@@ -1,0 +1,189 @@
+---
+import { Image } from "astro:assets";
+import type { CollectionEntry } from "astro:content";
+import BaseHead from "../components/BaseHead.astro";
+import Footer from "../components/Footer.astro";
+import FormattedDate from "../components/FormattedDate.astro";
+import Header from "../components/Header.astro";
+
+type Props = CollectionEntry<"blog">["data"];
+
+const { title, description, pubDate, updatedDate, heroImage, tags = [] } = Astro.props;
+---
+
+<html lang="ja">
+    <head>
+        <BaseHead title={title} description={description} />
+        <style>
+            main {
+                width: 100%;
+                max-width: 100vw;
+                margin: 0;
+                padding-top: 2rem;
+            }
+
+            .hero-image {
+                width: 100%;
+                max-width: 900px;
+                margin: 0 auto 2rem;
+                padding: 0 1rem;
+            }
+
+            .hero-image img {
+                display: block;
+                width: 100%;
+                height: auto;
+                border-radius: 20px;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+                object-fit: cover;
+            }
+
+            .prose {
+                width: 100%;
+                max-width: 800px;
+                margin: auto;
+                padding: 1rem 2rem;
+                color: var(--text-main);
+                line-height: 1.8;
+            }
+
+            .title {
+                margin-bottom: 3rem;
+                padding: 2rem 0;
+                text-align: center;
+            }
+
+            .title h1 {
+                font-size: 2.5rem;
+                margin: 0 0 0.5em 0;
+                color: var(--text-main);
+                font-weight: 800;
+                letter-spacing: -0.02em;
+            }
+
+            .date {
+                margin-bottom: 1rem;
+                color: var(--text-muted);
+                font-weight: 500;
+            }
+
+            .last-updated-on {
+                font-style: italic;
+                font-size: 0.9rem;
+                opacity: 0.8;
+            }
+
+            /* === 本文内タグ === */
+            
+            .prose :global(h2) {
+                font-size: 1.8rem;
+                margin: 3rem 0 1.5rem;
+                padding-bottom: 0.5rem;
+                border-bottom: 2px solid var(--accent-blue);
+                color: var(--text-main);
+            }
+
+            .prose :global(p) {
+                margin-bottom: 1.5rem;
+            }
+
+            /* 引用ブロック */
+            .prose :global(blockquote) {
+                margin: 2rem 0;
+                padding: 1.5rem 2rem;
+                background: rgba(125, 211, 252, 0.05);
+                border-left: 4px solid var(--accent-blue);
+                border-radius: 0 12px 12px 0;
+                font-style: italic;
+                color: var(--text-muted);
+            }
+
+            /* コードブロック */
+            .prose :global(pre) {
+                padding: 1.5rem;
+                border-radius: 12px;
+                margin: 2rem 0;
+                font-family: 'Fira Code', 'Cascadia Code', monospace;
+                font-size: 0.95rem;
+                overflow-x: auto;
+                box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+            }
+
+            /* ダークモード時の調整 */
+            :global(html.dark) .hero-image img {
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            }
+
+            @media (max-width: 720px) {
+                .prose {
+                    padding: 1rem;
+                }
+                .title h1 {
+                    font-size: 1.8rem;
+                }
+            }
+
+            .tags-container {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                justify-content: center;
+                margin-top: 1rem;
+            }
+
+            .tag {
+                background: rgba(2, 132, 199, 0.1);
+                color: var(--accent-blue);
+                border: 1px solid rgba(2, 132, 199, 0.2);
+                padding: 0.2rem 0.8rem;
+                border-radius: 99px;
+                font-size: 0.85rem;
+                font-weight: 600;
+                font-family: 'JetBrains Mono', monospace;
+            }
+
+            :global(html.dark) .tag {
+                background: rgba(125, 211, 252, 0.1);
+                border-color: rgba(125, 211, 252, 0.3);
+            }
+        </style>
+    </head>
+
+    <body>
+        <Header />
+        <main>
+            <article>
+                <div class="hero-image">
+                    {
+                        heroImage && (
+                            <Image
+                                width={1020}
+                                height={510}
+                                src={heroImage}
+                                alt={title}
+                            />
+                        )
+                    }
+                </div>
+                <div class="prose">
+                    <div class="title">
+                        <div class="date">
+                            <FormattedDate date={pubDate} />
+                            {
+                                updatedDate && (
+                                    <div class="last-updated-on">
+                                        Last updated on{" "}
+                                        <FormattedDate date={updatedDate} />
+                                    </div>
+                                )
+                            }
+                        </div>
+                        <h1>{title}</h1>
+                    </div>
+                    <slot />
+                </div>
+            </article>
+        </main>
+        <Footer />
+    </body>
+</html>

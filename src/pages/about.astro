@@ -1,0 +1,747 @@
+---
+import Layout from "../layouts/BlogPost.astro";
+import {
+    Twitter,
+    Github,
+    FileText,
+    Cpu,
+    Code2,
+    Music,
+    Gamepad2,
+    Terminal,
+    Zap,
+    BookOpen,
+    GraduationCap,
+    Milestone,
+    ShieldCheck,
+    Monitor,
+    Smartphone,
+    Laptop,
+    LayoutGrid,
+    MousePointer2,
+	Coffee,
+} from "lucide-astro";
+
+// --- 1. Programming & Web ---
+const PROG_SKILLS = [
+    {
+        name: "Ruby",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/ruby/ruby-original.svg",
+    },
+    {
+        name: "C",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/c/c-original.svg",
+    },
+    {
+        name: "Python",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg",
+    },
+    {
+        name: "Java",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg",
+    },
+    {
+        name: "JavaScript",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg",
+    },
+    {
+        name: "TypeScript",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg",
+    },
+    {
+        name: "HTML5",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg",
+    },
+    {
+        name: "CSS3",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg",
+    },
+    {
+        name: "Astro",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/astro/astro-original.svg",
+        darkInvert: true,
+    },
+    {
+        name: "LaTeX",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/latex/latex-original.svg",
+        darkInvert: true,
+    },
+];
+
+// --- 2. Tools & Creative ---
+const TOOL_SKILLS = [
+    {
+        name: "VS Code",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg",
+    },
+    {
+        name: "Git",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg",
+    },
+    {
+        name: "GitHub",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg",
+        darkInvert: true,
+    },
+    {
+        name: "IntelliJ",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/intellij/intellij-original.svg",
+    },
+    {
+        name: "Blender",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/blender/blender-original.svg",
+    },
+];
+
+// --- 3. Operating Systems ---
+const OS_SKILLS = [
+    {
+        name: "Windows 11",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/windows11/windows11-original.svg",
+    },
+    {
+        name: "Ubuntu",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/ubuntu/ubuntu-original.svg",
+    }, 
+    {
+        name: "Arch Linux",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/archlinux/archlinux-original.svg",
+        darkInvert: true,
+    },
+];
+
+// --- 4. Interests / 好きなこと ---
+const INTERESTS = [
+    { 
+        category: "Music", 
+        icon: Music, 
+        items: [
+            "米津玄師", "Eve", 
+            "Mrs. GREEN APPLE", "サカナクション", "ヨルシカ"
+        ] 
+    },
+    { 
+        category: "Game", 
+        icon: Gamepad2, 
+        items: [
+            "Minecraft", "ブルーアーカイブ", "ポケモン", "スプラトゥーン", "フォートナイト",
+            "ゼルダの伝説", "APEX", 
+        ] 
+    },
+    { 
+        category: "Other",
+        icon: Coffee, 
+        items: ["映像制作", "Twitter", "アニメ", "漫画", "映画鑑賞", "睡眠", "キヨ。"] 
+    },
+];
+import heroImage from '../assets/toramutton.jpg';
+---
+
+<Layout
+    title="自己紹介 / About Me"
+    description="トラマトのプロフィール、経歴、技術、環境など"
+    pubDate={new Date("2026-01-01")}
+    tags={[]}
+>
+    <div class="about-content">
+        {/* 1. bio */}
+        <section class="bio">
+            <p>
+                電気通信大学 情報理工学域 I 類の<strong>トラマト</strong>です。<br>
+                寅松 真人（とらまつ まさと）は偽名です。<br>
+                MMAというサークルに所属しています。
+            </p>
+        </section>
+
+        {/* 2. Interests & Hobbies */}
+        <h2>Interests & Hobbies</h2>
+        
+        <div class="interests-grid">
+            {INTERESTS.map((interest) => (
+                <div class="interest-card glass-card">
+                    <div class="interest-header">
+                        <interest.icon class="icon-blue" size={20} />
+                        <span class="interest-title">{interest.category}</span>
+                    </div>
+                    
+                    <div class="tags-wrapper">
+                        {interest.items.map((item) => (
+                            <span class="interest-tag">{item}</span>
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </div>
+
+        {/* 3. Environments */}
+        <h2>Environments</h2>
+        <div class="specs-grid">
+            {/* Desktop Card */}
+            <div class="spec-card glass-card">
+                <div class="card-header">
+                    <Monitor class="icon-blue" size={20} />
+                    <h3 id="trapezium">Desktop: Trapezium-08</h3>
+                </div>
+                <p class="card-note">2026/02/13 構築予定</p>
+                <ul class="spec-list">
+                    <li>
+                        <span class="spec-label">CPU</span>
+                        <span class="spec-val">AMD Ryzen 7 7700</span>
+                    </li>
+                    <li>
+                        <span class="spec-label">GPU</span>
+                        <span class="spec-val">Radeon RX 9060 XT 16GB</span>
+                    </li>
+                    <li>
+                        <span class="spec-label">MB</span>
+                        <span class="spec-val">ASUS A620M-K</span>
+                    </li>
+                    <li>
+                        <span class="spec-label">Memory</span>
+                        <span class="spec-val">DDR5 32GB</span>
+                    </li>
+                    <li>
+                        <span class="spec-label">Storage</span>
+                        <span class="spec-val">SSD 2TB (NVMe)</span>
+                    </li>
+                    <li>
+                        <span class="spec-label">Cooler</span>
+                        <span class="spec-val">虎徹 MarkⅡ</span>
+                    </li>
+                    <li>
+                        <span class="spec-label">Case</span>
+                        <span class="spec-val">MONTECH AIR 903 MAX</span>
+                    </li>
+                    <li>
+                        <span class="spec-label">PSU</span>
+                        <span class="spec-val">650W (80PLUS GOLD)</span>
+                    </li>
+                    <li>
+                        <span class="spec-label">OS</span>
+                        <span class="spec-val">Windows 11 Home & Arch Linux</span>
+                    </li>
+                </ul>
+            </div>
+
+            {/* Laptop Card */}
+            <div class="spec-card glass-card">
+                <div class="card-header">
+                    <Laptop class="icon-secondary" size={20} />
+                    <h3>Laptop: Dell 14 Plus</h3>
+                </div>
+                <p class="card-note">2025/03/28 ~</p>
+                <ul class="spec-list">
+                    <li>
+                        <span class="spec-label">CPU</span>
+                        <span class="spec-val">Core Ultra 7 258V</span>
+                    </li>
+                    <li>
+                        <span class="spec-label">GPU</span>
+                        <span class="spec-val">Intel Arc Graphics 140V</span>
+                    </li>
+                    <li>
+                        <span class="spec-label">Memory</span>
+                        <span class="spec-val">32GB (MoP / LPDDR5x-8533)</span>
+                    </li>
+                    <li>
+                        <span class="spec-label">OS</span>
+                        <span class="spec-val">Windows 11 Home</span>
+                    </li>
+                </ul>
+            </div>
+
+            {/* Mobile/Tablet Card */}
+            <div class="spec-card glass-card">
+                <div class="card-header">
+                    <Smartphone class="icon-secondary" size={20} />
+                    <h3>Mobile / Tablet</h3>
+                </div>
+                <ul class="spec-list">
+                    <li>
+                        <span class="spec-label">Mobile</span>
+                        <span class="spec-val">iPhone 16e <span class="text-yellow-small">(2025/03/10 ~)</span></span>
+                    </li>
+                    <li>
+                        <span class="spec-label">Tablet</span>
+                        <span class="spec-val">iPad A16 <span class="text-yellow-small">(2026/01 ~)</span></span>
+                    </li>
+                </ul>
+            </div>
+
+            {/* Setup & Tools Card */}
+            <div class="spec-card glass-card">
+                <div class="card-header">
+                    <LayoutGrid class="icon-blue" size={20} />
+                    <h3>Setup & Tools</h3>
+                </div>
+                <ul class="spec-list">
+                    <li>
+                        <span class="spec-label">Monitor</span>
+                        <span class="spec-val">27-inch WQHD 75Hz</span>
+                    </li>
+                    <li>
+                        <span class="spec-label">Editor</span>
+                        <span class="spec-val">VS Code</span>
+                    </li>
+                    <li>
+                        <span class="spec-label">Browser</span>
+                        <span class="spec-val">Firefox & Safari</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        {/* 4. Skills & Tools */}
+        <h2>Skills & Tools</h2>
+
+        <section class="skill-section">
+            <p class="skill-intro">使用している言語とかツールとか</p>
+
+            {/* カテゴリ1: Programming & Web */}
+            <div class="skill-category">
+                <h3 class="category-title">
+                    <Terminal size={18} /> Programming & Web
+                </h3>
+                <div class="skill-grid">
+                    {PROG_SKILLS.map((skill) => (
+                        <div class="skill-card" tabindex="0">
+                            <div class={`icon-wrapper ${skill.darkInvert ? "dark-invert" : ""}`}>
+                                <img src={skill.src} alt={skill.name} class="skill-img" width="48" height="48" />
+                            </div>
+                            <span class="skill-name">{skill.name}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* カテゴリ2: Tools & Creative */}
+            <div class="skill-category">
+                <h3 class="category-title">
+                    <MousePointer2 size={18} /> Tools & Creative
+                </h3>
+                <div class="skill-grid">
+                    {TOOL_SKILLS.map((skill) => (
+                        <div class="skill-card" tabindex="0">
+                            <div class={`icon-wrapper ${skill.darkInvert ? "dark-invert" : ""}`}>
+                                <img src={skill.src} alt={skill.name} class="skill-img" width="48" height="48" />
+                            </div>
+                            <span class="skill-name">{skill.name}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* カテゴリ3: OS */}
+            <div class="skill-category">
+                <h3 class="category-title">
+                    <Cpu size={18} /> Operating Systems
+                </h3>
+                <div class="skill-grid">
+                    {OS_SKILLS.map((skill) => (
+                        <div class="skill-card" tabindex="0">
+                            <div class={`icon-wrapper ${skill.darkInvert ? "dark-invert" : ""}`}>
+                                <img src={skill.src} alt={skill.name} class="skill-img" width="48" height="48" />
+                            </div>
+                            <span class="skill-name">{skill.name}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </section>
+
+        {/* 5. Timeline */}
+        <h2>Timeline</h2>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="time">2006.06</div>
+                <div class="desc">誕生</div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="time">2022.04</div>
+                <div class="desc">都立三田高校 入学</div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="time">2025.04</div>
+                <div class="desc">電気通信大学 入学</div>
+            </div>
+        </div>
+
+    </div>
+</Layout>
+
+<script>
+    // Observer設定
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                // 画面に入ったらクラスを追加
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.5 }); // 50%くらい見えたら発火
+
+    // 全てのh2が監視対象
+    document.querySelectorAll('.about-content h2').forEach((h2) => {
+        observer.observe(h2);
+    });
+</script>
+
+<style>
+    /* === 1. 基本設定・リセット === */
+    :global(.last-updated-on),
+    :global(time) {
+        display: none;
+    }
+
+    .about-content {
+        line-height: 1.8;
+        color: var(--text-main);
+    }
+
+    /* === h2のカスタム設定 === */
+    .about-content h2 {
+        position: relative;
+        display: block; 
+        width: 100%;
+        margin-top: 4rem;
+        margin-bottom: 1.5rem;
+        border: none !important;
+        padding-bottom: 5px;
+    }
+
+    /* 下線の設定 */
+    .about-content h2::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        height: 1px;
+        width: 0%;
+        background-color: var(--accent-blue);
+        transition: width 0.8s ease-out;
+    }
+
+    .about-content h2.visible::after {
+        width: 100%;
+    }
+
+    /* === ライトモード視認性調整 === */
+    :global(html:not(.dark)) {
+        /* ラベル調整 */
+        .spec-label {
+            color: #2563eb;
+            opacity: 1;
+        }
+
+        /* 黄色の文字の調整 */
+        .text-yellow-small, 
+        .text-yellow {
+            color: #b45309;
+            font-weight: 600;
+        }
+
+        /* カテゴリタイトル（Programming & Webなど） */
+        .category-title {
+            color: #1d4ed8;
+            opacity: 1;
+        }
+    }
+
+    /* === 2. タイムライン === */
+    .timeline {
+        margin: 2.5rem 0;
+        border-left: 2px solid var(--accent-blue);
+        padding-left: 1.5rem;
+    }
+    .timeline-item {
+        margin-bottom: 2rem;
+        position: relative;
+    }
+    .timeline-item::before {
+        content: "";
+        position: absolute;
+        left: calc(-1.5rem - 6px); /*青丸の位置調整*/ 
+        top: 0.5rem;
+        width: 10px;
+        height: 10px;
+        background: var(--background);
+        border: 2px solid var(--accent-blue);
+        border-radius: 50%;
+    }
+    .timeline-item.current::before {
+        background: var(--accent-secondary);
+        border-color: var(--accent-secondary);
+        box-shadow: 0 0 12px var(--accent-secondary);
+    }
+    .time {
+        font-weight: bold;
+        color: var(--accent-blue);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 1.1rem;
+    }
+    .desc {
+        margin-top: 0.3rem;
+        font-size: 0.95rem;
+    }
+
+    /* === 3. カード・レイアウト === */
+    .specs-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+    .glass-card {
+        background: var(--surface);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    :global(html.dark) .glass-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    .card-header {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        margin-bottom: 1rem;
+    }
+    .card-note {
+        font-size: 0.8rem;
+        color: var(--accent-secondary);
+        margin-top: -0.5rem;
+        margin-bottom: 0.8rem;
+        font-weight: bold;
+    }
+    .spec-card h3 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    /* === 4. スペック表の整列 === */
+    .spec-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .spec-list li {
+        display: grid;
+        grid-template-columns: 80px 1fr;
+        gap: 1rem;
+        padding: 0.6rem 0;
+        border-bottom: 1px dashed var(--border-color);
+        align-items: baseline;
+    }
+    .spec-list li:last-child {
+        border-bottom: none;
+    }
+    .spec-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--accent-blue);
+        font-family: "JetBrains Mono", monospace;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        opacity: 0.8;
+    }
+    .spec-val {
+        font-size: 1.05rem;
+        font-weight: 400;
+        color: var(--text-main);
+        font-family: "Zen Maru Gothic", sans-serif;
+        line-height: 1.5;
+    }
+    .text-yellow, .text-yellow-small {
+        font-size: 0.8rem;
+        color: var(--accent-secondary);
+        font-weight: 100;
+        margin-left: 0.5rem;
+        font-family: "JetBrains Mono", monospace;
+    }
+
+    /* === 5. スキルアイコン・グリッド === */
+    .skill-category {
+        margin-bottom: 3.5rem;
+    }
+    .category-title {
+        font-size: 0.9rem;
+        margin: 0 0 1.5rem 0;
+        color: var(--accent-blue);
+        font-family: "JetBrains Mono", monospace;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .skill-section {
+        margin: 2rem 0;
+        text-align: center;
+    }
+    .skill-intro {
+        margin-bottom: 2rem;
+        color: var(--text-main);
+        opacity: 0.8;
+        font-size: 0.9rem;
+    }
+    .skill-grid {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1.2rem;
+    }
+    .skill-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100px;
+        height: 100px;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        padding: 0;
+        cursor: pointer;
+        overflow: hidden;
+        outline: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+    :global(html.dark) .skill-card {
+        background: #e5e5e5;
+        color: #333;
+    }
+    .icon-wrapper {
+        width: 72px;
+        height: 72px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        transform: translateY(0);
+    }
+    .skill-name {
+        position: absolute;
+        bottom: 12px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #333;
+        font-family: "JetBrains Mono", monospace;
+        line-height: 1;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    .skill-card:hover, .skill-card:focus {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    }
+    .skill-card:hover .icon-wrapper, .skill-card:focus .icon-wrapper {
+        transform: translateY(-15px);
+    }
+    .skill-card:hover .skill-name, .skill-card:focus .skill-name {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .skill-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    /* === 6. 興味・好きなこと === */
+    .interests-grid {
+        display: grid;
+        grid-template-columns: 1fr; /* スマホだと1列 */
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+    
+    /* PCでは横並び or グリッド */
+    @media (min-width: 768px) {
+        .interests-grid {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+    }
+
+    .interest-card {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .interest-header {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.8rem;
+        margin-bottom: 0.2rem;
+    }
+
+    .interest-title {
+        font-weight: 700;
+        font-family: "JetBrains Mono", monospace;
+        color: var(--text-main);
+        font-size: 1.1rem;
+    }
+
+    .tags-wrapper {
+        display: flex;
+        flex-wrap: wrap; /* 端まで行ったら折り返す */
+        gap: 0.6rem;
+    }
+
+    .interest-tag {
+        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px; /* 丸っぽいタグ型 */
+        
+        /* 色設定 */
+        background: rgba(59, 130, 246, 0.1); 
+        color: var(--text-main);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        
+        transition: all 0.2s ease;
+        font-family: "Zen Maru Gothic", sans-serif;
+        line-height: 1.4;
+    }
+
+    /* ホバー時に少し濃くする */
+    .interest-tag:hover {
+        background: rgba(59, 130, 246, 0.2);
+        /* transform: translateY(-2px); */
+    }
+
+    /* === 7. レスポンシブ === */
+    @media (max-width: 768px) {
+        .specs-grid {
+            grid-template-columns: 1fr;
+        }
+        .spec-list li {
+            grid-template-columns: 1fr;
+            gap: 0.1rem;
+            padding: 0.7rem 0;
+        }
+        .spec-label { font-size: 0.7rem; }
+        .skill-grid { gap: 0.8rem; }
+        .skill-card {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+        }
+        .icon-wrapper {
+            width: 40px;
+            height: 40px;
+        }
+    }
+</style>

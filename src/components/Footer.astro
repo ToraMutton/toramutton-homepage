@@ -1,0 +1,144 @@
+---
+import { Twitter, Github, Rocket, MessageCircle } from 'lucide-astro';
+
+const today = new Date();
+---
+
+<footer>
+    <div class="footer-container">
+        <div class="social-links">
+            <a href="https://twitter.com/ToraMutton" target="_blank" rel="noopener noreferrer" aria-label="Daily">
+                <MessageCircle size={20} />
+            </a>
+            
+            <a href="https://twitter.com/ToraMutton_tech" target="_blank" rel="noopener noreferrer" aria-label="Tech">
+                <Twitter size={20} />
+            </a>
+            
+            <a href="https://github.com/ToraMutton" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                <Github size={20} />
+            </a>
+            
+            <a href="https://note.com/toramutton" target="_blank" rel="noopener noreferrer" aria-label="Note">
+                <svg role="img" viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                   <path d="M0 .279c4.623 0 10.953-.235 15.498-.117 6.099.156 8.39 2.813 8.468 9.374.077 3.71 0 14.335 0 14.335h-6.598c0-9.296.04-10.83 0-13.759-.078-2.578-.814-3.807-2.795-4.041-2.097-.235-7.975-.04-7.975-.04v17.84H0Z" />
+                </svg>
+            </a>
+
+            <a href="https://zenn.dev/toramutton" target="_blank" rel="noopener noreferrer" aria-label="Zenn">
+                <svg role="img" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                    <path d="M.264 23.771h4.984c.264 0 .498-.147.645-.352L19.614.874c.176-.293-.029-.645-.381-.645h-4.72c-.235 0-.44.117-.557.323L.03 23.361c-.088.176.029.41.234.41zM17.445 23.419l6.479-10.408c.205-.323-.029-.733-.41-.733h-4.691c-.176 0-.352.088-.44.235l-6.655 10.643c-.176.264.029.616.352.616h4.779c.234-.001.468-.118.586-.353z" />
+                </svg>
+            </a>
+        </div>
+
+        <div class="credits">
+            <span class="copyright">&copy; {today.getFullYear()} ToraMutton</span>
+            <span class="divider">|</span>
+            <span class="powered-by">
+                Built with <a href="https://astro.build" target="_blank" rel="noopener noreferrer">Astro</a>
+                <Rocket size={14} class="rocket-icon"/>
+            </span>
+        </div>
+    </div>
+</footer>
+
+<style>
+    footer {
+        padding: 3rem 1rem;
+        margin-top: auto;
+        border-top: 1px solid var(--border-color);
+        background: var(--background);
+        text-align: center;
+    }
+
+    /* ライトモード調整 */
+    :global(html:not(.dark)) footer {
+        background: var(--background); 
+    }
+
+    .footer-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    /* === ソーシャルアイコン === */
+    .social-links {
+        display: flex;
+        gap: 1.2rem;
+    }
+
+    .social-links a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+        text-decoration: none;
+        
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(0,0,0,0.03);
+        
+        transition: color 0.2s, background-color 0.2s;
+    }
+
+    :global(html.dark) .social-links a {
+        background: rgba(255,255,255,0.05);
+    }
+
+    /* NoteとZennの色設定 */
+    .social-links a[aria-label="Note"]:hover { background: #41c9b4; color: white; }
+    .social-links a[aria-label="Zenn"]:hover { background: #3ea8ff; color: white; }
+    .social-links a[aria-label="Twitter"]:hover,
+    .social-links a[aria-label="Daily"]:hover { background: #1da1f2; color: white; }
+    .social-links a[aria-label="Tech"]:hover { background: #1da1f2; color: white; }
+    .social-links a[aria-label="GitHub"]:hover { background: #333; color: white; }
+    :global(html.dark) .social-links a[aria-label="GitHub"]:hover { background: #fff; color: #333; }
+
+    /* その他共通ホバー */
+    .social-links a:hover {
+        color: #fff;
+        /* background: var(--accent-blue); */
+    }
+
+    /* === クレジット周り === */
+    .credits {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .divider { opacity: 0.3; }
+
+    .powered-by {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .powered-by a {
+        color: var(--text-main);
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.2s;
+    }
+
+    .powered-by a:hover { color: var(--accent-blue); }
+
+    .rocket-icon { color: var(--accent-yellow); }
+
+    @media (max-width: 600px) {
+        .divider { display: none; }
+        .credits { flex-direction: column; gap: 0.3rem; }
+    }
+</style>

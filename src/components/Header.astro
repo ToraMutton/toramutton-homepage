@@ -1,0 +1,371 @@
+---
+import { SITE_TITLE } from "../consts";
+import HeaderLink from "./HeaderLink.astro";
+import { Menu, X, Sun, Moon } from 'lucide-astro';
+---
+
+<header id="site-header">
+    <nav>
+        <div class="logo-group">
+            <h2>
+                <a href="/" class="title-link" style="display: flex; align-items: center; gap: 0.5rem;">
+                
+                    <img src="/toramutton.jpg" alt="icon" width={32} height={32} style="border-radius: 50%; object-fit: cover;" />
+                    
+                    {"ToraMutton's Homepage"}
+                </a>
+            </h2>
+        </div>
+
+        <div class="controls-group">
+            <button id="theme-toggle" class="theme-toggle" aria-label="テーマ切り替え">
+                <div class="icon-container-theme">
+                    <span class="icon-sun"><Sun size={22} /></span>
+                    <span class="icon-moon"><Moon size={22} /></span>
+                </div>
+            </button>
+
+            <button id="menu-toggle" class="menu-toggle" aria-label="メニューを開く" aria-expanded="false">
+                <div class="icon-container-menu">
+                    <span class="icon-menu"><Menu size={24} /></span>
+                    <span class="icon-close"><X size={24} /></span>
+                </div>
+            </button>
+        </div>
+
+        <div id="nav-links" class="internal-links">
+            <HeaderLink href="/">Home</HeaderLink>
+            <HeaderLink href="/blog">Blog</HeaderLink>
+            <HeaderLink href="/about">About</HeaderLink>
+        </div>
+    </nav>
+</header>
+
+<script>
+    // テーマ切り替え関数
+    function toggleTheme() {
+        const element = document.documentElement;
+        element.classList.toggle("dark");
+        const isDark = element.classList.contains("dark");
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+    }
+
+    // ページ遷移のたびにイベントを再登録
+    document.addEventListener('astro:page-load', () => {
+        // --- 1. ハンバーガーメニュー ---
+        const menuToggle = document.getElementById('menu-toggle');
+        const navLinks = document.getElementById('nav-links');
+        const header = document.getElementById('site-header');
+
+        if (menuToggle && navLinks && header) {
+            // onclickで上書き登録、重複登録防止
+            menuToggle.onclick = () => {
+                const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true';
+                menuToggle.setAttribute('aria-expanded', !isExpanded ? 'true' : 'false');
+                
+                menuToggle.classList.toggle('open');
+                navLinks.classList.toggle('open');
+                header.classList.toggle('menu-open');
+            };
+        }
+
+        // --- 2. テーマ切り替えボタンの制御 ---
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle) {
+            themeToggle.onclick = () => {
+                // @ts-ignore
+                if (!document.startViewTransition) {
+                    toggleTheme();
+                    return;
+                }
+                // @ts-ignore
+                document.startViewTransition(() => toggleTheme());
+            };
+        }
+    });
+</script>
+
+<style>
+    /* === 基本設定 === */
+    :root {
+        --glass-bg: rgba(15, 17, 21, 0.9); 
+        --glass-blur: blur(20px);
+        --header-height: 64px;
+        --accent-blue: #7dd3fc;
+    }
+    :global(html:not(.dark)) {
+        --glass-bg: rgba(255, 255, 255, 0.85);
+    }
+
+    header {
+        position: fixed; 
+        top: 0;
+        left: 0;
+        width: 100%;
+        
+        z-index: 9999;
+        
+        margin: 0;
+        padding: 0 1.5rem;
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        transition: border-color 0.3s, background-color 0.3s;
+    }
+    :global(html:not(.dark)) header {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    header.menu-open {
+        border-bottom-color: transparent;
+    }
+    nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: var(--header-height);
+        max-width: 1100px;
+        margin: 0 auto;
+        position: relative; 
+    }
+    .logo-group { z-index: 1001; }
+    .controls-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        z-index: 1001;
+    }
+
+    /* === テーマ切り替えボタン === */
+    .theme-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        color: inherit;
+        padding: 0;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        transition: background 0.2s, color 0.2s;
+    }
+
+    @media (hover: hover) {
+        .theme-toggle:hover {
+            background: rgba(125, 211, 252, 0.1);
+            color: var(--accent-blue);
+        }
+    }
+
+    /* スマホ版：タップした瞬間だけ凹ませる */
+    .theme-toggle:active {
+        transform: scale(0.9);
+        background: rgba(125, 211, 252, 0.2);
+    }
+
+    .icon-container-theme {
+        position: relative;
+        width: 24px;
+        height: 24px;
+    }
+    
+    .icon-sun, .icon-moon {
+        position: absolute;
+        top: 0;
+        left: 0;
+        transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    }
+
+    /* ダークモード */
+    :global(html.dark) .icon-sun { transform: rotate(90deg) scale(0.4); opacity: 0; }
+    :global(html.dark) .icon-moon { transform: rotate(0deg) scale(1); opacity: 1; }
+
+    /* ライトモード */
+    :global(html:not(.dark)) .icon-sun { transform: rotate(0deg) scale(1); opacity: 1; }
+    :global(html:not(.dark)) .icon-moon { transform: rotate(-90deg) scale(0.4); opacity: 0; }
+
+
+    /* === メニューボタン（PC版だと非表示） === */
+    .menu-toggle {
+        display: none;
+        appearance: none;
+        background: transparent;
+        border: none;
+        outline: none;
+        padding: 0;
+        cursor: pointer;
+        color: inherit;
+    }
+
+    /* === リンク関連 === */
+    h2 {
+        margin: 0;
+        line-height: 1;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border-bottom: none !important;
+        padding-bottom: 0 !important;
+    }
+    .title-link {
+        color: inherit !important; 
+        text-decoration: none !important;
+        border: none !important;
+    }
+    .title-link:hover {
+        color: var(--accent-blue) !important;
+    }
+
+    /* === PC向け右上メニュー === */
+    .internal-links {
+        display: flex;
+        gap: 1.5rem;
+    }
+    .internal-links :global(a) {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        text-decoration: none;
+        padding: 0.5rem 0;
+        position: relative;
+        transition: color 0.2s;
+    }
+    .internal-links :global(a:hover),
+    .internal-links :global(a.active) {
+        color: var(--text-main); 
+    }
+    :global(html.dark) .internal-links :global(a:hover),
+    :global(html.dark) .internal-links :global(a.active) {
+        color: #fff;
+    }
+    .internal-links :global(a)::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: var(--accent-blue);
+        transition: width 0.3s ease;
+    }
+    .internal-links :global(a:hover)::after,
+    .internal-links :global(a.active)::after {
+        width: 100%;
+    }
+
+    /* === スマホ・タブレット版 === */
+    @media (max-width: 720px) {
+        .menu-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            z-index: 1002;
+        }
+
+        .icon-container-menu {
+            position: relative;
+            width: 24px;
+            height: 24px;
+        }
+
+        .icon-menu, .icon-close {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .icon-menu { opacity: 1; transform: rotate(0deg) scale(1); }
+        .icon-close { opacity: 0; transform: rotate(-90deg) scale(0.5); }
+
+        .menu-toggle.open .icon-menu { opacity: 0; transform: rotate(90deg) scale(0.5); }
+        .menu-toggle.open .icon-close { opacity: 1; transform: rotate(0deg) scale(1); }
+
+        .internal-links {
+            position: absolute;
+            top: 100%; /* ヘッダーの真下 */
+            left: 50%; /* 中央起点 */
+            margin-left: -50vw; /* 画面半分戻す＝全画面幅 */
+            width: 100vw;       /* 横幅いっぱい */
+            
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            
+            /* アニメーション初期状態 */
+            max-height: 0;
+            opacity: 0;
+            transform: translateY(-10px);
+            visibility: hidden; /* クリック判定削除 */
+            
+            /* イージング */
+            transition: 
+                all 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.3s ease,
+                transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            
+            overflow: hidden;
+        }
+
+        :global(html.dark) .internal-links {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        /* 開いた時*/
+        .internal-links.open {
+            max-height: 400px; 
+            opacity: 1;
+            transform: translateY(0);
+            visibility: visible;
+        }
+
+        .internal-links :global(a) {
+            display: block;
+            padding: 1.2rem 2rem;
+            width: 100%;
+            text-align: center;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            color: var(--text-main);
+            
+            /* リンクの文字を少し遅らす */
+            opacity: 0;
+            transform: translateY(-5px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        /* メニューが開いた時だけ中リンク表示 */
+        .internal-links.open :global(a) {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 0.1s; /* 箱が開いてから文字が出る */
+        }
+
+        :global(html.dark) .internal-links :global(a) {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+        }
+        
+        .internal-links :global(a)::after { display: none; }
+        
+        .internal-links :global(a:hover) { background: rgba(0, 0, 0, 0.03); }
+        :global(html.dark) .internal-links :global(a:hover) { background: rgba(255, 255, 255, 0.05); }
+        
+        .internal-links :global(a.active) {
+            color: var(--accent-blue);
+            background: rgba(125, 211, 252, 0.1);
+        }
+        :global(html.dark) .internal-links :global(a.active) {
+            background: rgba(125, 211, 252, 0.05);
+        }
+    }
+</style>
