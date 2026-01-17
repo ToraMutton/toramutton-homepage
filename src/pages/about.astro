@@ -116,7 +116,7 @@ const INTERESTS = [
         category: "Music", 
         icon: Music, 
         items: [
-            "米津玄師", "Eve", 
+            "米津玄師", "Eve", "King Gnu",
             "Mrs. GREEN APPLE", "サカナクション", "ヨルシカ"
         ] 
     },
@@ -124,8 +124,7 @@ const INTERESTS = [
         category: "Game", 
         icon: Gamepad2, 
         items: [
-            "Minecraft", "ブルーアーカイブ", "ポケモン", "スプラトゥーン", "フォートナイト",
-            "ゼルダの伝説", "APEX", 
+            "Minecraft", "ブルーアーカイブ", "ポケモン", "バカゲー"
         ] 
     },
     { 
@@ -151,6 +150,64 @@ import heroImage from '../assets/toramutton.jpg';
                 寅松 真人（とらまつ まさと）は偽名です。<br>
                 MMAというサークルに所属しています。
             </p>
+        </section>
+
+        {/* 4. Skills & Tools */}
+        <h2>Skills & Tools</h2>
+
+        <section class="skill-section">
+            <p class="skill-intro">使用している言語とかツールとか</p>
+
+            {/* カテゴリ1: Programming & Web */}
+            <div class="skill-category">
+                <h3 class="category-title">
+                    <Terminal size={18} /> Programming & Web
+                </h3>
+                <div class="skill-grid">
+                    {PROG_SKILLS.map((skill) => (
+                        <div class="skill-card" tabindex="0">
+                            <div class={`icon-wrapper ${skill.darkInvert ? "dark-invert" : ""}`}>
+                                <img src={skill.src} alt={skill.name} class="skill-img" width="48" height="48" />
+                            </div>
+                            <span class="skill-name">{skill.name}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* カテゴリ2: Tools & Creative */}
+            <div class="skill-category">
+                <h3 class="category-title">
+                    <MousePointer2 size={18} /> Tools & Creative
+                </h3>
+                <div class="skill-grid">
+                    {TOOL_SKILLS.map((skill) => (
+                        <div class="skill-card" tabindex="0">
+                            <div class={`icon-wrapper ${skill.darkInvert ? "dark-invert" : ""}`}>
+                                <img src={skill.src} alt={skill.name} class="skill-img" width="48" height="48" />
+                            </div>
+                            <span class="skill-name">{skill.name}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* カテゴリ3: OS */}
+            <div class="skill-category">
+                <h3 class="category-title">
+                    <Cpu size={18} /> Operating Systems
+                </h3>
+                <div class="skill-grid">
+                    {OS_SKILLS.map((skill) => (
+                        <div class="skill-card" tabindex="0">
+                            <div class={`icon-wrapper ${skill.darkInvert ? "dark-invert" : ""}`}>
+                                <img src={skill.src} alt={skill.name} class="skill-img" width="48" height="48" />
+                            </div>
+                            <span class="skill-name">{skill.name}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
         </section>
 
         {/* 2. Interests & Hobbies */}
@@ -259,7 +316,7 @@ import heroImage from '../assets/toramutton.jpg';
                 <ul class="spec-list">
                     <li>
                         <span class="spec-label">Mobile</span>
-                        <span class="spec-val">iPhone 16e <span class="text-yellow-small">(2025/03/10 ~)</span></span>
+                        <span class="spec-val">iPhone 16e <span class="text-yellow-small">(2025/03/10 ～)</span></span>
                     </li>
                     <!-- <li>
                         <span class="spec-label">Tablet</span>
@@ -291,63 +348,7 @@ import heroImage from '../assets/toramutton.jpg';
             </div>
         </div>
 
-        {/* 4. Skills & Tools */}
-        <h2>Skills & Tools</h2>
-
-        <section class="skill-section">
-            <p class="skill-intro">使用している言語とかツールとか</p>
-
-            {/* カテゴリ1: Programming & Web */}
-            <div class="skill-category">
-                <h3 class="category-title">
-                    <Terminal size={18} /> Programming & Web
-                </h3>
-                <div class="skill-grid">
-                    {PROG_SKILLS.map((skill) => (
-                        <div class="skill-card" tabindex="0">
-                            <div class={`icon-wrapper ${skill.darkInvert ? "dark-invert" : ""}`}>
-                                <img src={skill.src} alt={skill.name} class="skill-img" width="48" height="48" />
-                            </div>
-                            <span class="skill-name">{skill.name}</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* カテゴリ2: Tools & Creative */}
-            <div class="skill-category">
-                <h3 class="category-title">
-                    <MousePointer2 size={18} /> Tools & Creative
-                </h3>
-                <div class="skill-grid">
-                    {TOOL_SKILLS.map((skill) => (
-                        <div class="skill-card" tabindex="0">
-                            <div class={`icon-wrapper ${skill.darkInvert ? "dark-invert" : ""}`}>
-                                <img src={skill.src} alt={skill.name} class="skill-img" width="48" height="48" />
-                            </div>
-                            <span class="skill-name">{skill.name}</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* カテゴリ3: OS */}
-            <div class="skill-category">
-                <h3 class="category-title">
-                    <Cpu size={18} /> Operating Systems
-                </h3>
-                <div class="skill-grid">
-                    {OS_SKILLS.map((skill) => (
-                        <div class="skill-card" tabindex="0">
-                            <div class={`icon-wrapper ${skill.darkInvert ? "dark-invert" : ""}`}>
-                                <img src={skill.src} alt={skill.name} class="skill-img" width="48" height="48" />
-                            </div>
-                            <span class="skill-name">{skill.name}</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </section>
+        
 
         {/* 5. Timeline */}
         <h2>Timeline</h2>

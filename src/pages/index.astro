@@ -49,7 +49,7 @@ interface UnifiedPost {
     url: string;
     date: Date;
     image?: string | any;
-    source: 'local' | 'note' | 'zenn';
+    source: 'local' | 'note' | 'zenn' | 'qiita';
 }
 
 // A. ローカル記事
@@ -93,8 +93,23 @@ if (!isDev) {
     } catch (e) { console.error("Zenn RSS fetch failed", e); }
 }
 
-// D. 統合・ソート・抽出
-const latestPosts = [...localPosts, ...notePosts, ...zennPosts]
+// D. Qiita記事
+let qiitaPosts: UnifiedPost[] = [];
+if (!isDev) {
+    try {
+        const qiitaFeed = await parser.parseURL('https://qiita.com/ToraMutton/feed'); 
+        qiitaPosts = qiitaFeed.items.map((item: any) => ({
+            title: item.title || '無題',
+            url: item.link || '',
+            date: new Date(item.pubDate || new Date()),
+            image: item.enclosure?.url,
+            source: 'qiita'
+        }));
+    } catch (e) { console.error("Qiita RSS fetch failed", e); }
+}
+
+// E. 統合・ソート・抽出
+const latestPosts = [...localPosts, ...notePosts, ...zennPosts, ...qiitaPosts]
     .sort((a, b) => b.date.valueOf() - a.date.valueOf())
     .slice(0, 3); /* 最新記事3つ */
 
@@ -181,7 +196,7 @@ const friendLinks: FriendLink[] = [
                             <a href="https://twitter.com/ToraMutton" target="_blank" rel="noopener noreferrer" class="social-btn twitter-icon">
                                 <Twitter size={18} /> <span>Daily</span>
                             </a>
-                            <a href="https://twitter.com/ToraMutton_tech" target="_blank" rel="noopener noreferrer" class="social-btn twitter-icon">
+                            <a href="https://twitter.com/ToraMutton_tech" target="_blank" rel="noopener noreferrer" class="social-btn twitter-tech-icon">
                                 <Twitter size={18} /> <span>Tech</span>
                             </a>
                             <a href="https://github.com/ToraMutton" target="_blank" rel="noopener noreferrer" class="social-btn github-icon">
@@ -198,6 +213,12 @@ const friendLinks: FriendLink[] = [
                                     <path d="M.264 23.771h4.984c.264 0 .498-.147.645-.352L19.614.874c.176-.293-.029-.645-.381-.645h-4.72c-.235 0-.44.117-.557.323L.03 23.361c-.088.176.029.41.234.41zM17.445 23.419l6.479-10.408c.205-.323-.029-.733-.41-.733h-4.691c-.176 0-.352.088-.44.235l-6.655 10.643c-.176.264.029.616.352.616h4.779c.234-.001.468-.118.586-.353z" />
                                 </svg>
                                 <span>Zenn</span>
+                            </a>
+                            <a href="https://qiita.com/ToraMutton" target="_blank" rel="noopener noreferrer" class="social-btn qiita-icon">
+                                <svg role="img" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                                    <path d="M12 0C5.3726 0 0 5.3726 0 12s5.3726 12 12 12c3.3984 0 6.4665-1.413 8.6498-3.6832-.383-.0574-.7746-.2062-1.1466-.4542-.7145-.4763-1.3486-.9263-1.6817-1.674-1.2945 1.3807-3.0532 1.835-5.1822 2.0503-4.311.4359-8.0456-1.4893-8.4979-6.2996-.1922-2.045.2628-3.989 1.1804-5.582l-.5342-2.1009c-.0862-.3652.2498-.7126.6057-.6262l1.8456.448c1.0974-.9012 2.4249-1.49 3.8892-1.638 1.2526-.1267 2.467.0834 3.571.5624l1.7348-1.0494c.3265-.1974.7399.0257.7711.4164l.1 2.4747v.0002c1.334 1.4084 2.2424 3.3319 2.4478 5.516.116 1.2339-.012 2.1776-.339 3.078-.1531.4215-.1992.7778.0776 1.1305.2674.3408.6915 1.0026 1.1644.8917.7107-.1666 1.4718-.1223 1.9422.1715C23.4925 15.9525 24 14.0358 24 12c0-6.6274-5.3726-12-12-12Zm-.0727 5.727a5.2731 5.2731 0 0 0-.6146.0273c-2.2084.2233-3.9572 1.8135-4.4937 3.8484l-1.3176-.1996-.014.2589 1.2972.1407c-.0352.1497-.0643.2384-.086.3923l-1.1319.0902.0103.2025 1.1032-.088c-.0194.1713-.031.2814-.0332.4565l-1.0078.412.0495.2499.9598-.4492c.002.1339.008.2053.0207.3407.2667 2.8371 2.6364 3.3981 5.4677 3.1118 2.8312-.2863 5.0517-1.3114 4.785-4.1486-.013-.1361-.0324-.2068-.0553-.3392l1.0397.2257.0242-.229-1.0906-.207c-.0342-.1687-.0765-.271-.1264-.4327l1.1208-.1374-.0158-.2019-1.1499.1409a5.1093 5.1093 0 0 0-.1665-.4259l1.2665-.4042-.0397-.2536-1.3471.4667c-.819-1.7168-2.5002-2.8224-4.4546-2.8482Z" />
+                                </svg>
+                                <span>Qiita</span>
                             </a>
                         </div>
                     </div>
@@ -248,7 +269,7 @@ const friendLinks: FriendLink[] = [
                     </div>
                     <div class="mission-list">
                         {missionData.map((m) => (
-                            <div class="mission-item">
+                            <div class="mission-item js-mission-item" data-date={m.date}>
                                 <div class="mission-info">
                                     <span class="mission-icon">
                                         <m.icon size={20} strokeWidth={2.5} />
@@ -256,7 +277,7 @@ const friendLinks: FriendLink[] = [
                                     <span class="mission-title">{m.title}</span>
                                 </div>
                                 <div class="mission-days">
-                                    <span class="days-num">{m.days}</span>
+                                    <span class="days-num js-days-num">{m.days}</span>
                                     <span class="days-unit">days</span>
                                 </div>
                             </div>
@@ -506,7 +527,31 @@ const friendLinks: FriendLink[] = [
             { title: "IRIS OUT", year: "2025" },
             { title: "JANE DOE", year: "2025" },
             { title: "1991", year: "2025" },
-            ];
+                ];
+                
+                // カウントダウン処理
+                const missionItems = document.querySelectorAll<HTMLElement>('.js-mission-item');
+
+                // 今日の日付
+                const now = new Date();
+                now.setHours(0, 0, 0, 0);
+
+                missionItems.forEach(item => {
+                    const targetDateStr = item.dataset.date;
+                    if (!targetDateStr) return;
+
+                    const target = new Date(targetDateStr);
+                    target.setHours(0, 0, 0, 0);
+
+                    const diff = target.getTime() - now.getTime();
+                    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+                    const numEl = item.querySelector<HTMLElement>('.js-days-num');
+                    if (numEl) {
+                        numEl.innerText = days.toString();
+                    }
+                });
+
 
                 const titleEl = document.getElementById('song-title');
                 const yearEl = document.getElementById('song-year');
@@ -711,9 +756,10 @@ const friendLinks: FriendLink[] = [
         background: rgba(2, 132, 199, 0.05);
     }
 
-    /* === ブランド別ホバー設定（詳細度強化版） === */
+    /* === ツール別設定 === */
     
-    /* 1. Twitter (自称X) */
+    /* 1. Twitter (自称X) */ 
+    /* 1.1 日常垢 */
     .twitter-icon:hover {
         border-color: #1DA1F2;
         background: rgba(29, 161, 242, 0.05);
@@ -725,6 +771,21 @@ const friendLinks: FriendLink[] = [
     :global(html.dark) .twitter-icon:hover {
         border-color: #1DA1F2;
         color: #1DA1F2;
+        /* box-shadow: 0 0 10px rgba(29, 161, 242, 0.4);  */
+    }
+
+    /* 1.2 技術垢 */
+    .twitter-tech-icon:hover {
+        border-color: #f59518;
+        background: rgba(245, 149, 24, 0.05);
+        color: #f59518;
+    }
+    .twitter-tech-icon:hover :global(svg) { color: #f59518; }
+    
+    /* ダークモードで発光 */
+    :global(html.dark) .twitter-tech-icon:hover {
+        border-color: #f59518;
+        color: #f59518;
         /* box-shadow: 0 0 10px rgba(29, 161, 242, 0.4);  */
     }
 
@@ -767,6 +828,20 @@ const friendLinks: FriendLink[] = [
     :global(html.dark) .zenn-icon:hover {
         border-color: #3EA8FF;
         color: #3EA8FF;
+        /* box-shadow: 0 0 10px rgba(62, 168, 255, 0.4); */
+    }
+
+    /* 5. Qiita */
+    .qiita-icon:hover {
+        border-color: #55c500;
+        background: rgba(85, 197, 0, 0.05);
+        color: #55c500;
+    }
+    .qiita-icon:hover svg { color: #55c500; }
+
+    :global(html.dark) .qiita-icon:hover {
+        border-color: #55c500;
+        color: #55c500;
         /* box-shadow: 0 0 10px rgba(62, 168, 255, 0.4); */
     }
 
@@ -874,6 +949,7 @@ const friendLinks: FriendLink[] = [
     .badge-local { background: rgba(2, 132, 199, 0.8); }
     .badge-note { background: rgba(45, 187, 160, 0.9); }
     .badge-zenn { background: rgba(62, 168, 255, 0.9); }
+    .badge-qiita { background: rgba(85, 197, 0, 0.9); }
 
     .post-info {
         padding: 1rem;
@@ -947,9 +1023,8 @@ const friendLinks: FriendLink[] = [
     .icon-blue { color: var(--accent-blue); }
     .icon-secondary { color: var(--accent-secondary); }
 
-    /* =========================================
-       5. 各種カード詳細 (Mission, PC, Advent)
-       ========================================= */
+    /* 5. 各種カード詳細 (Mission, PC, Advent)*/
+
     /* Countdownカード */
     .mission-list {
         display: flex;
@@ -1064,9 +1139,8 @@ const friendLinks: FriendLink[] = [
         background: rgba(103, 103, 103, 0.02) !important;
     }
 
-    /* =========================================
-       6. リンク集カード (Links)
-       ========================================= */
+    /*  6. リンク集カード (Links) */
+
     .link-list {
         display: flex;
         flex-direction: column;
@@ -1115,9 +1189,8 @@ const friendLinks: FriendLink[] = [
         margin-top: 0.2rem;
     }
 
-    /* =========================================
-       7. Today's Musicカード & アニメーション
-       ========================================= */
+    /* 7. Today's Musicカード & アニメーション */
+
     .recommendation-card {
         margin-top: 2rem;
         text-align: center;
@@ -1199,9 +1272,8 @@ const friendLinks: FriendLink[] = [
         }
     }
 
-    /* =========================================
-       8. レスポンシブ設定 (スマホ・タブレット)
-       ========================================= */
+    /* 8. レスポンシブ設定 (スマホ・タブレット) */
+
     @media (max-width: 1024px) {
         .grid-container {
             gap: 2rem;
@@ -1232,7 +1304,16 @@ const friendLinks: FriendLink[] = [
         }
 
         .social-links {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.8rem;
+            width: 100%;
+        }
+
+        .social-btn {
             justify-content: center;
+            width: 100%;
+            padding: 0.6rem 0.4rem;
         }
 
         .post-grid {
