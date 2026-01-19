@@ -630,9 +630,7 @@ const friendLinks: FriendLink[] = [
 </html>
 
 <style>
-    /* =========================================
-       1. ヒーローセクション (トップの顔)
-       ========================================= */
+    /* 1.トップの顔 */
     .hero {
         padding: 6rem 0 4rem;
     }
@@ -690,9 +688,7 @@ const friendLinks: FriendLink[] = [
         margin-bottom: 2rem;
     }
 
-    /* =========================================
-       2. ボタン・リンク・アイコン類
-       ========================================= */
+    /* 2. ボタン・リンク・アイコン類 */
     /* メインボタン */
     .primary-btn {
         display: inline-flex;
@@ -758,38 +754,38 @@ const friendLinks: FriendLink[] = [
 
     /* === ツール別設定 === */
     
-    /* 1. Twitter (自称X) */ 
-    /* 1.1 日常垢 */
-    .twitter-icon:hover {
-        border-color: #1DA1F2;
-        background: rgba(29, 161, 242, 0.05);
-        color: #1DA1F2;
-    }
-    .twitter-icon:hover :global(svg) { color: #1DA1F2; }
-    
-    /* ダークモードで発光 */
-    :global(html.dark) .twitter-icon:hover {
-        border-color: #1DA1F2;
-        color: #1DA1F2;
-        /* box-shadow: 0 0 10px rgba(29, 161, 242, 0.4);  */
-    }
+    /* Twitter (自称X) */ 
+        /* 日常垢 */
+        .twitter-icon:hover {
+            border-color: #1DA1F2;
+            background: rgba(29, 161, 242, 0.05);
+            color: #1DA1F2;
+        }
+        .twitter-icon:hover :global(svg) { color: #1DA1F2; }
+        
+        /* ダークモードで発光 */
+        :global(html.dark) .twitter-icon:hover {
+            border-color: #1DA1F2;
+            color: #1DA1F2;
+            /* box-shadow: 0 0 10px rgba(29, 161, 242, 0.4);  */
+        }
 
-    /* 1.2 技術垢 */
-    .twitter-tech-icon:hover {
-        border-color: #f59518;
-        background: rgba(245, 149, 24, 0.05);
-        color: #f59518;
-    }
-    .twitter-tech-icon:hover :global(svg) { color: #f59518; }
+        /* 技術垢 */
+        .twitter-tech-icon:hover {
+            border-color: #f59518;
+            background: rgba(245, 149, 24, 0.05);
+            color: #f59518;
+        }
+        .twitter-tech-icon:hover :global(svg) { color: #f59518; }
     
-    /* ダークモードで発光 */
-    :global(html.dark) .twitter-tech-icon:hover {
-        border-color: #f59518;
-        color: #f59518;
-        /* box-shadow: 0 0 10px rgba(29, 161, 242, 0.4);  */
-    }
+        /* ダークモードで発光 */
+        :global(html.dark) .twitter-tech-icon:hover {
+            border-color: #f59518;
+            color: #f59518;
+            /* box-shadow: 0 0 10px rgba(29, 161, 242, 0.4);  */
+        }
 
-    /* 2. GitHub */
+    /* GitHub */
     .github-icon:hover { 
         border-color: #333; 
         background: rgba(0, 0, 0, 0.05); 
@@ -803,7 +799,7 @@ const friendLinks: FriendLink[] = [
         /* box-shadow: 0 0 10px rgba(255, 255, 255, 0.3); */
     }
 
-    /* 3. Note */
+    /* Note */
     .note-icon:hover {
         border-color: #41C9B4;
         background: rgba(65, 201, 180, 0.05);
@@ -817,7 +813,7 @@ const friendLinks: FriendLink[] = [
         /* box-shadow: 0 0 10px rgba(65, 201, 180, 0.4); */
     }
 
-    /* 4. Zenn */
+    /* Zenn */
     .zenn-icon:hover {
         border-color: #3EA8FF;
         background: rgba(62, 168, 255, 0.05);
@@ -831,7 +827,7 @@ const friendLinks: FriendLink[] = [
         /* box-shadow: 0 0 10px rgba(62, 168, 255, 0.4); */
     }
 
-    /* 5. Qiita */
+    /* Qiita */
     .qiita-icon:hover {
         border-color: #55c500;
         background: rgba(85, 197, 0, 0.05);
@@ -845,9 +841,7 @@ const friendLinks: FriendLink[] = [
         /* box-shadow: 0 0 10px rgba(62, 168, 255, 0.4); */
     }
 
-    /* =========================================
-       3. 最新の記事リスト (Post Grid)
-       ========================================= */
+    /* 3. 最新の記事リスト */
     .recent-posts {
         margin: 4rem 0;
     }
