@@ -1,5 +1,5 @@
 ---
-import { Twitter, Github, Rocket, MessageCircle } from 'lucide-astro';
+import { Twitter, Github, Rocket, MessageCircle } from "lucide-astro";
 
 const today = new Date();
 ---
@@ -7,43 +7,103 @@ const today = new Date();
 <footer>
     <div class="footer-container">
         <div class="social-links">
-            <a href="https://twitter.com/ToraMutton" target="_blank" rel="noopener noreferrer" aria-label="Daily">
+            <a
+                href="https://twitter.com/ToraMutton"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Daily"
+            >
                 <MessageCircle size={20} />
             </a>
-            
-            <a href="https://twitter.com/ToraMutton_tech" target="_blank" rel="noopener noreferrer" aria-label="Tech">
+
+            <a
+                href="https://twitter.com/Tr3t_s"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Tech"
+            >
                 <Twitter size={20} />
             </a>
-            
-            <a href="https://github.com/ToraMutton" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+
+            <a
+                href="https://github.com/ToraMutton"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="GitHub"
+            >
                 <Github size={20} />
             </a>
-            
-            <a href="https://note.com/toramutton" target="_blank" rel="noopener noreferrer" aria-label="Note">
-                <svg role="img" viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
-                   <path d="M0 .279c4.623 0 10.953-.235 15.498-.117 6.099.156 8.39 2.813 8.468 9.374.077 3.71 0 14.335 0 14.335h-6.598c0-9.296.04-10.83 0-13.759-.078-2.578-.814-3.807-2.795-4.041-2.097-.235-7.975-.04-7.975-.04v17.84H0Z" />
+
+            <a
+                href="https://note.com/toramutton"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Note"
+            >
+                <svg
+                    role="img"
+                    viewBox="0 0 24 24"
+                    width="15"
+                    height="15"
+                    fill="currentColor"
+                >
+                    <path
+                        d="M0 .279c4.623 0 10.953-.235 15.498-.117 6.099.156 8.39 2.813 8.468 9.374.077 3.71 0 14.335 0 14.335h-6.598c0-9.296.04-10.83 0-13.759-.078-2.578-.814-3.807-2.795-4.041-2.097-.235-7.975-.04-7.975-.04v17.84H0Z"
+                    ></path>
                 </svg>
             </a>
 
-            <a href="https://zenn.dev/toramutton" target="_blank" rel="noopener noreferrer" aria-label="Zenn">
-                <svg role="img" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                    <path d="M.264 23.771h4.984c.264 0 .498-.147.645-.352L19.614.874c.176-.293-.029-.645-.381-.645h-4.72c-.235 0-.44.117-.557.323L.03 23.361c-.088.176.029.41.234.41zM17.445 23.419l6.479-10.408c.205-.323-.029-.733-.41-.733h-4.691c-.176 0-.352.088-.44.235l-6.655 10.643c-.176.264.029.616.352.616h4.779c.234-.001.468-.118.586-.353z" />
+            <a
+                href="https://zenn.dev/toramutton"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Zenn"
+            >
+                <svg
+                    role="img"
+                    viewBox="0 0 24 24"
+                    width="20"
+                    height="20"
+                    fill="currentColor"
+                >
+                    <path
+                        d="M.264 23.771h4.984c.264 0 .498-.147.645-.352L19.614.874c.176-.293-.029-.645-.381-.645h-4.72c-.235 0-.44.117-.557.323L.03 23.361c-.088.176.029.41.234.41zM17.445 23.419l6.479-10.408c.205-.323-.029-.733-.41-.733h-4.691c-.176 0-.352.088-.44.235l-6.655 10.643c-.176.264.029.616.352.616h4.779c.234-.001.468-.118.586-.353z"
+                    ></path>
                 </svg>
             </a>
 
-            <a href="https://qiita.com/ToraMutton" target="_blank" rel="noopener noreferrer" aria-label="Qiita">
-                <svg role="img" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                    <path d="M12 0C5.3726 0 0 5.3726 0 12s5.3726 12 12 12c3.3984 0 6.4665-1.413 8.6498-3.6832-.383-.0574-.7746-.2062-1.1466-.4542-.7145-.4763-1.3486-.9263-1.6817-1.674-1.2945 1.3807-3.0532 1.835-5.1822 2.0503-4.311.4359-8.0456-1.4893-8.4979-6.2996-.1922-2.045.2628-3.989 1.1804-5.582l-.5342-2.1009c-.0862-.3652.2498-.7126.6057-.6262l1.8456.448c1.0974-.9012 2.4249-1.49 3.8892-1.638 1.2526-.1267 2.467.0834 3.571.5624l1.7348-1.0494c.3265-.1974.7399.0257.7711.4164l.1 2.4747v.0002c1.334 1.4084 2.2424 3.3319 2.4478 5.516.116 1.2339-.012 2.1776-.339 3.078-.1531.4215-.1992.7778.0776 1.1305.2674.3408.6915 1.0026 1.1644.8917.7107-.1666 1.4718-.1223 1.9422.1715C23.4925 15.9525 24 14.0358 24 12c0-6.6274-5.3726-12-12-12Zm-.0727 5.727a5.2731 5.2731 0 0 0-.6146.0273c-2.2084.2233-3.9572 1.8135-4.4937 3.8484l-1.3176-.1996-.014.2589 1.2972.1407c-.0352.1497-.0643.2384-.086.3923l-1.1319.0902.0103.2025 1.1032-.088c-.0194.1713-.031.2814-.0332.4565l-1.0078.412.0495.2499.9598-.4492c.002.1339.008.2053.0207.3407.2667 2.8371 2.6364 3.3981 5.4677 3.1118 2.8312-.2863 5.0517-1.3114 4.785-4.1486-.013-.1361-.0324-.2068-.0553-.3392l1.0397.2257.0242-.229-1.0906-.207c-.0342-.1687-.0765-.271-.1264-.4327l1.1208-.1374-.0158-.2019-1.1499.1409a5.1093 5.1093 0 0 0-.1665-.4259l1.2665-.4042-.0397-.2536-1.3471.4667c-.819-1.7168-2.5002-2.8224-4.4546-2.8482Z" />
+            <a
+                href="https://qiita.com/ToraMutton"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Qiita"
+            >
+                <svg
+                    role="img"
+                    viewBox="0 0 24 24"
+                    width="20"
+                    height="20"
+                    fill="currentColor"
+                >
+                    <path
+                        d="M12 0C5.3726 0 0 5.3726 0 12s5.3726 12 12 12c3.3984 0 6.4665-1.413 8.6498-3.6832-.383-.0574-.7746-.2062-1.1466-.4542-.7145-.4763-1.3486-.9263-1.6817-1.674-1.2945 1.3807-3.0532 1.835-5.1822 2.0503-4.311.4359-8.0456-1.4893-8.4979-6.2996-.1922-2.045.2628-3.989 1.1804-5.582l-.5342-2.1009c-.0862-.3652.2498-.7126.6057-.6262l1.8456.448c1.0974-.9012 2.4249-1.49 3.8892-1.638 1.2526-.1267 2.467.0834 3.571.5624l1.7348-1.0494c.3265-.1974.7399.0257.7711.4164l.1 2.4747v.0002c1.334 1.4084 2.2424 3.3319 2.4478 5.516.116 1.2339-.012 2.1776-.339 3.078-.1531.4215-.1992.7778.0776 1.1305.2674.3408.6915 1.0026 1.1644.8917.7107-.1666 1.4718-.1223 1.9422.1715C23.4925 15.9525 24 14.0358 24 12c0-6.6274-5.3726-12-12-12Zm-.0727 5.727a5.2731 5.2731 0 0 0-.6146.0273c-2.2084.2233-3.9572 1.8135-4.4937 3.8484l-1.3176-.1996-.014.2589 1.2972.1407c-.0352.1497-.0643.2384-.086.3923l-1.1319.0902.0103.2025 1.1032-.088c-.0194.1713-.031.2814-.0332.4565l-1.0078.412.0495.2499.9598-.4492c.002.1339.008.2053.0207.3407.2667 2.8371 2.6364 3.3981 5.4677 3.1118 2.8312-.2863 5.0517-1.3114 4.785-4.1486-.013-.1361-.0324-.2068-.0553-.3392l1.0397.2257.0242-.229-1.0906-.207c-.0342-.1687-.0765-.271-.1264-.4327l1.1208-.1374-.0158-.2019-1.1499.1409a5.1093 5.1093 0 0 0-.1665-.4259l1.2665-.4042-.0397-.2536-1.3471.4667c-.819-1.7168-2.5002-2.8224-4.4546-2.8482Z"
+                    ></path>
                 </svg>
             </a>
         </div>
 
         <div class="credits">
-            <span class="copyright">&copy; {today.getFullYear()} ToraMutton</span>
+            <span class="copyright"
+                >&copy; {today.getFullYear()} ToraMutton</span
+            >
             <span class="divider">|</span>
             <span class="powered-by">
-                Built with <a href="https://astro.build" target="_blank" rel="noopener noreferrer">Astro</a>
-                <Rocket size={14} class="rocket-icon"/>
+                Built with <a
+                    href="https://astro.build"
+                    target="_blank"
+                    rel="noopener noreferrer">Astro</a
+                >
+                <Rocket size={14} class="rocket-icon" />
             </span>
         </div>
     </div>
@@ -60,7 +120,7 @@ const today = new Date();
 
     /* ライトモード調整 */
     :global(html:not(.dark)) footer {
-        background: var(--background); 
+        background: var(--background);
     }
 
     .footer-container {
@@ -84,28 +144,51 @@ const today = new Date();
         justify-content: center;
         color: var(--text-muted);
         text-decoration: none;
-        
+
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        background: rgba(0,0,0,0.03);
-        
-        transition: color 0.2s, background-color 0.2s;
+        background: rgba(0, 0, 0, 0.03);
+
+        transition:
+            color 0.2s,
+            background-color 0.2s;
     }
 
     :global(html.dark) .social-links a {
-        background: rgba(255,255,255,0.05);
+        background: rgba(255, 255, 255, 0.05);
     }
 
     /* 色設定 */
-    .social-links a[aria-label="Note"]:hover { background: #41c9b4; color: white; }
-    .social-links a[aria-label="Zenn"]:hover { background: #3ea8ff; color: white; }
-    .social-links a[aria-label="Qiita"]:hover { background: #55c500; color: white; }
+    .social-links a[aria-label="Note"]:hover {
+        background: #41c9b4;
+        color: white;
+    }
+    .social-links a[aria-label="Zenn"]:hover {
+        background: #3ea8ff;
+        color: white;
+    }
+    .social-links a[aria-label="Qiita"]:hover {
+        background: #55c500;
+        color: white;
+    }
     .social-links a[aria-label="Twitter"]:hover,
-    .social-links a[aria-label="Daily"]:hover { background: #1da1f2; color: white; }
-    .social-links a[aria-label="Tech"]:hover { background: #f59518; color: white; }
-    .social-links a[aria-label="GitHub"]:hover { background: #333; color: white; }
-    :global(html.dark) .social-links a[aria-label="GitHub"]:hover { background: #fff; color: #333; }
+    .social-links a[aria-label="Daily"]:hover {
+        background: #1da1f2;
+        color: white;
+    }
+    .social-links a[aria-label="Tech"]:hover {
+        background: #f59518;
+        color: white;
+    }
+    .social-links a[aria-label="GitHub"]:hover {
+        background: #333;
+        color: white;
+    }
+    :global(html.dark) .social-links a[aria-label="GitHub"]:hover {
+        background: #fff;
+        color: #333;
+    }
 
     /* その他共通ホバー */
     .social-links a:hover {
@@ -118,14 +201,16 @@ const today = new Date();
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        font-family: 'JetBrains Mono', monospace;
+        font-family: "JetBrains Mono", monospace;
         font-size: 0.8rem;
         color: var(--text-muted);
         flex-wrap: wrap;
         justify-content: center;
     }
 
-    .divider { opacity: 0.3; }
+    .divider {
+        opacity: 0.3;
+    }
 
     .powered-by {
         display: flex;
@@ -140,12 +225,21 @@ const today = new Date();
         transition: color 0.2s;
     }
 
-    .powered-by a:hover { color: var(--accent-blue); }
+    .powered-by a:hover {
+        color: var(--accent-blue);
+    }
 
-    .rocket-icon { color: var(--accent-yellow); }
+    .rocket-icon {
+        color: var(--accent-yellow);
+    }
 
     @media (max-width: 600px) {
-        .divider { display: none; }
-        .credits { flex-direction: column; gap: 0.3rem; }
+        .divider {
+            display: none;
+        }
+        .credits {
+            flex-direction: column;
+            gap: 0.3rem;
+        }
     }
 </style>
