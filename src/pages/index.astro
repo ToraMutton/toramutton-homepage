@@ -1,30 +1,35 @@
 ---
-import { getCollection } from 'astro:content';
+import { getCollection } from "astro:content";
 import BaseHead from "../components/BaseHead.astro";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import { SITE_TITLE, SITE_DESCRIPTION } from "../consts";
-import { Image } from 'astro:assets';
-import heroImage from '../assets/toramutton.jpg';
-import rssParser from 'rss-parser';
+import { Image } from "astro:assets";
+import heroImage from "../assets/toramutton.jpg";
+import rssParser from "rss-parser";
 import {
-    Twitter, Github, FileText, FileCode,
-    GraduationCap, Milestone, ShieldCheck,
+    Twitter,
+    Github,
+    FileText,
+    FileCode,
+    GraduationCap,
+    Milestone,
+    ShieldCheck,
     Sparkles,
-    Target, 
+    Target,
     Cpu,
     Music,
     Users,
-} from 'lucide-astro';
+} from "lucide-astro";
 
 // === 1. RSSフィード取得 ===
 const parser = new rssParser({
     customFields: {
         item: [
-            ['media:thumbnail', 'thumbnail'],
-            ['enclosure', 'enclosure'],
-        ]
-    }
+            ["media:thumbnail", "thumbnail"],
+            ["enclosure", "enclosure"],
+        ],
+    },
 });
 
 const isDev = import.meta.env.DEV;
@@ -32,80 +37,94 @@ const isDev = import.meta.env.DEV;
 const getImageUrl = (item: any) => {
     // 1. media:thumbnail
     if (item.thumbnail) {
-        return typeof item.thumbnail === 'string' ? item.thumbnail : item.thumbnail.$?.url;
+        return typeof item.thumbnail === "string"
+            ? item.thumbnail
+            : item.thumbnail.$?.url;
     }
-    
+
     // 2. enclosure
     if (item.enclosure?.url) {
         return item.enclosure.url;
     }
-    
+
     // 3. undefinedを返す
-    return undefined; 
-}
+    return undefined;
+};
 
 interface UnifiedPost {
     title: string;
     url: string;
     date: Date;
     image?: string | any;
-    source: 'local' | 'note' | 'zenn' | 'qiita';
+    source: "local" | "note" | "zenn" | "qiita";
 }
 
 // A. ローカル記事
-const localPostsRaw = await getCollection('blog');
-const localPosts = localPostsRaw.map(post => ({
+const localPostsRaw = await getCollection("blog");
+const localPosts = localPostsRaw.map((post) => ({
     title: post.data.title,
     url: `/blog/${post.id}/`,
     date: post.data.pubDate,
-    image: post.data.heroImage, 
+    image: post.data.heroImage,
     tags: post.data.tags,
-    source: 'local' as const
+    source: "local" as const,
 }));
 
 // B. Note記事
 let notePosts: UnifiedPost[] = [];
 if (!isDev) {
     try {
-        const noteFeed = await parser.parseURL('https://note.com/toramutton/rss');
+        const noteFeed = await parser.parseURL(
+            "https://note.com/toramutton/rss",
+        );
         notePosts = noteFeed.items.map((item: any) => ({
-            title: item.title || '無題',
-            url: item.link || '',
+            title: item.title || "無題",
+            url: item.link || "",
             date: new Date(item.pubDate || new Date()),
             image: getImageUrl(item),
-            source: 'note'
+            source: "note",
         }));
-    } catch (e) { console.error("Note RSS fetch failed", e); }
+    } catch (e) {
+        console.error("Note RSS fetch failed", e);
+    }
 }
 
 // C. Zenn記事
 let zennPosts: UnifiedPost[] = [];
 if (!isDev) {
     try {
-        const zennFeed = await parser.parseURL('https://zenn.dev/toramutton/feed'); 
+        const zennFeed = await parser.parseURL(
+            "https://zenn.dev/toramutton/feed",
+        );
         zennPosts = zennFeed.items.map((item: any) => ({
-            title: item.title || '無題',
-            url: item.link || '',
+            title: item.title || "無題",
+            url: item.link || "",
             date: new Date(item.pubDate || new Date()),
             image: item.enclosure?.url,
-            source: 'zenn'
+            source: "zenn",
         }));
-    } catch (e) { console.error("Zenn RSS fetch failed", e); }
+    } catch (e) {
+        console.error("Zenn RSS fetch failed", e);
+    }
 }
 
 // D. Qiita記事
 let qiitaPosts: UnifiedPost[] = [];
 if (!isDev) {
     try {
-        const qiitaFeed = await parser.parseURL('https://qiita.com/ToraMutton/feed'); 
+        const qiitaFeed = await parser.parseURL(
+            "https://qiita.com/ToraMutton/feed",
+        );
         qiitaPosts = qiitaFeed.items.map((item: any) => ({
-            title: item.title || '無題',
-            url: item.link || '',
+            title: item.title || "無題",
+            url: item.link || "",
             date: new Date(item.pubDate || new Date()),
             image: item.enclosure?.url,
-            source: 'qiita'
+            source: "qiita",
         }));
-    } catch (e) { console.error("Qiita RSS fetch failed", e); }
+    } catch (e) {
+        console.error("Qiita RSS fetch failed", e);
+    }
 }
 
 // E. 統合・ソート・抽出
@@ -121,7 +140,7 @@ const missions = [
 ];
 
 const today = new Date();
-const missionData = missions.map(m => {
+const missionData = missions.map((m) => {
     const target = new Date(m.date);
     const diff = target.getTime() - today.getTime();
     const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
@@ -138,28 +157,28 @@ const friendLinks: FriendLink[] = [
     {
         name: "しおり🔖のホームページ",
         url: "https://shiori-02-14.github.io/Homepage/index.html",
-        description: "推し愛に溢れる最高のサイト"
+        description: "推し愛に溢れる最高のサイト",
     },
     {
         name: "しばかぷメモ",
         url: "https://memo.shibadogcap.com/",
-        description: "クレーンゲームと自作キーボード熱血"
+        description: "クレーンゲームと自作キーボード熱血",
     },
     {
         name: "綿糸てせ",
         url: "https://ctes091x.net/",
-        description: "PGP Keyが置いてあります"
+        description: "PGP Keyが置いてあります",
     },
     {
         name: "ThunFaskyのサイト",
         url: "https://thunfasky.com/",
-        description: "PC構成の恩師であり、1クラのキチガイ担当"
+        description: "PC構成の恩師であり、1クラのキチガイ担当",
     },
     {
         name: "Cotton's website",
         url: "https://cotton7.me/",
-        description: "同じ.me派閥でうれしい"
-    }
+        description: "同じ.me派閥でうれしい",
+    },
 ];
 ---
 
@@ -174,15 +193,19 @@ const friendLinks: FriendLink[] = [
             <section class="hero">
                 <div class="hero-container">
                     <div class="hero-image-container">
-                        <Image src={heroImage} alt="トラマトのアイコン" class="hero-img" />
+                        <Image
+                            src={heroImage}
+                            alt="トラマトのアイコン"
+                            class="hero-img"
+                        />
                     </div>
-                    
+
                     <div class="hero-text-group">
                         <h1 class="hero-title">トラマトのホームページ</h1>
                         <p class="tagline">UEC25 I 類</p>
-                        
+
                         <p class="hero-desc">
-                            いろんな技術を気ままに勉強中<br>
+                            いろんな技術を気ままに勉強中<br />
                             楽しく生きる！
                         </p>
 
@@ -193,30 +216,87 @@ const friendLinks: FriendLink[] = [
                         </div>
 
                         <div class="social-links">
-                            <a href="https://twitter.com/ToraMutton" target="_blank" rel="noopener noreferrer" class="social-btn twitter-icon">
-                                <Twitter size={18} /> <span>Daily</span>
+                            <a
+                                href="https://twitter.com/ToraMutton"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="social-btn twitter-icon"
+                            >
+                                <Twitter size={18} />
+                                <span>Daily</span>
                             </a>
-                            <a href="https://twitter.com/ToraMutton_tech" target="_blank" rel="noopener noreferrer" class="social-btn twitter-tech-icon">
-                                <Twitter size={18} /> <span>Tech</span>
+                            <a
+                                href="https://twitter.com/Tr3t_s"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="social-btn twitter-tech-icon"
+                            >
+                                <Twitter size={18} />
+                                <span>Tech</span>
                             </a>
-                            <a href="https://github.com/ToraMutton" target="_blank" rel="noopener noreferrer" class="social-btn github-icon">
-                                <Github size={18} /> <span>GitHub</span>
+                            <a
+                                href="https://github.com/ToraMutton"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="social-btn github-icon"
+                            >
+                                <Github size={18} />
+                                <span>GitHub</span>
                             </a>
-                            <a href="https://note.com/toramutton" target="_blank" rel="noopener noreferrer" class="social-btn note-icon">
-                                <svg role="img" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                                    <path d="M0 .279c4.623 0 10.953-.235 15.498-.117 6.099.156 8.39 2.813 8.468 9.374.077 3.71 0 14.335 0 14.335h-6.598c0-9.296.04-10.83 0-13.759-.078-2.578-.814-3.807-2.795-4.041-2.097-.235-7.975-.04-7.975-.04v17.84H0Z" />
+                            <a
+                                href="https://note.com/toramutton"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="social-btn note-icon"
+                            >
+                                <svg
+                                    role="img"
+                                    viewBox="0 0 24 24"
+                                    width="14"
+                                    height="14"
+                                    fill="currentColor"
+                                >
+                                    <path
+                                        d="M0 .279c4.623 0 10.953-.235 15.498-.117 6.099.156 8.39 2.813 8.468 9.374.077 3.71 0 14.335 0 14.335h-6.598c0-9.296.04-10.83 0-13.759-.078-2.578-.814-3.807-2.795-4.041-2.097-.235-7.975-.04-7.975-.04v17.84H0Z"
+                                    ></path>
                                 </svg>
                                 <span>note</span>
                             </a>
-                            <a href="https://zenn.dev/toramutton" target="_blank" rel="noopener noreferrer" class="social-btn zenn-icon">
-                                <svg role="img" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                                    <path d="M.264 23.771h4.984c.264 0 .498-.147.645-.352L19.614.874c.176-.293-.029-.645-.381-.645h-4.72c-.235 0-.44.117-.557.323L.03 23.361c-.088.176.029.41.234.41zM17.445 23.419l6.479-10.408c.205-.323-.029-.733-.41-.733h-4.691c-.176 0-.352.088-.44.235l-6.655 10.643c-.176.264.029.616.352.616h4.779c.234-.001.468-.118.586-.353z" />
+                            <a
+                                href="https://zenn.dev/toramutton"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="social-btn zenn-icon"
+                            >
+                                <svg
+                                    role="img"
+                                    viewBox="0 0 24 24"
+                                    width="18"
+                                    height="18"
+                                    fill="currentColor"
+                                >
+                                    <path
+                                        d="M.264 23.771h4.984c.264 0 .498-.147.645-.352L19.614.874c.176-.293-.029-.645-.381-.645h-4.72c-.235 0-.44.117-.557.323L.03 23.361c-.088.176.029.41.234.41zM17.445 23.419l6.479-10.408c.205-.323-.029-.733-.41-.733h-4.691c-.176 0-.352.088-.44.235l-6.655 10.643c-.176.264.029.616.352.616h4.779c.234-.001.468-.118.586-.353z"
+                                    ></path>
                                 </svg>
                                 <span>Zenn</span>
                             </a>
-                            <a href="https://qiita.com/ToraMutton" target="_blank" rel="noopener noreferrer" class="social-btn qiita-icon">
-                                <svg role="img" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                                    <path d="M12 0C5.3726 0 0 5.3726 0 12s5.3726 12 12 12c3.3984 0 6.4665-1.413 8.6498-3.6832-.383-.0574-.7746-.2062-1.1466-.4542-.7145-.4763-1.3486-.9263-1.6817-1.674-1.2945 1.3807-3.0532 1.835-5.1822 2.0503-4.311.4359-8.0456-1.4893-8.4979-6.2996-.1922-2.045.2628-3.989 1.1804-5.582l-.5342-2.1009c-.0862-.3652.2498-.7126.6057-.6262l1.8456.448c1.0974-.9012 2.4249-1.49 3.8892-1.638 1.2526-.1267 2.467.0834 3.571.5624l1.7348-1.0494c.3265-.1974.7399.0257.7711.4164l.1 2.4747v.0002c1.334 1.4084 2.2424 3.3319 2.4478 5.516.116 1.2339-.012 2.1776-.339 3.078-.1531.4215-.1992.7778.0776 1.1305.2674.3408.6915 1.0026 1.1644.8917.7107-.1666 1.4718-.1223 1.9422.1715C23.4925 15.9525 24 14.0358 24 12c0-6.6274-5.3726-12-12-12Zm-.0727 5.727a5.2731 5.2731 0 0 0-.6146.0273c-2.2084.2233-3.9572 1.8135-4.4937 3.8484l-1.3176-.1996-.014.2589 1.2972.1407c-.0352.1497-.0643.2384-.086.3923l-1.1319.0902.0103.2025 1.1032-.088c-.0194.1713-.031.2814-.0332.4565l-1.0078.412.0495.2499.9598-.4492c.002.1339.008.2053.0207.3407.2667 2.8371 2.6364 3.3981 5.4677 3.1118 2.8312-.2863 5.0517-1.3114 4.785-4.1486-.013-.1361-.0324-.2068-.0553-.3392l1.0397.2257.0242-.229-1.0906-.207c-.0342-.1687-.0765-.271-.1264-.4327l1.1208-.1374-.0158-.2019-1.1499.1409a5.1093 5.1093 0 0 0-.1665-.4259l1.2665-.4042-.0397-.2536-1.3471.4667c-.819-1.7168-2.5002-2.8224-4.4546-2.8482Z" />
+                            <a
+                                href="https://qiita.com/ToraMutton"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="social-btn qiita-icon"
+                            >
+                                <svg
+                                    role="img"
+                                    viewBox="0 0 24 24"
+                                    width="18"
+                                    height="18"
+                                    fill="currentColor"
+                                >
+                                    <path
+                                        d="M12 0C5.3726 0 0 5.3726 0 12s5.3726 12 12 12c3.3984 0 6.4665-1.413 8.6498-3.6832-.383-.0574-.7746-.2062-1.1466-.4542-.7145-.4763-1.3486-.9263-1.6817-1.674-1.2945 1.3807-3.0532 1.835-5.1822 2.0503-4.311.4359-8.0456-1.4893-8.4979-6.2996-.1922-2.045.2628-3.989 1.1804-5.582l-.5342-2.1009c-.0862-.3652.2498-.7126.6057-.6262l1.8456.448c1.0974-.9012 2.4249-1.49 3.8892-1.638 1.2526-.1267 2.467.0834 3.571.5624l1.7348-1.0494c.3265-.1974.7399.0257.7711.4164l.1 2.4747v.0002c1.334 1.4084 2.2424 3.3319 2.4478 5.516.116 1.2339-.012 2.1776-.339 3.078-.1531.4215-.1992.7778.0776 1.1305.2674.3408.6915 1.0026 1.1644.8917.7107-.1666 1.4718-.1223 1.9422.1715C23.4925 15.9525 24 14.0358 24 12c0-6.6274-5.3726-12-12-12Zm-.0727 5.727a5.2731 5.2731 0 0 0-.6146.0273c-2.2084.2233-3.9572 1.8135-4.4937 3.8484l-1.3176-.1996-.014.2589 1.2972.1407c-.0352.1497-.0643.2384-.086.3923l-1.1319.0902.0103.2025 1.1032-.088c-.0194.1713-.031.2814-.0332.4565l-1.0078.412.0495.2499.9598-.4492c.002.1339.008.2053.0207.3407.2667 2.8371 2.6364 3.3981 5.4677 3.1118 2.8312-.2863 5.0517-1.3114 4.785-4.1486-.013-.1361-.0324-.2068-.0553-.3392l1.0397.2257.0242-.229-1.0906-.207c-.0342-.1687-.0765-.271-.1264-.4327l1.1208-.1374-.0158-.2019-1.1499.1409a5.1093 5.1093 0 0 0-.1665-.4259l1.2665-.4042-.0397-.2536-1.3471.4667c-.819-1.7168-2.5002-2.8224-4.4546-2.8482Z"
+                                    ></path>
                                 </svg>
                                 <span>Qiita</span>
                             </a>
@@ -231,33 +311,51 @@ const friendLinks: FriendLink[] = [
                     <a href="/blog" class="view-all">すべての記事を見る →</a>
                 </div>
                 <div class="post-grid">
-                    {latestPosts.map((post) => (
-                        <a href={post.url} class="post-card-mini" target={post.source !== 'local' ? "_blank" : "_self"}>
-                            <div class="post-thumb">
-                                {/* 1. 画像を先に */}
-                                {post.source === 'local' && typeof post.image === 'object' ? (
-                                    <Image src={post.image} alt="" />
-                                ) : post.image && typeof post.image === 'string' ? (
-                                    <img src={post.image} alt="" loading="lazy" />
-                                ) : (
-                                    <div class="no-image-placeholder">No Image</div>
-                                )}
+                    {
+                        latestPosts.map((post) => (
+                            <a
+                                href={post.url}
+                                class="post-card-mini"
+                                target={
+                                    post.source !== "local" ? "_blank" : "_self"
+                                }
+                            >
+                                <div class="post-thumb">
+                                    {/* 1. 画像を先に */}
+                                    {post.source === "local" &&
+                                    typeof post.image === "object" ? (
+                                        <Image src={post.image} alt="" />
+                                    ) : post.image &&
+                                      typeof post.image === "string" ? (
+                                        <img
+                                            src={post.image}
+                                            alt=""
+                                            loading="lazy"
+                                        />
+                                    ) : (
+                                        <div class="no-image-placeholder">
+                                            No Image
+                                        </div>
+                                    )}
 
-                                {/* 2. バッジを後に */}
-                                <span class={`badge badge-${post.source}`}>{post.source.toUpperCase()}</span>
-                            </div>
-                            <div class="post-info">
-                                <time datetime={post.date.toISOString()}>
-                                    {post.date.toLocaleDateString('ja-JP', {
-                                        year: 'numeric',
-                                        month: '2-digit',
-                                        day: '2-digit',
-                                    })}
-                                </time>
-                                <h3 class="post-title">{post.title}</h3>
-                            </div>
-                        </a>
-                    ))}
+                                    {/* 2. バッジを後に */}
+                                    <span class={`badge badge-${post.source}`}>
+                                        {post.source.toUpperCase()}
+                                    </span>
+                                </div>
+                                <div class="post-info">
+                                    <time datetime={post.date.toISOString()}>
+                                        {post.date.toLocaleDateString("ja-JP", {
+                                            year: "numeric",
+                                            month: "2-digit",
+                                            day: "2-digit",
+                                        })}
+                                    </time>
+                                    <h3 class="post-title">{post.title}</h3>
+                                </div>
+                            </a>
+                        ))
+                    }
                 </div>
             </section>
 
@@ -268,20 +366,32 @@ const friendLinks: FriendLink[] = [
                         <h3>Countdown</h3>
                     </div>
                     <div class="mission-list">
-                        {missionData.map((m) => (
-                            <div class="mission-item js-mission-item" data-date={m.date}>
-                                <div class="mission-info">
-                                    <span class="mission-icon">
-                                        <m.icon size={20} strokeWidth={2.5} />
-                                    </span>
-                                    <span class="mission-title">{m.title}</span>
+                        {
+                            missionData.map((m) => (
+                                <div
+                                    class="mission-item js-mission-item"
+                                    data-date={m.date}
+                                >
+                                    <div class="mission-info">
+                                        <span class="mission-icon">
+                                            <m.icon
+                                                size={20}
+                                                strokeWidth={2.5}
+                                            />
+                                        </span>
+                                        <span class="mission-title">
+                                            {m.title}
+                                        </span>
+                                    </div>
+                                    <div class="mission-days">
+                                        <span class="days-num js-days-num">
+                                            {m.days}
+                                        </span>
+                                        <span class="days-unit">days</span>
+                                    </div>
                                 </div>
-                                <div class="mission-days">
-                                    <span class="days-num js-days-num">{m.days}</span>
-                                    <span class="days-unit">days</span>
-                                </div>
-                            </div>
-                        ))}
+                            ))
+                        }
                     </div>
                 </div>
 
@@ -291,8 +401,7 @@ const friendLinks: FriendLink[] = [
                         <h3>My Desktop PC</h3>
                     </div>
                     <p class="card-desc">
-                        Ryzen 7 7700 + Radeon RX 9060 XT 16GB 構成。
-                        2026/02/13~
+                        Ryzen 7 7700 + Radeon RX 9060 XT 16GB 構成。 2026/02/13~
                     </p>
                     <div class="dedicated-link">
                         <a href="/about#trapezium">View Details →</a>
@@ -317,15 +426,24 @@ const friendLinks: FriendLink[] = [
                     </div>
 
                     <div class="link-list">
-                        {friendLinks.map((link) => (
-                            <a href={link.url} target="_blank" rel="noopener noreferrer" class="link-item">
-                                <span class="link-name">
-                                    {link.name}
-                                    <span class="external-icon">↗</span>
-                                </span>
-                                <span class="link-desc">{link.description}</span>
-                            </a>
-                        ))}
+                        {
+                            friendLinks.map((link) => (
+                                <a
+                                    href={link.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="link-item"
+                                >
+                                    <span class="link-name">
+                                        {link.name}
+                                        <span class="external-icon">↗</span>
+                                    </span>
+                                    <span class="link-desc">
+                                        {link.description}
+                                    </span>
+                                </a>
+                            ))
+                        }
                     </div>
                 </div>
             </div>
@@ -335,14 +453,16 @@ const friendLinks: FriendLink[] = [
                     <Music class="icon-secondary" size={24} />
                     <h3>Today's Music</h3>
                 </div>
-                
+
                 <div id="song-display" class="song-container">
                     <p class="song-title" id="song-title">Loading...</p>
                     <p class="song-year-wrapper">
-                        released in <span id="song-year" class="song-year">----</span>
+                        released in <span id="song-year" class="song-year"
+                            >----</span
+                        >
                     </p>
                 </div>
-                
+
                 <button id="next-song-btn" class="secondary-btn">
                     リロード <span class="arrow">→</span>
                 </button>
@@ -350,231 +470,236 @@ const friendLinks: FriendLink[] = [
 
             <script>
                 // 全曲データベース
-                document.addEventListener('astro:page-load', () => {
-                const songs = [
-            // =====================
-            // 2012
-            // =====================
-            { title: "街", year: "2012" },
-            { title: "ゴーゴー幽霊船", year: "2012" },
-            { title: "駄菓子屋商売", year: "2012" },
-            { title: "caribou", year: "2012" },
-            { title: "あめふり婦人", year: "2012" },
-            { title: "ディスコバルーン", year: "2012" },
-            { title: "vivi", year: "2012" },
-            { title: "トイパトリオット", year: "2012" },
-            { title: "恋と病熱", year: "2012" },
-            { title: "Black Sheep", year: "2012" },
-            { title: "乾涸びたバスひとつ", year: "2012" },
-            { title: "首なし閑古鳥", year: "2012" },
-            { title: "心像放映", year: "2012" },
-            { title: "抄本", year: "2012" },
+                document.addEventListener("astro:page-load", () => {
+                    const songs = [
+                        // =====================
+                        // 2012
+                        // =====================
+                        { title: "街", year: "2012" },
+                        { title: "ゴーゴー幽霊船", year: "2012" },
+                        { title: "駄菓子屋商売", year: "2012" },
+                        { title: "caribou", year: "2012" },
+                        { title: "あめふり婦人", year: "2012" },
+                        { title: "ディスコバルーン", year: "2012" },
+                        { title: "vivi", year: "2012" },
+                        { title: "トイパトリオット", year: "2012" },
+                        { title: "恋と病熱", year: "2012" },
+                        { title: "Black Sheep", year: "2012" },
+                        { title: "乾涸びたバスひとつ", year: "2012" },
+                        { title: "首なし閑古鳥", year: "2012" },
+                        { title: "心像放映", year: "2012" },
+                        { title: "抄本", year: "2012" },
 
-            // =====================
-            // 2013
-            // =====================
-            { title: "サンタマリア", year: "2013" },
-            { title: "百鬼夜行", year: "2013" },
-            { title: "笛吹けども踊らず", year: "2013" },
+                        // =====================
+                        // 2013
+                        // =====================
+                        { title: "サンタマリア", year: "2013" },
+                        { title: "百鬼夜行", year: "2013" },
+                        { title: "笛吹けども踊らず", year: "2013" },
 
-            { title: "MAD HEAD LOVE", year: "2013" },
-            { title: "ポッピンアパシー", year: "2013" },
-            { title: "鳥にでもなりたい", year: "2013" }, 
+                        { title: "MAD HEAD LOVE", year: "2013" },
+                        { title: "ポッピンアパシー", year: "2013" },
+                        { title: "鳥にでもなりたい", year: "2013" },
 
-            // =====================
-            // 2014
-            // =====================
-            { title: "リビングデッド・ユース", year: "2014" }, 
-            { title: "WOODEN DOLL", year: "2014" },
+                        // =====================
+                        // 2014
+                        // =====================
+                        { title: "リビングデッド・ユース", year: "2014" },
+                        { title: "WOODEN DOLL", year: "2014" },
 
-            { title: "アイネクライネ", year: "2014" },
+                        { title: "アイネクライネ", year: "2014" },
 
-            { title: "メランコリーキッチン", year: "2014" },
-            { title: "花に嵐", year: "2014" },
-            { title: "海と山椒魚", year: "2014" },
-            { title: "しとど晴天大迷惑", year: "2014" },
-            { title: "眼福", year: "2014" },
-            { title: "ホラ吹き猫野郎", year: "2014" },
-            { title: "TOXIC BOY", year: "2014" },
-            { title: "KARMA CITY", year: "2014" },
-            { title: "ドーナツホール", year: "2014" },
+                        { title: "メランコリーキッチン", year: "2014" },
+                        { title: "花に嵐", year: "2014" },
+                        { title: "海と山椒魚", year: "2014" },
+                        { title: "しとど晴天大迷惑", year: "2014" },
+                        { title: "眼福", year: "2014" },
+                        { title: "ホラ吹き猫野郎", year: "2014" },
+                        { title: "TOXIC BOY", year: "2014" },
+                        { title: "KARMA CITY", year: "2014" },
+                        { title: "ドーナツホール", year: "2014" },
 
-            // =====================
-            // 2015
-            // =====================
-            { title: "アンビリーバーズ", year: "2015" },
-            { title: "フローライト", year: "2015" },
-            { title: "再上映", year: "2015" },
-            { title: "Flowerwall", year: "2015" },
-            { title: "あたしはゆうれい", year: "2015" },
-            { title: "ウィルオウィスプ", year: "2015" },
-            { title: "Undercover", year: "2015" },
-            { title: "Neon Sign", year: "2015" },
-            { title: "メトロノーム", year: "2015" },
-            { title: "雨の街路に夜光蟲", year: "2015" },
-            { title: "シンデレラグレイ", year: "2015" },
-            { title: "ミラージュソング", year: "2015" },
-            { title: "ホープランド", year: "2015" },
-            { title: "Blue Jasmine", year: "2015" }, 
+                        // =====================
+                        // 2015
+                        // =====================
+                        { title: "アンビリーバーズ", year: "2015" },
+                        { title: "フローライト", year: "2015" },
+                        { title: "再上映", year: "2015" },
+                        { title: "Flowerwall", year: "2015" },
+                        { title: "あたしはゆうれい", year: "2015" },
+                        { title: "ウィルオウィスプ", year: "2015" },
+                        { title: "Undercover", year: "2015" },
+                        { title: "Neon Sign", year: "2015" },
+                        { title: "メトロノーム", year: "2015" },
+                        { title: "雨の街路に夜光蟲", year: "2015" },
+                        { title: "シンデレラグレイ", year: "2015" },
+                        { title: "ミラージュソング", year: "2015" },
+                        { title: "ホープランド", year: "2015" },
+                        { title: "Blue Jasmine", year: "2015" },
 
-            { title: "懺悔の街", year: "2015"},
-            { title: "ペトリコール", year: "2015"},
+                        { title: "懺悔の街", year: "2015" },
+                        { title: "ペトリコール", year: "2015" },
 
-            { title: "旅人電燈", year: "2015"},
-            { title: "こころにくだもの", year: "2015"},
+                        { title: "旅人電燈", year: "2015" },
+                        { title: "こころにくだもの", year: "2015" },
 
-            // =====================
-            // 2016
-            // =====================
-            { title: "LOSER", year: "2016" },
-            { title: "ナンバーナイン", year: "2016" },
-            { title: "amen", year: "2016" }, 
+                        // =====================
+                        // 2016
+                        // =====================
+                        { title: "LOSER", year: "2016" },
+                        { title: "ナンバーナイン", year: "2016" },
+                        { title: "amen", year: "2016" },
 
-            { title: "ララバイさよなら", year: "2017"},
-            { title: "翡翠の狼", year: "2017"},
+                        { title: "ララバイさよなら", year: "2017" },
+                        { title: "翡翠の狼", year: "2017" },
 
-            { title: "Neighbourhood", year: "2017"},
-            { title: "ゆめくいしょうじょ", year: "2017"},
+                        { title: "Neighbourhood", year: "2017" },
+                        { title: "ゆめくいしょうじょ", year: "2017" },
 
-            // =====================
-            // 2017
-            // =====================
-            { title: "飛燕", year: "2017" },
-            { title: "ピースサイン", year: "2017" },
-            { title: "砂の惑星", year: "2017" },
-            { title: "orion", year: "2017" },
-            { title: "かいじゅうのマーチ", year: "2017" },
-            { title: "Moonlight", year: "2017" },
-            { title: "春雷", year: "2017" },
-            { title: "fogbound", year: "2017" },
-            { title: "爱丽丝", year: "2017" },
-            { title: "Nighthawks", year: "2017" },
-            { title: "打上花火", year: "2017" },
-            { title: "灰色と青", year: "2017" },
-            
+                        // =====================
+                        // 2017
+                        // =====================
+                        { title: "飛燕", year: "2017" },
+                        { title: "ピースサイン", year: "2017" },
+                        { title: "砂の惑星", year: "2017" },
+                        { title: "orion", year: "2017" },
+                        { title: "かいじゅうのマーチ", year: "2017" },
+                        { title: "Moonlight", year: "2017" },
+                        { title: "春雷", year: "2017" },
+                        { title: "fogbound", year: "2017" },
+                        { title: "爱丽丝", year: "2017" },
+                        { title: "Nighthawks", year: "2017" },
+                        { title: "打上花火", year: "2017" },
+                        { title: "灰色と青", year: "2017" },
 
-            // =====================
-            // 2018
-            // =====================
-            { title: "Lemon", year: "2018" },
-            { title: "クランベリーとパンケーキ", year: "2018" },
-            { title: "Paper Flower", year: "2018" },
+                        // =====================
+                        // 2018
+                        // =====================
+                        { title: "Lemon", year: "2018" },
+                        { title: "クランベリーとパンケーキ", year: "2018" },
+                        { title: "Paper Flower", year: "2018" },
 
-            { title: "Flamingo", year: "2018" },
-            { title: "TEENAGE RIOT", year: "2018" },
-            { title: "ごめんね", year: "2018" }, 
+                        { title: "Flamingo", year: "2018" },
+                        { title: "TEENAGE RIOT", year: "2018" },
+                        { title: "ごめんね", year: "2018" },
 
-            // =====================
-            // 2019
-            // =====================
-            { title: "馬と鹿", year: "2019" },
-            { title: "海の幽霊", year: "2019" },
-            { title: "でしょましょ", year: "2019" },
+                        // =====================
+                        // 2019
+                        // =====================
+                        { title: "馬と鹿", year: "2019" },
+                        { title: "海の幽霊", year: "2019" },
+                        { title: "でしょましょ", year: "2019" },
 
-            // =====================
-            // 2020
-            // =====================
-            { title: "カムパネルラ", year: "2020" },
-            { title: "感電", year: "2020" },
-            { title: "PLACEBO ＋ 野田洋次郎", year: "2020" },
-            { title: "パプリカ", year: "2020" },
-            { title: "優しい人", year: "2020" },
-            { title: "まちがいさがし", year: "2020" },
-            { title: "ひまわり", year: "2020" },
-            { title: "迷える羊", year: "2020" },
-            { title: "Décolleté", year: "2020" },
-            { title: "カナリヤ", year: "2020" }, 
+                        // =====================
+                        // 2020
+                        // =====================
+                        { title: "カムパネルラ", year: "2020" },
+                        { title: "感電", year: "2020" },
+                        { title: "PLACEBO ＋ 野田洋次郎", year: "2020" },
+                        { title: "パプリカ", year: "2020" },
+                        { title: "優しい人", year: "2020" },
+                        { title: "まちがいさがし", year: "2020" },
+                        { title: "ひまわり", year: "2020" },
+                        { title: "迷える羊", year: "2020" },
+                        { title: "Décolleté", year: "2020" },
+                        { title: "カナリヤ", year: "2020" },
 
-            { title: "カイト", year: "2019"},
+                        { title: "カイト", year: "2019" },
 
-            // =====================
-            // 2021–2023
-            // =====================
-            { title: "Pale Blue", year: "2021" },
-            { title: "ゆめうつつ", year: "2021" },
-            { title: "死神", year: "2021"},
+                        // =====================
+                        // 2021–2023
+                        // =====================
+                        { title: "Pale Blue", year: "2021" },
+                        { title: "ゆめうつつ", year: "2021" },
+                        { title: "死神", year: "2021" },
 
-            { title: "POP SONG", year: "2022" },
-            { title: "M八七", year: "2022" },
-            { title: "KICK BACK", year: "2022" },
+                        { title: "POP SONG", year: "2022" },
+                        { title: "M八七", year: "2022" },
+                        { title: "KICK BACK", year: "2022" },
 
-            { title: "LADY", year: "2023" },
-            { title: "月を見ていた", year: "2023" },
-            { title: "地球儀", year: "2023" },
+                        { title: "LADY", year: "2023" },
+                        { title: "月を見ていた", year: "2023" },
+                        { title: "地球儀", year: "2023" },
 
-            // =====================
-            // 2024
-            // =====================
-            { title: "RED OUT", year: "2024" },
-            { title: "マルゲリータ ＋ アイナ・ジ・エンド", year: "2024" },
-            { title: "毎日", year: "2024" },
-            { title: "さよーならまたいつか！", year: "2024" },
-            { title: "とまれみよ", year: "2024" },
-            { title: "LENS FLARE", year: "2024" },
-            { title: "がらくた", year: "2024" },
-            { title: "YELLOW GHOST", year: "2024" },
-            { title: "POST HUMAN", year: "2024" },
-            { title: "LOST CORNER", year: "2024" },
-            { title: "おはよう", year: "2024" },
+                        // =====================
+                        // 2024
+                        // =====================
+                        { title: "RED OUT", year: "2024" },
+                        {
+                            title: "マルゲリータ ＋ アイナ・ジ・エンド",
+                            year: "2024",
+                        },
+                        { title: "毎日", year: "2024" },
+                        { title: "さよーならまたいつか！", year: "2024" },
+                        { title: "とまれみよ", year: "2024" },
+                        { title: "LENS FLARE", year: "2024" },
+                        { title: "がらくた", year: "2024" },
+                        { title: "YELLOW GHOST", year: "2024" },
+                        { title: "POST HUMAN", year: "2024" },
+                        { title: "LOST CORNER", year: "2024" },
+                        { title: "おはよう", year: "2024" },
 
-            { title: "Azalea", year: "2024" },
+                        { title: "Azalea", year: "2024" },
 
-            // =====================
-            // 2025
-            // =====================
-            { title: "Plazma", year: "2025" },
-            { title: "BOW AND ARROW", year: "2025" },
-            { title: "IRIS OUT", year: "2025" },
-            { title: "JANE DOE", year: "2025" },
-            { title: "1991", year: "2025" },
-                ];
-                
-                // カウントダウン処理
-                const missionItems = document.querySelectorAll<HTMLElement>('.js-mission-item');
+                        // =====================
+                        // 2025
+                        // =====================
+                        { title: "Plazma", year: "2025" },
+                        { title: "BOW AND ARROW", year: "2025" },
+                        { title: "IRIS OUT", year: "2025" },
+                        { title: "JANE DOE", year: "2025" },
+                        { title: "1991", year: "2025" },
+                    ];
 
-                // 今日の日付
-                const now = new Date();
-                now.setHours(0, 0, 0, 0);
+                    // カウントダウン処理
+                    const missionItems =
+                        document.querySelectorAll<HTMLElement>(
+                            ".js-mission-item",
+                        );
 
-                missionItems.forEach(item => {
-                    const targetDateStr = item.dataset.date;
-                    if (!targetDateStr) return;
+                    // 今日の日付
+                    const now = new Date();
+                    now.setHours(0, 0, 0, 0);
 
-                    const target = new Date(targetDateStr);
-                    target.setHours(0, 0, 0, 0);
+                    missionItems.forEach((item) => {
+                        const targetDateStr = item.dataset.date;
+                        if (!targetDateStr) return;
 
-                    const diff = target.getTime() - now.getTime();
-                    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+                        const target = new Date(targetDateStr);
+                        target.setHours(0, 0, 0, 0);
 
-                    const numEl = item.querySelector<HTMLElement>('.js-days-num');
-                    if (numEl) {
-                        numEl.innerText = days.toString();
+                        const diff = target.getTime() - now.getTime();
+                        const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+                        const numEl =
+                            item.querySelector<HTMLElement>(".js-days-num");
+                        if (numEl) {
+                            numEl.innerText = days.toString();
+                        }
+                    });
+
+                    const titleEl = document.getElementById("song-title");
+                    const yearEl = document.getElementById("song-year");
+                    const btn = document.getElementById("next-song-btn");
+
+                    function updateSong() {
+                        if (!titleEl || !yearEl) return;
+                        const randomSong =
+                            songs[Math.floor(Math.random() * songs.length)];
+                        titleEl.innerText = randomSong.title;
+                        yearEl.innerText = randomSong.year;
+
+                        titleEl.classList.remove("fade-in");
+                        void titleEl.offsetWidth; // リフロー
+                        titleEl.classList.add("fade-in");
                     }
+
+                    btn?.addEventListener("click", updateSong);
+                    updateSong();
                 });
 
-
-                const titleEl = document.getElementById('song-title');
-                const yearEl = document.getElementById('song-year');
-                const btn = document.getElementById('next-song-btn');
-
-                function updateSong() {
-                    if (!titleEl || !yearEl) return;
-                    const randomSong = songs[Math.floor(Math.random() * songs.length)];
-                    titleEl.innerText = randomSong.title;
-                    yearEl.innerText = randomSong.year;
-                    
-                    titleEl.classList.remove('fade-in');
-                    void titleEl.offsetWidth; // リフロー
-                    titleEl.classList.add('fade-in');
-                }
-
-                btn?.addEventListener('click', updateSong);
-                updateSong();
-            });
-
-
-            // メッセージ
-            const style3D = `
+                // メッセージ
+                const style3D = `
                 font-weight: 900;
                 font-size: 2.5rem;
                 color: #bae6fd;
@@ -593,37 +718,39 @@ const friendLinks: FriendLink[] = [
                     0 20px 20px rgba(0,0,0,0.15);
             `;
 
-            // AA用のスタイル
-            const styleAA = "font-family: 'Menlo', 'Consolas', monospace; font-weight: bold; color: #38bdf8; line-height: 1.2;";
-            const styleBody = "font-family: sans-serif; color: #7dd3fc; font-size: 0.9rem;";
+                // AA用のスタイル
+                const styleAA =
+                    "font-family: 'Menlo', 'Consolas', monospace; font-weight: bold; color: #38bdf8; line-height: 1.2;";
+                const styleBody =
+                    "font-family: sans-serif; color: #7dd3fc; font-size: 0.9rem;";
 
-            // 1. 立体ロゴ
-            console.log("%cToraMutton's Homepage", style3D);
-  
-  // 2. 巨大アスキーアート
-  // ⚠️ 整形するな！整形するな！
-  console.log(
-    `%c
+                // 1. 立体ロゴ
+                console.log("%cToraMutton's Homepage", style3D);
+
+                // 2. 巨大アスキーアート
+                // ⚠️ 整形するな！整形するな！
+                console.log(
+                    `%c
   ______                 __  ___      __  __            
  /_  __/___  ________ _ /  |/  /_  __/ /_/ /_____  ____ 
   / / / __ \\/ ___/ __ \`/ /|_/ / / / / __/ __/ __ \\/ __ \\
  / / / /_/ / /  / /_/ / /  / / /_/ / /_/ /_/ /_/ / / / /
 /_/  \\____/_/   \\__,_/_/  /_/\\__,_/\\__/\\__/\\____/_/ /_/ 
             `,
-            styleAA
-        );
+                    styleAA,
+                );
 
-        // 3. メッセージ
-        console.log(
-            `%c
+                // 3. メッセージ
+                console.log(
+                    `%c
         🚀 Built with Astro & Vercel.
         -----------------------------------
         Looking for bugs?
         Thanks for visiting!
             `,
-            styleBody
-        );
-        </script>
+                    styleBody,
+                );
+            </script>
         </main>
         <Footer />
     </body>
@@ -653,7 +780,9 @@ const friendLinks: FriendLink[] = [
         width: 180px;
         height: 180px;
         object-fit: cover;
-        box-shadow: 0 0 40px rgba(253, 224, 71, 0.3), 0 0 40px rgba(253, 224, 71, 0.15);
+        box-shadow:
+            0 0 40px rgba(253, 224, 71, 0.3),
+            0 0 40px rgba(253, 224, 71, 0.15);
         animation: float-natural 7s ease-in-out infinite;
     }
 
@@ -663,7 +792,7 @@ const friendLinks: FriendLink[] = [
 
     .hero-title {
         margin: 0;
-        font-size: 2.0rem;
+        font-size: 2rem;
         font-weight: 800;
         letter-spacing: -0.02em;
     }
@@ -753,77 +882,85 @@ const friendLinks: FriendLink[] = [
     }
 
     /* === ツール別設定 === */
-    
-    /* Twitter (自称X) */ 
-        /* 日常垢 */
-        .twitter-icon:hover {
-            border-color: #1DA1F2;
-            background: rgba(29, 161, 242, 0.05);
-            color: #1DA1F2;
-        }
-        .twitter-icon:hover :global(svg) { color: #1DA1F2; }
-        
-        /* ダークモードで発光 */
-        :global(html.dark) .twitter-icon:hover {
-            border-color: #1DA1F2;
-            color: #1DA1F2;
-            /* box-shadow: 0 0 10px rgba(29, 161, 242, 0.4);  */
-        }
 
-        /* 技術垢 */
-        .twitter-tech-icon:hover {
-            border-color: #f59518;
-            background: rgba(245, 149, 24, 0.05);
-            color: #f59518;
-        }
-        .twitter-tech-icon:hover :global(svg) { color: #f59518; }
-    
-        /* ダークモードで発光 */
-        :global(html.dark) .twitter-tech-icon:hover {
-            border-color: #f59518;
-            color: #f59518;
-            /* box-shadow: 0 0 10px rgba(29, 161, 242, 0.4);  */
-        }
+    /* Twitter (自称X) */
+    /* 日常垢 */
+    .twitter-icon:hover {
+        border-color: #1da1f2;
+        background: rgba(29, 161, 242, 0.05);
+        color: #1da1f2;
+    }
+    .twitter-icon:hover :global(svg) {
+        color: #1da1f2;
+    }
+
+    /* ダークモードで発光 */
+    :global(html.dark) .twitter-icon:hover {
+        border-color: #1da1f2;
+        color: #1da1f2;
+        /* box-shadow: 0 0 10px rgba(29, 161, 242, 0.4);  */
+    }
+
+    /* 技術垢 */
+    .twitter-tech-icon:hover {
+        border-color: #f59518;
+        background: rgba(245, 149, 24, 0.05);
+        color: #f59518;
+    }
+    .twitter-tech-icon:hover :global(svg) {
+        color: #f59518;
+    }
+
+    /* ダークモードで発光 */
+    :global(html.dark) .twitter-tech-icon:hover {
+        border-color: #f59518;
+        color: #f59518;
+        /* box-shadow: 0 0 10px rgba(29, 161, 242, 0.4);  */
+    }
 
     /* GitHub */
-    .github-icon:hover { 
-        border-color: #333; 
-        background: rgba(0, 0, 0, 0.05); 
-        color: #333; 
+    .github-icon:hover {
+        border-color: #333;
+        background: rgba(0, 0, 0, 0.05);
+        color: #333;
     }
     /* ダークモードで白く発光 */
-    :global(html.dark) .github-icon:hover { 
-        border-color: #ffffff; 
-        background: rgba(255, 255, 255, 0.1); 
-        color: #ffffff; 
+    :global(html.dark) .github-icon:hover {
+        border-color: #ffffff;
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
         /* box-shadow: 0 0 10px rgba(255, 255, 255, 0.3); */
     }
 
     /* Note */
     .note-icon:hover {
-        border-color: #41C9B4;
+        border-color: #41c9b4;
         background: rgba(65, 201, 180, 0.05);
-        color: #41C9B4;
+        color: #41c9b4;
     }
-    .note-icon:hover svg { color: #41C9B4; }
+    .note-icon:hover svg {
+        color: #41c9b4;
+    }
 
     :global(html.dark) .note-icon:hover {
-        border-color: #41C9B4;
-        color: #41C9B4;
+        border-color: #41c9b4;
+        color: #41c9b4;
         /* box-shadow: 0 0 10px rgba(65, 201, 180, 0.4); */
     }
 
     /* Zenn */
     .zenn-icon:hover {
-        border-color: #3EA8FF;
+        border-color: #3ea8ff;
         background: rgba(62, 168, 255, 0.05);
-        color: #3EA8FF;
+        color: #3ea8ff;
     }
-    .zenn-icon:hover svg { color: #3EA8FF; }
+    .zenn-icon:hover svg {
+        color: #3ea8ff;
+    }
 
     :global(html.dark) .zenn-icon:hover {
-        border-color: #3EA8FF;
-        color: #3EA8FF;
+        border-color: #3ea8ff;
+        color: #3ea8ff;
         /* box-shadow: 0 0 10px rgba(62, 168, 255, 0.4); */
     }
 
@@ -833,7 +970,9 @@ const friendLinks: FriendLink[] = [
         background: rgba(85, 197, 0, 0.05);
         color: #55c500;
     }
-    .qiita-icon:hover svg { color: #55c500; }
+    .qiita-icon:hover svg {
+        color: #55c500;
+    }
 
     :global(html.dark) .qiita-icon:hover {
         border-color: #55c500;
@@ -883,7 +1022,9 @@ const friendLinks: FriendLink[] = [
         overflow: hidden;
         text-decoration: none;
         color: var(--text-main);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
     }
 
     :global(html.dark) .post-card-mini {
@@ -940,10 +1081,18 @@ const friendLinks: FriendLink[] = [
         letter-spacing: 0.05em;
     }
 
-    .badge-local { background: rgba(2, 132, 199, 0.8); }
-    .badge-note { background: rgba(45, 187, 160, 0.9); }
-    .badge-zenn { background: rgba(62, 168, 255, 0.9); }
-    .badge-qiita { background: rgba(85, 197, 0, 0.9); }
+    .badge-local {
+        background: rgba(2, 132, 199, 0.8);
+    }
+    .badge-note {
+        background: rgba(45, 187, 160, 0.9);
+    }
+    .badge-zenn {
+        background: rgba(62, 168, 255, 0.9);
+    }
+    .badge-qiita {
+        background: rgba(85, 197, 0, 0.9);
+    }
 
     .post-info {
         padding: 1rem;
@@ -952,7 +1101,7 @@ const friendLinks: FriendLink[] = [
     .post-info time {
         font-size: 0.8rem;
         color: var(--text-muted);
-        font-family: 'JetBrains Mono', monospace;
+        font-family: "JetBrains Mono", monospace;
         display: block;
         margin-bottom: 0.3rem;
     }
@@ -1014,8 +1163,12 @@ const friendLinks: FriendLink[] = [
         flex-grow: 1;
     }
 
-    .icon-blue { color: var(--accent-blue); }
-    .icon-secondary { color: var(--accent-secondary); }
+    .icon-blue {
+        color: var(--accent-blue);
+    }
+    .icon-secondary {
+        color: var(--accent-secondary);
+    }
 
     /* 5. 各種カード詳細 (Mission, PC, Advent)*/
 
@@ -1056,7 +1209,7 @@ const friendLinks: FriendLink[] = [
         display: flex;
         align-items: baseline;
         gap: 0.3rem;
-        font-family: 'JetBrains Mono', monospace;
+        font-family: "JetBrains Mono", monospace;
     }
 
     .days-num {
@@ -1214,7 +1367,7 @@ const friendLinks: FriendLink[] = [
         margin-top: 0.5rem;
         font-size: 0.9rem;
         color: var(--text-muted);
-        font-family: 'JetBrains Mono', monospace;
+        font-family: "JetBrains Mono", monospace;
         opacity: 0.8;
     }
 
@@ -1258,7 +1411,8 @@ const friendLinks: FriendLink[] = [
     }
 
     @keyframes float-natural {
-        0%, 100% {
+        0%,
+        100% {
             transform: translateY(0);
         }
         50% {
@@ -1294,7 +1448,7 @@ const friendLinks: FriendLink[] = [
         }
 
         .hero-title {
-            font-size: 2.0rem;
+            font-size: 2rem;
         }
 
         .social-links {
