@@ -36,8 +36,12 @@ const getImageUrl = (item: any) => {
     return item.content?.match(/src="(https:\/\/[^"]+)"/)?.[1];
 }
 
+const isDev = import.meta.env.DEV; // 開発モードかどうかを判定
+
 // A. ローカル記事
-const localPostsRaw = await getCollection('blog');
+const localPostsRaw = await getCollection('blog', ({ data }) => {
+    return isDev || data.draft !== true;
+});
 const localPosts: UnifiedPost[] = localPostsRaw.map((post) => ({
   title: post.data.title,
   url: `/blog/${post.id}/`,

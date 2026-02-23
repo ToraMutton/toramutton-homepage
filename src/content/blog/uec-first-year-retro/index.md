@@ -4,6 +4,7 @@ pubDate: 2026-03-02
 description: "課題と実験のハッピーセットの日々"
 heroImage: "/test.jpg"
 tags: ["大学", "review"]
+draft: true
 ---
 
 どうも1クラ(Aクラ)のトラマトです。

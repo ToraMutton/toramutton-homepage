@@ -60,7 +60,9 @@ interface UnifiedPost {
 }
 
 // Local記事
-const localPostsRaw = await getCollection("blog");
+const localPostsRaw = await getCollection("blog", ({ data }) => {
+    return isDev || data.draft !== true;
+});
 const localPosts = localPostsRaw.map((post) => ({
     title: post.data.title,
     url: `/blog/${post.id}/`,
