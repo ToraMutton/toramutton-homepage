@@ -146,6 +146,29 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [] } = Astro
                 background: rgba(125, 211, 252, 0.1);
                 border-color: rgba(125, 211, 252, 0.3);
             }
+
+            .prose :global(table) {
+                width: 100%;
+                border-collapse: collapse; 
+                margin: 2rem 0;
+                font-size: 0.9rem;
+            }
+
+            .prose :global(th), .prose :global(td) {
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                padding: 0.8rem;
+                text-align: center;
+            }
+
+            .prose :global(th) {
+                background: rgba(255, 255, 255, 0.05); 
+                font-weight: bold;
+                color: var(--accent-blue, #bae6fd);
+            }
+
+            .prose :global(tr:nth-child(even)) {
+                background: rgba(255, 255, 255, 0.02);
+            }
         </style>
     </head>
 
