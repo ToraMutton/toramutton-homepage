@@ -413,7 +413,7 @@ const friendLinks: FriendLink[] = [
                         <h3>Advent 2026</h3>
                     </div>
                     <p class="card-desc">
-                        なんと、一人アドベントカレンダー2026。
+                        一人アドベントカレンダー2026開催予定地
                     </p>
                     <div class="coming-soon-badge">Coming soon...</div>
                 </div>
@@ -1286,11 +1286,14 @@ const friendLinks: FriendLink[] = [
     }
 
     /*  6. リンク集カード (Links) */
-
+    .links-card {
+        grid-column: 1 / -1;
+    }
+    
     .link-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.8rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
         margin: 1rem 0;
     }
 
