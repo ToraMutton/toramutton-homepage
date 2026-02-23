@@ -22,7 +22,7 @@ import {
     Users,
 } from "lucide-astro";
 
-// === 1. RSSフィード取得 ===
+// === RSSフィード取得 ===
 const parser = new rssParser({
     customFields: {
         item: [
@@ -59,7 +59,7 @@ interface UnifiedPost {
     source: "local" | "note" | "zenn" | "qiita";
 }
 
-// A. ローカル記事
+// Local記事
 const localPostsRaw = await getCollection("blog");
 const localPosts = localPostsRaw.map((post) => ({
     title: post.data.title,
@@ -70,7 +70,7 @@ const localPosts = localPostsRaw.map((post) => ({
     source: "local" as const,
 }));
 
-// B. Note記事
+// Note記事
 let notePosts: UnifiedPost[] = [];
 if (!isDev) {
     try {
@@ -89,7 +89,7 @@ if (!isDev) {
     }
 }
 
-// C. Zenn記事
+// Zenn記事
 let zennPosts: UnifiedPost[] = [];
 if (!isDev) {
     try {
@@ -108,7 +108,7 @@ if (!isDev) {
     }
 }
 
-// D. Qiita記事
+// Qiita記事
 let qiitaPosts: UnifiedPost[] = [];
 if (!isDev) {
     try {
@@ -127,12 +127,12 @@ if (!isDev) {
     }
 }
 
-// E. 統合・ソート・抽出
+// 統合・ソート・抽出
 const latestPosts = [...localPosts, ...notePosts, ...zennPosts, ...qiitaPosts]
     .sort((a, b) => b.date.valueOf() - a.date.valueOf())
-    .slice(0, 3); /* 最新記事3つ */
+    .slice(0, 3); // 最新記事、3選 
 
-// === 2. カウントダウン ===
+// === Countdown ===
 const missions = [
     { title: "春休み終了", date: "2026-04-08", icon: GraduationCap },
     { title: "2026年終了まで", date: "2026-12-31", icon: Milestone },
@@ -205,8 +205,7 @@ const friendLinks: FriendLink[] = [
                         <p class="tagline">UEC25 I 類</p>
 
                         <p class="hero-desc">
-                            いろんな技術を気ままに勉強中<br />
-                            楽しく生きる！
+                            最近はArchLinuxのRicingにハマってます🍚
                         </p>
 
                         <div class="hero-actions">
