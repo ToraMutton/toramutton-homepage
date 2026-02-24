@@ -125,14 +125,13 @@ strong, b {
 /* リンク */
 a {
     color: var(--accent-blue);
-    text-decoration: none;
+    text-decoration: underline;
+    text-underline-offset: 4px;
     transition: color 0.2s ease;
 }
 
 a:hover {
     color: var(--accent-secondary);
-    text-decoration: underline;
-    text-underline-offset: 4px;
 }
 
 /* 画像 */
