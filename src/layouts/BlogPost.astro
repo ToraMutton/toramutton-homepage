@@ -154,16 +154,28 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [] } = Astro
                 font-size: 0.9rem;
             }
 
+            /* ライトモード */
             .prose :global(th), .prose :global(td) {
-                border: 1px solid rgba(255, 255, 255, 0.2);
+                border: 1px solid var(--border-color); 
                 padding: 0.8rem;
                 text-align: center;
             }
 
             .prose :global(th) {
-                background: rgba(255, 255, 255, 0.05); 
+                background: rgba(0, 0, 0, 0.05); 
                 font-weight: bold;
-                color: var(--accent-blue, #bae6fd);
+                color: var(--text-main); 
+            }
+
+            /* ダークモード */
+            :global(html.dark) .prose :global(th) {
+                background: rgba(255, 255, 255, 0.1);
+                color: #ffffff;
+            }
+
+            :global(html.dark) .prose :global(th), 
+            :global(html.dark) .prose :global(td) {
+                border-color: rgba(255, 255, 255, 0.2);
             }
 
             .prose :global(tr:nth-child(even)) {
