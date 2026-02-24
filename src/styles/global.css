@@ -79,6 +79,7 @@ html {
     font-family: 'Zen Maru Gothic', sans-serif;
     line-height: 1.6;
     transition: background-color 0.3s ease, color 0.3s ease;
+    scroll-padding-top: 80px;
 }
 
 main {
