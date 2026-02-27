@@ -16,5 +16,7 @@ const { Content } = await render(post);
 ---
 
 <BlogPost {...post.data}>
-	<Content />
+    <div class="prose-content">
+        <Content />
+    </div>
 </BlogPost>
