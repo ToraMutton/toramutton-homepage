@@ -200,19 +200,14 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
 
             /* === 目次レイアウト === */
             .blog-container {
-                display: flex;
-                justify-content: center;
-                align-items: flex-start;
-                gap: 2rem;
+                position: relative;
                 width: 100%;
-                max-width: 1200px;
+                max-width: 900px;
                 margin: 0 auto;
-                padding: 0 1rem;
             }
 
             article {
                 width: 100%;
-                max-width: 900px;
             }
 
             .blog-main-content {
@@ -220,21 +215,25 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
             }
 
             .blog-toc {
-                display: none; /* デフォルト非表示 */
+                display: none;
             }
 
             @media (min-width: 1280px) {
                 .blog-toc {
                     display: block;
-                    position: sticky;
-                    top: 5rem;
-                    width: 240px;
-                    flex-shrink: 0;
-                    max-height: calc(100vh - 7rem);
-                    overflow-y: auto;
+                    position: absolute;
+                    top: 0;
+                    left: 100%;
+                    height: 100%;
+                    margin-left: 2rem;
                 }
 
                 .toc-sticky {
+                    position: sticky;
+                    top: 5rem;
+                    width: 240px;
+                    max-height: calc(100vh - 7rem);
+                    overflow-y: auto;
                     padding: 1rem;
                     background: var(--surface);
                     border: 1px solid var(--border-color);
