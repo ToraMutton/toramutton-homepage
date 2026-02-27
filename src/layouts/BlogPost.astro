@@ -2,6 +2,7 @@
 import { Image } from "astro:assets";
 import type { CollectionEntry } from "astro:content";
 import type { MarkdownHeading } from "astro";
+import { Twitter, Github, MessageCircle, Share2, ExternalLink, List } from "lucide-astro";
 
 import BaseHead from "../components/BaseHead.astro";
 import Footer from "../components/Footer.astro";
@@ -13,6 +14,10 @@ type Props = CollectionEntry<"blog">["data"] & {
 };
 
 const { title, description, pubDate, updatedDate, heroImage, tags = [], headings = [] } = Astro.props;
+
+const shareUrl = Astro.url.href;
+const shareText = `${title} | トラマト`;
+const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
 ---
 
 <html lang="ja">
@@ -32,7 +37,7 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
 
             .hero-image {
                 width: 100%;
-                max-width: 900px;
+                max-width: 860px;
                 margin: 0 auto 2rem;
                 padding: 0 1rem;
             }
@@ -48,7 +53,7 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
 
             .prose {
                 width: 100%;
-                max-width: 900px;
+                max-width: 860px;
                 padding: 1rem 0;
                 color: var(--text-main);
                 line-height: 1.8;
@@ -57,11 +62,9 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
             .title {
                 margin-bottom: 3rem;
                 padding: 2rem 0;
-                
                 display: flex;
                 flex-direction: column;
-                align-items: center; 
-                
+                align-items: center;
                 text-align: center;
             }
 
@@ -77,7 +80,6 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                
                 margin-bottom: 1rem;
                 color: var(--text-muted);
                 font-weight: 500;
@@ -198,19 +200,42 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
                 background: rgba(255, 255, 255, 0.02);
             }
 
-            /* === 目次レイアウト === */
+            /* ======================================================
+               3カラム レイアウト
+               ====================================================== */
             .blog-container {
                 display: grid;
                 grid-template-columns: 1fr;
                 gap: 2rem;
                 width: 100%;
-                max-width: 900px;
+                max-width: 860px;
                 margin: 0 auto;
+                padding: 0 1rem;
                 align-items: flex-start;
             }
 
             article {
                 width: 100%;
+                background: var(--surface);
+                border: 1px solid var(--border-color);
+                border-radius: 20px;
+                padding: 2rem 2.5rem;
+                box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+                min-width: 0;
+            }
+
+            :global(html.dark) article {
+                box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+            }
+
+            @media (max-width: 1279px) {
+                article {
+                    border: none;
+                    border-radius: 0;
+                    padding: 1rem;
+                    box-shadow: none;
+                    background: transparent;
+                }
             }
 
             .blog-main-content {
@@ -222,11 +247,12 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
                 display: none;
             }
 
-            @media (min-width: 1440px) {
+            @media (min-width: 1280px) {
                 .blog-container {
-                    max-width: 1440px;
-                    grid-template-columns: 240px minmax(0, 900px) 240px;
+                    max-width: 1360px;
+                    grid-template-columns: 260px minmax(0, 860px) 240px;
                     justify-content: center;
+                    padding: 0 2rem;
                 }
 
                 .blog-sidebar-left,
@@ -237,78 +263,279 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
                     max-height: calc(100vh - 8rem);
                     overflow-y: auto;
                 }
-
-                .toc-sticky {
-                    padding: 1rem;
-                    background: var(--surface);
-                    border: 1px solid var(--border-color);
-                    border-radius: 12px;
-                }
-
-                .sidebar-sticky {
-                    padding: 1rem;
-                }
             }
 
-            /* === 目次の中身の装飾 === */
+            /* ======================================================
+               左サイドバー - プロフィール & SNS
+               ====================================================== */
+            .sidebar-card {
+                background: var(--surface);
+                border: 1px solid var(--border-color);
+                border-radius: 16px;
+                padding: 1.5rem 1.2rem;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 1.2rem;
+            }
+
+            .sidebar-avatar {
+                width: 80px;
+                height: 80px;
+                border-radius: 50%;
+                object-fit: cover;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                border: 3px solid var(--border-color);
+            }
+
+            :global(html.dark) .sidebar-avatar {
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            }
+
+            .sidebar-name {
+                font-size: 1.1rem;
+                font-weight: 800;
+                color: var(--text-main);
+                margin: 0;
+            }
+
+            .sidebar-bio {
+                font-size: 0.8rem;
+                color: var(--text-muted);
+                text-align: center;
+                line-height: 1.5;
+                margin: 0;
+            }
+
+            .sidebar-divider {
+                width: 100%;
+                height: 1px;
+                background: var(--border-color);
+                margin: 0.2rem 0;
+            }
+
+            /* SNSリンクリスト */
+            .sidebar-section-title {
+                font-size: 0.75rem;
+                font-weight: 700;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                align-self: flex-start;
+                margin: 0;
+            }
+
+            .sidebar-sns-list {
+                display: flex;
+                flex-direction: column;
+                gap: 0.15rem;
+                width: 100%;
+            }
+
+            .sidebar-sns-link {
+                display: flex;
+                align-items: center;
+                gap: 0.7rem;
+                padding: 0.45rem 0.6rem;
+                border-radius: 10px;
+                color: var(--text-muted);
+                text-decoration: none;
+                font-size: 0.82rem;
+                font-weight: 500;
+                transition: all 0.2s ease;
+            }
+
+            .sidebar-sns-link:hover {
+                background: rgba(0, 0, 0, 0.04);
+                color: var(--text-main);
+                transform: translateX(2px);
+            }
+
+            :global(html.dark) .sidebar-sns-link:hover {
+                background: rgba(255, 255, 255, 0.06);
+            }
+
+            .sidebar-sns-link .sns-icon {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 28px;
+                height: 28px;
+                border-radius: 8px;
+                flex-shrink: 0;
+                transition: all 0.2s ease;
+            }
+
+            /* ブランドカラー ホバー */
+            .sidebar-sns-link[data-brand="twitter"]:hover .sns-icon {
+                background: #1da1f2;
+                color: white;
+            }
+            .sidebar-sns-link[data-brand="github"]:hover .sns-icon {
+                background: #333;
+                color: white;
+            }
+            :global(html.dark) .sidebar-sns-link[data-brand="github"]:hover .sns-icon {
+                background: #f0f0f0;
+                color: #333;
+            }
+            .sidebar-sns-link[data-brand="note"]:hover .sns-icon {
+                background: #41c9b4;
+                color: white;
+            }
+            .sidebar-sns-link[data-brand="zenn"]:hover .sns-icon {
+                background: #3ea8ff;
+                color: white;
+            }
+            .sidebar-sns-link[data-brand="qiita"]:hover .sns-icon {
+                background: #55c500;
+                color: white;
+            }
+
+            .sns-label {
+                flex: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            /* シェアボタン */
+            .sidebar-share-link {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                width: 100%;
+                padding: 0.6rem;
+                border-radius: 10px;
+                background: rgba(2, 132, 199, 0.08);
+                border: 1px solid rgba(2, 132, 199, 0.15);
+                color: var(--accent-blue);
+                text-decoration: none;
+                font-size: 0.82rem;
+                font-weight: 600;
+                transition: all 0.2s ease;
+            }
+
+            .sidebar-share-link:hover {
+                background: var(--accent-blue);
+                color: white;
+                border-color: var(--accent-blue);
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+            }
+
+            :global(html.dark) .sidebar-share-link {
+                background: rgba(56, 189, 248, 0.08);
+                border-color: rgba(56, 189, 248, 0.2);
+            }
+
+            :global(html.dark) .sidebar-share-link:hover {
+                background: var(--accent-blue);
+                color: #18181b;
+                box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+            }
+
+            /* ======================================================
+               右サイドバー - 目次
+               ====================================================== */
+            .toc-card {
+                background: var(--surface);
+                border: 1px solid var(--border-color);
+                border-radius: 16px;
+                padding: 1.2rem;
+                position: relative;
+                overflow: hidden;
+            }
+
+            /* 読了プログレスバー */
+            .toc-progress {
+                position: absolute;
+                top: 0;
+                left: 0;
+                height: 4px;
+                width: 0%;
+                background: linear-gradient(90deg, var(--accent-blue), var(--accent-secondary));
+                border-radius: 3px 3px 0 0;
+                transition: width 0.15s ease-out;
+                z-index: 1;
+            }
+
             .toc-title {
                 font-weight: 800;
-                font-size: 1.1rem;
-                margin-bottom: 1rem;
+                font-size: 0.95rem;
+                margin-bottom: 0.8rem;
                 color: var(--text-main);
                 border-bottom: 2px solid var(--border-color);
                 padding-bottom: 0.5rem;
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
             }
 
-            .toc-sticky ul {
+            .toc-title-icon {
+                display: flex;
+                align-items: center;
+                color: var(--accent-blue);
+            }
+
+            .toc-card ul {
                 list-style: none;
                 padding: 0;
                 margin: 0;
             }
 
-            .toc-sticky li {
-                margin-bottom: 0.3rem;
+            .toc-card li {
+                margin-bottom: 0.15rem;
                 line-height: 1.3;
             }
 
-            .toc-sticky a {
+            .toc-card a {
                 text-decoration: none;
                 color: var(--text-muted);
-                font-size: 0.85rem;
+                font-size: 0.82rem;
                 display: block;
-                transition: color 0.2s;
+                padding: 0.3rem 0.5rem;
+                border-radius: 6px;
+                transition: all 0.2s ease;
+                border-left: 2px solid transparent;
             }
 
-            .toc-sticky a:hover {
+            .toc-card a:hover {
                 color: var(--accent-blue);
+                background: rgba(2, 132, 199, 0.05);
             }
 
-            .toc-sticky a.active {
+            :global(html.dark) .toc-card a:hover {
+                background: rgba(56, 189, 248, 0.06);
+            }
+
+            .toc-card a.active {
                 color: var(--accent-blue);
-                font-weight: bold;
-                position: relative;
+                font-weight: 700;
+                border-left-color: var(--accent-blue);
+                background: rgba(2, 132, 199, 0.06);
             }
 
-            .toc-sticky a.active::before {
-                content: "";
-                position: absolute;
-                left: -12px;
-                top: 2px;
-                bottom: 2px;
-                width: 3px;
-                background-color: var(--accent-blue);
-                border-radius: 2px;
+            :global(html.dark) .toc-card a.active {
+                background: rgba(56, 189, 248, 0.08);
             }
 
             .toc-level-3 {
-                padding-left: 1rem;
-                font-size: 0.85rem;
+                padding-left: 0.8rem;
+            }
+
+            .toc-level-3 a {
+                font-size: 0.8rem;
             }
 
             .toc-level-4 {
-                padding-left: 1.8rem;
-                font-size: 0.8rem;
-                opacity: 0.8;
+                padding-left: 1.6rem;
+            }
+
+            .toc-level-4 a {
+                font-size: 0.78rem;
+                opacity: 0.85;
             }
         </style>
     </head>
@@ -318,12 +545,68 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
         <main>
             <div class="blog-container">
 
-                {/* 左側のサイドバー */}
+                {/* 左サイドバー - プロフィール & SNS */}
                 <aside class="blog-sidebar-left">
-                    <div class="sidebar-sticky">
-                        <div style="text-align: center; color: var(--text-muted); font-weight: bold;">
-                            Profile / Share
-                        </div>
+                    <div class="sidebar-card">
+                        <img
+                            src="/toramutton.jpg"
+                            alt="トラマト"
+                            class="sidebar-avatar"
+                            width="80"
+                            height="80"
+                        />
+                        <p class="sidebar-name">トラマト</p>
+                        <p class="sidebar-bio">勉強中</p>
+
+                        <div class="sidebar-divider"></div>
+
+                        <p class="sidebar-section-title">SNS</p>
+                        <nav class="sidebar-sns-list">
+                            <a href="https://twitter.com/ToraMutton" target="_blank" rel="noopener noreferrer" class="sidebar-sns-link" data-brand="twitter">
+                                <span class="sns-icon"><MessageCircle size={16} /></span>
+                                <span class="sns-label">Daily</span>
+                            </a>
+                            <a href="https://twitter.com/Tr3t_s" target="_blank" rel="noopener noreferrer" class="sidebar-sns-link" data-brand="twitter">
+                                <span class="sns-icon"><Twitter size={16} /></span>
+                                <span class="sns-label">Tech</span>
+                            </a>
+                            <a href="https://github.com/ToraMutton" target="_blank" rel="noopener noreferrer" class="sidebar-sns-link" data-brand="github">
+                                <span class="sns-icon"><Github size={16} /></span>
+                                <span class="sns-label">GitHub</span>
+                            </a>
+                            <a href="https://note.com/toramutton" target="_blank" rel="noopener noreferrer" class="sidebar-sns-link" data-brand="note">
+                                <span class="sns-icon">
+                                    <svg role="img" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                                        <path d="M0 .279c4.623 0 10.953-.235 15.498-.117 6.099.156 8.39 2.813 8.468 9.374.077 3.71 0 14.335 0 14.335h-6.598c0-9.296.04-10.83 0-13.759-.078-2.578-.814-3.807-2.795-4.041-2.097-.235-7.975-.04-7.975-.04v17.84H0Z"></path>
+                                    </svg>
+                                </span>
+                                <span class="sns-label">note</span>
+                            </a>
+                            <a href="https://zenn.dev/toramutton" target="_blank" rel="noopener noreferrer" class="sidebar-sns-link" data-brand="zenn">
+                                <span class="sns-icon">
+                                    <svg role="img" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                        <path d="M.264 23.771h4.984c.264 0 .498-.147.645-.352L19.614.874c.176-.293-.029-.645-.381-.645h-4.72c-.235 0-.44.117-.557.323L.03 23.361c-.088.176.029.41.234.41zM17.445 23.419l6.479-10.408c.205-.323-.029-.733-.41-.733h-4.691c-.176 0-.352.088-.44.235l-6.655 10.643c-.176.264.029.616.352.616h4.779c.234-.001.468-.118.586-.353z"></path>
+                                    </svg>
+                                </span>
+                                <span class="sns-label">Zenn</span>
+                            </a>
+                            <a href="https://qiita.com/ToraMutton" target="_blank" rel="noopener noreferrer" class="sidebar-sns-link" data-brand="qiita">
+                                <span class="sns-icon">
+                                    <svg role="img" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                        <path d="M12 0C5.3726 0 0 5.3726 0 12s5.3726 12 12 12c3.3984 0 6.4665-1.413 8.6498-3.6832-.383-.0574-.7746-.2062-1.1466-.4542-.7145-.4763-1.3486-.9263-1.6817-1.674-1.2945 1.3807-3.0532 1.835-5.1822 2.0503-4.311.4359-8.0456-1.4893-8.4979-6.2996-.1922-2.045.2628-3.989 1.1804-5.582l-.5342-2.1009c-.0862-.3652.2498-.7126.6057-.6262l1.8456.448c1.0974-.9012 2.4249-1.49 3.8892-1.638 1.2526-.1267 2.467.0834 3.571.5624l1.7348-1.0494c.3265-.1974.7399.0257.7711.4164l.1 2.4747v.0002c1.334 1.4084 2.2424 3.3319 2.4478 5.516.116 1.2339-.012 2.1776-.339 3.078-.1531.4215-.1992.7778.0776 1.1305.2674.3408.6915 1.0026 1.1644.8917.7107-.1666 1.4718-.1223 1.9422.1715C23.4925 15.9525 24 14.0358 24 12c0-6.6274-5.3726-12-12-12Zm-.0727 5.727a5.2731 5.2731 0 0 0-.6146.0273c-2.2084.2233-3.9572 1.8135-4.4937 3.8484l-1.3176-.1996-.014.2589 1.2972.1407c-.0352.1497-.0643.2384-.086.3923l-1.1319.0902.0103.2025 1.1032-.088c-.0194.1713-.031.2814-.0332.4565l-1.0078.412.0495.2499.9598-.4492c.002.1339.008.2053.0207.3407.2667 2.8371 2.6364 3.3981 5.4677 3.1118 2.8312-.2863 5.0517-1.3114 4.785-4.1486-.013-.1361-.0324-.2068-.0553-.3392l1.0397.2257.0242-.229-1.0906-.207c-.0342-.1687-.0765-.271-.1264-.4327l1.1208-.1374-.0158-.2019-1.1499.1409a5.1093 5.1093 0 0 0-.1665-.4259l1.2665-.4042-.0397-.2536-1.3471.4667c-.819-1.7168-2.5002-2.8224-4.4546-2.8482Z"></path>
+                                    </svg>
+                                </span>
+                                <span class="sns-label">Qiita</span>
+                            </a>
+                        </nav>
+
+                        <div class="sidebar-divider"></div>
+
+                        <p class="sidebar-section-title">Share</p>
+                        <a href={twitterShareUrl} target="_blank" rel="noopener noreferrer" class="sidebar-share-link">
+                            <Share2 size={14} />
+                            Twitterでシェア
+                        </a>
                     </div>
                 </aside>
 
@@ -359,11 +642,12 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
                     </div>
                 </article>
 
-                {/* サイド目次 */}
+                {/* 右サイド - 目次 */}
                 {headings.length > 0 && (
                     <aside class="blog-toc">
-                        <div class="toc-sticky">
-                            <div class="toc-title">目次</div>
+                        <div class="toc-card">
+                            <div class="toc-progress" id="toc-progress"></div>
+                            <div class="toc-title"><span class="toc-title-icon"><List size={16} /></span>目次</div>
                             <ul>
                                 {headings.map((heading) => (
                                     <li class={`toc-level-${heading.depth}`}>
@@ -382,6 +666,7 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
 </html>
 
 <script>
+    // === h2 アニメーション ===
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -394,6 +679,7 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
         observer.observe(h2);
     });
 
+    // === 目次アクティブ追従 ===
     const tocLinks = document.querySelectorAll('.blog-toc a');
     const headings = document.querySelectorAll('.prose h2, .prose h3, .prose h4');
 
@@ -423,5 +709,26 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
         });
 
         headings.forEach(h => tocObserver.observe(h));
+    }
+
+    // === 読了プログレスバー ===
+    const progressBar = document.getElementById('toc-progress');
+    if (progressBar) {
+        window.addEventListener('scroll', () => {
+            const article = document.querySelector('article');
+            if (!article) return;
+
+            const articleTop = article.offsetTop;
+            const articleHeight = article.scrollHeight;
+            const windowHeight = window.innerHeight;
+            const scrollTop = window.scrollY;
+
+            const progress = Math.min(
+                100,
+                Math.max(0, ((scrollTop - articleTop + windowHeight * 0.3) / articleHeight) * 100)
+            );
+
+            progressBar.style.width = `${progress}%`;
+        }, { passive: true });
     }
 </script>
