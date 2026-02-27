@@ -19,6 +19,10 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
     <head>
         <BaseHead title={title} description={description} />
         <style>
+            :global(html) {
+                scroll-behavior: smooth;
+            }
+
             main {
                 width: 100%;
                 max-width: 100vw;
