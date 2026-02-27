@@ -213,9 +213,6 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
             @media (min-width: 1024px) {
                 .blog-toc {
                     display: block;
-                    position: sticky;
-                    top: 100px;
-                    align-self: flex-start;
                 }
                 .toc-sticky {
                     position: sticky;
@@ -366,31 +363,35 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
     const tocLinks = document.querySelectorAll('.blog-toc a');
     const headings = document.querySelectorAll('.prose h2, .prose h3, .prose h4');
 
-    // スクロールを監視
-    const tocObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const id = entry.target.id;
-                if (!id) return; // IDがない場合はスルー
+    // 目次があるページだけ実行
+    if (tocLinks.length > 0 && headings.length > 0) {
+        const tocObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                // 見出しが画面の判定ラインに入ったら
+                if (entry.isIntersecting) {
+                    const id = entry.target.id;
+                    if (!id) return;
 
-                // 一旦すべてのリンクからactiveクラスを外す
-                tocLinks.forEach(link => link.classList.remove('active'));
+                    // 一旦すべてのリンクからactiveクラスを外す
+                    tocLinks.forEach(link => link.classList.remove('active'));
 
-                const activeLink = Array.from(tocLinks).find(
-                    link => link.getAttribute('href') === `#${id}` || 
-                            link.getAttribute('href') === `#${decodeURIComponent(id)}`
-                );
+                    const activeLink = Array.from(tocLinks).find(link => {
+                        const href = link.getAttribute('href');
+                        return href === `#${id}` || 
+                               href === `#${encodeURIComponent(id)}` || 
+                               href === `#${decodeURIComponent(id)}`;
+                    });
 
-                if (activeLink) {
-                    activeLink.classList.add('active');
+                    if (activeLink) {
+                        activeLink.classList.add('active');
+                    }
                 }
-            }
+            });
+        }, {
+            // 画面の上から15%〜20%の狭い範囲を通過した時だけ発火
+            rootMargin: "-15% 0px -80% 0px" 
         });
-    }, {
-        // 画面の上から10%、下から60%の範囲に見出しが来たら発火
-        rootMargin: "-10% 0px -60% 0px" 
-    });
 
-    // 取得した見出しをすべて監視対象にする
-    headings.forEach(h => tocObserver.observe(h));
+        headings.forEach(h => tocObserver.observe(h));
+    }
 </script>
