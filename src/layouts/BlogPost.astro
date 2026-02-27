@@ -194,7 +194,6 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
             .blog-container {
                 display: flex;
                 gap: 2rem;
-                align-items: flex-start; /* sticky */
                 max-width: 1200px;
                 margin: 0 auto;
                 padding: 0 1rem;
@@ -219,6 +218,7 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
                     align-self: flex-start;
                 }
                 .toc-sticky {
+                    position: sticky;
                     max-height: calc(100vh - 120px);
                     overflow-y: auto;
                     padding: 1.5rem;
