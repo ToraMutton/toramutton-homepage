@@ -214,14 +214,15 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
             @media (min-width: 1024px) {
                 .blog-toc {
                     display: block;
+                    position: sticky;
+                    top: 100px;
+                    align-self: flex-start;
                 }
                 .toc-sticky {
-                    position: sticky;
-                    top: 100px; 
                     max-height: calc(100vh - 120px);
                     overflow-y: auto;
                     padding: 1.5rem;
-                    background: var(--surface); /* ダークモード */
+                    background: var(--surface);
                     border: 1px solid var(--border-color);
                     border-radius: 12px;
                 }
@@ -260,9 +261,32 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
                 color: var(--accent-blue);
             }
 
+            .toc-sticky a.active {
+                color: var(--accent-blue);
+                font-weight: bold;
+                position: relative;
+            }
+
+            .toc-sticky a.active::before {
+                content: "";
+                position: absolute;
+                left: -12px;
+                top: 2px;
+                bottom: 2px;
+                width: 3px;
+                background-color: var(--accent-blue);
+                border-radius: 2px;
+            }
+
             .toc-level-3 {
                 padding-left: 1rem;
                 font-size: 0.85rem;
+            }
+
+            .toc-level-4 {
+                padding-left: 1.8rem;
+                font-size: 0.8rem;
+                opacity: 0.8;
             }
         </style>
     </head>
@@ -338,4 +362,35 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [], headings
     document.querySelectorAll('article h2').forEach((h2) => {
         observer.observe(h2);
     });
+
+    const tocLinks = document.querySelectorAll('.blog-toc a');
+    const headings = document.querySelectorAll('.prose h2, .prose h3, .prose h4');
+
+    // スクロールを監視
+    const tocObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const id = entry.target.id;
+                if (!id) return; // IDがない場合はスルー
+
+                // 一旦すべてのリンクからactiveクラスを外す
+                tocLinks.forEach(link => link.classList.remove('active'));
+
+                const activeLink = Array.from(tocLinks).find(
+                    link => link.getAttribute('href') === `#${id}` || 
+                            link.getAttribute('href') === `#${decodeURIComponent(id)}`
+                );
+
+                if (activeLink) {
+                    activeLink.classList.add('active');
+                }
+            }
+        });
+    }, {
+        // 画面の上から10%、下から60%の範囲に見出しが来たら発火
+        rootMargin: "-10% 0px -60% 0px" 
+    });
+
+    // 取得した見出しをすべて監視対象にする
+    headings.forEach(h => tocObserver.observe(h));
 </script>
