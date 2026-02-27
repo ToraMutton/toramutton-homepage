@@ -222,3 +222,17 @@ const { title, description, pubDate, updatedDate, heroImage, tags = [] } = Astro
         <Footer />
     </body>
 </html>
+
+<script>
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('article h2').forEach((h2) => {
+        observer.observe(h2);
+    });
+</script>
