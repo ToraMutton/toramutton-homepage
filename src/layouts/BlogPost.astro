@@ -60,8 +60,8 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
             }
 
             .title {
-                margin-bottom: 3rem;
-                padding: 2rem 0;
+                margin-bottom: 2rem;
+                padding: 1rem 0;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
@@ -210,31 +210,28 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 width: 100%;
                 max-width: 860px;
                 margin: 0 auto;
-                padding: 0 1rem;
+                padding: 0;
                 align-items: flex-start;
             }
 
             article {
                 width: 100%;
-                background: var(--surface);
-                border: 1px solid var(--border-color);
-                border-radius: 20px;
-                padding: 1rem 1.5rem;
-                box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
                 min-width: 0;
             }
 
-            :global(html.dark) article {
-                box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+            @media (min-width: 1280px) {
+                article {
+                    background: var(--surface);
+                    border: 1px solid var(--border-color);
+                    border-radius: 20px;
+                    padding: 0 1.5rem 1rem;
+                    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+                }
             }
 
-            @media (max-width: 1279px) {
-                article {
-                    border: none;
-                    border-radius: 0;
-                    padding: 0;
-                    box-shadow: none;
-                    background: transparent;
+            @media (min-width: 1280px) {
+                :global(html.dark) article {
+                    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
                 }
             }
 
