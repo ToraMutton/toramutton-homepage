@@ -12,7 +12,7 @@ type UnifiedPost = {
   url: string;
   date: Date;
   image?: string | any;
-  source: 'local' | 'note' | 'zenn';
+  source: 'local' | 'note' | 'zenn' | 'qiita';
   tags: string[];
 };
 
@@ -88,7 +88,27 @@ try {
   console.error("Zenn RSS fetch failed", e);
 }
 
-const allPosts = [...localPosts, ...notePosts, ...zennPosts].sort(
+// D. Qiita記事
+let qiitaPosts: UnifiedPost[] = [];
+try {
+  const qiitaFeed = await parser.parseURL('https://qiita.com/toramutton/feed');
+  qiitaPosts = qiitaFeed.items.map((item: any) => {
+    const rawTags = item.categories;
+    const safeTags = (Array.isArray(rawTags) && rawTags.length > 0) ? rawTags : ['Qiita'];
+    return {
+      title: item.title || '無題',
+      url: item.link || '',
+      date: new Date(item.pubDate || new Date()),
+      image: getImageUrl(item),
+      source: 'qiita' as const,
+      tags: safeTags,
+    };
+  });
+} catch (e) {
+  console.error("Qiita RSS fetch failed", e);
+}
+
+const allPosts = [...localPosts, ...notePosts, ...zennPosts, ...qiitaPosts].sort(
   (a, b) => b.date.valueOf() - a.date.valueOf()
 );
 ---
@@ -119,7 +139,16 @@ const allPosts = [...localPosts, ...notePosts, ...zennPosts].sort(
 
         .grid-container li {
             width: 100%;
-            display: flex; /* 中身（カード）の高さを揃えるためにflex */
+            display: flex;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .grid-container li.hiding {
+            opacity: 0;
+            transform: scale(0.95) translateY(8px);
+            pointer-events: none;
+        }
+        .grid-container li.hidden {
+            display: none !important;
         }
 
         @media (max-width: 600px) {
@@ -208,6 +237,7 @@ const allPosts = [...localPosts, ...notePosts, ...zennPosts].sort(
         .badge.note { background: rgba(65, 201, 180, 0.9); }
         .badge.zenn { background: rgba(62, 168, 255, 0.9); }
         .badge.local { background: var(--accent-blue, #2563eb); color: #fff; }
+        .badge.qiita { background: rgba(85, 199, 79, 0.9); }
 
         /* === 記事コンテンツ === */
         .content {
@@ -263,16 +293,223 @@ const allPosts = [...localPosts, ...notePosts, ...zennPosts].sort(
             font-family: 'JetBrains Mono', monospace;
             text-align: right;
         }
+
+        /* === ツールバー === */
+        .blog-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1rem 1.25rem;
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        :global(html.dark) .blog-toolbar {
+            background: rgba(255,255,255,0.03);
+            border-color: rgba(255,255,255,0.1);
+        }
+
+        .search-box {
+            flex: 1 1 240px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--background);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .search-box:focus-within {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(56,189,248,0.15);
+        }
+        :global(html.dark) .search-box {
+            background: rgba(255,255,255,0.05);
+        }
+        .search-box svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            color: var(--text-muted);
+        }
+        .search-box input {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+        .search-box input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
+
+        .sort-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+        .sort-box label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        .sort-box select {
+            appearance: none;
+            -webkit-appearance: none;
+            background: var(--background);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.5rem 2rem 0.5rem 0.75rem;
+            font-family: inherit;
+            font-size: 0.85rem;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.6rem center;
+        }
+        :global(html.dark) .sort-box select {
+            background-color: rgba(255,255,255,0.05);
+        }
+        :global(html.dark) .sort-box select option {
+            background: #27272a;
+            color: #f1f5f9;
+        }
+        .sort-box select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .no-results {
+            display: none;
+            text-align: center;
+            padding: 4rem 1rem;
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+        .no-results.visible {
+            display: block;
+        }
+        .no-results svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+            opacity: 0.4;
+        }
+
+        @media (max-width: 600px) {
+            .blog-toolbar {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            .search-box { flex-basis: 100%; }
+            .sort-box { width: 100%; }
+            .sort-box select { flex: 1; }
+            .source-filters { width: 100%; justify-content: center; }
+        }
+
+        /* === ソースフィルタボタン === */
+        .source-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .source-btn {
+            padding: 0.4rem 0.9rem;
+            border-radius: 99px;
+            border: 1.5px solid var(--border-color);
+            background: transparent;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        .source-btn:hover {
+            color: var(--text-main);
+        }
+        .source-btn[data-filter="all"]:hover {
+            border-color: var(--accent-blue);
+        }
+        .source-btn[data-filter="local"]:hover {
+            border-color: #2563eb;
+        }
+        .source-btn[data-filter="note"]:hover {
+            border-color: rgba(65, 201, 180, 0.9);
+        }
+        .source-btn[data-filter="zenn"]:hover {
+            border-color: rgba(62, 168, 255, 0.9);
+        }
+        .source-btn[data-filter="qiita"]:hover {
+            border-color: rgba(85, 199, 79, 0.9);
+        }
+        .source-btn.active {
+            color: #fff;
+            border-color: transparent;
+        }
+        .source-btn.active[data-filter="all"] {
+            background: var(--accent-blue);
+        }
+        .source-btn.active[data-filter="local"] {
+            background: #2563eb;
+        }
+        .source-btn.active[data-filter="note"] {
+            background: rgba(65, 201, 180, 0.9);
+        }
+        .source-btn.active[data-filter="zenn"] {
+            background: rgba(62, 168, 255, 0.9);
+        }
+        .source-btn.active[data-filter="qiita"] {
+            background: rgba(85, 199, 79, 0.9);
+        }
     </style>
     </head>
     <body>
         <Header />
         <main>
             <section>
-                <ul class="grid-container">
+                <div class="blog-toolbar">
+                    <div class="search-box">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input type="text" id="blog-search" placeholder="タイトル・タグで検索..." />
+                    </div>
+                    <div class="sort-box">
+                        <label for="blog-sort">並び替え:</label>
+                        <select id="blog-sort">
+                            <option value="date-desc">新しい順</option>
+                            <option value="date-asc">古い順</option>
+                            <option value="title-asc">名前順 (A→Z)</option>
+                            <option value="title-desc">名前順 (Z→A)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="source-filters" id="source-filters">
+                    <button class="source-btn active" data-filter="all">ALL</button>
+                    <button class="source-btn" data-filter="local">LOCAL</button>
+                    <button class="source-btn" data-filter="note">NOTE</button>
+                    <button class="source-btn" data-filter="zenn">ZENN</button>
+                    <button class="source-btn" data-filter="qiita">QIITA</button>
+                </div>
+                <ul class="grid-container" id="blog-grid">
                     {
                         allPosts.map((post) => (
-                            <li style="display: flex;">
+                            <li style="display: flex;" data-title={post.title.toLowerCase()} data-tags={post.tags.join(',').toLowerCase()} data-date={post.date.valueOf().toString()} data-source={post.source}>
                                 <a href={post.url} class="card" target={post.source !== 'local' ? "_blank" : "_self"} rel={post.source !== 'local' ? "noopener noreferrer" : ""}>
                                     <div class="thumbnail-container">
                                         <span class={`badge ${post.source}`}>{post.source}</span>
@@ -307,8 +544,120 @@ const allPosts = [...localPosts, ...notePosts, ...zennPosts].sort(
                         ))
                     }
                 </ul>
+                <div class="no-results" id="no-results">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                    <p>記事が見つかりません</p>
+                </div>
             </section>
         </main>
         <Footer />
+
+        <script>
+        {
+            const searchInput = document.getElementById('blog-search') as HTMLInputElement;
+            const sortSelect = document.getElementById('blog-sort') as HTMLSelectElement;
+            const grid = document.getElementById('blog-grid') as HTMLUListElement;
+            const noResults = document.getElementById('no-results') as HTMLDivElement;
+            const sourceButtons = document.querySelectorAll('.source-btn') as NodeListOf<HTMLButtonElement>;
+
+            if (searchInput && sortSelect && grid && noResults) {
+                let animating = false;
+                let activeSource = 'all';
+
+                // Source filter button clicks
+                sourceButtons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        sourceButtons.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        activeSource = btn.dataset.filter || 'all';
+                        filterAndSort();
+                    });
+                });
+
+                function filterAndSort() {
+                    if (animating) return;
+                    animating = true;
+
+                    const query = searchInput.value.toLowerCase().trim();
+                    const sortValue = sortSelect.value;
+                    const items = Array.from(grid.querySelectorAll(':scope > li')) as HTMLLIElement[];
+
+                    // Step 1: Determine which items match (text + source)
+                    const matchResults = items.map(li => {
+                        const title = li.dataset.title || '';
+                        const tags = li.dataset.tags || '';
+                        const source = li.dataset.source || '';
+                        const textMatch = !query || title.includes(query) || tags.includes(query);
+                        const sourceMatch = activeSource === 'all' || source === activeSource;
+                        return textMatch && sourceMatch;
+                    });
+
+                    // Step 2: Fade out
+                    items.forEach(li => {
+                        li.classList.add('hiding');
+                    });
+
+                    // Step 3: After fade-out, reorder DOM and fade in
+                    setTimeout(() => {
+                        items.forEach((li, i) => {
+                            if (matchResults[i]) {
+                                li.classList.remove('hidden');
+                                li.style.display = 'flex';
+                            } else {
+                                li.classList.add('hidden');
+                                li.style.display = 'none';
+                            }
+                        });
+
+                        const visible = items.filter((_, i) => matchResults[i]);
+                        visible.sort((a, b) => {
+                            switch (sortValue) {
+                                case 'date-asc':
+                                    return Number(a.dataset.date) - Number(b.dataset.date);
+                                case 'date-desc':
+                                    return Number(b.dataset.date) - Number(a.dataset.date);
+                                case 'title-asc':
+                                    return (a.dataset.title || '').localeCompare(b.dataset.title || '', 'ja');
+                                case 'title-desc':
+                                    return (b.dataset.title || '').localeCompare(a.dataset.title || '', 'ja');
+                                default:
+                                    return 0;
+                            }
+                        });
+
+                        const hidden = items.filter((_, i) => !matchResults[i]);
+                        [...visible, ...hidden].forEach(li => grid.appendChild(li));
+
+                        noResults.classList.toggle('visible', visible.length === 0);
+
+                        // Step 4: Staggered fade-in
+                        requestAnimationFrame(() => {
+                            visible.forEach((li, i) => {
+                                li.style.transitionDelay = `${i * 40}ms`;
+                                li.classList.remove('hiding');
+                            });
+
+                            const maxDelay = visible.length * 40 + 300;
+                            setTimeout(() => {
+                                visible.forEach(li => {
+                                    li.style.transitionDelay = '0ms';
+                                });
+                                animating = false;
+                            }, maxDelay);
+                        });
+                    }, 250);
+                }
+
+                searchInput.addEventListener('input', filterAndSort);
+                searchInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        filterAndSort();
+                    }
+                });
+                sortSelect.addEventListener('change', filterAndSort);
+            }
+        }
+        </script>
     </body>
 </html>
