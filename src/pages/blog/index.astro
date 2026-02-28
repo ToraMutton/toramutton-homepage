@@ -300,7 +300,7 @@ const allPosts = [...localPosts, ...notePosts, ...zennPosts, ...qiitaPosts].sort
             flex-wrap: wrap;
             gap: 1rem;
             align-items: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
             padding: 1rem 1.25rem;
             background: var(--surface);
             border: 1px solid var(--border-color);
@@ -411,11 +411,32 @@ const allPosts = [...localPosts, ...notePosts, ...zennPosts, ...qiitaPosts].sort
             .blog-toolbar {
                 flex-direction: column;
                 gap: 0.75rem;
+                padding: 0.75rem 1rem;
             }
-            .search-box { flex-basis: 100%; }
-            .sort-box { width: 100%; }
-            .sort-box select { flex: 1; }
-            .source-filters { width: 100%; justify-content: center; }
+            .search-box {
+                flex-basis: 100%;
+                width: 100%;
+            }
+            .sort-box {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .sort-box select {
+                flex: 1;
+                min-width: 0;
+            }
+            .source-filters {
+                width: 100%;
+                justify-content: flex-start;
+                margin-bottom: 1rem;
+            }
+            .source-btn {
+                padding: 0.35rem 0.7rem;
+                font-size: 0.7rem;
+            }
+            .content {
+                padding: 1rem;
+            }
         }
 
         /* === ソースフィルタボタン === */
@@ -561,8 +582,10 @@ const allPosts = [...localPosts, ...notePosts, ...zennPosts, ...qiitaPosts].sort
             const sourceButtons = document.querySelectorAll('.source-btn') as NodeListOf<HTMLButtonElement>;
 
             if (searchInput && sortSelect && grid && noResults) {
-                let animating = false;
                 let activeSource = 'all';
+                let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+                let fadeOutTimer: ReturnType<typeof setTimeout> | null = null;
+                let cleanupTimer: ReturnType<typeof setTimeout> | null = null;
 
                 // Source filter button clicks
                 sourceButtons.forEach(btn => {
@@ -570,19 +593,25 @@ const allPosts = [...localPosts, ...notePosts, ...zennPosts, ...qiitaPosts].sort
                         sourceButtons.forEach(b => b.classList.remove('active'));
                         btn.classList.add('active');
                         activeSource = btn.dataset.filter || 'all';
-                        filterAndSort();
+                        triggerFilterAndSort();
                     });
                 });
 
-                function filterAndSort() {
-                    if (animating) return;
-                    animating = true;
+                function triggerFilterAndSort() {
+                    // Cancel any pending timers
+                    if (debounceTimer) clearTimeout(debounceTimer);
+                    if (fadeOutTimer) clearTimeout(fadeOutTimer);
+                    if (cleanupTimer) clearTimeout(cleanupTimer);
 
+                    debounceTimer = setTimeout(() => filterAndSort(), 120);
+                }
+
+                function filterAndSort() {
                     const query = searchInput.value.toLowerCase().trim();
                     const sortValue = sortSelect.value;
                     const items = Array.from(grid.querySelectorAll(':scope > li')) as HTMLLIElement[];
 
-                    // Step 1: Determine which items match (text + source)
+                    // Step 1: Determine matches
                     const matchResults = items.map(li => {
                         const title = li.dataset.title || '';
                         const tags = li.dataset.tags || '';
@@ -597,8 +626,8 @@ const allPosts = [...localPosts, ...notePosts, ...zennPosts, ...qiitaPosts].sort
                         li.classList.add('hiding');
                     });
 
-                    // Step 3: After fade-out, reorder DOM and fade in
-                    setTimeout(() => {
+                    // Step 3: After fade-out, reorder and fade in
+                    fadeOutTimer = setTimeout(() => {
                         items.forEach((li, i) => {
                             if (matchResults[i]) {
                                 li.classList.remove('hidden');
@@ -638,24 +667,23 @@ const allPosts = [...localPosts, ...notePosts, ...zennPosts, ...qiitaPosts].sort
                             });
 
                             const maxDelay = visible.length * 40 + 300;
-                            setTimeout(() => {
+                            cleanupTimer = setTimeout(() => {
                                 visible.forEach(li => {
                                     li.style.transitionDelay = '0ms';
                                 });
-                                animating = false;
                             }, maxDelay);
                         });
-                    }, 250);
+                    }, 200);
                 }
 
-                searchInput.addEventListener('input', filterAndSort);
+                searchInput.addEventListener('input', triggerFilterAndSort);
                 searchInput.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') {
                         e.preventDefault();
-                        filterAndSort();
+                        triggerFilterAndSort();
                     }
                 });
-                sortSelect.addEventListener('change', filterAndSort);
+                sortSelect.addEventListener('change', triggerFilterAndSort);
             }
         }
         </script>
