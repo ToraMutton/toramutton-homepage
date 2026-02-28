@@ -42,6 +42,10 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 padding: 0 1rem;
             }
 
+            .hero-image:empty {
+                display: none;
+            }
+
             .hero-image img {
                 display: block;
                 width: 100%;
@@ -61,7 +65,7 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
 
             .title {
                 margin-bottom: 2rem;
-                padding: 1rem 0;
+                padding: 0;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
@@ -217,6 +221,7 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
             article {
                 width: 100%;
                 min-width: 0;
+                margin: 0;
             }
 
             @media (min-width: 1280px) {
@@ -224,7 +229,7 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                     background: var(--surface);
                     border: 1px solid var(--border-color);
                     border-radius: 20px;
-                    padding: 0 1.5rem 1rem;
+                    padding: 1.5rem 1.5rem 1rem;
                     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
                 }
             }
@@ -259,6 +264,7 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                     top: 6rem;
                     max-height: calc(100vh - 8rem);
                     overflow-y: auto;
+                    margin: 0;
                 }
             }
 
@@ -612,18 +618,16 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 </aside>
 
                 <article>
-                    <div class="hero-image">
-                        {
-                            heroImage && (
-                                <Image
-                                    width={1020}
-                                    height={510}
-                                    src={heroImage}
-                                    alt={title}
-                                />
-                            )
-                        }
-                    </div>
+                    {heroImage && (
+                        <div class="hero-image">
+                            <Image
+                                width={1020}
+                                height={510}
+                                src={heroImage}
+                                alt={title}
+                            />
+                        </div>
+                    )}
                     <div class="prose">
                         <div class="title">
                             <div class="date">
