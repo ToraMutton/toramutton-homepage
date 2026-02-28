@@ -219,7 +219,7 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 background: var(--surface);
                 border: 1px solid var(--border-color);
                 border-radius: 20px;
-                padding: 2rem 2.5rem;
+                padding: 1rem 1.5rem;
                 box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
                 min-width: 0;
             }
@@ -232,7 +232,7 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 article {
                     border: none;
                     border-radius: 0;
-                    padding: 1rem;
+                    padding: 0;
                     box-shadow: none;
                     background: transparent;
                 }
@@ -369,6 +369,10 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
             /* ブランドカラー ホバー */
             .sidebar-sns-link[data-brand="twitter"]:hover .sns-icon {
                 background: #1da1f2;
+                color: white;
+            }
+            .sidebar-sns-link[data-brand="tech"]:hover .sns-icon {
+                background: #f59518;
                 color: white;
             }
             .sidebar-sns-link[data-brand="github"]:hover .sns-icon {
@@ -566,7 +570,7 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                                 <span class="sns-icon"><MessageCircle size={16} /></span>
                                 <span class="sns-label">Daily</span>
                             </a>
-                            <a href="https://twitter.com/Tr3t_s" target="_blank" rel="noopener noreferrer" class="sidebar-sns-link" data-brand="twitter">
+                            <a href="https://twitter.com/Tr3t_s" target="_blank" rel="noopener noreferrer" class="sidebar-sns-link" data-brand="tech">
                                 <span class="sns-icon"><Twitter size={16} /></span>
                                 <span class="sns-label">Tech</span>
                             </a>
