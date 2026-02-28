@@ -22,7 +22,10 @@ import {
     Users,
     Cake,
     PartyPopper,
-    Wine
+    Wine,
+    Timer,
+    GitGraph,
+    Rocket
 } from "lucide-astro";
 
 // === RSSフィード取得 ===
@@ -136,6 +139,21 @@ if (!isDev) {
 const latestPosts = [...localPosts, ...notePosts, ...zennPosts, ...qiitaPosts]
     .sort((a, b) => b.date.valueOf() - a.date.valueOf())
     .slice(0, 3); // 最新記事、3選 
+
+// === GitHub Contributions取得 ===
+type ContributionDay = { date: string; count: number; level: number };
+let ghContributions: ContributionDay[] = [];
+let ghTotal = 0;
+try {
+    const ghRes = await fetch('https://github-contributions-api.jogruber.de/v4/toramutton?y=last');
+    const ghData = await ghRes.json();
+    ghTotal = ghData.total?.lastYear || 0;
+    ghContributions = ghData.contributions || [];
+} catch (e) {
+    console.error('GitHub contributions fetch failed', e);
+}
+// 直近13週分（91日）だけ表示
+const recentContributions = ghContributions.slice(-91);
 
 // === Countdown ===
 const missions = [
@@ -367,7 +385,7 @@ const friendLinks: FriendLink[] = [
             <div class="grid-container">
                 <div class="glass-card mission-card">
                     <div class="card-header">
-                        <Target class="icon-secondary" size={24} />
+                        <Target class="icon-blue" size={24} />
                         <h3>Countdown</h3>
                     </div>
                     <div class="mission-list">
@@ -413,9 +431,67 @@ const friendLinks: FriendLink[] = [
                     </div>
                 </div>
 
+                <!-- GitHub Contributions Card -->
+                <div class="glass-card gh-card">
+                    <div class="card-header">
+                        <GitGraph class="icon-blue" size={24} />
+                        <h3>GitHub Contributions</h3>
+                        <span class="gh-total">{ghTotal} contributions in the last year</span>
+                    </div>
+                    <div class="gh-grid" id="gh-grid">
+                        {recentContributions.map((day) => (
+                            <div
+                                class={`gh-cell gh-level-${day.level}`}
+                                data-date={day.date}
+                                data-count={day.count}
+                                title={`${day.date}: ${day.count} contributions`}
+                            />
+                        ))}
+                    </div>
+                    <div class="gh-legend">
+                        <span class="gh-legend-label">Less</span>
+                        <div class="gh-cell gh-level-0" />
+                        <div class="gh-cell gh-level-1" />
+                        <div class="gh-cell gh-level-2" />
+                        <div class="gh-cell gh-level-3" />
+                        <div class="gh-cell gh-level-4" />
+                        <span class="gh-legend-label">More</span>
+                    </div>
+                    <div class="dedicated-link">
+                        <a href="https://github.com/toramutton" target="_blank" rel="noopener noreferrer">View GitHub Profile →</a>
+                    </div>
+                </div>
+
+                <!-- Uptime Card -->
+                <div class="glass-card uptime-card">
+                    <div class="card-header">
+                        <Timer class="icon-blue" size={24} />
+                        <h3>Uptime</h3>
+                    </div>
+                    <div class="uptime-list">
+                        <div class="uptime-item">
+                            <div class="uptime-label"><Cake size={16} class="uptime-icon" /> 生まれてから</div>
+                            <div class="uptime-value">
+                                <span class="uptime-num" id="uptime-birth">--</span>
+                                <span class="uptime-unit">days</span>
+                            </div>
+                            <div class="uptime-date">since 2006/06/20</div>
+                        </div>
+                        <div class="uptime-item">
+                            <div class="uptime-label"><Rocket size={16} class="uptime-icon" /> このサイトができてから</div>
+                            <div class="uptime-value">
+                                <span class="uptime-num" id="uptime-site">--</span>
+                                <span class="uptime-unit">days</span>
+                            </div>
+                            <div class="uptime-date">since 2026/01/02</div>
+                        </div>
+                    </div>
+                    <div class="uptime-clock" id="uptime-clock"></div>
+                </div>
+
                 <div class="glass-card advent-card">
                     <div class="card-header">
-                        <Sparkles class="icon-secondary" size={24} />
+                        <Sparkles class="icon-blue" size={24} />
                         <h3>Advent 2026</h3>
                     </div>
                     <p class="card-desc">
@@ -755,6 +831,38 @@ const friendLinks: FriendLink[] = [
             `,
                     styleBody,
                 );
+            </script>
+
+            <!-- Uptime counter script -->
+            <script>
+            {
+                function updateUptime() {
+                    const now = new Date();
+                    const birth = new Date('2006-06-20T00:00:00+09:00');
+                    const site = new Date('2026-01-02T00:00:00+09:00');
+
+                    const birthDays = Math.floor((now.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24));
+                    const siteDays = Math.floor((now.getTime() - site.getTime()) / (1000 * 60 * 60 * 24));
+
+                    const birthEl = document.getElementById('uptime-birth');
+                    const siteEl = document.getElementById('uptime-site');
+                    const clockEl = document.getElementById('uptime-clock');
+
+                    if (birthEl) birthEl.textContent = birthDays.toLocaleString();
+                    if (siteEl) siteEl.textContent = siteDays.toLocaleString();
+                    if (clockEl) {
+                        clockEl.textContent = now.toLocaleString('ja-JP', {
+                            timeZone: 'Asia/Tokyo',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                        });
+                    }
+                }
+
+                updateUptime();
+                setInterval(updateUptime, 1000);
+            }
             </script>
         </main>
         <Footer />
@@ -1434,6 +1542,139 @@ const friendLinks: FriendLink[] = [
             opacity: 1;
             transform: translateY(0);
         }
+    }
+
+    /* 7.5 GitHub Contributions Card */
+    .gh-card .card-header {
+        flex-wrap: wrap;
+    }
+    .gh-total {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        font-family: 'JetBrains Mono', monospace;
+        margin-left: auto;
+    }
+    .gh-grid {
+        display: grid;
+        grid-template-rows: repeat(7, 1fr);
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(0, 1fr);
+        gap: 3px;
+        margin: 1rem 0;
+        overflow-x: auto;
+    }
+    .gh-cell {
+        width: 100%;
+        aspect-ratio: 1;
+        border-radius: 3px;
+        min-width: 10px;
+        min-height: 10px;
+    }
+    .gh-level-0 { background: rgba(255,255,255,0.05); }
+    .gh-level-1 { background: #0e4429; }
+    .gh-level-2 { background: #006d32; }
+    .gh-level-3 { background: #26a641; }
+    .gh-level-4 { background: #39d353; }
+
+    :global(html:not(.dark)) .gh-level-0 { background: #ebedf0; }
+    :global(html:not(.dark)) .gh-level-1 { background: #9be9a8; }
+    :global(html:not(.dark)) .gh-level-2 { background: #40c463; }
+    :global(html:not(.dark)) .gh-level-3 { background: #30a14e; }
+    :global(html:not(.dark)) .gh-level-4 { background: #216e39; }
+
+    .gh-legend {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        justify-content: flex-end;
+        margin-bottom: 1rem;
+    }
+    .gh-legend .gh-cell {
+        width: 12px;
+        height: 12px;
+        min-width: 12px;
+        min-height: 12px;
+        aspect-ratio: auto;
+    }
+    .gh-legend-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* 7.6 Uptime Card */
+    .uptime-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        margin: 0.5rem 0;
+    }
+
+    .uptime-item {
+        padding: 1rem 1.2rem;
+        background: rgba(0, 0, 0, 0.03);
+        border-radius: 10px;
+        border-left: 3px solid var(--accent-blue);
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    :global(html.dark) .uptime-item {
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .uptime-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-body);
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .uptime-icon {
+        color: var(--accent-blue);
+        flex-shrink: 0;
+    }
+
+    .uptime-value {
+        display: flex;
+        align-items: baseline;
+        gap: 0.4rem;
+    }
+
+    .uptime-num {
+        font-size: 2rem;
+        font-weight: 800;
+        font-family: 'JetBrains Mono', monospace;
+        color: var(--accent-secondary);
+        letter-spacing: -0.02em;
+    }
+
+    .uptime-unit {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .uptime-date {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    .uptime-clock {
+        margin-top: auto;
+        padding-top: 1rem;
+        text-align: center;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        letter-spacing: 0.1em;
     }
 
     @keyframes float-natural {
