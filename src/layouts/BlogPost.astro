@@ -37,9 +37,8 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
 
             .hero-image {
                 width: 100%;
-                max-width: 860px;
-                margin: 0 auto 2rem;
-                padding: 0 1rem;
+                margin: 0;
+                padding: 0;
             }
 
             .hero-image:empty {
@@ -51,8 +50,19 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 width: 100%;
                 height: auto;
                 border-radius: 20px;
-                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
                 object-fit: cover;
+            }
+
+            @media (min-width: 1280px) {
+                .hero-image {
+                    width: calc(100% + 3rem);
+                    margin: -1.5rem -1.5rem 2rem;
+                }
+                
+                .hero-image img {
+                    border-bottom-left-radius: 0;
+                    border-bottom-right-radius: 0;
+                }
             }
 
             .prose {
