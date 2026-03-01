@@ -1,7 +1,7 @@
 ---
 import { SITE_TITLE } from "../consts";
 import HeaderLink from "./HeaderLink.astro";
-import { Menu, X, Sun, Moon } from 'lucide-astro';
+import { Menu, X, Sun, Moon, BookOpenText } from 'lucide-astro';
 ---
 
 <header id="site-header">
@@ -18,6 +18,13 @@ import { Menu, X, Sun, Moon } from 'lucide-astro';
         </div>
 
         <div class="controls-group">
+            <button id="toc-toggle" class="toc-toggle" aria-label="目次を開く">
+                <div class="icon-container-toc">
+                    <span class="icon-toc-open"><BookOpenText size={22} /></span>
+                    <span class="icon-toc-close"><X size={22} /></span>
+                </div>
+            </button>
+
             <button id="theme-toggle" class="theme-toggle" aria-label="テーマ切り替え">
                 <div class="icon-container-theme">
                     <span class="icon-sun"><Sun size={22} /></span>
@@ -52,6 +59,29 @@ import { Menu, X, Sun, Moon } from 'lucide-astro';
 
     // ページ遷移のたびにイベントを再登録
     document.addEventListener('astro:page-load', () => {
+        // --- 0. 目次ボタンの表示制御 ---
+        const tocToggle = document.getElementById('toc-toggle');
+        const tocSidebar = document.querySelector('.blog-toc');
+        if (tocToggle && tocSidebar) {
+            tocToggle.classList.add('has-toc');
+            // onclickでTOCを開閉
+            tocToggle.onclick = () => {
+                tocSidebar.classList.toggle('mobile-open');
+                tocToggle.classList.toggle('active');
+                
+                // ハンバーガーメニューが開いていたら閉じる
+                const menuToggle = document.getElementById('menu-toggle');
+                const navLinks = document.getElementById('nav-links');
+                const header = document.getElementById('site-header');
+                if (menuToggle && menuToggle.classList.contains('open')) {
+                    menuToggle.classList.remove('open');
+                    menuToggle.setAttribute('aria-expanded', 'false');
+                    if (navLinks) navLinks.classList.remove('open');
+                    if (header) header.classList.remove('menu-open');
+                }
+            };
+        }
+
         // --- 1. ハンバーガーメニュー ---
         const menuToggle = document.getElementById('menu-toggle');
         const navLinks = document.getElementById('nav-links');
@@ -134,6 +164,56 @@ import { Menu, X, Sun, Moon } from 'lucide-astro';
         align-items: center;
         gap: 0.5rem;
         z-index: 1001;
+    }
+
+    /* === 目次切り替えボタン (スマホ用 TOC) === */
+    .toc-toggle {
+        display: none; /* 初期状態では非表示 */
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        color: inherit;
+        padding: 0;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        transition: background 0.2s, color 0.2s;
+    }
+
+    .icon-container-toc {
+        position: relative;
+        width: 22px;
+        height: 22px;
+    }
+
+    .icon-toc-open, .icon-toc-close {
+        position: absolute;
+        top: 0;
+        left: 0;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .icon-toc-open { opacity: 1; transform: rotate(0deg) scale(1); }
+    .icon-toc-close { opacity: 0; transform: rotate(-90deg) scale(0.5); }
+
+    .toc-toggle.active .icon-toc-open { opacity: 0; transform: rotate(90deg) scale(0.5); }
+    .toc-toggle.active .icon-toc-close { opacity: 1; transform: rotate(0deg) scale(1); }
+
+    @media (max-width: 1279px) {
+        .toc-toggle.has-toc {
+            display: flex;
+        }
+    }
+
+    .toc-toggle:active {
+        transform: scale(0.9);
+        background: rgba(125, 211, 252, 0.2);
+    }
+    .toc-toggle.active {
+        color: var(--accent-blue);
+        background: rgba(125, 211, 252, 0.1);
     }
 
     /* === テーマ切り替えボタン === */

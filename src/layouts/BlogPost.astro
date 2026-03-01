@@ -22,7 +22,7 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
 
 <html lang="ja">
     <head>
-        <BaseHead title={title} description={description} />
+        <BaseHead title={title} description={description} image={heroImage} />
         <style>
             :global(html) {
                 scroll-behavior: smooth;
@@ -155,6 +155,56 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 }
             }
 
+            .mobile-share-container {
+                display: flex;
+                justify-content: center;
+                margin-top: 3rem;
+                padding-top: 2rem;
+                border-top: 1px dashed var(--border-color);
+            }
+
+            .mobile-share-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                width: 100%;
+                max-width: 280px;
+                padding: 0.8rem;
+                border-radius: 99px;
+                background: rgba(2, 132, 199, 0.08);
+                border: 1px solid rgba(2, 132, 199, 0.15);
+                color: var(--accent-blue);
+                text-decoration: none;
+                font-size: 0.9rem;
+                font-weight: 600;
+                transition: all 0.2s ease;
+            }
+
+            .mobile-share-btn:hover {
+                background: var(--accent-blue);
+                color: white;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+            }
+
+            :global(html.dark) .mobile-share-btn {
+                background: rgba(56, 189, 248, 0.08);
+                border-color: rgba(56, 189, 248, 0.2);
+            }
+
+            :global(html.dark) .mobile-share-btn:hover {
+                background: var(--accent-blue);
+                color: #18181b;
+                box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+            }
+
+            @media (min-width: 1280px) {
+                .mobile-share-container {
+                    display: none;
+                }
+            }
+
             .tags-container {
                 display: flex;
                 flex-wrap: wrap;
@@ -254,9 +304,54 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 width: 100%;
             }
 
-            .blog-sidebar-left,
+            .blog-sidebar-left {
+                display: none;
+            }
+
             .blog-toc {
                 display: none;
+            }
+
+            @media (max-width: 1279px) {
+                .blog-toc {
+                    display: block;
+                    position: fixed;
+                    top: var(--header-height, 64px);
+                    left: 0;
+                    width: 100%;
+                    height: calc(100vh - var(--header-height, 64px));
+                    background: var(--glass-bg, rgba(15, 17, 21, 0.95));
+                    backdrop-filter: var(--glass-blur, blur(20px));
+                    -webkit-backdrop-filter: var(--glass-blur, blur(20px));
+                    z-index: 9998;
+                    padding: 2rem;
+                    overflow-y: auto;
+
+                    /* モバイル目次のアニメーション初期状態 */
+                    opacity: 0;
+                    transform: translateY(20px);
+                    visibility: hidden;
+                    pointer-events: none;
+                    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                }
+
+                .blog-toc.mobile-open {
+                    opacity: 1;
+                    transform: translateY(0);
+                    visibility: visible;
+                    pointer-events: auto;
+                }
+
+                :global(html:not(.dark)) .blog-toc {
+                    background: rgba(255, 255, 255, 0.95);
+                }
+
+                .blog-toc .toc-card {
+                    border: none;
+                    background: transparent;
+                    box-shadow: none;
+                    padding: 1rem 0 0 0; /* プログレスバーとの間に余白を設ける */
+                }
             }
 
             @media (min-width: 1280px) {
@@ -654,6 +749,14 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                             <h1>{title}</h1>
                         </div>
                         <slot />
+
+                        {/* モバイル用シェアボタン (PCでは非表示) */}
+                        <div class="mobile-share-container">
+                            <a href={twitterShareUrl} target="_blank" rel="noopener noreferrer" class="mobile-share-btn">
+                                <Share2 size={16} />
+                                Twitterでシェア
+                            </a>
+                        </div>
                     </div>
                 </article>
 
@@ -692,6 +795,18 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
 
     document.querySelectorAll('article h2').forEach((h2) => {
         observer.observe(h2);
+    });
+
+    // === モバイル用目次のリンククリック時に閉じる ===
+    const tocSidebarMobile = document.querySelector('.blog-toc');
+    const tocToggleBtn = document.getElementById('toc-toggle');
+    document.querySelectorAll('.blog-toc a').forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth < 1280 && tocSidebarMobile && tocSidebarMobile.classList.contains('mobile-open')) {
+                tocSidebarMobile.classList.remove('mobile-open');
+                if (tocToggleBtn) tocToggleBtn.classList.remove('active');
+            }
+        });
     });
 
     // === 目次アクティブ追従 ===
