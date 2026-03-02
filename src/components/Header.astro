@@ -8,11 +8,11 @@ import { Menu, X, Sun, Moon, BookOpenText } from 'lucide-astro';
     <nav>
         <div class="logo-group">
             <h2>
-                <a href="/" class="title-link" style="display: flex; align-items: center; gap: 0.5rem;">
+                <a href="/" class="title-link">
                 
-                    <img src="/toramutton.jpg" alt="icon" width={32} height={32} style="border-radius: 50%; object-fit: cover;" />
+                    <img src="/toramutton.jpg" alt="icon" width={32} height={32} style="border-radius: 50%; object-fit: cover; flex-shrink: 0;" />
                     
-                    {"ToraMutton's Homepage"}
+                    <span style="overflow: hidden; text-overflow: ellipsis;">{"ToraMutton's Homepage"}</span>
                 </a>
             </h2>
         </div>
@@ -292,6 +292,12 @@ import { Menu, X, Sun, Moon, BookOpenText } from 'lucide-astro';
         color: inherit !important; 
         text-decoration: none !important;
         border: none !important;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     .title-link:hover {
         color: var(--accent-blue) !important;
