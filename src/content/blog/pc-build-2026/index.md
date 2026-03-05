@@ -6,3 +6,10 @@ heroImage: './trapezium-08.png'
 tags: ["自作PC"]
 draft: true
 ---
+
+# 動機
+それは2025年の夏。[2回もノートPCをぶっ壊した](https://note.com/toramutton/n/n7867a442b905)私は、
+「修理している間はPCが使えない」という当たり前すぎる事実にイライラしてました。
+
+
+# パーツ
