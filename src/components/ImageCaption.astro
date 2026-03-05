@@ -1,0 +1,34 @@
+---
+import { Image } from 'astro:assets';
+
+interface Props {
+  src: any;
+  alt: string;
+  caption: string;
+}
+
+const { src, alt, caption } = Astro.props;
+---
+
+<figure class="image-caption-container">
+  <Image src={src} alt={alt} />
+  <figcaption>{caption}</figcaption>
+</figure>
+
+<style>
+  .image-caption-container {
+    margin: 2rem 0;
+    text-align: center;
+  }
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid #444;
+  }
+  figcaption {
+    margin-top: 0.8rem;
+    font-size: 0.85em;
+    color: #a0a0a0;
+  }
+</style>

@@ -1,0 +1,214 @@
+---
+title: 'メモリ大高騰時代にギリギリ自作PCを間に合わせた話'
+description: '人生初の自作PCについて'
+pubDate: '2026-03-05'
+heroImage: './trapezium-08.png'
+tags: ["自作PC"]
+draft: true
+---
+import ImageCaption from '../../../components/ImageCaption.astro';
+
+## 動機
+それは2025年の夏。[2回もノートPCをぶっ壊した](https://note.com/toramutton/n/n7867a442b905)私は、
+「修理している間はPCが使えない」という当たり前すぎる事実にイライラしてました。
+
+そこで私は考えました。
+
+> **ノートがないなら、デスクトップを使えばいいじゃない!!!!**
+
+ということで、せっかくならと自作PCを組むことにしました。
+~~どうして決意から制作まで半年以上かかったのかというと、普通に金欠~~
+
+ここで勘の良い人は気づくかもしれませんね。
+
+**「こんな時期に自作PCを組むなんて正気じゃない」**
+
+と。
+
+それも当然、どこぞの生成AIのせいで**メモリが爆高騰**しているのですからね。
+
+<ImageCaption 
+  src={import('./ddr5.png')} 
+  alt="ありえないメモリ(2026年3月時点)" 
+  caption="本当にありえない(2026年3月時点)" 
+/>
+
+しかし今回は[ThunFasky氏](https://thunfasky.com/)の協力により、
+かなり「耐え」の金額で仕入れることができました。かんしゃあ〜
+
+## 構成
+
+では、具体的な構成について紹介やっていきましょう！
+まず**全て**のパーツを含んだ表はこんな感じです。
+
+| パーツ | モデル | 価格 (円) |
+| :--- | :--- | :--- |
+| [CPU](#cpu) | Ryzen 7 7700 | 30,000 |
+| [GPU](#gpu) | Radeon RX 9060 XT 16GB | 51,980 |
+| [マザボ](#マザボ) | ASUS A620M-K | 9,900 |
+| [メモリ](#メモリ) | DDR5 32GB | 21,000 |
+| [ストレージ](#ストレージ) | SSD 2TB | 16,000 |
+| [ケース](#ケース) | MONTECH AIR 903 MAX | 8,980 |
+| [CPUクーラー](#cpuクーラー) | 虎徹 Mark II | 3,000 |
+| [グリス](#グリス) | FROST-X25 | 0 |
+| [電源](#電源) | 玄人志向 PLATINUM 600W | 6,000 |
+| [OS](#os) | Windows11 home | 15,000 |
+| [Wi-Fi](#wifi) | Sungale 1300Mbps | 1,783 |
+| [LANケーブル](#lan) | CAT6A 15m | 1,936 |
+| [スタンド](#スタンド) | EEX-CST01BK | 2,230 |
+| [土台](#土台) | 物理学概論の教科書 | 2,640 |
+| [アクスタ](#アクスタ) | レゼ | 4,899 |
+| **合計** | | **¥175,348** |
+
+自作PCの表で絶対出てこないような項目もありますが、後で詳しく説明します。
+
+### CPU
+Ryzen 7 7700。大体何やるにしても困らないコスパ最強CPUでした！迷ったらコレ
+
+<ImageCaption 
+  src={import('./cpu.png')} 
+  alt="Ryzen 7 7700" 
+  caption="万能CPU" 
+/>
+
+### GPU
+Radeon RX 9060 XT **16GB**。なんだかんだこいつにめちゃくちゃ助けられてる。
+今後のこと考えたらVRAM16GBは正義ですな。今のとこGPU性能で困ったこと無いです。
+
+<ImageCaption 
+  src={import('./gpu.png')} 
+  alt="Radeon RX 9060 XT" 
+  caption="つよつよグラボ" 
+/>
+
+### マザボ
+ASUS A620M-K。必要最低限の機能に絞ってコストを抑えたマザボ。ASUSはやっぱ良いですねぇ
+
+<ImageCaption 
+  src={import('./mb.png')} 
+  alt="ASUS A620M-K" 
+  caption="ピン折らなくて良かった" 
+/>
+
+### メモリ
+なんと、2万ちょいで手に入ったDDR5 32GB。 
+ぶっ壊れてほしくないパーツ堂々の第1位。
+
+<ImageCaption 
+  src={import('./ram.png')} 
+  alt="DDR5 32GB" 
+  caption="お宝" 
+/>
+
+### ストレージ
+SSD 2TB。ゲームも開発環境も余裕で入る容量。
+この大きさに2TB入れられる技術力、意味がわからない...
+
+<ImageCaption 
+  src={import('./ssd.png')} 
+  alt="SSD 2TB" 
+  caption="止めるネジ小さすぎ" 
+/>
+
+### ケース
+MONTECH AIR 903 MAX。
+
+**とにかくデカい！！！**
+
+デカすぎてケーブルの長さがギリギリでした、危ない
+
+あと自由自在に色を変えられるのがとてつもなく素晴らしいです。
+
+<ImageCaption 
+  src={import('./case.png')} 
+  alt="MONTECH AIR 903 MAX" 
+  caption="かっこいい" 
+/>
+
+### CPUクーラー
+虎徹 Mark II。最初見たとき"刃物"すぎてびっくりしました。
+
+<ImageCaption 
+  src={import('./cooler.png')} 
+  alt="虎徹 Mark II" 
+  caption="刃物" 
+/>
+
+### グリス
+FROST-X25。CPUクーラーとセットってことで、実質タダでくれて嬉しい。
+
+<ImageCaption 
+  src={import('./grease.png')} 
+  alt="FROST-X25" 
+  caption="初めて塗った割には上手くできた(はず)" 
+/>
+
+### 電源
+玄人志向 PLATINUM 600W。なんと、プラチナで6000円！
+
+<ImageCaption 
+  src={import('./psu.png')} 
+  alt="玄人志向 PLATINUM 600W" 
+  caption="全ての源" 
+/>
+
+### OS
+Windows 11 home。ゲーム用にはやっぱりこれ。 
+
+<ImageCaption 
+  src={import('./os.png')} 
+  alt="Windows 11 home" 
+  caption="たまに問題行動起こしてる"
+/>
+
+### Wi-Fi
+Sungale 1300Mbps。最初はWifiでええか、と思っていたが...？
+
+<ImageCaption 
+  src={import('./wifi.png')} 
+  alt="Sungale 1300Mbps" 
+  caption="実はこのあとリストラされる"
+/>
+
+### LANケーブル
+CAT6A 15m。はい、Wifiだとゲームでのfpsドロップが尋常じゃないので有線にしました。
+学習費用、2000円弱...
+
+<ImageCaption 
+  src={import('./lan.png')} 
+  alt="CAT6A 15m" 
+  caption="安定の有線接続"
+/>
+
+### スタンド
+EEX-CST01BK。PCを床に直接置くと埃を吸い込みまくるので、ちょい浮かします。
+
+<ImageCaption 
+  src={import('./stand.png')} 
+  alt="EEX-CST01BK" 
+  caption="20kg耐えるので安心安全"
+/>
+
+### 土台
+一番意味がわからないと思いますが、ちゃんと理由があります。
+PCケースとスタンドの形状の相性が悪く、間にコレを挟んだら安定したから採用しました。
+ちなみに健康論や化学概論の教科書でも試しましたが、物概が一番安定しました。
+
+<ImageCaption 
+  src={import('./book.png')} 
+  alt="物理学概論の教科書" 
+  caption="土台（物理）"
+/>
+
+### アクスタ
+[米津玄師 16thシングル『IRIS OUT / JANE DOE』](https://reissuerecords.net/2025/09/22/irisout_janedoe_0924/)の
+IRIS OUT盤に付属していたレゼのアクスタ。
+ケースの赤いライトで照らすと雰囲気最高になります。
+
+<ImageCaption 
+  src={import('./reze.png')} 
+  alt="レゼ" 
+  caption="死ぬほど可愛い上目遣い"
+/>
+
+## 組み立て
