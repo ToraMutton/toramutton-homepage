@@ -1,6 +1,6 @@
 ---
 import { Twitter, Github, Rocket, MessageCircle } from "lucide-astro";
-
+import { GITHUB_URL, TW_DAILY_URL, TW_TECH_URL, NOTE_URL, ZENN_URL, QIITA_URL } from '../consts';
 const today = new Date();
 ---
 
@@ -8,7 +8,7 @@ const today = new Date();
     <div class="footer-container">
         <div class="social-links">
             <a
-                href="https://twitter.com/ToraMutton"
+                href={TW_DAILY_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Daily"
@@ -17,7 +17,7 @@ const today = new Date();
             </a>
 
             <a
-                href="https://twitter.com/Tr3t_s"
+                href={TW_TECH_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Tech"
@@ -26,7 +26,7 @@ const today = new Date();
             </a>
 
             <a
-                href="https://github.com/ToraMutton"
+                href={GITHUB_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="GitHub"
@@ -35,7 +35,7 @@ const today = new Date();
             </a>
 
             <a
-                href="https://note.com/toramutton"
+                href={NOTE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Note"
@@ -54,7 +54,7 @@ const today = new Date();
             </a>
 
             <a
-                href="https://zenn.dev/toramutton"
+                href={ZENN_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Zenn"
@@ -73,7 +73,7 @@ const today = new Date();
             </a>
 
             <a
-                href="https://qiita.com/ToraMutton"
+                href={QIITA_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Qiita"
