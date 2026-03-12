@@ -3,7 +3,16 @@ import { getCollection } from "astro:content";
 import BaseHead from "../components/BaseHead.astro";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
-import { SITE_TITLE, SITE_DESCRIPTION } from "../consts";
+import { 
+    SITE_TITLE, 
+    SITE_DESCRIPTION, 
+    X_DAILY_URL, 
+    X_TECH_URL, 
+    GITHUB_URL, 
+    NOTE_URL, 
+    ZENN_URL, 
+    QIITA_URL 
+} from "../consts";
 import { Image } from "astro:assets";
 import heroImage from "../assets/toramutton.jpg";
 import rssParser from "rss-parser";
@@ -234,7 +243,7 @@ const friendLinks: FriendLink[] = [
                         <p class="tagline">UEC25 I 類</p>
 
                         <p class="hero-desc">
-                            最近はArchLinuxのRicingにハマってます🍚
+                            おはようございます！
                         </p>
 
                         <div class="hero-actions">
@@ -245,7 +254,7 @@ const friendLinks: FriendLink[] = [
 
                         <div class="social-links">
                             <a
-                                href="https://twitter.com/ToraMutton"
+                                href={X_DAILY_URL}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 class="social-btn twitter-icon"
@@ -254,7 +263,7 @@ const friendLinks: FriendLink[] = [
                                 <span>Daily</span>
                             </a>
                             <a
-                                href="https://twitter.com/Tr3t_s"
+                                href={X_TECH_URL}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 class="social-btn twitter-tech-icon"
@@ -263,7 +272,7 @@ const friendLinks: FriendLink[] = [
                                 <span>Tech</span>
                             </a>
                             <a
-                                href="https://github.com/ToraMutton"
+                                href={GITHUB_URL}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 class="social-btn github-icon"
@@ -272,7 +281,7 @@ const friendLinks: FriendLink[] = [
                                 <span>GitHub</span>
                             </a>
                             <a
-                                href="https://note.com/toramutton"
+                                href={NOTE_URL}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 class="social-btn note-icon"
@@ -291,7 +300,7 @@ const friendLinks: FriendLink[] = [
                                 <span>note</span>
                             </a>
                             <a
-                                href="https://zenn.dev/toramutton"
+                                href={ZENN_URL}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 class="social-btn zenn-icon"
@@ -310,7 +319,7 @@ const friendLinks: FriendLink[] = [
                                 <span>Zenn</span>
                             </a>
                             <a
-                                href="https://qiita.com/ToraMutton"
+                                href={QIITA_URL}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 class="social-btn qiita-icon"
