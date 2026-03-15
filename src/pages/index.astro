@@ -1107,7 +1107,9 @@ const friendLinks: FriendLink[] = [
         padding: 1.5rem;
         border-radius: 16px;
         border: 1px solid rgba(0, 0, 0, 0.1);
-        background: var(--surface);
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
     }
 
     :global(html.dark) .glass-card {
