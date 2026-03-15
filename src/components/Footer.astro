@@ -114,8 +114,7 @@ const today = new Date();
 </footer>
 
 <script>
-{
-    async function loadCounter() {
+    document.addEventListener('astro:page-load', async () => {
         const el = document.getElementById('counter-num');
         if (!el) return;
         try {
@@ -126,9 +125,7 @@ const today = new Date();
         } catch {
             el.textContent = '---';
         }
-    }
-    loadCounter();
-}
+    });
 </script>
 
 <style>
