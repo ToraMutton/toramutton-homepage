@@ -92,9 +92,11 @@ const today = new Date();
             </a>
         </div>
 
+        <!-- カウンター機能は一旦保留
         <div class="visitor-counter" id="visitor-counter">
             <span class="counter-text">あなたは <span class="counter-num" id="counter-num">-------</span> 人目の訪問者です</span>
         </div>
+        -->
 
         <div class="credits">
             <span class="copyright"
@@ -114,6 +116,7 @@ const today = new Date();
 </footer>
 
 <script>
+    /* カウンター機能は一旦保留
     document.addEventListener('astro:page-load', async () => {
         const el = document.getElementById('counter-num');
         if (!el) return;
@@ -126,6 +129,7 @@ const today = new Date();
             el.textContent = '---';
         }
     });
+    */
 </script>
 
 <style>
