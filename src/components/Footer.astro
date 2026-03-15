@@ -92,6 +92,10 @@ const today = new Date();
             </a>
         </div>
 
+        <div class="visitor-counter" id="visitor-counter">
+            <span class="counter-text">あなたは <span class="counter-num" id="counter-num">-------</span> 人目の訪問者です</span>
+        </div>
+
         <div class="credits">
             <span class="copyright"
                 >&copy; {today.getFullYear()} ToraMutton</span
@@ -108,6 +112,24 @@ const today = new Date();
         </div>
     </div>
 </footer>
+
+<script>
+{
+    async function loadCounter() {
+        const el = document.getElementById('counter-num');
+        if (!el) return;
+        try {
+            const res = await fetch('/api/counter');
+            const data = await res.json();
+            const numStr = String(data.count).padStart(7, '0');
+            el.textContent = numStr;
+        } catch {
+            el.textContent = '---';
+        }
+    }
+    loadCounter();
+}
+</script>
 
 <style>
     footer {
@@ -193,7 +215,36 @@ const today = new Date();
     /* その他共通ホバー */
     .social-links a:hover {
         color: #fff;
-        /* background: var(--accent-blue); */
+    }
+
+    /* === 訪問者カウンター === */
+    .visitor-counter {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem 1.2rem;
+        border: 1px dashed var(--border-color);
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.02);
+    }
+
+    :global(html.dark) .visitor-counter {
+        background: rgba(255, 255, 255, 0.02);
+        border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .counter-text {
+        font-family: "JetBrains Mono", "Menlo", monospace;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        letter-spacing: 0.03em;
+    }
+
+    .counter-num {
+        color: var(--accent-blue);
+        font-weight: 700;
+        font-size: 0.85rem;
+        letter-spacing: 0.1em;
     }
 
     /* === クレジット周り === */
