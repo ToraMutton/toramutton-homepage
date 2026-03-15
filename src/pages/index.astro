@@ -957,17 +957,18 @@ const friendLinks: FriendLink[] = [
     .view-all {
         display: inline-flex;
         align-items: center;
-        gap: 0.4rem;
-        padding: 0.6rem 1.2rem;
-        font-size: 0.85rem;
-        font-weight: 600;
+        gap: 0.5rem;
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
         color: var(--text-muted);
-        background: transparent;
-        border: 1px solid var(--border-color);
-        border-radius: 99px;
         text-decoration: none;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        white-space: nowrap;
+        padding: 0.6rem 1.2rem;
+        border-radius: 99px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border: 1px solid var(--border-color);
+        transition: all 0.2s ease;
     }
 
     .view-all:hover {
@@ -983,6 +984,20 @@ const friendLinks: FriendLink[] = [
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 1.5rem;
+    }
+
+    .blog-card {
+        display: flex;
+        flex-direction: column;
+        background: var(--glass-bg);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        text-decoration: none;
+        color: inherit;
     }
 
     .post-card-mini {
