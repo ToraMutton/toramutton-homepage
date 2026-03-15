@@ -250,6 +250,8 @@ const plannedWorks = works.filter(w => w.status === 'planned');
 
     .glass-card {
         background: var(--surface);
+        backdrop-filter: var(--glass-blur);
+        -webkit-backdrop-filter: var(--glass-blur);
         padding: 1.8rem;
         border-radius: 16px;
         border: 1px solid var(--border-color);
@@ -262,7 +264,6 @@ const plannedWorks = works.filter(w => w.status === 'planned');
 
     :global(html.dark) .glass-card {
         background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(10px);
         border-color: rgba(255, 255, 255, 0.1);
     }
 
