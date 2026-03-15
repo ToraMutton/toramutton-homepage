@@ -4,11 +4,14 @@
 /* =========================================
    1. リセット & 基本設定
    ========================================= */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
     margin: 0;
     padding: 0;
     width: 100%;
@@ -25,13 +28,13 @@ html, body {
     --surface: #ffffff;
     --text-main: #334155;
     --text-muted: #64748b;
-    
+
     --accent-blue: #0056b3;
     --accent-secondary: #007bff;
-    
+
     --border-color: rgba(0, 0, 0, 0.1);
     --glass-bg: rgba(255, 255, 255, 0.85);
-    
+
     /* コンポーネント用カラー */
     --code-bg: #ffffff;
     --code-text: #ef4444;
@@ -56,7 +59,7 @@ html.dark {
 
     --accent-blue: #38bdf8;
     --accent-secondary: #f7f263;
-    
+
     --border-color: rgba(255, 255, 255, 0.1);
     --glass-bg: rgba(24, 24, 27, 0.9);
     --glass-blur: blur(20px);
@@ -90,7 +93,11 @@ main {
 }
 
 /* 見出し一括設定 */
-h1, h2, h3, h4, h5 {
+h1,
+h2,
+h3,
+h4,
+h5 {
     color: var(--text-main);
     line-height: 1.3;
     margin-top: 2.5rem;
@@ -107,7 +114,7 @@ h1 {
 
 h2 {
     position: relative;
-    display: block; 
+    display: block;
     width: 100%;
     margin-top: 4rem;
     margin-bottom: 1.5rem;
@@ -140,14 +147,17 @@ h2.visible::after {
     margin-bottom: 1.5rem;
 }
 
-h4 { font-size: 1.25rem; }
+h4 {
+    font-size: 1.25rem;
+}
 
 p {
     margin-bottom: 1.5rem;
     color: var(--text-main);
 }
 
-strong, b {
+strong,
+b {
     color: var(--text-main);
     font-weight: 700;
 }
@@ -169,7 +179,7 @@ img {
     max-width: 100%;
     height: auto;
     border-radius: var(--radius);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 /* =========================================
@@ -190,10 +200,10 @@ pre {
     padding: 1.5rem;
     border-radius: var(--radius);
     overflow-x: auto;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-pre > code {
+pre>code {
     background: none;
     color: #f8fafc;
     padding: 0;
@@ -216,8 +226,13 @@ hr {
 }
 
 @media (max-width: 720px) {
-    main { padding: 2rem 1rem; }
-    h1 { font-size: 2rem; }
+    main {
+        padding: 2rem 1rem;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
 }
 
 /* =========================================
@@ -242,6 +257,7 @@ hr {
 .mission-title {
     font-weight: 700;
 }
+
 html:not(.dark) .mission-title {
     color: #1e293b;
 }
@@ -250,4 +266,32 @@ html:not(.dark) .mission-title {
     background: var(--badge-bg);
     color: var(--badge-text);
     border: 1px solid var(--border-color);
+}
+
+/* =========================================
+   6. View Transition (テーマ切替アニメーション)
+   ========================================= */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+    z-index: 1;
+}
+
+::view-transition-new(root) {
+    z-index: 9999;
+    animation: circle-reveal 0.5s ease-in-out;
+}
+
+@keyframes circle-reveal {
+    from {
+        clip-path: circle(0% at var(--tx, 50%) var(--ty, 50%));
+    }
+
+    to {
+        clip-path: circle(150% at var(--tx, 50%) var(--ty, 50%));
+    }
 }

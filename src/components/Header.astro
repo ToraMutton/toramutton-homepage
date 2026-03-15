@@ -43,6 +43,7 @@ import { Menu, X, Sun, Moon, BookOpenText } from 'lucide-astro';
         <div id="nav-links" class="internal-links">
             <HeaderLink href="/">Home</HeaderLink>
             <HeaderLink href="/blog">Blog</HeaderLink>
+            <HeaderLink href="/works">Works</HeaderLink>
             <HeaderLink href="/about">About</HeaderLink>
         </div>
     </nav>
@@ -102,7 +103,11 @@ import { Menu, X, Sun, Moon, BookOpenText } from 'lucide-astro';
         // --- 2. テーマ切り替えボタンの制御 ---
         const themeToggle = document.getElementById('theme-toggle');
         if (themeToggle) {
-            themeToggle.onclick = () => {
+            themeToggle.onclick = (e: MouseEvent) => {
+                const x = e.clientX;
+                const y = e.clientY;
+                document.documentElement.style.setProperty('--tx', `${x}px`);
+                document.documentElement.style.setProperty('--ty', `${y}px`);
                 // @ts-ignore
                 if (!document.startViewTransition) {
                     toggleTheme();
