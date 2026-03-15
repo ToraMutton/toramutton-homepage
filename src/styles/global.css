@@ -20,6 +20,42 @@ body {
 }
 
 /* =========================================
+   背景パーティクル（星空 / 粒子）アニメーション
+   ========================================= */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 200vh;
+    /* スクロール用に高さを倍に */
+    z-index: -1;
+    pointer-events: none;
+
+    /* 3層の星/粒子を描画 */
+    background-image:
+        radial-gradient(var(--star-color) 1px, transparent 1px),
+        radial-gradient(var(--star-color) 1px, transparent 1px),
+        radial-gradient(var(--star-color) 2px, transparent 2px);
+    background-size: 550px 550px, 350px 350px, 250px 250px;
+    background-position: 0 0, 40px 60px, 130px 270px;
+
+    animation: star-drift 120s linear infinite;
+}
+
+@keyframes star-drift {
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(-50%);
+        /* 100vh分上に移動してループ */
+    }
+}
+
+/* =========================================
    2. 変数定義
    ========================================= */
 :root {
@@ -34,6 +70,9 @@ body {
 
     --border-color: rgba(0, 0, 0, 0.1);
     --glass-bg: rgba(255, 255, 255, 0.85);
+
+    /* 背景パーティクル色 (ライトモード: 薄いブルーグレー) */
+    --star-color: rgba(0, 86, 179, 0.15);
 
     /* コンポーネント用カラー */
     --code-bg: #ffffff;
@@ -63,6 +102,9 @@ html.dark {
     --border-color: rgba(255, 255, 255, 0.1);
     --glass-bg: rgba(24, 24, 27, 0.9);
     --glass-blur: blur(20px);
+
+    /* 背景星色 (ダークモード: 白) */
+    --star-color: rgba(255, 255, 255, 0.4);
 
     /* コンポーネント用カラー（ダーク） */
     --code-bg: #0f1115;
