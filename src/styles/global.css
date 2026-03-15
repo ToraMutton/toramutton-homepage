@@ -35,9 +35,9 @@ body::before {
 
     /* 3層の星/粒子を描画 */
     background-image:
-        radial-gradient(var(--star-color) 1px, transparent 1px),
-        radial-gradient(var(--star-color) 1px, transparent 1px),
-        radial-gradient(var(--star-color) 2px, transparent 2px);
+        radial-gradient(var(--star-color) 0.8px, transparent 0.8px),
+        radial-gradient(var(--star-color) 0.8px, transparent 0.8px),
+        radial-gradient(var(--star-color) 1.2px, transparent 1.2px);
     background-size: 550px 550px, 350px 350px, 250px 250px;
     background-position: 0 0, 40px 60px, 130px 270px;
 
@@ -72,7 +72,7 @@ body::before {
     --glass-bg: rgba(255, 255, 255, 0.85);
 
     /* 背景パーティクル色 (ライトモード: 薄いブルーグレー) */
-    --star-color: rgba(0, 86, 179, 0.15);
+    --star-color: rgba(0, 86, 179, 0.35);
 
     /* コンポーネント用カラー */
     --code-bg: #ffffff;
@@ -104,7 +104,7 @@ html.dark {
     --glass-blur: blur(20px);
 
     /* 背景星色 (ダークモード: 白) */
-    --star-color: rgba(255, 255, 255, 0.4);
+    --star-color: rgba(255, 255, 255, 0.75);
 
     /* コンポーネント用カラー（ダーク） */
     --code-bg: #0f1115;
