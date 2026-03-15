@@ -113,8 +113,12 @@ import { Menu, X, Sun, Moon, BookOpenText } from 'lucide-astro';
                     toggleTheme();
                     return;
                 }
+                document.documentElement.classList.add('theme-transitioning');
                 // @ts-ignore
-                document.startViewTransition(() => toggleTheme());
+                const transition = document.startViewTransition(() => toggleTheme());
+                transition.finished.then(() => {
+                    document.documentElement.classList.remove('theme-transitioning');
+                });
             };
         }
     });
