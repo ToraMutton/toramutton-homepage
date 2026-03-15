@@ -4,7 +4,7 @@ import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { SITE_TITLE } from '../consts';
-import { ExternalLink, Github, Code2, Palette, Gamepad2 } from 'lucide-astro';
+import { ExternalLink, Github, Code2, Palette, Gamepad2, Shapes, Cpu } from 'lucide-astro';
 
 interface Work {
     name: string;
@@ -14,6 +14,7 @@ interface Work {
     tags: string[];
     icon: any;
     year: string;
+    planned?: boolean;
 }
 
 const works: Work[] = [
@@ -27,11 +28,29 @@ const works: Work[] = [
         year: "2026",
     },
     {
-        name: "Minecraft Skin Editor",
-        description: "ブラウザ上で動くMinecraftスキンエディター。ピクセルペイント、3Dプレビュー（Three.js）、PNG入出力、オートセーブ機能付き。",
-        tags: ["TypeScript", "Three.js", "Canvas API"],
+        name: "Minecraft Skin Editor(未)",
+        description: "ブラウザ上で動くMinecraftスキンエディター。ピクセルペイント、3Dプレビュー(Three.js)、PNG入出力、オートセーブ機能付きの予定。",
+        tags: ["TypeScript", "Three.js"],
         icon: Gamepad2,
-        year: "2026",
+        year: "2026春予定",
+        github: "https://github.com/ToraMutton/minecraft-skin-editor",
+        planned: true,
+    },
+    {
+        name: "幾何学模様生成サイト(未)",
+        description: "TypeScriptで作る幾何学模様ジェネレーター。パラメータをいじってリアルタイムで模様を生成・エクスポートできる予定。",
+        tags: ["TypeScript"],
+        icon: Shapes,
+        year: "2026春予定",
+        planned: true,
+    },
+    {
+        name: "ローカルLLM環境(未)",
+        description: "AMD GPU (Radeon RX 9060 XT 16GB) + ROCmによるローカルLLM実行環境の構築予定",
+        tags: ["Python", "ROCm", "AMD GPU"],
+        icon: Cpu,
+        year: "2026夏〜秋予定",
+        planned: true,
     },
 ];
 ---
@@ -46,11 +65,11 @@ const works: Work[] = [
         <main>
             <section class="works-section">
                 <h1 class="works-title">Works</h1>
-                <p class="works-desc">制作したもの一覧</p>
+                <p class="works-desc">制作した・するもの一覧</p>
 
                 <div class="works-grid">
                     {works.map((work) => (
-                        <div class="work-card glass-card">
+                        <div class={`work-card glass-card${work.planned ? ' planned' : ''}`}>
                             <div class="work-header">
                                 <work.icon class="work-icon" size={24} />
                                 <div class="work-meta">
@@ -132,6 +151,15 @@ const works: Work[] = [
         background: rgba(255, 255, 255, 0.03);
         backdrop-filter: blur(10px);
         border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .glass-card.planned {
+        opacity: 0.55;
+        border-style: dashed;
+    }
+
+    .glass-card.planned:hover {
+        opacity: 0.8;
     }
 
     .glass-card:hover {
