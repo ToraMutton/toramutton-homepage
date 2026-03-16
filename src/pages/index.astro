@@ -94,7 +94,7 @@ let notePosts: UnifiedPost[] = [];
 if (!isDev) {
     try {
         const noteFeed = await parser.parseURL(
-            "https://note.com/toramutton/rss",
+            `https://note.com/toramutton/rss?t=${Date.now()}`,
         );
         notePosts = noteFeed.items.map((item: any) => ({
             title: item.title || "無題",
@@ -113,7 +113,7 @@ let zennPosts: UnifiedPost[] = [];
 if (!isDev) {
     try {
         const zennFeed = await parser.parseURL(
-            "https://zenn.dev/toramutton/feed",
+            `https://zenn.dev/toramutton/feed?t=${Date.now()}`,
         );
         zennPosts = zennFeed.items.map((item: any) => ({
             title: item.title || "無題",
@@ -132,7 +132,7 @@ let qiitaPosts: UnifiedPost[] = [];
 if (!isDev) {
     try {
         const qiitaFeed = await parser.parseURL(
-            "https://qiita.com/ToraMutton/feed",
+            `https://qiita.com/ToraMutton/feed?t=${Date.now()}`,
         );
         qiitaPosts = qiitaFeed.items.map((item: any) => ({
             title: item.title || "無題",
