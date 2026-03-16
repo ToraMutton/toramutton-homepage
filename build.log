@@ -1,0 +1,87 @@
+
+> toramutton-portfolio@0.0.1 build
+> astro build
+
+[2m21:47:43[22m [34m[content][39m Syncing content
+[2m21:47:43[22m [34m[content][39m Synced content
+[2m21:47:43[22m [34m[types][39m Generated [2m183ms[22m
+[2m21:47:43[22m [34m[build][39m output: [34m"server"[39m
+[2m21:47:43[22m [34m[build][39m mode: [34m"server"[39m
+[2m21:47:43[22m [34m[build][39m directory: [34m/home/toramutton/projects/toramutton-homepage/dist/[39m
+[2m21:47:43[22m [34m[build][39m adapter: [32m@astrojs/vercel[39m
+[2m21:47:43[22m [34m[build][39m Collecting build info...
+[2m21:47:43[22m [34m[build][39m [32m✓ Completed in 208ms.[39m
+[2m21:47:43[22m [34m[build][39m Building server entrypoints...
+[2m21:47:45[22m [34m[vite][39m [32m✓ built in 2.07s[39m
+[2m21:47:45[22m [34m[build][39m [32m✓ Completed in 2.09s.[39m
+
+[42m[30m building client (vite) [39m[49m
+[2m21:47:45[22m [34m[vite][39m transforming...
+[2m21:47:45[22m [34m[vite][39m [32m✓[39m 21 modules transformed.
+[33m[1m21:47:45[22m [WARN] [vite][39m [33mGenerated an empty chunk: "Footer.astro_astro_type_script_index_0_lang".[39m
+[2m21:47:45[22m [34m[vite][39m rendering chunks...
+[2m21:47:45[22m [34m[vite][39m computing gzip size...
+[2m21:47:45[22m [34m[vite][39m [2mdist/client/[22m[2m_astro/[22m[36mindex.astro_astro_type_script_index_1_lang.BPZLM3Ad.js         [39m[1m[2m 6.41 kB[22m[1m[22m[2m │ gzip: 2.39 kB[22m
+[2m21:47:45[22m [34m[vite][39m [2mdist/client/[22m[2m_astro/[22m[36mClientRouter.astro_astro_type_script_index_0_lang.QW52Ox2j.js  [39m[1m[2m15.33 kB[22m[1m[22m[2m │ gzip: 5.30 kB[22m
+[2m21:47:45[22m [34m[vite][39m [32m✓ built in 40ms[39m
+
+[42m[30m prerendering static routes [39m[49m
+[2m21:47:45[22m [32m▶[39m src/pages/about.astro
+[2m21:47:45[22m   [34m└─[39m [2m/about/index.html[22m [2m(+7ms)[22m 
+[2m21:47:45[22m [32m▶[39m src/pages/blog/index.astro
+[2m21:47:45[22m   [34m└─[39m [2m/blog/index.html[22m [2m(+383ms)[22m 
+[2m21:47:45[22m [32m▶[39m src/pages/blog/[...slug].astro
+[2m21:47:45[22m   [34m├─[39m [2m/blog/pc-build-2026/index.html[22m [2m(+9ms)[22m 
+[2m21:47:45[22m   [34m├─[39m [2m/blog/uec-first-year-review/index.html[22m [2m(+2ms)[22m 
+[2m21:47:45[22m   [34m└─[39m [2m/blog/site-launch/index.html[22m [2m(+2ms)[22m 
+[2m21:47:45[22m [35mλ[39m src/pages/rss.xml.js
+[2m21:47:45[22m   [34m└─[39m [2m/rss.xml[22m [2m(+167ms)[22m 
+[2m21:47:45[22m [32m▶[39m src/pages/works.astro
+[2m21:47:45[22m   [34m└─[39m [2m/works/index.html[22m [2m(+2ms)[22m 
+[2m21:47:45[22m [32m▶[39m src/pages/index.astro
+[2m21:47:45[22m   [34m└─[39m [2m/index.html[22m [31m(+1.43s)[39m 
+[2m21:47:47[22m [32m✓ Completed in 2.03s.
+[39m
+[42m[30m generating optimized images [39m[49m
+[2m21:47:47[22m   [32m▶[39m /_astro/trapezium-08.C-V3poVJ_98c9q.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(1/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/planning.9WIc28lF_1oNzSO.webp [2m(reused cache entry)[22m [2m(+0ms)[22m [2m(2/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/site-launch-title.BWf1tXIS_1EOlpI.webp [2m(reused cache entry)[22m [2m(+0ms)[22m [2m(3/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/ddr5.BM8Wxy3N_2stlfU.webp [2m(reused cache entry)[22m [2m(+0ms)[22m [2m(4/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/mb.DntdASJY_Z1RamiE.webp [2m(reused cache entry)[22m [2m(+0ms)[22m [2m(5/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/cpu.BuYlUKf__cCMuP.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(6/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/gpu.C44YvCrg_Mv7ft.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(7/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/ram.B9FgTuX__1WuqgF.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(8/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/ssd.DRjYO2An_Z2iUXm8.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(9/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/case.CKJWtK3E_Z24zGp4.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(10/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/cooler.DsPYwxgL_qYksY.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(11/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/os.RK5D2i-a_Z1rTQgQ.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(12/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/grease.CZfZCbXk_fD35f.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(13/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/wifi.Bwed6QeC_Z1ddfHX.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(14/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/psu.DArTRvEX_zsayF.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(15/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/lan.hiGQk0yX_1lsCmc.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(16/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/trapezium-08.C-V3poVJ_Z1jz8hE.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(17/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/stand.BBDdC_Az_Z1N1cxn.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(18/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/site-launch-title.BWf1tXIS_2mKRfr.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(19/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/planning.9WIc28lF_ZkOAWj.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(20/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/reze.CY_jiTL1_ZfsPi7.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(21/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/book.CTGnsN6F_ArBhV.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(22/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/tsumi.DxtEqhcF_1VCKH6.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(23/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/alice.uNY11eFp_vdayU.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(24/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/wiring.BMGhUh7R_1bDFe.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(25/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/toramutton.Crp2Kz-g_Z3Xd1D.webp [2m(reused cache entry)[22m [2m(+0ms)[22m [2m(26/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/osanai.79pUyqHh_ZEdbvL.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(27/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/on9060.hC520I_t_1pS5HI.webp [2m(reused cache entry)[22m [2m(+1ms)[22m [2m(28/29)[22m
+[2m21:47:47[22m   [32m▶[39m /_astro/trapezium-08.C-V3poVJ_2sDaji.webp [2m(reused cache entry)[22m [2m(+0ms)[22m [2m(29/29)[22m
+[2m21:47:47[22m [32m✓ Completed in 2ms.
+[39m
+[2m21:47:47[22m [34m[build][39m Rearranging server assets...
+[33m[1m21:47:47[22m [WARN] [@astrojs/vercel][39m 
+	The local Node.js version (25) is not supported by Vercel Serverless Functions.
+	Your project will use Node.js 24 as the runtime instead.
+	Consider switching your local version to 24.
+
+[2m21:47:47[22m [34m[@astrojs/vercel][39m Bundling function ../../../../dist/server/entry.mjs
+[2m21:47:47[22m [34m[@astrojs/sitemap][39m `sitemap-index.xml` created at `dist/client`
+[2m21:47:47[22m [34m[@astrojs/vercel][39m Copying static files to .vercel/output/static
+[2m21:47:47[22m [34m[build][39m Server built in [1m4.83s[22m
+[2m21:47:47[22m [34m[build][39m [1mComplete![22m

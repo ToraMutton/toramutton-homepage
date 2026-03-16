@@ -7,6 +7,7 @@ import BaseHead from '../../components/BaseHead.astro';
 import Footer from '../../components/Footer.astro';
 import Header from '../../components/Header.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
+import { fetchOgpImage } from '../../utils/rss';
 
 type UnifiedPost = {
   title: string;
@@ -93,18 +94,25 @@ try {
 let qiitaPosts: UnifiedPost[] = [];
 try {
   const qiitaFeed = await parser.parseURL('https://qiita.com/toramutton/feed');
-  qiitaPosts = qiitaFeed.items.map((item: any) => {
+  const qiitaItems = qiitaFeed.items.map(async (item: any) => {
     const rawTags = item.categories;
     const safeTags = (Array.isArray(rawTags) && rawTags.length > 0) ? rawTags : ['Qiita'];
+    
+    let imageUrl = getImageUrl(item);
+    if (!imageUrl && item.link) {
+        imageUrl = await fetchOgpImage(item.link);
+    }
+    
     return {
       title: item.title || '無題',
       url: item.link || '',
       date: new Date(item.pubDate || new Date()),
-      image: getImageUrl(item),
+      image: imageUrl,
       source: 'qiita' as const,
       tags: safeTags,
     };
   });
+  qiitaPosts = await Promise.all(qiitaItems);
 } catch (e) {
   console.error("Qiita RSS fetch failed", e);
 }

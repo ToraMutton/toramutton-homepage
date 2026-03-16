@@ -17,6 +17,7 @@ import {
 import { Image } from "astro:assets";
 import heroImage from "../assets/toramutton.jpg";
 import rssParser from "rss-parser";
+import { fetchOgpImage } from "../utils/rss";
 import {
     Twitter,
     Github,
@@ -134,13 +135,20 @@ if (!isDev) {
         const qiitaFeed = await parser.parseURL(
             `https://qiita.com/ToraMutton/feed?t=${Date.now()}`,
         );
-        qiitaPosts = qiitaFeed.items.map((item: any) => ({
-            title: item.title || "無題",
-            url: item.link || "",
-            date: new Date(item.pubDate || new Date()),
-            image: item.enclosure?.url,
-            source: "qiita",
-        }));
+        const qiitaItems = qiitaFeed.items.map(async (item: any) => {
+            let imageUrl = item.enclosure?.url;
+            if (!imageUrl && item.link) {
+                imageUrl = await fetchOgpImage(item.link);
+            }
+            return {
+                title: item.title || "無題",
+                url: item.link || "",
+                date: new Date(item.pubDate || new Date()),
+                image: imageUrl,
+                source: "qiita",
+            };
+        });
+        qiitaPosts = await Promise.all(qiitaItems);
     } catch (e) {
         console.error("Qiita RSS fetch failed", e);
     }
