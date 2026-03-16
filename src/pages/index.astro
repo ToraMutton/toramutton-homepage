@@ -79,6 +79,7 @@ interface UnifiedPost {
 const localPostsRaw = await getCollection("blog", ({ data }) => {
     return isDev || data.draft !== true;
 });
+
 const localPosts = localPostsRaw.map((post) => ({
     title: post.data.title,
     url: `/blog/${post.id}/`,
