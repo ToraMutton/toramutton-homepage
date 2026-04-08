@@ -4,15 +4,15 @@ import { getCollection } from "astro:content";
 import BaseHead from "../components/BaseHead.astro";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
-import { 
-    SITE_TITLE, 
-    SITE_DESCRIPTION, 
-    TW_DAILY_URL, 
-    TW_TECH_URL, 
-    GITHUB_URL, 
-    NOTE_URL, 
-    ZENN_URL, 
-    QIITA_URL 
+import {
+    SITE_TITLE,
+    SITE_DESCRIPTION,
+    TW_DAILY_URL,
+    TW_TECH_URL,
+    GITHUB_URL,
+    NOTE_URL,
+    ZENN_URL,
+    QIITA_URL,
 } from "../consts";
 import { Image } from "astro:assets";
 import heroImage from "../assets/toramutton.jpg";
@@ -36,7 +36,8 @@ import {
     Wine,
     Timer,
     GitGraph,
-    Rocket
+    Rocket,
+    ThermometerSun,
 } from "lucide-astro";
 
 // === RSSフィード取得 ===
@@ -157,28 +158,30 @@ if (!isDev) {
 // 統合・ソート・抽出
 const latestPosts = [...localPosts, ...notePosts, ...zennPosts, ...qiitaPosts]
     .sort((a, b) => b.date.valueOf() - a.date.valueOf())
-    .slice(0, 3); // 最新記事、3選 
+    .slice(0, 3); // 最新記事、3選
 
 // === GitHub Contributions取得 ===
 type ContributionDay = { date: string; count: number; level: number };
 let ghContributions: ContributionDay[] = [];
 let ghTotal = 0;
 try {
-    const ghRes = await fetch('https://github-contributions-api.jogruber.de/v4/toramutton?y=last');
+    const ghRes = await fetch(
+        "https://github-contributions-api.jogruber.de/v4/toramutton?y=last",
+    );
     const ghData = await ghRes.json();
     ghTotal = ghData.total?.lastYear || 0;
     ghContributions = ghData.contributions || [];
 } catch (e) {
-    console.error('GitHub contributions fetch failed', e);
+    console.error("GitHub contributions fetch failed", e);
 }
 // 直近13週分（91日）だけ表示
 const recentContributions = ghContributions.slice(-91);
 
 // === Countdown ===
 const missions = [
-    { title: "春休み終了", date: "2026-04-08", icon: GraduationCap },
     { title: "20歳の誕生日", date: "2026-06-20", icon: Cake },
     { title: "TOP4", date: "2026-07-04", icon: PartyPopper },
+    { title: "夏休み", date: "2026-08-06", icon: ThermometerSun },
     { title: "米津玄師ライブ", date: "2026-11-12", icon: Music },
     { title: "2026年終了まで", date: "2026-12-31", icon: Milestone },
 ];
@@ -233,7 +236,6 @@ const friendLinks: FriendLink[] = [
         url: "https://negapainter.work/",
         description: "Switch改造大魔神",
     },
-
 ];
 ---
 
@@ -259,9 +261,7 @@ const friendLinks: FriendLink[] = [
                         <h1 class="hero-title">トラマトのホームページ</h1>
                         <p class="tagline">UEC25 I 類</p>
 
-                        <p class="hero-desc">
-                            技育祭でモチベ爆上がり中
-                        </p>
+                        <p class="hero-desc">B2が始まりました</p>
 
                         <div class="hero-actions">
                             <a href="/about" class="primary-btn">
@@ -467,29 +467,37 @@ const friendLinks: FriendLink[] = [
                     <div class="card-header">
                         <GitGraph class="icon-blue" size={24} />
                         <h3>GitHub Contributions</h3>
-                        <span class="gh-total">{ghTotal} contributions in the last year</span>
+                        <span class="gh-total"
+                            >{ghTotal} contributions in the last year</span
+                        >
                     </div>
                     <div class="gh-grid" id="gh-grid">
-                        {recentContributions.map((day) => (
-                            <div
-                                class={`gh-cell gh-level-${day.level}`}
-                                data-date={day.date}
-                                data-count={day.count}
-                                title={`${day.date}: ${day.count} contributions`}
-                            />
-                        ))}
+                        {
+                            recentContributions.map((day) => (
+                                <div
+                                    class={`gh-cell gh-level-${day.level}`}
+                                    data-date={day.date}
+                                    data-count={day.count}
+                                    title={`${day.date}: ${day.count} contributions`}
+                                />
+                            ))
+                        }
                     </div>
                     <div class="gh-legend">
                         <span class="gh-legend-label">Less</span>
-                        <div class="gh-cell gh-level-0" />
-                        <div class="gh-cell gh-level-1" />
-                        <div class="gh-cell gh-level-2" />
-                        <div class="gh-cell gh-level-3" />
-                        <div class="gh-cell gh-level-4" />
+                        <div class="gh-cell gh-level-0"></div>
+                        <div class="gh-cell gh-level-1"></div>
+                        <div class="gh-cell gh-level-2"></div>
+                        <div class="gh-cell gh-level-3"></div>
+                        <div class="gh-cell gh-level-4"></div>
                         <span class="gh-legend-label">More</span>
                     </div>
                     <div class="dedicated-link">
-                        <a href="https://github.com/toramutton" target="_blank" rel="noopener noreferrer">View GitHub Profile →</a>
+                        <a
+                            href="https://github.com/toramutton"
+                            target="_blank"
+                            rel="noopener noreferrer">View GitHub Profile →</a
+                        >
                     </div>
                 </div>
 
@@ -501,17 +509,25 @@ const friendLinks: FriendLink[] = [
                     </div>
                     <div class="uptime-list">
                         <div class="uptime-item">
-                            <div class="uptime-label"><Cake size={16} class="uptime-icon" /> 生まれてから</div>
+                            <div class="uptime-label">
+                                <Cake size={16} class="uptime-icon" /> 生まれてから
+                            </div>
                             <div class="uptime-value">
-                                <span class="uptime-num" id="uptime-birth">--</span>
+                                <span class="uptime-num" id="uptime-birth"
+                                    >--</span
+                                >
                                 <span class="uptime-unit">days</span>
                             </div>
                             <div class="uptime-date">since 2006/06/20</div>
                         </div>
                         <div class="uptime-item">
-                            <div class="uptime-label"><Rocket size={16} class="uptime-icon" /> このサイトができてから</div>
+                            <div class="uptime-label">
+                                <Rocket size={16} class="uptime-icon" /> このサイトができてから
+                            </div>
                             <div class="uptime-value">
-                                <span class="uptime-num" id="uptime-site">--</span>
+                                <span class="uptime-num" id="uptime-site"
+                                    >--</span
+                                >
                                 <span class="uptime-unit">days</span>
                             </div>
                             <div class="uptime-date">since 2026/01/02</div>
@@ -581,11 +597,9 @@ const friendLinks: FriendLink[] = [
             </div>
 
             <script>
-
                 import { songs } from "../data/songs";
 
                 document.addEventListener("astro:page-load", () => {
-
                     // カウントダウン処理
                     const missionItems =
                         document.querySelectorAll<HTMLElement>(
@@ -689,34 +703,42 @@ const friendLinks: FriendLink[] = [
 
             <!-- Uptime counter script -->
             <script>
-            {
-                function updateUptime() {
-                    const now = new Date();
-                    const birth = new Date('2006-06-20T00:00:00+09:00');
-                    const site = new Date('2026-01-02T00:00:00+09:00');
+                {
+                    function updateUptime() {
+                        const now = new Date();
+                        const birth = new Date("2006-06-20T00:00:00+09:00");
+                        const site = new Date("2026-01-02T00:00:00+09:00");
 
-                    const birthDays = Math.floor((now.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24));
-                    const siteDays = Math.floor((now.getTime() - site.getTime()) / (1000 * 60 * 60 * 24));
+                        const birthDays = Math.floor(
+                            (now.getTime() - birth.getTime()) /
+                                (1000 * 60 * 60 * 24),
+                        );
+                        const siteDays = Math.floor(
+                            (now.getTime() - site.getTime()) /
+                                (1000 * 60 * 60 * 24),
+                        );
 
-                    const birthEl = document.getElementById('uptime-birth');
-                    const siteEl = document.getElementById('uptime-site');
-                    const clockEl = document.getElementById('uptime-clock');
+                        const birthEl = document.getElementById("uptime-birth");
+                        const siteEl = document.getElementById("uptime-site");
+                        const clockEl = document.getElementById("uptime-clock");
 
-                    if (birthEl) birthEl.textContent = birthDays.toLocaleString();
-                    if (siteEl) siteEl.textContent = siteDays.toLocaleString();
-                    if (clockEl) {
-                        clockEl.textContent = now.toLocaleString('ja-JP', {
-                            timeZone: 'Asia/Tokyo',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                        });
+                        if (birthEl)
+                            birthEl.textContent = birthDays.toLocaleString();
+                        if (siteEl)
+                            siteEl.textContent = siteDays.toLocaleString();
+                        if (clockEl) {
+                            clockEl.textContent = now.toLocaleString("ja-JP", {
+                                timeZone: "Asia/Tokyo",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit",
+                            });
+                        }
                     }
-                }
 
-                updateUptime();
-                setInterval(updateUptime, 1000);
-            }
+                    updateUptime();
+                    setInterval(updateUptime, 1000);
+                }
             </script>
         </main>
         <Footer />
@@ -1006,7 +1028,9 @@ const friendLinks: FriendLink[] = [
         border: 1px solid rgba(0, 0, 0, 0.1);
         border-radius: 8px;
         overflow: hidden;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
         text-decoration: none;
         color: inherit;
     }
@@ -1291,7 +1315,7 @@ const friendLinks: FriendLink[] = [
     .links-card {
         grid-column: 1 / -1;
     }
-    
+
     .link-list {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -1423,7 +1447,7 @@ const friendLinks: FriendLink[] = [
     .gh-total {
         font-size: 0.8rem;
         color: var(--text-muted);
-        font-family: 'JetBrains Mono', monospace;
+        font-family: "JetBrains Mono", monospace;
         margin-left: auto;
     }
     .gh-grid {
@@ -1442,17 +1466,37 @@ const friendLinks: FriendLink[] = [
         min-width: 10px;
         min-height: 10px;
     }
-    .gh-level-0 { background: rgba(255,255,255,0.05); }
-    .gh-level-1 { background: #0e4429; }
-    .gh-level-2 { background: #006d32; }
-    .gh-level-3 { background: #26a641; }
-    .gh-level-4 { background: #39d353; }
+    .gh-level-0 {
+        background: rgba(255, 255, 255, 0.05);
+    }
+    .gh-level-1 {
+        background: #0e4429;
+    }
+    .gh-level-2 {
+        background: #006d32;
+    }
+    .gh-level-3 {
+        background: #26a641;
+    }
+    .gh-level-4 {
+        background: #39d353;
+    }
 
-    :global(html:not(.dark)) .gh-level-0 { background: #ebedf0; }
-    :global(html:not(.dark)) .gh-level-1 { background: #9be9a8; }
-    :global(html:not(.dark)) .gh-level-2 { background: #40c463; }
-    :global(html:not(.dark)) .gh-level-3 { background: #30a14e; }
-    :global(html:not(.dark)) .gh-level-4 { background: #216e39; }
+    :global(html:not(.dark)) .gh-level-0 {
+        background: #ebedf0;
+    }
+    :global(html:not(.dark)) .gh-level-1 {
+        background: #9be9a8;
+    }
+    :global(html:not(.dark)) .gh-level-2 {
+        background: #40c463;
+    }
+    :global(html:not(.dark)) .gh-level-3 {
+        background: #30a14e;
+    }
+    :global(html:not(.dark)) .gh-level-4 {
+        background: #216e39;
+    }
 
     .gh-legend {
         display: flex;
@@ -1471,7 +1515,7 @@ const friendLinks: FriendLink[] = [
     .gh-legend-label {
         font-size: 0.7rem;
         color: var(--text-muted);
-        font-family: 'JetBrains Mono', monospace;
+        font-family: "JetBrains Mono", monospace;
     }
 
     /* 7.6 Uptime Card */
@@ -1519,7 +1563,7 @@ const friendLinks: FriendLink[] = [
     .uptime-num {
         font-size: 2rem;
         font-weight: 800;
-        font-family: 'JetBrains Mono', monospace;
+        font-family: "JetBrains Mono", monospace;
         color: var(--accent-secondary);
         letter-spacing: -0.02em;
     }
@@ -1535,14 +1579,14 @@ const friendLinks: FriendLink[] = [
     .uptime-date {
         font-size: 0.7rem;
         color: var(--text-muted);
-        font-family: 'JetBrains Mono', monospace;
+        font-family: "JetBrains Mono", monospace;
     }
 
     .uptime-clock {
         margin-top: auto;
         padding-top: 1rem;
         text-align: center;
-        font-family: 'JetBrains Mono', monospace;
+        font-family: "JetBrains Mono", monospace;
         font-size: 1.1rem;
         font-weight: 600;
         color: var(--text-muted);
