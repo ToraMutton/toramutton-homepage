@@ -4,7 +4,22 @@ import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { SITE_TITLE } from '../consts';
-import { ExternalLink, Github, Code2, Gamepad2, Shapes, Cpu, Keyboard, BarChart3, CheckCircle2, Hammer, Lightbulb, Terminal } from 'lucide-astro';
+import { 
+    ExternalLink, 
+    Github, 
+    Code2, 
+    Gamepad2, 
+    Shapes, 
+    Cpu, 
+    Keyboard, 
+    BarChart3, 
+    CheckCircle2, 
+    Hammer, 
+    Lightbulb, 
+    Terminal,
+    Grid3X3, 
+Grid
+} from 'lucide-astro';
 
 interface Work {
     name: string;
@@ -46,6 +61,16 @@ const works: Work[] = [
         year: "2026",
         url: "https://artoram.toramutton.me",
         github: "https://github.com/ToraMutton/artoram",
+        status: 'completed',
+    },
+    {
+        name: "NEXUS for UEC",
+        description: "電通大生向け時間割アプリ。全ての情報をこれ1つで管理できるのを目指して、開発に携わっています。",
+        tags: ["Swift", "Firebase"],
+        icon: Grid3X3,
+        year: "2026",
+        url: "https://apps.apple.com/jp/app/nexus-for-uec/id6759309164",
+        github: "https://github.com/shiori-02-14/NEXUS-",
         status: 'completed',
     },
     {
