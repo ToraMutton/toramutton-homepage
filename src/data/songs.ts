@@ -167,4 +167,9 @@ export const songs: Song[] = [
   { title: "IRIS OUT", year: "2025" },
   { title: "JANE DOE", year: "2025" },
   { title: "1991", year: "2025" },
+
+  // =====================
+  // 2026
+  // =====================
+  { title: "烏", year: "2026" },
 ];
