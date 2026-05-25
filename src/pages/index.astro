@@ -146,7 +146,7 @@ if (!isDev) {
                 url: item.link || "",
                 date: new Date(item.pubDate || new Date()),
                 image: imageUrl,
-                source: "qiita",
+                source: "qiita" as const,
             };
         });
         qiitaPosts = await Promise.all(qiitaItems);
@@ -240,6 +240,11 @@ const friendLinks: FriendLink[] = [
         name: "ぽりとす",
         url: "https://polythos.net/",
         description: "目指せキリ番",
+    },
+    {
+        name: "RM",
+        url: "my-homepage-2qz3.vercel.app",
+        description: "武道強そう(小並感)",
     },
 ];
 ---
