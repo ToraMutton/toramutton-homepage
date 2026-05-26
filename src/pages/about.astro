@@ -1,6 +1,6 @@
 ---
 export const prerender = true;
-import Layout from "../layouts/BlogPost.astro";
+import Layout from "../layouts/BaseLayout.astro";
 import {
     Twitter,
     Github,
@@ -20,7 +20,7 @@ import {
     Laptop,
     LayoutGrid,
     MousePointer2,
-	Coffee,
+    Coffee,
 } from "lucide-astro";
 
 // --- 1. Programming & Web ---
@@ -149,44 +149,58 @@ const OS_SKILLS = [
 
 // --- 4. Interests / 好きなこと ---
 const INTERESTS = [
-    { 
-        category: "Music", 
-        icon: Music, 
+    {
+        category: "Music",
+        icon: Music,
         items: [
-            "米津玄師", "Eve", "King Gnu",
-            "Mrs. GREEN APPLE", "サカナクション", "ヨルシカ"
-        ] 
+            "米津玄師",
+            "Eve",
+            "King Gnu",
+            "Mrs. GREEN APPLE",
+            "サカナクション",
+            "ヨルシカ",
+        ],
     },
-    { 
-        category: "Game", 
-        icon: Gamepad2, 
+    {
+        category: "Game",
+        icon: Gamepad2,
         items: [
-        "Minecraft", "ブルーアーカイブ", "ポケモン", "スプラトゥーン", "バカゲー"
-        ] 
+            "Minecraft",
+            "ブルーアーカイブ",
+            "ポケモン",
+            "スプラトゥーン",
+            "バカゲー",
+        ],
     },
-    { 
+    {
         category: "Other",
-        icon: Coffee, 
-        items: ["映像制作", "Twitter", "アニメ", "漫画", "映画鑑賞", "睡眠", "キヨ。"] 
+        icon: Coffee,
+        items: [
+            "映像制作",
+            "Twitter",
+            "アニメ",
+            "漫画",
+            "映画鑑賞",
+            "睡眠",
+            "キヨ。",
+        ],
     },
 ];
-import heroImage from '../assets/toramutton.jpg';
+import heroImage from "../assets/toramutton.jpg";
 ---
 
 <Layout
     title="自己紹介 / About Me"
     description="トラマトのプロフィール、経歴、技術、環境など"
-    pubDate={new Date("2026-01-01")}
-    tags={[]}
 >
     <div class="about-content">
         {/* 1. bio */}
         <section class="bio">
             <p>
-                電気通信大学 情報理工学域 I 類の<strong>トラマト</strong>です。<br>
-                寅松 真人(とらまつ まさと)は偽名です。<br>
-                MMAというサークルに所属しています。
-                主にTwitterかDiscordに生息しています。
+                電気通信大学 情報理工学域 I 類の<strong>トラマト</strong
+                >です。<br />
+                寅松 真人(とらまつ まさと)は偽名です。<br />
+                MMAというサークルに所属しています。 主にTwitterかDiscordに生息しています。
             </p>
         </section>
 
@@ -202,14 +216,24 @@ import heroImage from '../assets/toramutton.jpg';
                     <Terminal size={18} /> Programming & Web
                 </h3>
                 <div class="skill-grid">
-                    {PROG_SKILLS.map((skill) => (
-                        <div class="skill-card" tabindex="0">
-                            <div class={`icon-wrapper ${skill.darkInvert ? "dark-invert" : ""}`}>
-                                <img src={skill.src} alt={skill.name} class="skill-img" width="48" height="48" />
+                    {
+                        PROG_SKILLS.map((skill) => (
+                            <div class="skill-card" tabindex="0">
+                                <div
+                                    class={`icon-wrapper ${skill.darkInvert ? "dark-invert" : ""}`}
+                                >
+                                    <img
+                                        src={skill.src}
+                                        alt={skill.name}
+                                        class="skill-img"
+                                        width="48"
+                                        height="48"
+                                    />
+                                </div>
+                                <span class="skill-name">{skill.name}</span>
                             </div>
-                            <span class="skill-name">{skill.name}</span>
-                        </div>
-                    ))}
+                        ))
+                    }
                 </div>
             </div>
 
@@ -219,14 +243,24 @@ import heroImage from '../assets/toramutton.jpg';
                     <MousePointer2 size={18} /> Tools & Creative
                 </h3>
                 <div class="skill-grid">
-                    {TOOL_SKILLS.map((skill) => (
-                        <div class="skill-card" tabindex="0">
-                            <div class={`icon-wrapper ${skill.darkInvert ? "dark-invert" : ""}`}>
-                                <img src={skill.src} alt={skill.name} class="skill-img" width="48" height="48" />
+                    {
+                        TOOL_SKILLS.map((skill) => (
+                            <div class="skill-card" tabindex="0">
+                                <div
+                                    class={`icon-wrapper ${skill.darkInvert ? "dark-invert" : ""}`}
+                                >
+                                    <img
+                                        src={skill.src}
+                                        alt={skill.name}
+                                        class="skill-img"
+                                        width="48"
+                                        height="48"
+                                    />
+                                </div>
+                                <span class="skill-name">{skill.name}</span>
                             </div>
-                            <span class="skill-name">{skill.name}</span>
-                        </div>
-                    ))}
+                        ))
+                    }
                 </div>
             </div>
 
@@ -236,40 +270,54 @@ import heroImage from '../assets/toramutton.jpg';
                     <Cpu size={18} /> Operating Systems
                 </h3>
                 <div class="skill-grid">
-                    {OS_SKILLS.map((skill) => (
-                        <div class="skill-card" tabindex="0">
-                            <div class={`icon-wrapper ${skill.darkInvert ? "dark-invert" : ""}`}>
-                                <img src={skill.src} alt={skill.name} class="skill-img" width="48" height="48" />
+                    {
+                        OS_SKILLS.map((skill) => (
+                            <div class="skill-card" tabindex="0">
+                                <div
+                                    class={`icon-wrapper ${skill.darkInvert ? "dark-invert" : ""}`}
+                                >
+                                    <img
+                                        src={skill.src}
+                                        alt={skill.name}
+                                        class="skill-img"
+                                        width="48"
+                                        height="48"
+                                    />
+                                </div>
+                                <span class="skill-name">{skill.name}</span>
                             </div>
-                            <span class="skill-name">{skill.name}</span>
-                        </div>
-                    ))}
+                        ))
+                    }
                 </div>
             </div>
         </section>
 
         {/* 2. Interests & Hobbies */}
         <h2>Interests & Hobbies</h2>
-        
+
         <div class="interests-grid">
-            {INTERESTS.map((interest) => (
-                <div class="interest-card glass-card">
-                    <div class="interest-header">
-                        <interest.icon class="icon-blue" size={20} />
-                        <span class="interest-title">{interest.category}</span>
+            {
+                INTERESTS.map((interest) => (
+                    <div class="interest-card glass-card">
+                        <div class="interest-header">
+                            <interest.icon class="icon-blue" size={20} />
+                            <span class="interest-title">
+                                {interest.category}
+                            </span>
+                        </div>
+
+                        <div class="tags-wrapper">
+                            {interest.items.map((item) => (
+                                <span class="interest-tag">{item}</span>
+                            ))}
+                        </div>
                     </div>
-                    
-                    <div class="tags-wrapper">
-                        {interest.items.map((item) => (
-                            <span class="interest-tag">{item}</span>
-                        ))}
-                    </div>
-                </div>
-            ))}
+                ))
+            }
         </div>
 
         {/* 3. Environments */}
-        <h2 id = "trapezium">Environments</h2>
+        <h2 id="trapezium">Environments</h2>
         <div class="specs-grid">
             {/* Desktop Card */}
             <div class="spec-card glass-card">
@@ -309,11 +357,15 @@ import heroImage from '../assets/toramutton.jpg';
                     </li>
                     <li>
                         <span class="spec-label">PSU</span>
-                        <span class="spec-val">玄人志向 80PLUS Platinum 600W</span>
+                        <span class="spec-val"
+                            >玄人志向 80PLUS Platinum 600W</span
+                        >
                     </li>
                     <li>
                         <span class="spec-label">OS</span>
-                        <span class="spec-val">Windows 11 Home & Arch Linux</span>
+                        <span class="spec-val"
+                            >Windows 11 Home & Arch Linux</span
+                        >
                     </li>
                 </ul>
             </div>
@@ -376,7 +428,7 @@ import heroImage from '../assets/toramutton.jpg';
                     </li>
                     <li>
                         <span class="spec-label">Sub Monitor</span>
-                        <span class="spec-val">27-inch WQHD 75Hz</span>  
+                        <span class="spec-val">27-inch WQHD 75Hz</span>
                     </li>
                     <li>
                         <span class="spec-label">Editor</span>
@@ -397,8 +449,6 @@ import heroImage from '../assets/toramutton.jpg';
                 </ul>
             </div>
         </div>
-
-        
 
         {/* 5. Timeline */}
         <h2>Timeline</h2>
@@ -428,23 +478,25 @@ import heroImage from '../assets/toramutton.jpg';
                 <div class="desc">基本情報技術者試験 合格</div>
             </div>
         </div>
-
     </div>
 </Layout>
 
 <script>
     // Observer設定
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                // 画面に入ったらクラスを追加
-                entry.target.classList.add('visible');
-            }
-        });
-    }, { threshold: 0.5 }); // 50%くらい見えたら発火
+    const observer = new IntersectionObserver(
+        (entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    // 画面に入ったらクラスを追加
+                    entry.target.classList.add("visible");
+                }
+            });
+        },
+        { threshold: 0.5 },
+    ); // 50%くらい見えたら発火
 
     // 全てのh2が監視対象
-    document.querySelectorAll('.about-content h2').forEach((h2) => {
+    document.querySelectorAll(".about-content h2").forEach((h2) => {
         observer.observe(h2);
     });
 </script>
@@ -464,7 +516,7 @@ import heroImage from '../assets/toramutton.jpg';
     /* === h2のカスタム設定 === */
     .about-content h2 {
         position: relative;
-        display: block; 
+        display: block;
         width: 100%;
         margin-top: 4rem;
         margin-bottom: 1.5rem;
@@ -497,7 +549,7 @@ import heroImage from '../assets/toramutton.jpg';
         }
 
         /* 黄色の文字の調整 */
-        .text-yellow-small, 
+        .text-yellow-small,
         .text-yellow {
             color: #b45309;
             font-weight: 600;
@@ -523,7 +575,7 @@ import heroImage from '../assets/toramutton.jpg';
     .timeline-item::before {
         content: "";
         position: absolute;
-        left: calc(-1.5rem - 6px); /*青丸の位置調整*/ 
+        left: calc(-1.5rem - 6px); /*青丸の位置調整*/
         top: 0.5rem;
         width: 10px;
         height: 10px;
@@ -620,7 +672,8 @@ import heroImage from '../assets/toramutton.jpg';
         font-family: "Zen Maru Gothic", sans-serif;
         line-height: 1.5;
     }
-    .text-yellow, .text-yellow-small {
+    .text-yellow,
+    .text-yellow-small {
         font-size: 0.8rem;
         color: var(--accent-secondary);
         font-weight: 100;
@@ -704,14 +757,17 @@ import heroImage from '../assets/toramutton.jpg';
         transform: translateY(20px);
         transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
-    .skill-card:hover, .skill-card:focus {
+    .skill-card:hover,
+    .skill-card:focus {
         transform: translateY(-5px);
         box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
     }
-    .skill-card:hover .icon-wrapper, .skill-card:focus .icon-wrapper {
+    .skill-card:hover .icon-wrapper,
+    .skill-card:focus .icon-wrapper {
         transform: translateY(-15px);
     }
-    .skill-card:hover .skill-name, .skill-card:focus .skill-name {
+    .skill-card:hover .skill-name,
+    .skill-card:focus .skill-name {
         opacity: 1;
         transform: translateY(0);
     }
@@ -728,7 +784,7 @@ import heroImage from '../assets/toramutton.jpg';
         gap: 1.5rem;
         margin-bottom: 3rem;
     }
-    
+
     /* PCでは横並び or グリッド */
     @media (min-width: 768px) {
         .interests-grid {
@@ -768,12 +824,12 @@ import heroImage from '../assets/toramutton.jpg';
         font-size: 0.9rem;
         padding: 0.4rem 0.8rem;
         border-radius: 20px; /* 丸っぽいタグ型 */
-        
+
         /* 色設定 */
-        background: rgba(59, 130, 246, 0.1); 
+        background: rgba(59, 130, 246, 0.1);
         color: var(--text-main);
         border: 1px solid rgba(59, 130, 246, 0.2);
-        
+
         transition: all 0.2s ease;
         font-family: "Zen Maru Gothic", sans-serif;
         line-height: 1.4;
@@ -795,8 +851,12 @@ import heroImage from '../assets/toramutton.jpg';
             gap: 0.1rem;
             padding: 0.7rem 0;
         }
-        .spec-label { font-size: 0.7rem; }
-        .skill-grid { gap: 0.8rem; }
+        .spec-label {
+            font-size: 0.7rem;
+        }
+        .skill-grid {
+            gap: 0.8rem;
+        }
         .skill-card {
             width: 80px;
             height: 80px;
