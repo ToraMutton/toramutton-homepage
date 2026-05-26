@@ -51,9 +51,9 @@ body {
 
     /* タイポグラフィ */
     --font-mono:
-        'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
     --font-sans:
-        'JetBrains Mono', -apple-system, BlinkMacSystemFont,
+        -apple-system, BlinkMacSystemFont,
         '游ゴシック', 'Yu Gothic', YuGothic,
         'Noto Sans JP', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN',
         'Meiryo', sans-serif;
@@ -89,10 +89,12 @@ html.dark {
 html {
     background-color: var(--background);
     color: var(--text-main);
-    font-family: 'Zen Maru Gothic', sans-serif;
+    font-family: var(--font-sans);
     line-height: 1.6;
     transition: background-color 0.3s ease, color 0.3s ease;
     scroll-padding-top: 80px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 main {
@@ -101,7 +103,6 @@ main {
     padding: 3rem 1.5rem;
 }
 
-/* 見出し一括設定 */
 h1,
 h2,
 h3,
@@ -112,7 +113,7 @@ h5 {
     margin-top: 2.5rem;
     margin-bottom: 1rem;
     font-weight: 700;
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
 }
 
 h1 {
@@ -195,7 +196,7 @@ img {
    4. コンポーネント (コード, 引用など)
    ========================================= */
 code {
-    font-family: "Menlo", "Monaco", "Consolas", "Courier New", monospace;
+    font-family: var(--font-mono);
     background-color: var(--code-bg);
     color: var(--code-text);
     border: 1px solid var(--border-color);
