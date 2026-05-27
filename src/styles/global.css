@@ -24,30 +24,42 @@ body {
    ========================================= */
 :root {
     /* --- ライトモード --- */
-    --background: #f3f4f6;
-    --surface: #ffffff;
-    --text-main: #334155;
-    --text-muted: #64748b;
+    /* 背景 */
+    --background: #ffffff;
+    --surface: #f6f8fa;
+    --elevated: #eaeef2;
 
-    --accent-blue: #0056b3;
-    --accent-secondary: #007bff;
+    /* テキスト */
+    --text-main: #1f2338;
+    --text-muted: #656d76;
 
-    --border-color: rgba(0, 0, 0, 0.1);
-    --glass-bg: rgba(255, 255, 255, 0.85);
+    /* 境界線 */
+    --border-color: #d0d7de;
+
+    /* アクセント */
+    --accent-blue: #0e7490;
+    /* dim cyan : リンク・主要強調 */
+    --accent-rev: #22d3ee;
+    /* bright cyan : hover/active */
+    --accent-secondary: #2563eb;
+    /* sub-blue : 副アクセント */
 
     /* コンポーネント用カラー */
-    --code-bg: #ffffff;
-    --code-text: #ef4444;
-    --spec-label: #2563eb;
-    --text-yellow-custom: #b45309;
-    --category-title: #1d4ed8;
-    --badge-bg: rgba(0, 0, 0, 0.08);
-    --badge-text: #475569;
+    --code-bg: #f6f8fa;
+    --code-text: #cf222e;
+    --spec-label: #0e7490;
+    --text-yellow-custom: #9a6700;
+    --category-title: #0e7490;
+    --badge-bg: #eaeef2;
+    --badge-text: #656d76;
 
     /* 共通定数 */
-    --glass-blur: blur(12px);
-    --radius: 12px;
+    --radius: 4px;
     --max-width: 1800px;
+
+    /* --- 互換用（段階的に廃止予定） --- */
+    --glass-bg: #ffffff;
+    --glass-blur: none;
 
     /* タイポグラフィ */
     --font-mono:
