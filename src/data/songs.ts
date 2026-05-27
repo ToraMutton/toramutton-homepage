@@ -172,4 +172,5 @@ export const songs: Song[] = [
   // 2026
   // =====================
   { title: "烏", year: "2026" },
+  { title: "夜鷹", year: "2026" },
 ];

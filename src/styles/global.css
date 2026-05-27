@@ -1,5 +1,5 @@
 /* src/styles/global.css */
-@import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
 
 /* =========================================
    1. リセット & 基本設定
@@ -24,54 +24,87 @@ body {
    ========================================= */
 :root {
     /* --- ライトモード --- */
-    --background: #f3f4f6;
-    --surface: #ffffff;
-    --text-main: #334155;
-    --text-muted: #64748b;
+    /* 背景 */
+    --background: #ffffff;
+    --surface: #f6f8fa;
+    --elevated: #eaeef2;
 
-    --accent-blue: #0056b3;
-    --accent-secondary: #007bff;
+    /* テキスト */
+    --text-main: #1f2328;
+    --text-muted: #656d76;
 
-    --border-color: rgba(0, 0, 0, 0.1);
-    --glass-bg: rgba(255, 255, 255, 0.85);
+    /* 境界線 */
+    --border-color: #d0d7de;
+
+    /* アクセント */
+    --accent-blue: #0e7490;
+    /* dim cyan : リンク・主要強調 */
+    --accent-rev: #22d3ee;
+    /* bright cyan : hover/active */
+    --accent-secondary: #2563eb;
+    /* sub-blue : 副アクセント */
 
     /* コンポーネント用カラー */
-    --code-bg: #ffffff;
-    --code-text: #ef4444;
-    --spec-label: #2563eb;
-    --text-yellow-custom: #b45309;
-    --category-title: #1d4ed8;
-    --badge-bg: rgba(0, 0, 0, 0.08);
-    --badge-text: #475569;
+    --code-bg: #f6f8fa;
+    --code-text: #cf222e;
+    --spec-label: #0e7490;
+    --text-yellow-custom: #9a6700;
+    --category-title: #0e7490;
+    --badge-bg: #eaeef2;
+    --badge-text: #656d76;
 
     /* 共通定数 */
-    --glass-blur: blur(12px);
-    --radius: 12px;
+    --radius: 4px;
     --max-width: 1800px;
+
+    /* --- 互換用（段階的に廃止予定） --- */
+    --glass-bg: #ffffff;
+    --glass-blur: none;
+
+    /* タイポグラフィ */
+    --font-mono:
+        'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+    --font-sans:
+        -apple-system, BlinkMacSystemFont,
+        '游ゴシック', 'Yu Gothic', YuGothic,
+        'Noto Sans JP', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN',
+        'Meiryo', sans-serif;
 }
 
-/* --- ダークモード --- */
+/* --- †ダークモード† --- */
 html.dark {
-    --background: #18181b;
-    --surface: #27272a;
-    --text-main: #f1f5f9;
-    --text-muted: #94a3b8;
+    /* 背景 */
+    --background: #0d1117;
+    --surface: #161b22;
+    --elevated: #21262d;
 
-    --accent-blue: #38bdf8;
-    --accent-secondary: #f7f263;
+    /* テキスト */
+    --text-main: #e6edf3;
+    --text-muted: #7d8590;
 
-    --border-color: rgba(255, 255, 255, 0.1);
-    --glass-bg: rgba(24, 24, 27, 0.9);
-    --glass-blur: blur(20px);
+    /* 境界線 */
+    --border-color: #30363d;
 
-    /* コンポーネント用カラー（ダーク） */
-    --code-bg: #0f1115;
-    --code-text: #fca5a5;
-    --spec-label: var(--text-main);
-    --text-yellow-custom: var(--accent-secondary);
-    --category-title: var(--text-main);
-    --badge-bg: rgba(255, 255, 255, 0.1);
+    /* アクセント */
+    --accent-blue: #22d3ee;
+    /* bright cyan : リンク・主要強調 */
+    --accent-rev: #0e7490;
+    /* dim cyan : 落ち着いた強調 */
+    --accent-secondary: #60a5fa;
+    /* sub-blue : 副アクセント */
+
+    /* コンポーネント用カラー */
+    --code-bg: #161b22;
+    --code-text: #ff7b72;
+    --spec-label: var(--accent-blue);
+    --text-yellow-custom: #d29922;
+    --category-title: var(--accent-blue);
+    --badge-bg: #21262d;
     --badge-text: var(--text-muted);
+
+    /* --- 互換用（段階的に廃止予定） --- */
+    --glass-bg: #161b22;
+    --glass-blur: none;
 }
 
 /* =========================================
@@ -80,10 +113,12 @@ html.dark {
 html {
     background-color: var(--background);
     color: var(--text-main);
-    font-family: 'Zen Maru Gothic', sans-serif;
+    font-family: var(--font-sans);
     line-height: 1.6;
     transition: background-color 0.3s ease, color 0.3s ease;
     scroll-padding-top: 80px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 main {
@@ -92,7 +127,6 @@ main {
     padding: 3rem 1.5rem;
 }
 
-/* 見出し一括設定 */
 h1,
 h2,
 h3,
@@ -103,7 +137,7 @@ h5 {
     margin-top: 2.5rem;
     margin-bottom: 1rem;
     font-weight: 700;
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
 }
 
 h1 {
@@ -186,7 +220,7 @@ img {
    4. コンポーネント (コード, 引用など)
    ========================================= */
 code {
-    font-family: "Menlo", "Monaco", "Consolas", "Courier New", monospace;
+    font-family: var(--font-mono);
     background-color: var(--code-bg);
     color: var(--code-text);
     border: 1px solid var(--border-color);
