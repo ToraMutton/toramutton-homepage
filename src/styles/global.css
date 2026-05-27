@@ -30,7 +30,7 @@ body {
     --elevated: #eaeef2;
 
     /* テキスト */
-    --text-main: #1f2338;
+    --text-main: #1f2328;
     --text-muted: #656d76;
 
     /* 境界線 */
@@ -71,28 +71,40 @@ body {
         'Meiryo', sans-serif;
 }
 
-/* --- ダークモード --- */
+/* --- †ダークモード† --- */
 html.dark {
-    --background: #18181b;
-    --surface: #27272a;
-    --text-main: #f1f5f9;
-    --text-muted: #94a3b8;
+    /* 背景 */
+    --background: #0d1117;
+    --surface: #161b22;
+    --elevated: #21262d;
 
-    --accent-blue: #38bdf8;
-    --accent-secondary: #f7f263;
+    /* テキスト */
+    --text-main: #e6edf3;
+    --text-muted: #7d8590;
 
-    --border-color: rgba(255, 255, 255, 0.1);
-    --glass-bg: rgba(24, 24, 27, 0.9);
-    --glass-blur: blur(20px);
+    /* 境界線 */
+    --border-color: #30363d;
 
-    /* コンポーネント用カラー（ダーク） */
-    --code-bg: #0f1115;
-    --code-text: #fca5a5;
-    --spec-label: var(--text-main);
-    --text-yellow-custom: var(--accent-secondary);
-    --category-title: var(--text-main);
-    --badge-bg: rgba(255, 255, 255, 0.1);
+    /* アクセント */
+    --accent-blue: #22d3ee;
+    /* bright cyan : リンク・主要強調 */
+    --accent-rev: #0e7490;
+    /* dim cyan : 落ち着いた強調 */
+    --accent-secondary: #60a5fa;
+    /* sub-blue : 副アクセント */
+
+    /* コンポーネント用カラー */
+    --code-bg: #161b22;
+    --code-text: #ff7b72;
+    --spec-label: var(--accent-blue);
+    --text-yellow-custom: #d29922;
+    --category-title: var(--accent-blue);
+    --badge-bg: #21262d;
     --badge-text: var(--text-muted);
+
+    /* --- 互換用（段階的に廃止予定） --- */
+    --glass-bg: #161b22;
+    --glass-blur: none;
 }
 
 /* =========================================
