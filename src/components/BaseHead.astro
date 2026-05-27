@@ -1,20 +1,19 @@
 ---
-import '../styles/global.css';
-import type { ImageMetadata } from 'astro';
-import FallbackImage from '../assets/toramutton.jpg';
-import { SITE_TITLE } from '../consts';
-import { ClientRouter } from 'astro:transitions';
+import "../styles/global.css";
+import type { ImageMetadata } from "astro";
+import FallbackImage from "../assets/toramutton.jpg";
+import { SITE_TITLE } from "../consts";
+import { ClientRouter } from "astro:transitions";
 
 interface Props {
-    title: string;
-    description: string;
-    image?: ImageMetadata;
+  title: string;
+  description: string;
+  image?: ImageMetadata;
 }
 
 const canonicalURL = Astro.site
   ? new URL(Astro.url.pathname, Astro.site)
   : Astro.url;
-
 
 const { title, description, image = FallbackImage } = Astro.props;
 ---
@@ -26,37 +25,34 @@ const { title, description, image = FallbackImage } = Astro.props;
 <!-- テーマ（ダーク/ライト）の初期化 -->
 <script is:inline>
   const getTheme = () => {
-    const saved = localStorage.getItem('theme');
-    if (saved === 'light' || saved === 'dark') return saved;
+    const saved = localStorage.getItem("theme");
+    if (saved === "light" || saved === "dark") return saved;
 
-    return window.matchMedia('(prefers-color-scheme: light)').matches
-      ? 'light'
-      : 'dark';
+    return window.matchMedia("(prefers-color-scheme: light)").matches
+      ? "light"
+      : "dark";
   };
 
   const applyTheme = () => {
     const theme = getTheme();
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem('theme', theme);
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
   };
 
   applyTheme();
-  document.addEventListener('astro:after-swap', applyTheme);
+  document.addEventListener("astro:after-swap", applyTheme);
 </script>
 
 <!-- アイコン / RSS / sitemap -->
 <link rel="icon" type="image/jpeg" href="/toramutton.jpg" />
 <link rel="sitemap" href="/sitemap-index.xml" />
 <link
-    rel="alternate"
-    type="application/rss+xml"
-    title={SITE_TITLE}
-    href={new URL('rss.xml', Astro.site)}
+  rel="alternate"
+  type="application/rss+xml"
+  title={SITE_TITLE}
+  href={new URL("rss.xml", Astro.site)}
 />
 <meta name="generator" content={Astro.generator} />
-
-<link rel="preload" href="/fonts/atkinson-regular.woff" as="font" type="font/woff" crossorigin />
-<link rel="preload" href="/fonts/atkinson-bold.woff" as="font" type="font/woff" crossorigin />
 
 <link rel="canonical" href={canonicalURL} />
 
