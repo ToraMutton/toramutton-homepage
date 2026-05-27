@@ -376,15 +376,19 @@ const plannedWorks = works.filter((w) => w.status === "planned");
         grid-template-columns: 2rem 1fr 2fr auto;
         gap: 1.5rem;
         align-items: center;
-        padding: 1rem 0;
+        padding: 1rem 0 1rem 0.75rem;
         border-bottom: 1px solid var(--border-color);
         border-radius: 0;
-        transition: border-bottom-color 0.2s ease;
+        position: relative;
+        transition:
+            background-color 0.2s ease,
+            border-bottom-color 0.2s ease;
     }
 
     /* hover対応デバイスのみ */
     @media (hover: hover) {
         .work-row:hover {
+            background-color: rgba(34, 211, 238, 0.04);
             border-bottom-color: var(--accent-blue);
         }
     }
@@ -396,7 +400,7 @@ const plannedWorks = works.filter((w) => w.status === "planned");
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--accent-blue);
+        color: var(--text-muted);
     }
 
     .work-main {
@@ -413,6 +417,36 @@ const plannedWorks = works.filter((w) => w.status === "planned");
         line-height: 1.3;
         font-family: var(--font-mono, "JetBrains Mono", monospace);
         word-break: break-word;
+        position: relative;
+        padding-left: 0;
+        transition:
+            padding-left 0.25s ease,
+            color 0.2s ease;
+    }
+
+    .work-name::before {
+        content: "▸";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translate(-0.5rem, -50%);
+        color: var(--accent-blue);
+        opacity: 0;
+        transition:
+            opacity 0.25s ease,
+            transform 0.25s ease;
+        font-family: var(--font-mono, "JetBrains Mono", monospace);
+    }
+
+    @media (hover: hover) {
+        .work-row:hover .work-name {
+            padding-left: 1rem;
+            color: var(--accent-blue);
+        }
+        .work-row:hover .work-name::before {
+            opacity: 1;
+            transform: translate(0, -50%);
+        }
     }
 
     .work-tags {
@@ -479,17 +513,38 @@ const plannedWorks = works.filter((w) => w.status === "planned");
     }
 
     /* =========================================
-       5. ステータス別装飾
-       ========================================= */
-    /* in-progress：先頭にアクセントライン */
-    .work-row.in-progress .work-icon-cell {
-        color: var(--accent-blue);
+    5. ステータス別装飾
+    ========================================= */
+    .work-row {
         position: relative;
+        padding-left: 0.75rem; /* 縦バー分のスペース確保 */
     }
 
-    /* planned：opacity + [planned]ラベル */
+    /* デフォルト（completed）：左端バーは透明 */
+    .work-row::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.5rem;
+        bottom: 0.5rem;
+        width: 2px;
+        background: transparent;
+        transition: background-color 0.2s ease;
+    }
+
+    /* in-progress：青いバー */
+    .work-row.in-progress::before {
+        background: var(--accent-blue);
+    }
+
+    /* planned：rowごと薄く + [planned]ラベル */
     .work-row.planned {
         opacity: 0.5;
+    }
+
+    .work-row.planned::before {
+        background: var(--text-muted);
+        opacity: 0.6;
     }
 
     .work-row.planned .work-name::after {
@@ -499,10 +554,6 @@ const plannedWorks = works.filter((w) => w.status === "planned");
         font-family: var(--font-mono, "JetBrains Mono", monospace);
         font-weight: 400;
         margin-left: 0.3rem;
-    }
-
-    .work-row.planned .work-icon-cell {
-        color: var(--text-muted);
     }
 
     /* =========================================
