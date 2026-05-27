@@ -577,9 +577,18 @@ const plannedWorks = works.filter((w) => w.status === "planned");
         display: block;
     }
 
+    .work-image-layer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--background);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
     @media (hover: hover) {
-        .work-row:hover .work-image-layer {
-            opacity: 0.55;
+        .work-row:hover .work-image-layer::after {
+            opacity: 0.5;  /* ホバー時に暗いオーバーレイが乗る */
         }
     }
 
