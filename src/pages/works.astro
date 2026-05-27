@@ -520,40 +520,9 @@ const plannedWorks = works.filter((w) => w.status === "planned");
         padding-left: 0.75rem; /* 縦バー分のスペース確保 */
     }
 
-    /* デフォルト（completed）：左端バーは透明 */
-    .work-row::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0.5rem;
-        bottom: 0.5rem;
-        width: 2px;
-        background: transparent;
-        transition: background-color 0.2s ease;
-    }
-
-    /* in-progress：青いバー */
-    .work-row.in-progress::before {
-        background: var(--accent-blue);
-    }
-
     /* planned：rowごと薄く + [planned]ラベル */
     .work-row.planned {
         opacity: 0.5;
-    }
-
-    .work-row.planned::before {
-        background: var(--text-muted);
-        opacity: 0.6;
-    }
-
-    .work-row.planned .work-name::after {
-        content: " [planned]";
-        color: var(--text-muted);
-        font-size: 0.7rem;
-        font-family: var(--font-mono, "JetBrains Mono", monospace);
-        font-weight: 400;
-        margin-left: 0.3rem;
     }
 
     /* =========================================
@@ -568,7 +537,7 @@ const plannedWorks = works.filter((w) => w.status === "planned");
             grid-template-columns: 2rem 1fr auto;
             grid-template-rows: auto auto;
             gap: 0.5rem 1rem;
-            padding: 0.9rem 0;
+            padding: 1rem 0;
         }
 
         .work-icon-cell {
