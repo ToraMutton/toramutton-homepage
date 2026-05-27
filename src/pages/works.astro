@@ -1,25 +1,25 @@
 ---
 export const prerender = true;
-import BaseHead from '../components/BaseHead.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import { SITE_TITLE } from '../consts';
-import { 
-    ExternalLink, 
-    Github, 
-    Code2, 
-    Gamepad2, 
-    Shapes, 
-    Cpu, 
-    Keyboard, 
-    BarChart3, 
-    CheckCircle2, 
-    Hammer, 
-    Lightbulb, 
+import BaseHead from "../components/BaseHead.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import { SITE_TITLE } from "../consts";
+import {
+    ExternalLink,
+    Github,
+    Code2,
+    Gamepad2,
+    Shapes,
+    Cpu,
+    Keyboard,
+    BarChart3,
+    CheckCircle2,
+    Hammer,
+    Lightbulb,
     Terminal,
-    Grid3X3, 
-Grid
-} from 'lucide-astro';
+    Grid3X3,
+    Grid,
+} from "lucide-astro";
 
 interface Work {
     name: string;
@@ -29,57 +29,62 @@ interface Work {
     tags: string[];
     icon: any;
     year: string;
-    status: 'completed' | 'in-progress' | 'planned';
+    status: "completed" | "in-progress" | "planned";
 }
 
 const works: Work[] = [
     {
         name: "ToraMutton's Homepage",
-        description: "Astro + Vercelで構築した個人用ポートフォリオサイト。ダークモード対応や、GitHub Actionsを用いたZenn/Qiita記事のRSS自動取得・ビルドパイプラインを自作して組み込んでいます。",
+        description:
+            "Astro + Vercelで構築した個人用ポートフォリオサイト。ダークモード対応や、GitHub Actionsを用いたZenn/Qiita記事のRSS自動取得・ビルドパイプラインを自作して組み込んでいます。",
         url: "https://toramutton.me",
         github: "https://github.com/ToraMutton/toramutton-homepage",
         tags: ["Astro", "TypeScript", "Vercel", "GitHub Actions"],
         icon: Code2,
         year: "2026",
-        status: 'completed',
+        status: "completed",
     },
     {
         name: "Minecraft Skin Editor",
-        description: "ブラウザ上で完結するMinecraftスキンエディター。Three.jsによるリアルタイム3Dプレビューとピクセル単位のペイント機能、オートセーブ機能付き！。",
+        description:
+            "ブラウザ上で完結するMinecraftスキンエディター。Three.jsによるリアルタイム3Dプレビューとピクセル単位のペイント機能、オートセーブ機能付き！。",
         tags: ["TypeScript", "Three.js", "React"],
         icon: Gamepad2,
         year: "2026",
         url: "https://vextra.toramutton.me/",
         github: "https://github.com/ToraMutton/minecraft-skin-editor",
-        status: 'completed',
+        status: "completed",
     },
     {
         name: "Artoram",
-        description: "Canvas APIを使った幾何学アートジェネレーター。数式のパラメータをリアルタイムで操作し、生成された画像をエクスポートできるWebツールです。",
+        description:
+            "Canvas APIを使った幾何学アートジェネレーター。数式のパラメータをリアルタイムで操作し、生成された画像をエクスポートできるWebツールです。",
         tags: ["TypeScript", "Canvas API", "React"],
         icon: Shapes,
         year: "2026",
         url: "https://artoram.toramutton.me",
         github: "https://github.com/ToraMutton/artoram",
-        status: 'completed',
+        status: "completed",
     },
     {
         name: "NEXUS for UEC",
-        description: "電通大生向け時間割アプリ。全ての情報をこれ1つで管理できるのを目指して、開発に携わっています。",
+        description:
+            "電通大生向け時間割アプリ。全ての情報をこれ1つで管理できるのを目指して、開発に携わっています。",
         tags: ["Swift", "Firebase"],
         icon: Grid3X3,
         year: "2026",
         url: "https://apps.apple.com/jp/app/nexus-for-uec/id6759309164",
         github: "https://github.com/shiori-02-14/NEXUS-",
-        status: 'completed',
+        status: "completed",
     },
     {
         name: "ローカルLLM環境",
-        description: "自作PCの AMD Radeon RX 9060 XT 16GB と ROCm を活用した、完全ローカルな推論環境の構築プロジェクト。",
+        description:
+            "自作PCの AMD Radeon RX 9060 XT 16GB と ROCm を活用した、完全ローカルな推論環境の構築プロジェクト。",
         tags: ["Python", "ROCm", "LLM"],
         icon: Cpu,
         year: "2026夏〜秋予定",
-        status: 'planned',
+        status: "planned",
     },
     // {
     //     name: "タイピングゲーム",
@@ -99,126 +104,203 @@ const works: Work[] = [
     // },
     {
         name: "オリジナルプログラミング言語",
-        description: "Go言語による自作プログラミング言語の開発。字句解析・構文解析といった言語処理系の仕組みを学ぶための、実用性皆無なオリジナル言語。",
+        description:
+            "Go言語による自作プログラミング言語の開発。字句解析・構文解析といった言語処理系の仕組みを学ぶための、実用性皆無なオリジナル言語。",
         tags: ["Go", "Compiler", ".trmt"],
         icon: Terminal,
         year: "2027予定",
-        status: 'planned',
+        status: "planned",
     },
 ];
-const completedWorks = works.filter(w => w.status === 'completed');
-const inProgressWorks = works.filter(w => w.status === 'in-progress');
-const plannedWorks = works.filter(w => w.status === 'planned');
+const completedWorks = works.filter((w) => w.status === "completed");
+const inProgressWorks = works.filter((w) => w.status === "in-progress");
+const plannedWorks = works.filter((w) => w.status === "planned");
 ---
 
 <!doctype html>
 <html lang="ja">
     <head>
-        <BaseHead title={`${SITE_TITLE} | Works`} description="トラマトの制作物一覧" />
+        <BaseHead
+            title={`${SITE_TITLE} | Works`}
+            description="トラマトの制作物一覧"
+        />
     </head>
     <body>
         <Header />
         <main>
             <section class="works-section">
                 <h1 class="works-title">Works</h1>
-                <p class="works-desc">制作した・現在進行中・予定のプロジェクト</p>
+                <p class="works-desc">
+                    制作した・現在進行中・予定のプロジェクト
+                </p>
 
-                {completedWorks.length > 0 && (
-                    <>
-                        <h2 class="section-heading">
-                            <CheckCircle2 size={20} class="section-icon completed-icon" />
-                            Completed
-                        </h2>
-                        <div class="works-grid">
-                            {completedWorks.map((work) => (
-                                <div class="work-card glass-card">
-                                    <div class="work-header">
-                                        <work.icon class="work-icon" size={24} />
-                                        <div class="work-meta">
-                                            <h3 class="work-name">{work.name}</h3>
-                                            <span class="work-year">{work.year}</span>
+                {
+                    completedWorks.length > 0 && (
+                        <>
+                            <h2 class="section-heading">
+                                <CheckCircle2
+                                    size={20}
+                                    class="section-icon completed-icon"
+                                />
+                                Completed
+                            </h2>
+                            <div class="works-grid">
+                                {completedWorks.map((work) => (
+                                    <div class="work-card glass-card">
+                                        <div class="work-header">
+                                            <work.icon
+                                                class="work-icon"
+                                                size={24}
+                                            />
+                                            <div class="work-meta">
+                                                <h3 class="work-name">
+                                                    {work.name}
+                                                </h3>
+                                                <span class="work-year">
+                                                    {work.year}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <p class="work-description">
+                                            {work.description}
+                                        </p>
+                                        <div class="work-tags">
+                                            {work.tags.map((tag) => (
+                                                <span class="work-tag">
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                        </div>
+                                        <div class="work-links">
+                                            {work.url && (
+                                                <a
+                                                    href={work.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    class="work-link"
+                                                >
+                                                    <ExternalLink size={14} />{" "}
+                                                    Visit
+                                                </a>
+                                            )}
+                                            {work.github && (
+                                                <a
+                                                    href={work.github}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    class="work-link github-link"
+                                                >
+                                                    <Github size={14} /> Source
+                                                </a>
+                                            )}
                                         </div>
                                     </div>
-                                    <p class="work-description">{work.description}</p>
-                                    <div class="work-tags">
-                                        {work.tags.map((tag) => <span class="work-tag">{tag}</span>)}
-                                    </div>
-                                    <div class="work-links">
-                                        {work.url && (
-                                            <a href={work.url} target="_blank" rel="noopener noreferrer" class="work-link">
-                                                <ExternalLink size={14} /> Visit
-                                            </a>
-                                        )}
-                                        {work.github && (
-                                            <a href={work.github} target="_blank" rel="noopener noreferrer" class="work-link github-link">
-                                                <Github size={14} /> Source
-                                            </a>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </>
-                )}
+                                ))}
+                            </div>
+                        </>
+                    )
+                }
 
-                {inProgressWorks.length > 0 && (
-                    <>
-                        <h2 class="section-heading">
-                            <Hammer size={20} class="section-icon progress-icon" />
-                            In Progress
-                        </h2>
-                        <div class="works-grid">
-                            {inProgressWorks.map((work) => (
-                                <div class="work-card glass-card in-progress">
-                                    <div class="work-header">
-                                        <work.icon class="work-icon" size={24} />
-                                        <div class="work-meta">
-                                            <h3 class="work-name">{work.name}</h3>
-                                            <span class="work-year">{work.year}</span>
+                {
+                    inProgressWorks.length > 0 && (
+                        <>
+                            <h2 class="section-heading">
+                                <Hammer
+                                    size={20}
+                                    class="section-icon progress-icon"
+                                />
+                                In Progress
+                            </h2>
+                            <div class="works-grid">
+                                {inProgressWorks.map((work) => (
+                                    <div class="work-card glass-card in-progress">
+                                        <div class="work-header">
+                                            <work.icon
+                                                class="work-icon"
+                                                size={24}
+                                            />
+                                            <div class="work-meta">
+                                                <h3 class="work-name">
+                                                    {work.name}
+                                                </h3>
+                                                <span class="work-year">
+                                                    {work.year}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <p class="work-description">
+                                            {work.description}
+                                        </p>
+                                        <div class="work-tags">
+                                            {work.tags.map((tag) => (
+                                                <span class="work-tag">
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                        </div>
+                                        <div class="work-links">
+                                            {work.github && (
+                                                <a
+                                                    href={work.github}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    class="work-link github-link"
+                                                >
+                                                    <Github size={14} />{" "}
+                                                    Repository
+                                                </a>
+                                            )}
                                         </div>
                                     </div>
-                                    <p class="work-description">{work.description}</p>
-                                    <div class="work-tags">
-                                        {work.tags.map((tag) => <span class="work-tag">{tag}</span>)}
-                                    </div>
-                                    <div class="work-links">
-                                        {work.github && (
-                                            <a href={work.github} target="_blank" rel="noopener noreferrer" class="work-link github-link">
-                                                <Github size={14} /> Repository
-                                            </a>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </>
-                )}
+                                ))}
+                            </div>
+                        </>
+                    )
+                }
 
-                {plannedWorks.length > 0 && (
-                    <>
-                        <h2 class="section-heading">
-                            <Lightbulb size={20} class="section-icon planned-icon" />
-                            Planned
-                        </h2>
-                        <div class="works-grid">
-                            {plannedWorks.map((work) => (
-                                <div class="work-card glass-card planned">
-                                    <div class="work-header">
-                                        <work.icon class="work-icon" size={24} />
-                                        <div class="work-meta">
-                                            <h3 class="work-name">{work.name}</h3>
-                                            <span class="work-year">{work.year}</span>
+                {
+                    plannedWorks.length > 0 && (
+                        <>
+                            <h2 class="section-heading">
+                                <Lightbulb
+                                    size={20}
+                                    class="section-icon planned-icon"
+                                />
+                                Planned
+                            </h2>
+                            <div class="works-grid">
+                                {plannedWorks.map((work) => (
+                                    <div class="work-card glass-card planned">
+                                        <div class="work-header">
+                                            <work.icon
+                                                class="work-icon"
+                                                size={24}
+                                            />
+                                            <div class="work-meta">
+                                                <h3 class="work-name">
+                                                    {work.name}
+                                                </h3>
+                                                <span class="work-year">
+                                                    {work.year}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <p class="work-description">
+                                            {work.description}
+                                        </p>
+                                        <div class="work-tags">
+                                            {work.tags.map((tag) => (
+                                                <span class="work-tag">
+                                                    {tag}
+                                                </span>
+                                            ))}
                                         </div>
                                     </div>
-                                    <p class="work-description">{work.description}</p>
-                                    <div class="work-tags">
-                                        {work.tags.map((tag) => <span class="work-tag">{tag}</span>)}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </>
-                )}
+                                ))}
+                            </div>
+                        </>
+                    )
+                }
             </section>
         </main>
         <Footer />
@@ -254,7 +336,7 @@ const plannedWorks = works.filter(w => w.status === 'planned');
     }
 
     .section-heading::after {
-        content: '';
+        content: "";
         flex: 1;
         height: 1px;
         background: var(--border-color);
@@ -291,7 +373,11 @@ const plannedWorks = works.filter(w => w.status === 'planned');
         border-radius: 16px;
         border: 1px solid var(--border-color);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease,
+            border-color 0.2s ease,
+            opacity 0.2s ease;
         display: flex;
         flex-direction: column;
         gap: 1rem;
@@ -348,7 +434,7 @@ const plannedWorks = works.filter(w => w.status === 'planned');
     }
 
     .work-year {
-        font-family: "JetBrains Mono", monospace;
+        font-family: var(--font-mono);
         font-size: 0.75rem;
         color: var(--accent-blue);
         font-weight: 700;
@@ -375,7 +461,7 @@ const plannedWorks = works.filter(w => w.status === 'planned');
         background: rgba(59, 130, 246, 0.1);
         color: var(--accent-blue);
         border: 1px solid rgba(59, 130, 246, 0.2);
-        font-family: "JetBrains Mono", monospace;
+        font-family: var(--font-mono);
         font-weight: 600;
     }
 
