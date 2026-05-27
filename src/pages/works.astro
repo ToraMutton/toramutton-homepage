@@ -4,6 +4,14 @@ import BaseHead from "../components/BaseHead.astro";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import { SITE_TITLE } from "../consts";
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+import homepageImage from "../assets/works/toramutton.webp";
+import vextraImage from "../assets/works/vextra.webp";
+import artoramImage from "../assets/works/artoram.webp";
+import nexusImage from "../assets/works/nexus.webp";
+
 import {
     ExternalLink,
     Github,
@@ -30,6 +38,7 @@ interface Work {
     icon: any;
     year: string;
     status: "completed" | "in-progress" | "planned";
+    image?: ImageMetadata;
 }
 
 const works: Work[] = [
@@ -43,6 +52,7 @@ const works: Work[] = [
         icon: Code2,
         year: "2026",
         status: "completed",
+        image: homepageImage,
     },
     {
         name: "Minecraft Skin Editor",
@@ -54,6 +64,7 @@ const works: Work[] = [
         url: "https://vextra.toramutton.me/",
         github: "https://github.com/ToraMutton/minecraft-skin-editor",
         status: "completed",
+        image: vextraImage,
     },
     {
         name: "Artoram",
@@ -65,6 +76,7 @@ const works: Work[] = [
         url: "https://artoram.toramutton.me",
         github: "https://github.com/ToraMutton/artoram",
         status: "completed",
+        image: artoramImage,
     },
     {
         name: "NEXUS for UEC",
@@ -76,6 +88,7 @@ const works: Work[] = [
         url: "https://nexusforuec.team-bookmark.com/",
         github: "https://github.com/shiori-02-14/NEXUS-",
         status: "completed",
+        image: nexusImage,
     },
     {
         name: "ローカルLLM",
@@ -129,6 +142,15 @@ const plannedWorks = works.filter((w) => w.status === "planned");
                             <ul class="works-list">
                                 {completedWorks.map((work) => (
                                     <li class="work-row">
+                                        {work.image && (
+                                            <div class="work-image-layer">
+                                                <Image
+                                                    src={work.image}
+                                                    alt=""
+                                                    loading="lazy"
+                                                />
+                                            </div>
+                                        )}
                                         <span class="work-icon-cell">
                                             <work.icon size={20} />
                                         </span>
@@ -380,6 +402,7 @@ const plannedWorks = works.filter((w) => w.status === "planned");
         border-bottom: 1px solid var(--border-color);
         border-radius: 0;
         position: relative;
+        overflow: hidden;
         transition:
             background-color 0.2s ease,
             border-bottom-color 0.2s ease;
@@ -513,16 +536,65 @@ const plannedWorks = works.filter((w) => w.status === "planned");
     }
 
     /* =========================================
-    5. ステータス別装飾
-    ========================================= */
-    .work-row {
-        position: relative;
-        padding-left: 0.75rem; /* 縦バー分のスペース確保 */
-    }
+   5. ステータス別装飾 & 画像レイヤー
+   ========================================= */
 
-    /* planned：rowごと薄く + [planned]ラベル */
+    /* planned：rowごと薄く */
     .work-row.planned {
         opacity: 0.5;
+    }
+
+    /* 画像レイヤー */
+    .work-image-layer {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 45%;
+        z-index: 0;
+        pointer-events: none;
+        clip-path: polygon(15% 0, 100% 0, 100% 100%, 0 100%);
+        -webkit-mask-image: linear-gradient(
+            to left,
+            black 0%,
+            black 30%,
+            transparent 100%
+        );
+        mask-image: linear-gradient(
+            to left,
+            black 0%,
+            black 30%,
+            transparent 100%
+        );
+        opacity: 0.35;
+        transition: opacity 0.3s ease;
+    }
+
+    .work-image-layer img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    @media (hover: hover) {
+        .work-row:hover .work-image-layer {
+            opacity: 0.55;
+        }
+    }
+
+    /* テキスト要素を画像より前面に */
+    .work-icon-cell,
+    .work-main,
+    .work-desc-text,
+    .work-right {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* タグの背景（画像と重なったとき読みやすくする） */
+    .work-tag {
+        background: var(--background);
     }
 
     /* =========================================
@@ -565,5 +637,4 @@ const plannedWorks = works.filter((w) => w.status === "planned");
         .work-name {
             font-size: 0.9rem;
         }
-    }
 </style>
