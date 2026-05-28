@@ -285,7 +285,7 @@ const IMAGE_SOURCES = new Set(["local", "note"]);
                                         )}
                                         {post.source === "zenn" && (
                                             <span class="badge-glyph">
-                                                {"<>"}
+                                                &lt;&gt;
                                             </span>
                                         )}
                                         {post.source === "note" && (
@@ -760,12 +760,10 @@ const IMAGE_SOURCES = new Set(["local", "note"]);
         justify-content: center;
         gap: 0.3em;
         font-family: var(--font-mono, "JetBrains Mono", monospace);
-        /* ↑ 前回 0.7rem → 0.82rem に拡大 */
         font-size: 0.82rem;
         font-weight: 700;
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        /* ↑ padding も一回り大きく */
         padding: 0.35em 0.65em;
         border: 1px solid;
         border-radius: 0;
