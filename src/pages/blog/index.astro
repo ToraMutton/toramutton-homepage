@@ -185,17 +185,31 @@ const allPosts = [
                 <!-- ソースフィルター -->
                 <div class="source-filters" id="source-filters">
                     <button class="source-btn active" data-filter="all"
-                        >ALL</button
+                        >$ ALL</button
                     >
-                    <button class="source-btn" data-filter="local">LOCAL</button
+                    <button
+                        class="source-btn"
+                        data-filter="local"
+                        data-source="local">LOCAL</button
                     >
-                    <button class="source-btn" data-filter="note">NOTE</button>
-                    <button class="source-btn" data-filter="zenn">ZENN</button>
-                    <button class="source-btn" data-filter="qiita">QIITA</button
+                    <button
+                        class="source-btn"
+                        data-filter="zenn"
+                        data-source="zenn">ZENN</button
+                    >
+                    <button
+                        class="source-btn"
+                        data-filter="note"
+                        data-source="note">NOTE</button
+                    >
+                    <button
+                        class="source-btn"
+                        data-filter="qiita"
+                        data-source="qiita">QIITA</button
                     >
                 </div>
 
-                <!-- 記事リスト (row list) -->
+                <!-- 記事リスト -->
                 <ul class="posts-list" id="blog-grid">
                     {
                         allPosts.map((post) => (
@@ -208,7 +222,7 @@ const allPosts = [
                             >
                                 <a
                                     href={post.url}
-                                    class="post-link"
+                                    class={`post-link source-${post.source}`}
                                     target={
                                         post.source !== "local"
                                             ? "_blank"
@@ -220,11 +234,10 @@ const allPosts = [
                                             : ""
                                     }
                                 >
-                                    {/* 右端背景レイヤー */}
-                                    {post.image && (
+                                    {/* 右端レイヤー: localは画像、外部はパターン */}
+                                    {post.source === "local" && post.image ? (
                                         <div class="post-image-layer">
-                                            {post.source === "local" &&
-                                            typeof post.image === "object" ? (
+                                            {typeof post.image === "object" ? (
                                                 <Image
                                                     src={post.image}
                                                     alt=""
@@ -241,13 +254,34 @@ const allPosts = [
                                                 />
                                             ) : null}
                                         </div>
+                                    ) : (
+                                        <div
+                                            class={`post-pattern-layer pattern-${post.source}`}
+                                            aria-hidden="true"
+                                        />
                                     )}
 
                                     {/* ソースバッジ */}
                                     <span
-                                        class={`post-source-badge source-${post.source}`}
+                                        class={`post-source-badge badge-${post.source}`}
                                     >
-                                        {post.source}
+                                        {post.source === "local" && (
+                                            <span class="badge-glyph">$</span>
+                                        )}
+                                        {post.source === "zenn" && (
+                                            <span class="badge-glyph">
+                                                {"<>"}
+                                            </span>
+                                        )}
+                                        {post.source === "note" && (
+                                            <span class="badge-glyph">¶</span>
+                                        )}
+                                        {post.source === "qiita" && (
+                                            <span class="badge-glyph">#</span>
+                                        )}
+                                        <span class="badge-text">
+                                            {post.source}
+                                        </span>
                                     </span>
 
                                     {/* メイン */}
@@ -316,6 +350,10 @@ const allPosts = [
                     let activeSource = "all";
                     let debounceTimer: ReturnType<typeof setTimeout> | null =
                         null;
+                    let fadeOutTimer: ReturnType<typeof setTimeout> | null =
+                        null;
+                    let cleanupTimer: ReturnType<typeof setTimeout> | null =
+                        null;
 
                     sourceButtons.forEach((btn) => {
                         btn.addEventListener("click", () => {
@@ -330,7 +368,9 @@ const allPosts = [
 
                     function triggerFilterAndSort() {
                         if (debounceTimer) clearTimeout(debounceTimer);
-                        debounceTimer = setTimeout(() => filterAndSort(), 120);
+                        if (fadeOutTimer) clearTimeout(fadeOutTimer);
+                        if (cleanupTimer) clearTimeout(cleanupTimer);
+                        debounceTimer = setTimeout(() => filterAndSort(), 100);
                     }
 
                     function filterAndSort() {
@@ -340,6 +380,7 @@ const allPosts = [
                             grid.querySelectorAll(":scope > li"),
                         ) as HTMLLIElement[];
 
+                        // Step 1: マッチ判定
                         const matchResults = items.map((li) => {
                             const title = li.dataset.title || "";
                             const tags = li.dataset.tags || "";
@@ -354,57 +395,86 @@ const allPosts = [
                             return textMatch && sourceMatch;
                         });
 
-                        items.forEach((li, i) => {
-                            if (matchResults[i]) {
-                                li.classList.remove("hidden");
-                                li.style.display = "";
-                            } else {
-                                li.classList.add("hidden");
-                                li.style.display = "none";
-                            }
+                        // Step 2: fade-out (全行)
+                        items.forEach((li) => {
+                            li.classList.add("is-fading");
+                            li.style.transitionDelay = "0ms";
                         });
 
-                        const visible = items.filter((_, i) => matchResults[i]);
-                        visible.sort((a, b) => {
-                            switch (sortValue) {
-                                case "date-asc":
-                                    return (
-                                        Number(a.dataset.date) -
-                                        Number(b.dataset.date)
-                                    );
-                                case "date-desc":
-                                    return (
-                                        Number(b.dataset.date) -
-                                        Number(a.dataset.date)
-                                    );
-                                case "title-asc":
-                                    return (
-                                        a.dataset.title || ""
-                                    ).localeCompare(
-                                        b.dataset.title || "",
-                                        "ja",
-                                    );
-                                case "title-desc":
-                                    return (
-                                        b.dataset.title || ""
-                                    ).localeCompare(
-                                        a.dataset.title || "",
-                                        "ja",
-                                    );
-                                default:
-                                    return 0;
-                            }
-                        });
+                        // Step 3: fade-out完了後にreorder + fade-in
+                        fadeOutTimer = setTimeout(() => {
+                            items.forEach((li, i) => {
+                                if (matchResults[i]) {
+                                    li.classList.remove("is-hidden");
+                                    li.style.display = "";
+                                } else {
+                                    li.classList.add("is-hidden");
+                                    li.style.display = "none";
+                                }
+                            });
 
-                        const hidden = items.filter((_, i) => !matchResults[i]);
-                        [...visible, ...hidden].forEach((li) =>
-                            grid.appendChild(li),
-                        );
+                            const visible = items.filter(
+                                (_, i) => matchResults[i],
+                            );
+                            visible.sort((a, b) => {
+                                switch (sortValue) {
+                                    case "date-asc":
+                                        return (
+                                            Number(a.dataset.date) -
+                                            Number(b.dataset.date)
+                                        );
+                                    case "date-desc":
+                                        return (
+                                            Number(b.dataset.date) -
+                                            Number(a.dataset.date)
+                                        );
+                                    case "title-asc":
+                                        return (
+                                            a.dataset.title || ""
+                                        ).localeCompare(
+                                            b.dataset.title || "",
+                                            "ja",
+                                        );
+                                    case "title-desc":
+                                        return (
+                                            b.dataset.title || ""
+                                        ).localeCompare(
+                                            a.dataset.title || "",
+                                            "ja",
+                                        );
+                                    default:
+                                        return 0;
+                                }
+                            });
 
-                        noResults.classList.toggle(
-                            "visible",
-                            visible.length === 0,
-                        );
+                            const hidden = items.filter(
+                                (_, i) => !matchResults[i],
+                            );
+                            [...visible, ...hidden].forEach((li) =>
+                                grid.appendChild(li),
+                            );
+
+                            noResults.classList.toggle(
+                                "visible",
+                                visible.length === 0,
+                            );
+
+                            // Step 4: staggered fade-in
+                            requestAnimationFrame(() => {
+                                visible.forEach((li, i) => {
+                                    li.style.transitionDelay = `${Math.min(i * 30, 600)}ms`;
+                                    li.classList.remove("is-fading");
+                                });
+
+                                const maxDelay =
+                                    Math.min(visible.length * 30, 600) + 300;
+                                cleanupTimer = setTimeout(() => {
+                                    visible.forEach((li) => {
+                                        li.style.transitionDelay = "0ms";
+                                    });
+                                }, maxDelay);
+                            });
+                        }, 180);
                     }
 
                     searchInput.addEventListener("input", triggerFilterAndSort);
@@ -422,38 +492,36 @@ const allPosts = [
 </html>
 
 <style>
-    /* =========================================
-       Layout
-       ========================================= */
     main {
         max-width: 900px;
         margin: 0 auto;
         padding: 6rem 1.5rem 3rem;
     }
 
+    /* =========================================
+       1. ヘッダ部 (works と統一)
+       ========================================= */
     .blog-title {
-        font-family: var(--font-mono);
         font-size: 2rem;
-        font-weight: 700;
         margin: 0 0 0.5rem;
         color: var(--text-main);
+        font-family: var(--font-mono, "JetBrains Mono", monospace);
         letter-spacing: -0.02em;
     }
 
     .blog-desc {
-        font-family: var(--font-mono);
         color: var(--text-muted);
-        font-size: 0.85rem;
-        margin: 0 0 2rem;
+        font-size: 0.95rem;
+        margin-bottom: 2rem;
     }
 
     /* =========================================
-       Toolbar (search + sort)
+       2. ツールバー (検索 + ソート)
        ========================================= */
     .blog-toolbar {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.75rem;
+        gap: 0.6rem;
         align-items: center;
         margin-bottom: 0.75rem;
     }
@@ -486,7 +554,7 @@ const allPosts = [
         border: none;
         outline: none;
         background: transparent;
-        font-family: var(--font-mono);
+        font-family: var(--font-mono, "JetBrains Mono", monospace);
         font-size: 0.85rem;
         color: var(--text-main);
     }
@@ -504,7 +572,7 @@ const allPosts = [
     }
 
     .sort-box label {
-        font-family: var(--font-mono);
+        font-family: var(--font-mono, "JetBrains Mono", monospace);
         font-size: 0.8rem;
         color: var(--text-muted);
         white-space: nowrap;
@@ -517,7 +585,7 @@ const allPosts = [
         border: 1px solid var(--border-color);
         border-radius: 4px;
         padding: 0.45rem 1.8rem 0.45rem 0.7rem;
-        font-family: var(--font-mono);
+        font-family: var(--font-mono, "JetBrains Mono", monospace);
         font-size: 0.8rem;
         color: var(--text-main);
         cursor: pointer;
@@ -533,7 +601,7 @@ const allPosts = [
     }
 
     /* =========================================
-       Source filter buttons
+       3. ソースフィルター
        ========================================= */
     .source-filters {
         display: flex;
@@ -549,7 +617,7 @@ const allPosts = [
         border: 1px solid var(--border-color);
         background: transparent;
         color: var(--text-muted);
-        font-family: var(--font-mono);
+        font-family: var(--font-mono, "JetBrains Mono", monospace);
         font-size: 0.75rem;
         font-weight: 700;
         letter-spacing: 0.05em;
@@ -565,6 +633,22 @@ const allPosts = [
             color: var(--text-main);
             border-color: var(--text-muted);
         }
+        .source-btn[data-source="local"]:hover {
+            color: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+        .source-btn[data-source="zenn"]:hover {
+            color: #3ea8ff;
+            border-color: #3ea8ff;
+        }
+        .source-btn[data-source="note"]:hover {
+            color: #41c9b4;
+            border-color: #41c9b4;
+        }
+        .source-btn[data-source="qiita"]:hover {
+            color: #55c74f;
+            border-color: #55c74f;
+        }
     }
 
     .source-btn.active {
@@ -572,9 +656,25 @@ const allPosts = [
         border-color: var(--accent-blue);
         background: transparent;
     }
+    .source-btn.active[data-source="local"] {
+        color: var(--accent-blue);
+        border-color: var(--accent-blue);
+    }
+    .source-btn.active[data-source="zenn"] {
+        color: #3ea8ff;
+        border-color: #3ea8ff;
+    }
+    .source-btn.active[data-source="note"] {
+        color: #41c9b4;
+        border-color: #41c9b4;
+    }
+    .source-btn.active[data-source="qiita"] {
+        color: #55c74f;
+        border-color: #55c74f;
+    }
 
     /* =========================================
-       Posts row list
+       4. Row list (works.astro の構造に揃える)
        ========================================= */
     .posts-list {
         list-style: none;
@@ -582,131 +682,177 @@ const allPosts = [
         margin: 0;
         display: flex;
         flex-direction: column;
-        border-top: 1px solid var(--border-color);
     }
 
     .post-row {
-        position: relative;
-        overflow: hidden;
-        border-bottom: 1px solid var(--border-color);
+        /* fade animation state */
+        opacity: 1;
+        transform: translateY(0);
         transition:
-            border-bottom-color 0.2s ease,
-            background-color 0.2s ease;
+            opacity 0.25s ease,
+            transform 0.25s ease;
     }
 
-    .post-row.hidden {
+    .post-row.is-fading {
+        opacity: 0;
+        transform: translateY(-4px);
+        pointer-events: none;
+    }
+
+    .post-row.is-hidden {
         display: none !important;
     }
 
     .post-link {
         display: grid;
-        grid-template-columns: 4rem 1fr auto;
+        grid-template-columns: 5rem 1fr auto;
         gap: 1.5rem;
         align-items: center;
-        padding: 1rem 0.5rem;
+        padding: 1rem 0 1rem 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+        border-radius: 0;
+        position: relative;
+        overflow: hidden;
         text-decoration: none;
         color: inherit;
+        transition:
+            background-color 0.2s ease,
+            border-bottom-color 0.2s ease;
+    }
+
+    @media (hover: hover) {
+        .post-link:hover {
+            background-color: rgba(34, 211, 238, 0.04);
+            border-bottom-color: var(--accent-blue);
+        }
+    }
+
+    /* テキスト要素を背景レイヤーより前面に */
+    .post-source-badge,
+    .post-main,
+    .post-date {
         position: relative;
         z-index: 1;
     }
 
-    /* hover: 線の色変化 + 微かな背景 */
-    @media (hover: hover) {
-        .post-row:hover {
-            border-bottom-color: var(--accent-blue);
-            background-color: var(--surface);
-        }
-    }
-
     /* =========================================
-       Source badge
+       5. ソースバッジ (左に大きく主張)
        ========================================= */
     .post-source-badge {
-        font-family: var(--font-mono);
-        font-size: 0.65rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-family: var(--font-mono, "JetBrains Mono", monospace);
+        font-size: 0.7rem;
         font-weight: 700;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.05em;
         text-transform: uppercase;
-        padding: 0.2em 0.5em;
+        padding: 0.3em 0.55em;
         border: 1px solid;
         border-radius: 0;
-        background: transparent;
-        text-align: center;
-        line-height: 1.2;
-        position: relative;
-        z-index: 2;
+        background: var(--background);
         white-space: nowrap;
+        line-height: 1.1;
         justify-self: start;
+        transition: background-color 0.2s ease;
     }
 
-    .post-source-badge.source-local {
+    .post-source-badge .badge-glyph {
+        font-size: 0.85em;
+        font-weight: 700;
+        opacity: 0.9;
+    }
+
+    .post-source-badge .badge-text {
+        font-size: 0.85em;
+    }
+
+    /* local: terminal prompt 風 (accent-blue) */
+    .badge-local {
         color: var(--accent-blue);
         border-color: var(--accent-blue);
     }
 
-    .post-source-badge.source-zenn {
+    /* zenn: angle bracket 風 (#3ea8ff) */
+    .badge-zenn {
         color: #3ea8ff;
         border-color: #3ea8ff;
     }
 
-    .post-source-badge.source-note {
+    /* note: pilcrow ¶ (#41c9b4) */
+    .badge-note {
         color: #41c9b4;
         border-color: #41c9b4;
     }
 
-    .post-source-badge.source-qiita {
+    /* qiita: hash # (#55c74f) */
+    .badge-qiita {
         color: #55c74f;
         border-color: #55c74f;
     }
 
+    /* hover時にバッジが微妙に光る */
+    @media (hover: hover) {
+        .post-link:hover .badge-local {
+            background: rgba(34, 211, 238, 0.08);
+        }
+        .post-link:hover .badge-zenn {
+            background: rgba(62, 168, 255, 0.08);
+        }
+        .post-link:hover .badge-note {
+            background: rgba(65, 201, 180, 0.08);
+        }
+        .post-link:hover .badge-qiita {
+            background: rgba(85, 199, 79, 0.08);
+        }
+    }
+
     /* =========================================
-       Main (title + tags)
+       6. Main (title + tags) — works と同じ ▸ 方式
        ========================================= */
     .post-main {
         display: flex;
         flex-direction: column;
-        gap: 0.4rem;
+        gap: 0.3rem;
         min-width: 0;
-        position: relative;
-        z-index: 2;
     }
 
     .post-title {
-        font-family: var(--font-sans);
+        font-family: var(--font-mono, "JetBrains Mono", monospace);
         font-size: 0.95rem;
         font-weight: 700;
         color: var(--text-main);
-        line-height: 1.4;
+        line-height: 1.3;
+        word-break: break-word;
         position: relative;
-        display: inline-block;
+        padding-left: 0;
         transition:
-            transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+            padding-left 0.25s ease,
             color 0.2s ease;
     }
 
-    /* ▸ プロンプト: hover で左から登場 + タイトル横スライド (works と同思想) */
     .post-title::before {
         content: "▸";
         position: absolute;
-        left: -1.2em;
-        top: 0;
+        left: 0;
+        top: 50%;
+        transform: translate(-0.5rem, -50%);
         color: var(--accent-blue);
         opacity: 0;
-        transform: translateX(-0.3em);
         transition:
             opacity 0.25s ease,
-            transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            transform 0.25s ease;
+        font-family: var(--font-mono, "JetBrains Mono", monospace);
     }
 
     @media (hover: hover) {
-        .post-row:hover .post-title {
-            transform: translateX(1.2em);
+        .post-link:hover .post-title {
+            padding-left: 1rem;
             color: var(--accent-blue);
         }
-
-        .post-row:hover .post-title::before {
+        .post-link:hover .post-title::before {
             opacity: 1;
-            transform: translateX(0);
+            transform: translate(0, -50%);
         }
     }
 
@@ -717,18 +863,19 @@ const allPosts = [
     }
 
     .post-tag {
-        font-family: var(--font-mono);
+        font-family: var(--font-mono, "JetBrains Mono", monospace);
         font-size: 0.7rem;
-        padding: 0.1em 0.4em;
         border: 1px solid var(--border-color);
         border-radius: 0;
+        padding: 0.1em 0.4em;
         color: var(--text-muted);
         background: var(--background);
+        font-weight: 500;
         white-space: nowrap;
     }
 
     .post-tag-more {
-        font-family: var(--font-mono);
+        font-family: var(--font-mono, "JetBrains Mono", monospace);
         font-size: 0.7rem;
         color: var(--text-muted);
         opacity: 0.6;
@@ -736,47 +883,53 @@ const allPosts = [
     }
 
     /* =========================================
-       Date
+       7. Date
        ========================================= */
     .post-date {
-        font-family: var(--font-mono);
-        font-size: 0.8rem;
+        font-family: var(--font-mono, "JetBrains Mono", monospace);
         color: var(--text-muted);
+        font-size: 0.8rem;
         white-space: nowrap;
         flex-shrink: 0;
-        position: relative;
-        z-index: 2;
     }
 
     /* =========================================
-       Image layer (right-side background)
+       8. 背景レイヤー
        ========================================= */
-    .post-image-layer {
+
+    /* 共通: 右端の clip + mask フェード */
+    .post-image-layer,
+    .post-pattern-layer {
         position: absolute;
         right: 0;
         top: 0;
         bottom: 0;
         width: 45%;
         z-index: 0;
+        pointer-events: none;
         clip-path: polygon(15% 0, 100% 0, 100% 100%, 0 100%);
-        mask-image: linear-gradient(
-            to left,
-            black 0%,
-            black 30%,
-            transparent 100%
-        );
         -webkit-mask-image: linear-gradient(
             to left,
             black 0%,
             black 30%,
             transparent 100%
         );
-        opacity: 0.35;
-        pointer-events: none;
+        mask-image: linear-gradient(
+            to left,
+            black 0%,
+            black 30%,
+            transparent 100%
+        );
         transition: opacity 0.3s ease;
     }
 
-    .post-image-layer img {
+    /* === local: 画像 === */
+    .post-image-layer {
+        opacity: 0.35;
+    }
+
+    .post-image-layer img,
+    .post-image-layer :global(img) {
         width: 100%;
         height: 100%;
         object-fit: cover;
@@ -793,24 +946,63 @@ const allPosts = [
     }
 
     @media (hover: hover) {
-        .post-row:hover .post-image-layer {
-            opacity: 0.45;
-        }
-
-        .post-row:hover .post-image-layer::after {
+        .post-link:hover .post-image-layer::after {
             opacity: 0.5;
         }
     }
 
+    /* === 外部記事: パターン === */
+    .post-pattern-layer {
+        opacity: 0.22;
+    }
+
+    @media (hover: hover) {
+        .post-link:hover .post-pattern-layer {
+            opacity: 0.32;
+        }
+    }
+
+    /* zenn: 斜線パターン (青) */
+    .pattern-zenn {
+        background-image: repeating-linear-gradient(
+            135deg,
+            #3ea8ff 0,
+            #3ea8ff 1px,
+            transparent 1px,
+            transparent 10px
+        );
+    }
+
+    /* qiita: ドットパターン (緑) */
+    .pattern-qiita {
+        background-image: radial-gradient(
+            circle,
+            #55c74f 1px,
+            transparent 1.5px
+        );
+        background-size: 10px 10px;
+    }
+
+    /* note: 横線パターン (ティール) — note の罫線っぽく */
+    .pattern-note {
+        background-image: repeating-linear-gradient(
+            0deg,
+            #41c9b4 0,
+            #41c9b4 1px,
+            transparent 1px,
+            transparent 8px
+        );
+    }
+
     /* =========================================
-       No results
+       9. No results
        ========================================= */
     .no-results {
         display: none;
         text-align: left;
         padding: 3rem 0;
         color: var(--text-muted);
-        font-family: var(--font-mono);
+        font-family: var(--font-mono, "JetBrains Mono", monospace);
         font-size: 0.9rem;
     }
 
@@ -823,7 +1015,7 @@ const allPosts = [
     }
 
     /* =========================================
-       Mobile (max-width: 720px)
+       10. モバイル (max-width: 720px)
        ========================================= */
     @media (max-width: 720px) {
         main {
@@ -855,10 +1047,10 @@ const allPosts = [
         }
 
         .post-link {
-            grid-template-columns: 4rem 1fr;
+            grid-template-columns: 5rem 1fr;
             grid-template-rows: auto auto;
             gap: 0.5rem 1rem;
-            padding: 0.9rem 0.4rem;
+            padding: 0.9rem 0 0.9rem 0.4rem;
         }
 
         .post-source-badge {
@@ -881,10 +1073,18 @@ const allPosts = [
             font-size: 0.9rem;
         }
 
-        /* モバイルでも画像レイヤーは表示 (works と同じ判断) */
-        .post-image-layer {
+        /* モバイルでも背景レイヤーは表示 (works と同じ判断) */
+        .post-image-layer,
+        .post-pattern-layer {
             width: 50%;
-            opacity: 0.25;
+        }
+
+        .post-image-layer {
+            opacity: 0.22;
+        }
+
+        .post-pattern-layer {
+            opacity: 0.18;
         }
     }
 </style>
