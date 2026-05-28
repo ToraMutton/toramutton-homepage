@@ -122,6 +122,12 @@ html {
     -moz-osx-font-smoothing: grayscale;
 }
 
+@supports not (scrollbar-gutter: stable) {
+    html {
+        overflow-y: scroll;
+    }
+}
+
 main {
     max-width: var(--max-width);
     margin: 0 auto;
