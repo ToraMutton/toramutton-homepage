@@ -262,115 +262,168 @@ const friendLinks: FriendLink[] = [
     <body>
         <Header />
         <main>
-            <section class="hero">
-                <div class="hero-container">
-                    <div class="hero-image-container">
-                        <Image
-                            src={heroImage}
-                            alt="トラマトのアイコン"
-                            class="hero-img"
-                        />
+            <section class="hero" data-hero>
+                <div class="hero-grid">
+                    <!-- 左カラム: terminal -->
+                    <div class="terminal">
+                        <div class="terminal-header">
+                            <span class="terminal-dots" aria-hidden="true">
+                                <i></i><i></i><i></i>
+                            </span>
+                            <span class="terminal-path">~/toramutton.me</span>
+                        </div>
+                        <div class="terminal-body">
+                            <p class="line" style="--i: 0">
+                                <span class="prompt">$</span>
+                                <span class="cmd"
+                                    ><span class="typewriter">whoami</span
+                                    ></span
+                                >
+                            </p>
+                            <p class="line" style="--i: 1">
+                                <span class="output">ToraMutton</span>
+                            </p>
+                            <p class="line line-blank" style="--i: 2"></p>
+                            <p class="line line-comment" style="--i: 3">
+                                <span class="comment"># 電通大 I 類</span>
+                            </p>
+                            <p class="line line-comment" style="--i: 4">
+                                <span class="comment"
+                                    ># Web / Systems / Compilers</span
+                                >
+                            </p>
+                            <p class="line line-blank" style="--i: 5"></p>
+                            <p class="line" style="--i: 6">
+                                <span class="prompt">$</span>
+                                <span class="cmd">ls ./social</span>
+                            </p>
+                            <div class="line social-links" style="--i: 7">
+                                <a
+                                    href={GITHUB_URL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="social-btn"
+                                    aria-label="GitHub"
+                                >
+                                    <Github size={14} /><span>github</span>
+                                </a>
+                                <a
+                                    href={ZENN_URL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="social-btn"
+                                    aria-label="Zenn"
+                                >
+                                    <svg
+                                        role="img"
+                                        viewBox="0 0 24 24"
+                                        width="14"
+                                        height="14"
+                                        fill="currentColor"
+                                        aria-hidden="true"
+                                    >
+                                        <path
+                                            d="M.264 23.771h4.984c.264 0 .498-.147.645-.352L19.614.874c.176-.293-.029-.645-.381-.645h-4.72c-.235 0-.44.117-.557.323L.03 23.361c-.088.176.029.41.234.41zM17.445 23.419l6.479-10.408c.205-.323-.029-.733-.41-.733h-4.691c-.176 0-.352.088-.44.235l-6.655 10.643c-.176.264.029.616.352.616h4.779c.234-.001.468-.118.586-.353z"
+                                        ></path>
+                                    </svg>
+                                    <span>zenn</span>
+                                </a>
+                                <a
+                                    href={NOTE_URL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="social-btn"
+                                    aria-label="Note"
+                                >
+                                    <svg
+                                        role="img"
+                                        viewBox="0 0 24 24"
+                                        width="14"
+                                        height="14"
+                                        fill="currentColor"
+                                        aria-hidden="true"
+                                    >
+                                        <path
+                                            d="M0 .279c4.623 0 10.953-.235 15.498-.117 6.099.156 8.39 2.813 8.468 9.374.077 3.71 0 14.335 0 14.335h-6.598c0-9.296.04-10.83 0-13.759-.078-2.578-.814-3.807-2.795-4.041-2.097-.235-7.975-.04-7.975-.04v17.84H0Z"
+                                        ></path>
+                                    </svg>
+                                    <span>note</span>
+                                </a>
+                                <a
+                                    href={QIITA_URL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="social-btn"
+                                    aria-label="Qiita"
+                                >
+                                    <svg
+                                        role="img"
+                                        viewBox="0 0 24 24"
+                                        width="14"
+                                        height="14"
+                                        fill="currentColor"
+                                        aria-hidden="true"
+                                    >
+                                        <path
+                                            d="M12 0C5.3726 0 0 5.3726 0 12s5.3726 12 12 12 12-5.3726 12-12S18.6274 0 12 0Zm0 5.727a5.273 5.273 0 1 0 0 10.546 5.273 5.273 0 0 0 0-10.546Z"
+                                        ></path>
+                                    </svg>
+                                    <span>qiita</span>
+                                </a>
+                                <a
+                                    href={TW_TECH_URL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="social-btn"
+                                    aria-label="Twitter Tech"
+                                >
+                                    <Twitter size={14} /><span>twitter</span>
+                                </a>
+                            </div>
+                            <p class="line line-blank" style="--i: 8"></p>
+                            <p class="line" style="--i: 9">
+                                <span class="prompt">$</span>
+                                <a href="/about" class="cmd cmd-link">
+                                    cd ./about<span class="cursor-arrow">
+                                        →</span
+                                    >
+                                </a>
+                            </p>
+                        </div>
                     </div>
 
-                    <div class="hero-text-group">
-                        <h1 class="hero-title">トラマトのホームページ</h1>
-                        <p class="tagline">UEC25 I 類</p>
-
-                        <p class="hero-desc">こんにちは</p>
-
-                        <div class="hero-actions">
-                            <a href="/about" class="primary-btn">
-                                More About Me <span class="arrow">→</span>
-                            </a>
-                        </div>
-
-                        <div class="social-links">
-                            <a
-                                href={TW_DAILY_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="social-btn twitter-icon"
-                            >
-                                <Twitter size={18} />
-                                <span>Daily</span>
-                            </a>
-                            <a
-                                href={TW_TECH_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="social-btn twitter-tech-icon"
-                            >
-                                <Twitter size={18} />
-                                <span>Tech</span>
-                            </a>
-                            <a
-                                href={GITHUB_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="social-btn github-icon"
-                            >
-                                <Github size={18} />
-                                <span>GitHub</span>
-                            </a>
-                            <a
-                                href={NOTE_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="social-btn note-icon"
-                            >
-                                <svg
-                                    role="img"
-                                    viewBox="0 0 24 24"
-                                    width="14"
-                                    height="14"
-                                    fill="currentColor"
+                    <!-- 右カラム: spec-list -->
+                    <aside class="spec-block" style="--i: 2">
+                        <p class="spec-block-title">// status</p>
+                        <ul class="spec-list">
+                            <li>
+                                <span class="spec-key">name</span>
+                                <span class="spec-val"
+                                    >トラマト / 寅松 / toramutton</span
                                 >
-                                    <path
-                                        d="M0 .279c4.623 0 10.953-.235 15.498-.117 6.099.156 8.39 2.813 8.468 9.374.077 3.71 0 14.335 0 14.335h-6.598c0-9.296.04-10.83 0-13.759-.078-2.578-.814-3.807-2.795-4.041-2.097-.235-7.975-.04-7.975-.04v17.84H0Z"
-                                    ></path>
-                                </svg>
-                                <span>note</span>
-                            </a>
-                            <a
-                                href={ZENN_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="social-btn zenn-icon"
-                            >
-                                <svg
-                                    role="img"
-                                    viewBox="0 0 24 24"
-                                    width="18"
-                                    height="18"
-                                    fill="currentColor"
+                            </li>
+                            <li>
+                                <span class="spec-key">univ</span>
+                                <span class="spec-val">UEC '25 / Class A</span>
+                            </li>
+                            <li>
+                                <span class="spec-key">focus</span>
+                                <span class="spec-val"
+                                    >Web · Systems · Compilers</span
                                 >
-                                    <path
-                                        d="M.264 23.771h4.984c.264 0 .498-.147.645-.352L19.614.874c.176-.293-.029-.645-.381-.645h-4.72c-.235 0-.44.117-.557.323L.03 23.361c-.088.176.029.41.234.41zM17.445 23.419l6.479-10.408c.205-.323-.029-.733-.41-.733h-4.691c-.176 0-.352.088-.44.235l-6.655 10.643c-.176.264.029.616.352.616h4.779c.234-.001.468-.118.586-.353z"
-                                    ></path>
-                                </svg>
-                                <span>Zenn</span>
-                            </a>
-                            <a
-                                href={QIITA_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="social-btn qiita-icon"
-                            >
-                                <svg
-                                    role="img"
-                                    viewBox="0 0 24 24"
-                                    width="18"
-                                    height="18"
-                                    fill="currentColor"
-                                >
-                                    <path
-                                        d="M12 0C5.3726 0 0 5.3726 0 12s5.3726 12 12 12c3.3984 0 6.4665-1.413 8.6498-3.6832-.383-.0574-.7746-.2062-1.1466-.4542-.7145-.4763-1.3486-.9263-1.6817-1.674-1.2945 1.3807-3.0532 1.835-5.1822 2.0503-4.311.4359-8.0456-1.4893-8.4979-6.2996-.1922-2.045.2628-3.989 1.1804-5.582l-.5342-2.1009c-.0862-.3652.2498-.7126.6057-.6262l1.8456.448c1.0974-.9012 2.4249-1.49 3.8892-1.638 1.2526-.1267 2.467.0834 3.571.5624l1.7348-1.0494c.3265-.1974.7399.0257.7711.4164l.1 2.4747v.0002c1.334 1.4084 2.2424 3.3319 2.4478 5.516.116 1.2339-.012 2.1776-.339 3.078-.1531.4215-.1992.7778.0776 1.1305.2674.3408.6915 1.0026 1.1644.8917.7107-.1666 1.4718-.1223 1.9422.1715C23.4925 15.9525 24 14.0358 24 12c0-6.6274-5.3726-12-12-12Zm-.0727 5.727a5.2731 5.2731 0 0 0-.6146.0273c-2.2084.2233-3.9572 1.8135-4.4937 3.8484l-1.3176-.1996-.014.2589 1.2972.1407c-.0352.1497-.0643.2384-.086.3923l-1.1319.0902.0103.2025 1.1032-.088c-.0194.1713-.031.2814-.0332.4565l-1.0078.412.0495.2499.9598-.4492c.002.1339.008.2053.0207.3407.2667 2.8371 2.6364 3.3981 5.4677 3.1118 2.8312-.2863 5.0517-1.3114 4.785-4.1486-.013-.1361-.0324-.2068-.0553-.3392l1.0397.2257.0242-.229-1.0906-.207c-.0342-.1687-.0765-.271-.1264-.4327l1.1208-.1374-.0158-.2019-1.1499.1409a5.1093 5.1093 0 0 0-.1665-.4259l1.2665-.4042-.0397-.2536-1.3471.4667c-.819-1.7168-2.5002-2.8224-4.4546-2.8482Z"
-                                    ></path>
-                                </svg>
-                                <span>Qiita</span>
-                            </a>
-                        </div>
-                    </div>
+                            </li>
+                            <li>
+                                <span class="spec-key">stack</span>
+                                <span class="spec-val">Rust / TS / C</span>
+                            </li>
+                            <li>
+                                <span class="spec-key">status</span>
+                                <span class="spec-val spec-val-live">
+                                    <span class="dot-live"></span>online
+                                </span>
+                            </li>
+                        </ul>
+                    </aside>
                 </div>
             </section>
 
@@ -615,6 +668,18 @@ const friendLinks: FriendLink[] = [
                 import { songs } from "../data/songs";
 
                 document.addEventListener("astro:page-load", () => {
+                    const hero =
+                        document.querySelector<HTMLElement>("[data-hero]");
+                    if (hero) {
+                        const trigger = () =>
+                            requestAnimationFrame(() =>
+                                hero.setAttribute("data-loaded", ""),
+                            );
+                        document.fonts?.ready
+                            ? document.fonts.ready.then(trigger)
+                            : trigger();
+                    }
+
                     // カウントダウン処理
                     const missionItems =
                         document.querySelectorAll<HTMLElement>(
@@ -761,226 +826,326 @@ const friendLinks: FriendLink[] = [
 </html>
 
 <style>
-    /* 1.トップの顔 */
+    /* ====================================
+   Hero — terminal-style
+   ==================================== */
     .hero {
-        padding: 6rem 0 4rem;
-    }
-
-    .hero-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 3rem;
-        max-width: 900px;
+        padding: 6rem 0 5rem;
+        max-width: 1100px;
         margin: 0 auto;
     }
 
-    .hero-text-group {
-        text-align: left;
+    .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+        gap: 2rem;
+        align-items: start;
     }
 
-    .hero-img {
-        border-radius: 50%;
-        width: 180px;
-        height: 180px;
-        object-fit: cover;
-        box-shadow:
-            0 0 40px rgba(253, 224, 71, 0.3),
-            0 0 40px rgba(253, 224, 71, 0.15);
-        animation: float-natural 7s ease-in-out infinite;
+    /* ---- Terminal block ---- */
+    .terminal {
+        background: var(--surface);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        overflow: hidden;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
     }
 
-    /* :global(html.dark) .hero-img {
-        box-shadow: 0 0 15px rgba(253, 224, 71, 0.3), 0 0 40px rgba(253, 224, 71, 0.15);
-    } */
-
-    .hero-title {
-        margin: 0;
-        font-size: 2rem;
-        font-weight: 900;
-        letter-spacing: -0.02em;
-    }
-
-    .tagline {
-        margin-top: 0.5rem;
-        margin-bottom: 1.5rem;
-        color: var(--text-main);
-        font-size: 1rem;
-        font-weight: 700;
-        opacity: 0.8;
-    }
-
-    .hero-desc {
-        font-size: 0.95rem;
-        margin-bottom: 2rem;
-        color: var(--text-muted);
-        line-height: 1.7;
-    }
-
-    .hero-actions {
-        margin-bottom: 2rem;
-    }
-
-    /* 2. ボタン・リンク・アイコン類 */
-    /* メインボタン */
-    .primary-btn {
-        display: inline-flex;
+    .terminal-header {
+        display: flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.8rem 1.8rem;
-        background: var(--accent-blue);
-        color: #fff;
-        font-weight: 700;
-        text-decoration: none;
-        border-radius: 99px;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        gap: 0.75rem;
+        padding: 0.6rem 1rem;
+        background: var(--elevated, rgba(0, 0, 0, 0.06));
+        border-bottom: 1px solid var(--border-color);
     }
 
-    .primary-btn:hover {
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-        opacity: 0.9;
+    :global(html.dark) .terminal-header {
+        background: rgba(255, 255, 255, 0.04);
     }
 
-    .primary-btn:hover .arrow {
-        transform: translateX(4px);
+    .terminal-dots {
+        display: inline-flex;
+        gap: 6px;
+    }
+    .terminal-dots i {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--border-color);
     }
 
-    .arrow {
-        transition: transform 0.2s ease;
+    .terminal-path {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        letter-spacing: 0.02em;
     }
 
-    /* ソーシャルボタン */
-    .social-links {
+    .terminal-body {
+        padding: 1.5rem 1.2rem 1.8rem;
+        font-size: 0.95rem;
+        line-height: 1.7;
+        color: var(--text-main);
+    }
+
+    .line {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.8rem;
-        margin-top: 1.5rem;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+        min-height: 1.6em;
+    }
+    .line-blank {
+        min-height: 0.6em;
+    }
+
+    .prompt {
+        color: var(--accent-blue);
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .cmd {
+        color: var(--text-main);
+    }
+
+    .output {
+        color: var(--text-main);
+        font-weight: 700;
+        font-size: 1.15rem;
+        padding-left: 1.2rem;
+        position: relative;
+    }
+    .output::before {
+        content: ">";
+        position: absolute;
+        left: 0;
+        color: var(--text-muted);
+        font-weight: 400;
+    }
+
+    .comment {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    /* ---- Social links ---- */
+    .social-links {
+        gap: 0.5rem;
+        padding-left: 1.2rem;
+        margin-top: 0.2rem;
     }
 
     .social-btn {
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        gap: 0.6rem;
-        padding: 0.6rem 1.2rem;
-        font-size: 0.9rem;
-        font-weight: 600;
+        gap: 0.4rem;
+        padding: 0.3rem 0.7rem;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        background: transparent;
+        border: 1px solid var(--border-color);
+        border-radius: 0;
         text-decoration: none;
+        transition:
+            color 0.18s ease,
+            border-color 0.18s ease;
+    }
+
+    @media (hover: hover) {
+        .social-btn:hover {
+            color: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+    }
+
+    /* ---- CTA (cd ./about) ---- */
+    .cmd-link {
         color: var(--text-main);
-        background: rgba(0, 0, 0, 0.04);
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        border-radius: 8px;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: color 0.18s ease;
+    }
+    .cursor-arrow {
+        color: var(--accent-blue);
+        transition: transform 0.18s ease;
+    }
+    @media (hover: hover) {
+        .cmd-link:hover {
+            color: var(--accent-blue);
+        }
+        .cmd-link:hover .cursor-arrow {
+            transform: translateX(4px);
+        }
     }
 
-    :global(html.dark) .social-btn {
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.1); /* 少し明るくして視認性アップ */
+    /* ---- Spec block (右カラム) ---- */
+    .spec-block {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        padding-top: 0.6rem;
+    }
+    .spec-block-title {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin: 0 0 1rem;
+        letter-spacing: 0.05em;
+    }
+    .spec-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .spec-list li {
+        display: grid;
+        grid-template-columns: 70px 1fr;
+        gap: 1rem;
+        padding: 0.55rem 0;
+        border-bottom: 1px dashed var(--border-color);
+        align-items: baseline;
+    }
+    .spec-list li:last-child {
+        border-bottom: none;
+    }
+    .spec-key {
+        font-size: 0.72rem;
+        color: var(--accent-blue);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .spec-val {
+        font-size: 0.9rem;
+        color: var(--text-main);
+    }
+    .spec-val-live {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .dot-live {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent-blue);
+        box-shadow: 0 0 6px var(--accent-blue);
+        animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+        0%,
+        100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.4;
+        }
     }
 
-    .social-btn:hover {
-        transform: translateY(-1px);
-        border-color: var(--accent-blue);
-        background: rgba(2, 132, 199, 0.05);
+    /* ====================================
+   Load animations
+   ==================================== */
+    .line,
+    .spec-block {
+        opacity: 0;
+        transform: translateY(8px);
     }
 
-    /* === ツール別設定 === */
-
-    /* Twitter (自称X) */
-    /* 日常垢 */
-    .twitter-icon:hover {
-        border-color: #1da1f2;
-        background: rgba(29, 161, 242, 0.05);
-        color: #1da1f2;
-    }
-    .twitter-icon:hover :global(svg) {
-        color: #1da1f2;
+    .hero[data-loaded] .line,
+    .hero[data-loaded] .spec-block {
+        opacity: 1;
+        transform: translateY(0);
+        transition:
+            opacity 0.45s ease,
+            transform 0.45s ease;
+        transition-delay: calc(0.6s + var(--i, 0) * 90ms);
     }
 
-    /* ダークモードで発光 */
-    :global(html.dark) .twitter-icon:hover {
-        border-color: #1da1f2;
-        color: #1da1f2;
-        /* box-shadow: 0 0 10px rgba(29, 161, 242, 0.4);  */
+    /* whoami 行は即表示（タイプライターが担当） */
+    .hero[data-loaded] .line[style*="--i: 0"] {
+        opacity: 1;
+        transform: translateY(0);
+        transition-delay: 0s;
     }
 
-    /* 技術垢 */
-    .twitter-tech-icon:hover {
-        border-color: #f59518;
-        background: rgba(245, 149, 24, 0.05);
-        color: #f59518;
+    /* タイプライター */
+    .typewriter {
+        display: inline-block;
+        overflow: hidden;
+        white-space: nowrap;
+        vertical-align: bottom;
+        max-width: 0;
+        border-right: 2px solid var(--accent-blue);
     }
-    .twitter-tech-icon:hover :global(svg) {
-        color: #f59518;
+    .hero[data-loaded] .typewriter {
+        animation:
+            typing 0.6s steps(6, end) 0.15s forwards,
+            caret 0.7s step-end 3 0.75s;
     }
-
-    /* ダークモードで発光 */
-    :global(html.dark) .twitter-tech-icon:hover {
-        border-color: #f59518;
-        color: #f59518;
-        /* box-shadow: 0 0 10px rgba(29, 161, 242, 0.4);  */
+    @keyframes typing {
+        to {
+            max-width: 7ch;
+        }
     }
-
-    /* GitHub */
-    .github-icon:hover {
-        border-color: #333;
-        background: rgba(0, 0, 0, 0.05);
-        color: #333;
-    }
-    /* ダークモードで白く発光 */
-    :global(html.dark) .github-icon:hover {
-        border-color: #ffffff;
-        background: rgba(255, 255, 255, 0.1);
-        color: #ffffff;
-        /* box-shadow: 0 0 10px rgba(255, 255, 255, 0.3); */
+    @keyframes caret {
+        50% {
+            border-color: transparent;
+        }
     }
 
-    /* Note */
-    .note-icon:hover {
-        border-color: #41c9b4;
-        background: rgba(65, 201, 180, 0.05);
-        color: #41c9b4;
-    }
-    .note-icon:hover svg {
-        color: #41c9b4;
-    }
-
-    :global(html.dark) .note-icon:hover {
-        border-color: #41c9b4;
-        color: #41c9b4;
-        /* box-shadow: 0 0 10px rgba(65, 201, 180, 0.4); */
-    }
-
-    /* Zenn */
-    .zenn-icon:hover {
-        border-color: #3ea8ff;
-        background: rgba(62, 168, 255, 0.05);
-        color: #3ea8ff;
-    }
-    .zenn-icon:hover svg {
-        color: #3ea8ff;
-    }
-
-    :global(html.dark) .zenn-icon:hover {
-        border-color: #3ea8ff;
-        color: #3ea8ff;
-        /* box-shadow: 0 0 10px rgba(62, 168, 255, 0.4); */
+    /* ====================================
+   Reduced motion
+   ==================================== */
+    @media (prefers-reduced-motion: reduce) {
+        .line,
+        .spec-block {
+            opacity: 1;
+            transform: none;
+            transition: none;
+        }
+        .hero[data-loaded] .line,
+        .hero[data-loaded] .spec-block {
+            transition: none;
+            transition-delay: 0s;
+        }
+        .typewriter {
+            max-width: none;
+            border-right: none;
+            animation: none;
+        }
+        .dot-live {
+            animation: none;
+        }
     }
 
-    /* Qiita */
-    .qiita-icon:hover {
-        border-color: #55c500;
-        background: rgba(85, 197, 0, 0.05);
-        color: #55c500;
-    }
-    .qiita-icon:hover svg {
-        color: #55c500;
-    }
-
-    :global(html.dark) .qiita-icon:hover {
-        border-color: #55c500;
-        color: #55c500;
-        /* box-shadow: 0 0 10px rgba(62, 168, 255, 0.4); */
+    /* ====================================
+   Mobile (≤ 720px) — Hero
+   ==================================== */
+    @media (max-width: 720px) {
+        .hero {
+            padding: 4rem 0 3rem;
+        }
+        .hero-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        .terminal-body {
+            padding: 1.2rem 1rem 1.4rem;
+            font-size: 0.88rem;
+        }
+        .output {
+            font-size: 1.05rem;
+        }
+        .social-links {
+            padding-left: 0;
+            flex-wrap: wrap;
+        }
+        .spec-list li {
+            grid-template-columns: 60px 1fr;
+            gap: 0.6rem;
+        }
     }
 
     /* 3. 最新の記事リスト */
