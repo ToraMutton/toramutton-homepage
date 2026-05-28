@@ -129,6 +129,9 @@ const allPosts = [
     ...zennPosts,
     ...qiitaPosts,
 ].sort((a, b) => b.date.valueOf() - a.date.valueOf());
+
+// 画像レイヤーを使うソース (local + note)
+const IMAGE_SOURCES = new Set(["local", "note"]);
 ---
 
 <!doctype html>
@@ -234,26 +237,38 @@ const allPosts = [
                                             : ""
                                     }
                                 >
-                                    {/* 右端レイヤー: localは画像、外部はパターン */}
-                                    {post.source === "local" && post.image ? (
-                                        <div class="post-image-layer">
-                                            {typeof post.image === "object" ? (
-                                                <Image
-                                                    src={post.image}
-                                                    alt=""
-                                                    width={400}
-                                                    height={225}
-                                                    loading="lazy"
-                                                />
-                                            ) : typeof post.image ===
-                                              "string" ? (
-                                                <img
-                                                    src={post.image}
-                                                    alt=""
-                                                    loading="lazy"
-                                                />
-                                            ) : null}
-                                        </div>
+                                    {/*
+                                  右端レイヤー:
+                                  - local / note → 画像があれば image-layer、なければ pattern フォールバック
+                                  - zenn / qiita → 常に pattern
+                                */}
+                                    {IMAGE_SOURCES.has(post.source) ? (
+                                        post.image ? (
+                                            <div class="post-image-layer">
+                                                {post.source === "local" &&
+                                                typeof post.image ===
+                                                    "object" ? (
+                                                    <Image
+                                                        src={post.image}
+                                                        alt=""
+                                                        width={400}
+                                                        height={225}
+                                                        loading="lazy"
+                                                    />
+                                                ) : (
+                                                    <img
+                                                        src={post.image}
+                                                        alt=""
+                                                        loading="lazy"
+                                                    />
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div
+                                                class={`post-pattern-layer pattern-${post.source}`}
+                                                aria-hidden="true"
+                                            />
+                                        )
                                     ) : (
                                         <div
                                             class={`post-pattern-layer pattern-${post.source}`}
@@ -395,13 +410,13 @@ const allPosts = [
                             return textMatch && sourceMatch;
                         });
 
-                        // Step 2: fade-out (全行)
+                        // Step 2: 全行 fade-out
                         items.forEach((li) => {
                             li.classList.add("is-fading");
                             li.style.transitionDelay = "0ms";
                         });
 
-                        // Step 3: fade-out完了後にreorder + fade-in
+                        // Step 3: fade-out 完了後に reorder + fade-in
                         fadeOutTimer = setTimeout(() => {
                             items.forEach((li, i) => {
                                 if (matchResults[i]) {
@@ -499,7 +514,7 @@ const allPosts = [
     }
 
     /* =========================================
-       1. ヘッダ部 (works と統一)
+       1. ヘッダ部
        ========================================= */
     .blog-title {
         font-size: 2rem;
@@ -654,7 +669,6 @@ const allPosts = [
     .source-btn.active {
         color: var(--accent-blue);
         border-color: var(--accent-blue);
-        background: transparent;
     }
     .source-btn.active[data-source="local"] {
         color: var(--accent-blue);
@@ -674,7 +688,7 @@ const allPosts = [
     }
 
     /* =========================================
-       4. Row list (works.astro の構造に揃える)
+       4. Row list
        ========================================= */
     .posts-list {
         list-style: none;
@@ -684,13 +698,13 @@ const allPosts = [
         flex-direction: column;
     }
 
+    /* --- fade animation --- */
     .post-row {
-        /* fade animation state */
         opacity: 1;
         transform: translateY(0);
         transition:
-            opacity 0.25s ease,
-            transform 0.25s ease;
+            opacity 0.22s ease,
+            transform 0.22s ease;
     }
 
     .post-row.is-fading {
@@ -703,9 +717,11 @@ const allPosts = [
         display: none !important;
     }
 
+    /* --- リンク本体 (グリッド定義) --- */
     .post-link {
         display: grid;
-        grid-template-columns: 5rem 1fr auto;
+        /* バッジ列: 6rem に拡張 */
+        grid-template-columns: 6rem 1fr auto;
         gap: 1.5rem;
         align-items: center;
         padding: 1rem 0 1rem 0.75rem;
@@ -736,74 +752,74 @@ const allPosts = [
     }
 
     /* =========================================
-       5. ソースバッジ (左に大きく主張)
+       5. ソースバッジ
        ========================================= */
     .post-source-badge {
         display: inline-flex;
         align-items: center;
-        gap: 0.3rem;
+        justify-content: center;
+        gap: 0.3em;
         font-family: var(--font-mono, "JetBrains Mono", monospace);
-        font-size: 0.7rem;
+        /* ↑ 前回 0.7rem → 0.82rem に拡大 */
+        font-size: 0.82rem;
         font-weight: 700;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.06em;
         text-transform: uppercase;
-        padding: 0.3em 0.55em;
+        /* ↑ padding も一回り大きく */
+        padding: 0.35em 0.65em;
         border: 1px solid;
         border-radius: 0;
         background: var(--background);
         white-space: nowrap;
-        line-height: 1.1;
-        justify-self: start;
+        line-height: 1.15;
+        width: 100%;
+        box-sizing: border-box;
         transition: background-color 0.2s ease;
     }
 
-    .post-source-badge .badge-glyph {
-        font-size: 0.85em;
+    .badge-glyph {
+        font-size: 1.05em;
         font-weight: 700;
-        opacity: 0.9;
+        opacity: 1;
+        flex-shrink: 0;
     }
 
-    .post-source-badge .badge-text {
-        font-size: 0.85em;
+    .badge-text {
+        font-size: 0.9em;
+        letter-spacing: 0.08em;
     }
 
-    /* local: terminal prompt 風 (accent-blue) */
+    /* source 別カラー */
     .badge-local {
         color: var(--accent-blue);
         border-color: var(--accent-blue);
     }
-
-    /* zenn: angle bracket 風 (#3ea8ff) */
     .badge-zenn {
         color: #3ea8ff;
         border-color: #3ea8ff;
     }
-
-    /* note: pilcrow ¶ (#41c9b4) */
     .badge-note {
         color: #41c9b4;
         border-color: #41c9b4;
     }
-
-    /* qiita: hash # (#55c74f) */
     .badge-qiita {
         color: #55c74f;
         border-color: #55c74f;
     }
 
-    /* hover時にバッジが微妙に光る */
+    /* hover 時バッジ背景がほんのり */
     @media (hover: hover) {
         .post-link:hover .badge-local {
-            background: rgba(34, 211, 238, 0.08);
+            background: rgba(34, 211, 238, 0.1);
         }
         .post-link:hover .badge-zenn {
-            background: rgba(62, 168, 255, 0.08);
+            background: rgba(62, 168, 255, 0.1);
         }
         .post-link:hover .badge-note {
-            background: rgba(65, 201, 180, 0.08);
+            background: rgba(65, 201, 180, 0.1);
         }
         .post-link:hover .badge-qiita {
-            background: rgba(85, 199, 79, 0.08);
+            background: rgba(85, 199, 79, 0.1);
         }
     }
 
@@ -896,8 +912,6 @@ const allPosts = [
     /* =========================================
        8. 背景レイヤー
        ========================================= */
-
-    /* 共通: 右端の clip + mask フェード */
     .post-image-layer,
     .post-pattern-layer {
         position: absolute;
@@ -923,7 +937,7 @@ const allPosts = [
         transition: opacity 0.3s ease;
     }
 
-    /* === local: 画像 === */
+    /* local / note: 画像レイヤー */
     .post-image-layer {
         opacity: 0.35;
     }
@@ -951,39 +965,39 @@ const allPosts = [
         }
     }
 
-    /* === 外部記事: パターン === */
+    /* zenn / qiita: パターンレイヤー */
     .post-pattern-layer {
-        opacity: 0.22;
+        opacity: 0.28;
     }
 
     @media (hover: hover) {
         .post-link:hover .post-pattern-layer {
-            opacity: 0.32;
+            opacity: 0.4;
         }
     }
 
-    /* zenn: 斜線パターン (青) */
+    /* zenn */
     .pattern-zenn {
         background-image: repeating-linear-gradient(
             135deg,
             #3ea8ff 0,
-            #3ea8ff 1px,
-            transparent 1px,
-            transparent 10px
+            #3ea8ff 2px,
+            transparent 2px,
+            transparent 8px
         );
     }
 
-    /* qiita: ドットパターン (緑) */
+    /* qiita: ドット密度も少し上げる (8px grid) */
     .pattern-qiita {
         background-image: radial-gradient(
             circle,
-            #55c74f 1px,
-            transparent 1.5px
+            #55c74f 1.5px,
+            transparent 2px
         );
-        background-size: 10px 10px;
+        background-size: 8px 8px;
     }
 
-    /* note: 横線パターン (ティール) — note の罫線っぽく */
+    /* note: 横線 (フォールバック用; 通常は画像) */
     .pattern-note {
         background-image: repeating-linear-gradient(
             0deg,
@@ -999,7 +1013,6 @@ const allPosts = [
        ========================================= */
     .no-results {
         display: none;
-        text-align: left;
         padding: 3rem 0;
         color: var(--text-muted);
         font-family: var(--font-mono, "JetBrains Mono", monospace);
@@ -1009,7 +1022,6 @@ const allPosts = [
     .no-results.visible {
         display: block;
     }
-
     .no-results p {
         margin: 0;
     }
@@ -1040,14 +1052,13 @@ const allPosts = [
             width: 100%;
             justify-content: space-between;
         }
-
         .sort-box select {
             flex: 1;
             min-width: 0;
         }
 
         .post-link {
-            grid-template-columns: 5rem 1fr;
+            grid-template-columns: 6rem 1fr;
             grid-template-rows: auto auto;
             gap: 0.5rem 1rem;
             padding: 0.9rem 0 0.9rem 0.4rem;
@@ -1057,12 +1068,10 @@ const allPosts = [
             grid-row: 1;
             grid-column: 1;
         }
-
         .post-main {
             grid-row: 1;
             grid-column: 2;
         }
-
         .post-date {
             grid-row: 2;
             grid-column: 2;
@@ -1073,7 +1082,6 @@ const allPosts = [
             font-size: 0.9rem;
         }
 
-        /* モバイルでも背景レイヤーは表示 (works と同じ判断) */
         .post-image-layer,
         .post-pattern-layer {
             width: 50%;
@@ -1082,9 +1090,8 @@ const allPosts = [
         .post-image-layer {
             opacity: 0.22;
         }
-
         .post-pattern-layer {
-            opacity: 0.18;
+            opacity: 0.2;
         }
     }
 </style>
