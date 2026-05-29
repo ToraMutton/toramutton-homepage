@@ -203,6 +203,11 @@ const ENV_BLOCKS = [
             { k: "psu", v: "玄人志向 80PLUS Platinum 600W" },
             { k: "os", v: "Windows 11 Home & Arch Linux" },
         ],
+        link: {
+            cmd: "cd ./desktop && cat pc-build-2026.md",
+            href: "/blog/pc-build-2026/",
+            tag: "local",
+        },
     },
     {
         section: "laptop",
@@ -396,11 +401,26 @@ import heroImage from "../assets/toramutton.jpg";
                                     <span class="env-v">{row.v}</span>
                                 </div>
                             ))}
+                            {block.link && (
+                                <a
+                                    class="env-line env-cmd env-cmd--inline"
+                                    href={block.link.href}
+                                >
+                                    <span class="env-dollar">$</span>
+                                    <span class="env-cmd-text">
+                                        {block.link.cmd}
+                                    </span>
+                                    <span class="env-comment env-tag">
+                                        # {block.link.tag}
+                                    </span>
+                                    <span class="env-arrow">→</span>
+                                </a>
+                            )}
                         </div>
                     ))
                 }
 
-                {/* follow-up commands (links) */}
+                {/* follow-up command (note) */}
                 <div class="env-links">
                     <a
                         class="env-line env-cmd"
@@ -412,14 +432,6 @@ import heroImage from "../assets/toramutton.jpg";
                         <span class="env-cmd-text">cat ~/profile/intro.md</span>
                         <span class="env-comment env-tag"># note</span>
                         <span class="env-arrow">↗</span>
-                    </a>
-                    <a class="env-line env-cmd" href="/blog/pc-build-2026/">
-                        <span class="env-dollar">$</span>
-                        <span class="env-cmd-text"
-                            >cd ./desktop && cat pc-build-2026.md</span
-                        >
-                        <span class="env-comment env-tag"># local</span>
-                        <span class="env-arrow">→</span>
                     </a>
                 </div>
             </div>
@@ -971,6 +983,10 @@ import heroImage from "../assets/toramutton.jpg";
             transition:
                 background-color 0.15s ease,
                 color 0.15s ease;
+        }
+
+        .env-cmd--inline {
+            margin-top: 0.6rem;
         }
         .env-tag {
             margin-left: 0.8rem;
