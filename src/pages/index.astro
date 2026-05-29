@@ -989,6 +989,14 @@ const friendLinks: FriendLink[] = [
         right: 1.2rem;
         z-index: 1;
     }
+    .hero[data-loaded] .terminal-avatar {
+        opacity: 1;
+        transform: scale(1);
+        transition:
+            opacity 0.45s ease,
+            transform 0.45s ease;
+        transition-delay: 0.4s;
+    }
 
     .terminal-avatar :global(img) {
         width: 72px;
@@ -1282,6 +1290,11 @@ const friendLinks: FriendLink[] = [
         }
         .dot-live {
             animation: none;
+        }
+        .terminal-avatar {
+            opacity: 1;
+            transform: none;
+            transition: none;
         }
     }
 
