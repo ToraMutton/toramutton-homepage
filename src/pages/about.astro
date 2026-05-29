@@ -838,4 +838,181 @@ import heroImage from "../assets/toramutton.jpg";
             height: 40px;
         }
     }
+
+    /* === Environments (dotfile / terminal) === */
+    .environments {
+        margin: 2rem 0 3rem;
+        --env-key-w: 8rem;
+    }
+
+    .env-terminal {
+        background: var(--surface);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 1.25rem 1.25rem 1.4rem;
+        font-family: var(--font-mono);
+        font-size: 0.92rem;
+        line-height: 1.7;
+        overflow-x: auto;
+    }
+
+    .env-dollar {
+        color: var(--accent-blue);
+        opacity: 0.8;
+        margin-right: 0.6rem;
+        user-select: none;
+    }
+    .env-promptline {
+        color: var(--text-main);
+        margin-bottom: 1rem;
+    }
+
+    /* ini blocks */
+    .env-block {
+        margin-bottom: 1.2rem;
+    }
+    .env-block:last-of-type {
+        margin-bottom: 0;
+    }
+    .env-section-head {
+        margin: 0.2rem 0 0.3rem;
+    }
+    .env-bracket {
+        color: var(--accent-blue);
+        opacity: 0.5;
+    }
+    .env-section {
+        color: var(--accent-blue);
+        font-weight: 700;
+    }
+    .env-comment {
+        color: var(--text-muted);
+        margin-left: 0.8rem;
+        font-size: 0.85em;
+    }
+
+    /* key = value */
+    .env-row {
+        display: grid;
+        grid-template-columns: var(--env-key-w) 1ch 1fr;
+        column-gap: 0.6rem;
+        align-items: baseline;
+        padding: 0.1rem 0.5rem;
+        margin: 0 -0.5rem;
+        border-radius: 4px;
+        transition: background-color 0.15s ease;
+    }
+    .env-k {
+        color: var(--text-muted);
+        white-space: nowrap;
+    }
+    .env-eq {
+        color: var(--text-muted);
+        opacity: 0.6;
+    }
+    .env-v {
+        color: var(--text-main);
+        /* 英数字は mono、日本語は sans にフォールバック */
+        font-family: var(--font-mono), var(--font-sans);
+        word-break: break-word;
+    }
+
+    /* follow-up command links */
+    .env-links {
+        margin-top: 1.3rem;
+        padding-top: 1rem;
+        border-top: 1px dashed var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+    .env-cmd {
+        display: flex;
+        align-items: baseline;
+        text-decoration: none;
+        color: var(--text-main);
+        padding: 0.25rem 0.5rem;
+        margin: 0 -0.5rem;
+        border-radius: 4px;
+        transition:
+            background-color 0.15s ease,
+            color 0.15s ease;
+    }
+    .env-tag {
+        margin-left: 0.8rem;
+    }
+    .env-arrow {
+        margin-left: 0.5rem;
+        color: var(--accent-blue);
+        transform: translateX(-4px);
+        opacity: 0;
+        transition:
+            transform 0.2s ease,
+            opacity 0.2s ease;
+    }
+
+    /* hover: pointer devices only */
+    @media (hover: hover) {
+        .env-row:hover {
+            background-color: color-mix(
+                in srgb,
+                var(--accent-blue) 10%,
+                transparent
+            );
+        }
+        .env-row:hover .env-k {
+            color: var(--accent-blue);
+        }
+        .env-cmd:hover {
+            background-color: color-mix(
+                in srgb,
+                var(--accent-blue) 10%,
+                transparent
+            );
+        }
+        .env-cmd:hover .env-cmd-text {
+            color: var(--accent-blue);
+        }
+        .env-cmd:hover .env-arrow {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    /* reveal (一度だけ発火 / h2 と同じ IntersectionObserver 方式) */
+    .env-terminal .env-line {
+        transition:
+            opacity 0.4s ease,
+            transform 0.4s ease;
+    }
+    .env-terminal.reveal-ready:not(.is-revealed) .env-line {
+        opacity: 0;
+        transform: translateX(-8px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .env-terminal .env-line {
+            opacity: 1 !important;
+            transform: none !important;
+            transition: none !important;
+        }
+    }
+
+    /* mobile */
+    @media (max-width: 768px) {
+        .environments {
+            --env-key-w: 6.5rem;
+        }
+        .env-terminal {
+            font-size: 0.82rem;
+            padding: 1rem;
+        }
+        .env-comment {
+            display: block;
+            margin-left: 0;
+        }
+        .env-cmd {
+            flex-wrap: wrap;
+        }
+    }
 </style>
