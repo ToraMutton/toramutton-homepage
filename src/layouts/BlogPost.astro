@@ -59,36 +59,34 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 padding-top: 80px;
             }
 
+            /* === ヒーロー画像 === */
             .hero-image {
                 width: 100%;
                 margin: 0;
                 padding: 0;
             }
-
             .hero-image:empty {
                 display: none;
             }
-
             .hero-image img {
                 display: block;
                 width: 100%;
                 height: auto;
-                border-radius: 20px;
+                border-radius: var(--radius);
                 object-fit: cover;
             }
-
             @media (min-width: 1280px) {
                 .hero-image {
                     width: calc(100% + 3rem);
                     margin: -1.5rem -1.5rem 2rem;
                 }
-
                 .hero-image img {
                     border-bottom-left-radius: 0;
                     border-bottom-right-radius: 0;
                 }
             }
 
+            /* === 本文 === */
             .prose {
                 width: 100%;
                 max-width: 860px;
@@ -105,7 +103,6 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 align-items: center;
                 text-align: center;
             }
-
             .title h1 {
                 font-size: 2.5rem;
                 margin: 0 0 0.5em 0;
@@ -122,7 +119,6 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 color: var(--text-muted);
                 font-weight: 500;
             }
-
             .last-updated-on {
                 font-style: italic;
                 font-size: 0.9rem;
@@ -130,7 +126,6 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
             }
 
             /* === 本文内タグ === */
-
             .prose :global(h2) {
                 font-size: 1.8rem;
                 margin: 3rem 0 1.5rem;
@@ -138,36 +133,30 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 border-bottom: 2px solid var(--accent-blue);
                 color: var(--text-main);
             }
-
             .prose :global(p) {
                 margin-bottom: 1.5rem;
             }
 
-            /* 引用ブロック */
+            /* 引用ブロック（角丸・影撤去 → 左ボーダーのみ） */
             .prose :global(blockquote) {
                 margin: 2rem 0;
                 padding: 1.5rem 2rem;
-                background: rgba(125, 211, 252, 0.05);
-                border-left: 4px solid var(--accent-blue);
-                border-radius: 0 12px 12px 0;
+                background: var(--surface);
+                border-left: 3px solid var(--accent-blue);
+                border-radius: 0;
                 font-style: italic;
                 color: var(--text-muted);
             }
 
-            /* コードブロック */
+            /* コードブロック（影撤去・4px・border 化） */
             .prose :global(pre) {
                 padding: 1.5rem;
-                border-radius: 12px;
+                border-radius: var(--radius);
+                border: 1px solid var(--border-color);
                 margin: 2rem 0;
-                font-family: "Fira Code", "Cascadia Code", monospace;
+                font-family: var(--font-mono);
                 font-size: 0.95rem;
                 overflow-x: auto;
-                box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
-            }
-
-            /* ダークモード時の調整 */
-            :global(html.dark) .hero-image img {
-                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
             }
 
             @media (max-width: 720px) {
@@ -182,6 +171,7 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 }
             }
 
+            /* === モバイル用シェアボタン（ターミナル化）=== */
             .mobile-share-container {
                 display: flex;
                 justify-content: center;
@@ -189,7 +179,6 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 padding-top: 2rem;
                 border-top: 1px dashed var(--border-color);
             }
-
             .mobile-share-btn {
                 display: flex;
                 align-items: center;
@@ -198,40 +187,35 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 width: 100%;
                 max-width: 280px;
                 padding: 0.8rem;
-                border-radius: 99px;
-                background: rgba(2, 132, 199, 0.08);
-                border: 1px solid rgba(2, 132, 199, 0.15);
+                border-radius: var(--radius);
+                background: color-mix(
+                    in srgb,
+                    var(--accent-blue) 8%,
+                    transparent
+                );
+                border: 1px solid
+                    color-mix(in srgb, var(--accent-blue) 25%, transparent);
                 color: var(--accent-blue);
                 text-decoration: none;
                 font-size: 0.9rem;
                 font-weight: 600;
-                transition: all 0.2s ease;
+                transition:
+                    background 0.2s,
+                    color 0.2s,
+                    border-color 0.2s;
             }
-
             .mobile-share-btn:hover {
                 background: var(--accent-blue);
-                color: white;
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+                color: var(--background);
+                border-color: var(--accent-blue);
             }
-
-            :global(html.dark) .mobile-share-btn {
-                background: rgba(56, 189, 248, 0.08);
-                border-color: rgba(56, 189, 248, 0.2);
-            }
-
-            :global(html.dark) .mobile-share-btn:hover {
-                background: var(--accent-blue);
-                color: #18181b;
-                box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
-            }
-
             @media (min-width: 1280px) {
                 .mobile-share-container {
                     display: none;
                 }
             }
 
+            /* === タグ === */
             .tags-container {
                 display: flex;
                 flex-wrap: wrap;
@@ -239,62 +223,51 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 justify-content: center;
                 margin-top: 1rem;
             }
-
             .tag {
-                background: rgba(2, 132, 199, 0.1);
+                background: color-mix(
+                    in srgb,
+                    var(--accent-blue) 10%,
+                    transparent
+                );
                 color: var(--accent-blue);
-                border: 1px solid rgba(2, 132, 199, 0.2);
+                border: 1px solid
+                    color-mix(in srgb, var(--accent-blue) 25%, transparent);
                 padding: 0.2rem 0.8rem;
-                border-radius: 99px;
+                border-radius: var(--radius);
                 font-size: 0.85rem;
                 font-weight: 600;
-                font-family: "JetBrains Mono", monospace;
+                font-family: var(--font-mono);
             }
 
-            :global(html.dark) .tag {
-                background: rgba(125, 211, 252, 0.1);
-                border-color: rgba(125, 211, 252, 0.3);
-            }
-
+            /* === テーブル === */
             .prose :global(table) {
                 width: 100%;
                 border-collapse: collapse;
                 margin: 2rem 0;
                 font-size: 0.9rem;
             }
-
-            /* ライトモード */
             .prose :global(th),
             .prose :global(td) {
                 border: 1px solid var(--border-color);
                 padding: 0.8rem;
                 text-align: center;
             }
-
             .prose :global(th) {
-                background: rgba(0, 0, 0, 0.05);
+                background: var(--elevated);
                 font-weight: bold;
                 color: var(--text-main);
             }
-
-            /* ダークモード */
-            :global(html.dark) .prose :global(th) {
-                background: rgba(255, 255, 255, 0.1);
-                color: #ffffff;
-            }
-
-            :global(html.dark) .prose :global(th),
-            :global(html.dark) .prose :global(td) {
-                border-color: rgba(255, 255, 255, 0.2);
-            }
-
             .prose :global(tr:nth-child(even)) {
-                background: rgba(255, 255, 255, 0.02);
+                background: color-mix(
+                    in srgb,
+                    var(--text-main) 3%,
+                    transparent
+                );
             }
 
             /* ======================================================
-               3カラム レイアウト
-               ====================================================== */
+       3カラム レイアウト
+       ====================================================== */
             .blog-container {
                 display: grid;
                 grid-template-columns: 1fr;
@@ -311,18 +284,35 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 min-width: 0;
                 margin: 0;
             }
-
             @media (min-width: 1280px) {
                 article {
                     background: var(--surface);
                     border: 1px solid var(--border-color);
-                    border-radius: 20px;
+                    border-radius: var(--radius);
                     padding: 1.5rem 1.5rem 1rem;
-                    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
                 }
             }
 
+            .blog-main-content {
+                width: 100%;
+            }
+
+            /* ① 左サイドバーはPCのみ（モバイル・タブレットでは非表示）*/
+            .blog-sidebar-left {
+                display: none;
+            }
+            .blog-toc {
+                display: none;
+            }
+
             @media (min-width: 1280px) {
+                .blog-container {
+                    max-width: 1360px;
+                    grid-template-columns: 260px minmax(0, 860px) 240px;
+                    justify-content: center;
+                    padding: 0 2rem;
+                }
+                .blog-sidebar-left,
                 .blog-toc {
                     display: block;
                     position: sticky;
@@ -334,12 +324,12 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
             }
 
             /* ======================================================
-               左サイドバー - プロフィール & SNS
-               ====================================================== */
+       左サイドバー - プロフィール & SNS（border-card 化）
+       ====================================================== */
             .sidebar-card {
                 background: var(--surface);
                 border: 1px solid var(--border-color);
-                border-radius: 16px;
+                border-radius: var(--radius);
                 padding: 1.5rem 1.2rem;
                 display: flex;
                 flex-direction: column;
@@ -350,14 +340,9 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
             .sidebar-avatar {
                 width: 80px;
                 height: 80px;
-                border-radius: 50%;
+                border-radius: var(--radius); /* 50% → 4px */
                 object-fit: cover;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-                border: 3px solid var(--border-color);
-            }
-
-            :global(html.dark) .sidebar-avatar {
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+                border: 1px solid var(--border-color);
             }
 
             .sidebar-name {
@@ -366,7 +351,6 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 color: var(--text-main);
                 margin: 0;
             }
-
             .sidebar-bio {
                 font-size: 0.8rem;
                 color: var(--text-muted);
@@ -374,7 +358,6 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 line-height: 1.5;
                 margin: 0;
             }
-
             .sidebar-divider {
                 width: 100%;
                 height: 1px;
@@ -382,7 +365,6 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 margin: 0.2rem 0;
             }
 
-            /* SNSリンクリスト */
             .sidebar-section-title {
                 font-size: 0.75rem;
                 font-weight: 700;
@@ -391,6 +373,7 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 letter-spacing: 0.08em;
                 align-self: flex-start;
                 margin: 0;
+                font-family: var(--font-mono);
             }
 
             .sidebar-sns-list {
@@ -399,28 +382,29 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 gap: 0.15rem;
                 width: 100%;
             }
-
             .sidebar-sns-link {
                 display: flex;
                 align-items: center;
                 gap: 0.7rem;
                 padding: 0.45rem 0.6rem;
-                border-radius: 10px;
+                border-radius: var(--radius);
                 color: var(--text-muted);
                 text-decoration: none;
                 font-size: 0.82rem;
                 font-weight: 500;
-                transition: all 0.2s ease;
+                transition:
+                    background 0.2s,
+                    color 0.2s,
+                    transform 0.2s;
             }
-
             .sidebar-sns-link:hover {
-                background: rgba(0, 0, 0, 0.04);
+                background: color-mix(
+                    in srgb,
+                    var(--text-main) 6%,
+                    transparent
+                );
                 color: var(--text-main);
                 transform: translateX(2px);
-            }
-
-            :global(html.dark) .sidebar-sns-link:hover {
-                background: rgba(255, 255, 255, 0.06);
             }
 
             .sidebar-sns-link .sns-icon {
@@ -429,12 +413,14 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 justify-content: center;
                 width: 28px;
                 height: 28px;
-                border-radius: 8px;
+                border-radius: var(--radius); /* 8px → 4px */
                 flex-shrink: 0;
-                transition: all 0.2s ease;
+                transition:
+                    background 0.2s,
+                    color 0.2s;
             }
 
-            /* ブランドカラー ホバー */
+            /* ブランドカラー ホバー（per-source アクセントは維持）*/
             .sidebar-sns-link[data-brand="twitter"]:hover .sns-icon {
                 background: #1da1f2;
                 color: white;
@@ -473,7 +459,7 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 white-space: nowrap;
             }
 
-            /* シェアボタン */
+            /* シェアボタン（ターミナル化）*/
             .sidebar-share-link {
                 display: flex;
                 align-items: center;
@@ -481,60 +467,45 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 gap: 0.5rem;
                 width: 100%;
                 padding: 0.6rem;
-                border-radius: 10px;
-                background: rgba(2, 132, 199, 0.08);
-                border: 1px solid rgba(2, 132, 199, 0.15);
+                border-radius: var(--radius);
+                background: color-mix(
+                    in srgb,
+                    var(--accent-blue) 8%,
+                    transparent
+                );
+                border: 1px solid
+                    color-mix(in srgb, var(--accent-blue) 25%, transparent);
                 color: var(--accent-blue);
                 text-decoration: none;
                 font-size: 0.82rem;
                 font-weight: 600;
-                transition: all 0.2s ease;
+                transition:
+                    background 0.2s,
+                    color 0.2s,
+                    border-color 0.2s;
             }
-
             .sidebar-share-link:hover {
                 background: var(--accent-blue);
-                color: white;
+                color: var(--background);
                 border-color: var(--accent-blue);
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
-            }
-
-            :global(html.dark) .sidebar-share-link {
-                background: rgba(56, 189, 248, 0.08);
-                border-color: rgba(56, 189, 248, 0.2);
-            }
-
-            :global(html.dark) .sidebar-share-link:hover {
-                background: var(--accent-blue);
-                color: #18181b;
-                box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
             }
 
             /* ======================================================
-               右サイドバー - 目次
-               ====================================================== */
+       右サイドバー - 目次（② カード撤去 → 余白一重）
+       ====================================================== */
             .toc-card {
-                background: var(--surface);
-                border: 1px solid var(--border-color);
-                border-radius: 16px;
-                padding: 1.2rem;
                 position: relative;
-                overflow: hidden;
+                padding-top: 0.5rem; /* progress バー分の余白のみ */
             }
 
-            /* 読了プログレスバー */
+            /* 読了プログレスバー（gradient → solid / 角丸撤去 / 2px）*/
             .toc-progress {
                 position: absolute;
                 top: 0;
                 left: 0;
-                height: 4px;
+                height: 2px;
                 width: 0%;
-                background: linear-gradient(
-                    90deg,
-                    var(--accent-blue),
-                    var(--accent-secondary)
-                );
-                border-radius: 3px 3px 0 0;
+                background: var(--accent-blue);
                 transition: width 0.15s ease-out;
                 z-index: 1;
             }
@@ -544,13 +515,12 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 font-size: 0.95rem;
                 margin-bottom: 0.8rem;
                 color: var(--text-main);
-                border-bottom: 2px solid var(--border-color);
+                border-bottom: 1px solid var(--border-color);
                 padding-bottom: 0.5rem;
                 display: flex;
                 align-items: center;
                 gap: 0.4rem;
             }
-
             .toc-title-icon {
                 display: flex;
                 align-items: center;
@@ -562,67 +532,63 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 padding: 0;
                 margin: 0;
             }
-
             .toc-card li {
                 margin-bottom: 0.15rem;
                 line-height: 1.3;
             }
-
             .toc-card a {
                 text-decoration: none;
                 color: var(--text-muted);
                 font-size: 0.82rem;
                 display: block;
                 padding: 0.3rem 0.5rem;
-                border-radius: 6px;
-                transition: all 0.2s ease;
+                border-radius: 0; /* 角丸撤去 */
+                transition:
+                    background 0.2s,
+                    color 0.2s;
                 border-left: 2px solid transparent;
             }
-
             .toc-card a:hover {
                 color: var(--accent-blue);
-                background: rgba(2, 132, 199, 0.05);
+                background: color-mix(
+                    in srgb,
+                    var(--accent-blue) 6%,
+                    transparent
+                );
             }
-
-            :global(html.dark) .toc-card a:hover {
-                background: rgba(56, 189, 248, 0.06);
-            }
-
             .toc-card a.active {
                 color: var(--accent-blue);
                 font-weight: 700;
                 border-left-color: var(--accent-blue);
-                background: rgba(2, 132, 199, 0.06);
-            }
-
-            :global(html.dark) .toc-card a.active {
-                background: rgba(56, 189, 248, 0.08);
+                background: color-mix(
+                    in srgb,
+                    var(--accent-blue) 8%,
+                    transparent
+                );
             }
 
             .toc-level-3 {
                 padding-left: 0.8rem;
             }
-
             .toc-level-3 a {
                 font-size: 0.8rem;
             }
-
             .toc-level-4 {
                 padding-left: 1.6rem;
             }
-
             .toc-level-4 a {
                 font-size: 0.78rem;
                 opacity: 0.85;
             }
 
-            /* --- TOC: Zenn 風サイドドロワー（≤1279px） --- */
+            /* --- TOC: Zenn 風サイドドロワー（≤1279px / 右側維持）--- */
             @media (max-width: 1279px) {
                 .blog-toc {
+                    display: block;
                     position: fixed;
                     top: var(--header-height, 64px);
                     right: 0;
-                    width: min(300px, 85vw);
+                    width: min(300px, 42vw);
                     height: calc(100dvh - var(--header-height, 64px));
                     overflow-y: auto;
                     z-index: 1000;
@@ -631,32 +597,26 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                     border-left: 1px solid var(--border-color);
                     padding: 1.5rem 1.25rem;
 
-                    /* 閉じた状態：右に 16px ずれ + 不可視 */
                     opacity: 0;
                     transform: translateX(16px);
                     pointer-events: none;
                     visibility: hidden;
 
-                    /* opacity は先に完了、transform は少し長めに */
                     transition:
                         opacity 0.18s ease-out,
                         transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
                         visibility 0s linear 0.22s;
                 }
-
                 .blog-toc.mobile-open {
                     opacity: 1;
                     transform: translateX(0);
                     pointer-events: auto;
                     visibility: visible;
-
-                    /* open 時は visibility の遅延をキャンセル */
                     transition:
                         opacity 0.18s ease-out,
                         transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
                         visibility 0s linear 0s;
                 }
-
                 @media (prefers-reduced-motion: reduce) {
                     .blog-toc,
                     .blog-toc.mobile-open {
