@@ -177,8 +177,8 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 .title h1 {
                     font-size: 1.8rem;
                 }
-                blog-toc {
-                    width: min(300px, 37.5vw);
+                .blog-toc {
+                    width: min(300px, 42vw);
                 }
             }
 
@@ -319,66 +319,6 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                     border-radius: 20px;
                     padding: 1.5rem 1.5rem 1rem;
                     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-                }
-            }
-
-            @media (min-width: 1280px) {
-                :global(html.dark) article {
-                    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
-                }
-            }
-
-            .blog-main-content {
-                width: 100%;
-            }
-
-            .blog-sidebar-left {
-                display: none;
-            }
-
-            .blog-toc {
-                display: none;
-            }
-
-            @media (max-width: 1279px) {
-                .blog-toc {
-                    display: block;
-                    position: fixed;
-                    top: var(--header-height, 64px);
-                    left: 0;
-                    width: 100%;
-                    height: calc(100vh - var(--header-height, 64px));
-                    background: var(--glass-bg, rgba(15, 17, 21, 0.95));
-                    backdrop-filter: var(--glass-blur, blur(20px));
-                    -webkit-backdrop-filter: var(--glass-blur, blur(20px));
-                    z-index: 9998;
-                    padding: 2rem;
-                    overflow-y: auto;
-
-                    /* モバイル目次のアニメーション初期状態 */
-                    opacity: 0;
-                    transform: translateY(20px);
-                    visibility: hidden;
-                    pointer-events: none;
-                    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-                }
-
-                .blog-toc.mobile-open {
-                    opacity: 1;
-                    transform: translateY(0);
-                    visibility: visible;
-                    pointer-events: auto;
-                }
-
-                :global(html:not(.dark)) .blog-toc {
-                    background: rgba(255, 255, 255, 0.95);
-                }
-
-                .blog-toc .toc-card {
-                    border: none;
-                    background: transparent;
-                    box-shadow: none;
-                    padding: 1rem 0 0 0; /* プログレスバーとの間に余白を設ける */
                 }
             }
 
