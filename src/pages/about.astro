@@ -366,165 +366,88 @@ import heroImage from "../assets/toramutton.jpg";
 
         {/* 3. Environments */}
         <h2 id="trapezium">Environments</h2>
-        <div class="specs-grid">
-            {/* Desktop Card */}
-            <div class="spec-card glass-card">
-                <div class="card-header">
-                    <Monitor class="icon-blue" size={20} />
-                    <h3>Desktop</h3>
-                </div>
-                <p class="card-note">2026/02/13 ~</p>
-                <ul class="spec-list">
-                    <li>
-                        <span class="spec-label">CPU</span>
-                        <span class="spec-val">AMD Ryzen 7 7700</span>
-                    </li>
-                    <li>
-                        <span class="spec-label">GPU</span>
-                        <span class="spec-val">Radeon RX 9060 XT 16GB</span>
-                    </li>
-                    <li>
-                        <span class="spec-label">MB</span>
-                        <span class="spec-val">ASUS A620M-K CSM</span>
-                    </li>
-                    <li>
-                        <span class="spec-label">Memory</span>
-                        <span class="spec-val">DDR5 32GB</span>
-                    </li>
-                    <li>
-                        <span class="spec-label">Storage</span>
-                        <span class="spec-val">SSD 2TB (NVMe)</span>
-                    </li>
-                    <li>
-                        <span class="spec-label">Cooler</span>
-                        <span class="spec-val">虎徹 MarkⅡ</span>
-                    </li>
-                    <li>
-                        <span class="spec-label">Case</span>
-                        <span class="spec-val">MONTECH AIR 903 MAX</span>
-                    </li>
-                    <li>
-                        <span class="spec-label">PSU</span>
-                        <span class="spec-val"
-                            >玄人志向 80PLUS Platinum 600W</span
-                        >
-                    </li>
-                    <li>
-                        <span class="spec-label">OS</span>
-                        <span class="spec-val"
-                            >Windows 11 Home & Arch Linux</span
-                        >
-                    </li>
-                </ul>
-            </div>
 
-            {/* Laptop Card */}
-            <div class="spec-card glass-card">
-                <div class="card-header">
-                    <Laptop class="icon-secondary" size={20} />
-                    <h3>Laptop: Dell 14 Plus</h3>
+        <div class="environments">
+            <div class="env-terminal" aria-label="environments config">
+                {/* prompt */}
+                <div class="env-line env-promptline">
+                    <span class="env-dollar">$</span>
+                    <span class="env-typed">cat ~/.config/environments</span>
                 </div>
-                <p class="card-note">2025/03/28 ~</p>
-                <ul class="spec-list">
-                    <li>
-                        <span class="spec-label">CPU</span>
-                        <span class="spec-val">Core Ultra 7 258V</span>
-                    </li>
-                    <li>
-                        <span class="spec-label">GPU</span>
-                        <span class="spec-val">Intel Arc Graphics 140V</span>
-                    </li>
-                    <li>
-                        <span class="spec-label">Memory</span>
-                        <span class="spec-val">32GB (MoP / LPDDR5x-8533)</span>
-                    </li>
-                    <li>
-                        <span class="spec-label">OS</span>
-                        <span class="spec-val">Windows 11 Home</span>
-                    </li>
-                </ul>
-            </div>
 
-            {/* Mobile/Tablet Card */}
-            <div class="spec-card glass-card">
-                <div class="card-header">
-                    <Smartphone class="icon-secondary" size={20} />
-                    <h3>Mobile / Tablet</h3>
-                </div>
-                <ul class="spec-list">
-                    <li>
-                        <span class="spec-label">Mobile</span>
-                        <span class="spec-val">iPhone 16e</span>
-                    </li>
-                    <li>
-                        <span class="spec-label">Tablet</span>
-                        <span class="spec-val">iPad Air M4</span>
-                    </li>
-                </ul>
-            </div>
+                {/* output: ini blocks */}
+                {
+                    ENV_BLOCKS.map((block) => (
+                        <div class="env-block">
+                            <div class="env-line env-section-head">
+                                <span class="env-bracket">[</span>
+                                <span class="env-section">{block.section}</span>
+                                <span class="env-bracket">]</span>
+                                {block.meta && (
+                                    <span class="env-comment">
+                                        # {block.meta}
+                                    </span>
+                                )}
+                            </div>
+                            {block.rows.map((row) => (
+                                <div class="env-line env-row">
+                                    <span class="env-k">{row.k}</span>
+                                    <span class="env-eq">=</span>
+                                    <span class="env-v">{row.v}</span>
+                                </div>
+                            ))}
+                        </div>
+                    ))
+                }
 
-            {/* Setup & Tools Card */}
-            <div class="spec-card glass-card">
-                <div class="card-header">
-                    <LayoutGrid class="icon-blue" size={20} />
-                    <h3>Setup & Tools</h3>
+                {/* follow-up commands (links) */}
+                <div class="env-links">
+                    class="env-line env-cmd"
+                    href="https://note.com/toramutton/n/n338320294cf6"
+                    target="_blank" rel="noopener noreferrer" >
+                    <span class="env-dollar">$</span>
+                    <span class="env-cmd-text">cat ~/profile/intro.md</span>
+                    <span class="env-comment env-tag"># note</span>
+                    <span class="env-arrow">↗</span>
                 </div>
-                <ul class="spec-list">
-                    <li>
-                        <span class="spec-label">Main Monitor</span>
-                        <span class="spec-val">24-inch WQHD 180Hz</span>
-                    </li>
-                    <li>
-                        <span class="spec-label">Sub Monitor</span>
-                        <span class="spec-val">27-inch WQHD 75Hz</span>
-                    </li>
-                    <li>
-                        <span class="spec-label">Editor</span>
-                        <span class="spec-val">Neovim(AstroNvim)</span>
-                    </li>
-                    <li>
-                        <span class="spec-label">Browser</span>
-                        <span class="spec-val">Google Chrome & Safari</span>
-                    </li>
-                    <li>
-                        <span class="spec-label">WM</span>
-                        <span class="spec-val">Hyprland</span>
-                    </li>
-                    <li>
-                        <span class="spec-label">Bar</span>
-                        <span class="spec-val">Waybar</span>
-                    </li>
-                </ul>
+                <a class="env-line env-cmd" href="/blog/pc-build-2026/">
+                    <span class="env-dollar">$</span>
+                    <span class="env-cmd-text"
+                        >cd ./desktop && cat pc-build-2026.md</span
+                    >
+                    <span class="env-comment env-tag"># local</span>
+                    <span class="env-arrow">→</span>
+                </a>
             </div>
         </div>
+    </div>
 
-        {/* 5. Timeline */}
-        <h2>Timeline</h2>
-        <div class="timeline">
-            <div class="timeline-item">
-                <div class="time">2006.06.20</div>
-                <div class="desc">誕生</div>
-            </div>
+    {/* 5. Timeline */}
+    <h2>Timeline</h2>
+    <div class="timeline">
+        <div class="timeline-item">
+            <div class="time">2006.06.20</div>
+            <div class="desc">誕生</div>
+        </div>
 
-            <div class="timeline-item">
-                <div class="time">2022.04.07</div>
-                <div class="desc">都立三田高校 入学</div>
-            </div>
+        <div class="timeline-item">
+            <div class="time">2022.04.07</div>
+            <div class="desc">都立三田高校 入学</div>
+        </div>
 
-            <div class="timeline-item">
-                <div class="time">2025.04.04</div>
-                <div class="desc">電気通信大学 入学</div>
-            </div>
+        <div class="timeline-item">
+            <div class="time">2025.04.04</div>
+            <div class="desc">電気通信大学 入学</div>
+        </div>
 
-            <div class="timeline-item">
-                <div class="time">2026.01.02</div>
-                <div class="desc">Astroでホームページを作成</div>
-            </div>
+        <div class="timeline-item">
+            <div class="time">2026.01.02</div>
+            <div class="desc">Astroでホームページを作成</div>
+        </div>
 
-            <div class="timeline-item">
-                <div class="time">2026.03.10</div>
-                <div class="desc">基本情報技術者試験 合格</div>
-            </div>
+        <div class="timeline-item">
+            <div class="time">2026.03.10</div>
+            <div class="desc">基本情報技術者試験 合格</div>
         </div>
     </div>
 </Layout>
