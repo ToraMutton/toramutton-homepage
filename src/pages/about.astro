@@ -402,7 +402,7 @@ import heroImage from "../assets/toramutton.jpg";
 
                 {/* follow-up commands (links) */}
                 <div class="env-links">
-                    <div
+                    <a
                         class="env-line env-cmd"
                         href="https://note.com/toramutton/n/n338320294cf6"
                         target="_blank"
@@ -412,7 +412,7 @@ import heroImage from "../assets/toramutton.jpg";
                         <span class="env-cmd-text">cat ~/profile/intro.md</span>
                         <span class="env-comment env-tag"># note</span>
                         <span class="env-arrow">↗</span>
-                    </div>
+                    </a>
                     <a class="env-line env-cmd" href="/blog/pc-build-2026/">
                         <span class="env-dollar">$</span>
                         <span class="env-cmd-text"
@@ -483,7 +483,7 @@ import heroImage from "../assets/toramutton.jpg";
 
             if (!reduceMotion) {
                 const lines = Array.from(
-                    envTerminal.querySelectorAll(".env-line"),
+                    envTerminal.querySelectorAll<HTMLElement>(".env-line"),
                 );
                 lines.forEach((el, i) => {
                     el.style.transitionDelay = `${i * 45}ms`;
