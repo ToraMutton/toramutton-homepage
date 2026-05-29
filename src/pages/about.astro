@@ -402,646 +402,652 @@ import heroImage from "../assets/toramutton.jpg";
 
                 {/* follow-up commands (links) */}
                 <div class="env-links">
-                    class="env-line env-cmd"
-                    href="https://note.com/toramutton/n/n338320294cf6"
-                    target="_blank" rel="noopener noreferrer" >
-                    <span class="env-dollar">$</span>
-                    <span class="env-cmd-text">cat ~/profile/intro.md</span>
-                    <span class="env-comment env-tag"># note</span>
-                    <span class="env-arrow">↗</span>
-                </div>
-                <a class="env-line env-cmd" href="/blog/pc-build-2026/">
-                    <span class="env-dollar">$</span>
-                    <span class="env-cmd-text"
-                        >cd ./desktop && cat pc-build-2026.md</span
+                    <div
+                        class="env-line env-cmd"
+                        href="https://note.com/toramutton/n/n338320294cf6"
+                        target="_blank"
+                        rel="noopener noreferrer"
                     >
-                    <span class="env-comment env-tag"># local</span>
-                    <span class="env-arrow">→</span>
-                </a>
+                        <span class="env-dollar">$</span>
+                        <span class="env-cmd-text">cat ~/profile/intro.md</span>
+                        <span class="env-comment env-tag"># note</span>
+                        <span class="env-arrow">↗</span>
+                    </div>
+                    <a class="env-line env-cmd" href="/blog/pc-build-2026/">
+                        <span class="env-dollar">$</span>
+                        <span class="env-cmd-text"
+                            >cd ./desktop && cat pc-build-2026.md</span
+                        >
+                        <span class="env-comment env-tag"># local</span>
+                        <span class="env-arrow">→</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {/* 5. Timeline */}
+        <h2>Timeline</h2>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="time">2006.06.20</div>
+                <div class="desc">誕生</div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="time">2022.04.07</div>
+                <div class="desc">都立三田高校 入学</div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="time">2025.04.04</div>
+                <div class="desc">電気通信大学 入学</div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="time">2026.01.02</div>
+                <div class="desc">Astroでホームページを作成</div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="time">2026.03.10</div>
+                <div class="desc">基本情報技術者試験 合格</div>
             </div>
         </div>
     </div>
 
-    {/* 5. Timeline */}
-    <h2>Timeline</h2>
-    <div class="timeline">
-        <div class="timeline-item">
-            <div class="time">2006.06.20</div>
-            <div class="desc">誕生</div>
-        </div>
+    <script>
+        // Observer設定
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        // 画面に入ったらクラスを追加
+                        entry.target.classList.add("visible");
+                    }
+                });
+            },
+            { threshold: 0.5 },
+        ); // 50%くらい見えたら発火
 
-        <div class="timeline-item">
-            <div class="time">2022.04.07</div>
-            <div class="desc">都立三田高校 入学</div>
-        </div>
+        // 全てのh2が監視対象
+        document.querySelectorAll(".about-content h2").forEach((h2) => {
+            observer.observe(h2);
+        });
 
-        <div class="timeline-item">
-            <div class="time">2025.04.04</div>
-            <div class="desc">電気通信大学 入学</div>
-        </div>
+        // Environments: 一度だけ発火する reveal（h2 と同じ方式）
+        const envTerminal = document.querySelector(".env-terminal");
+        if (envTerminal) {
+            const reduceMotion = window.matchMedia(
+                "(prefers-reduced-motion: reduce)",
+            ).matches;
 
-        <div class="timeline-item">
-            <div class="time">2026.01.02</div>
-            <div class="desc">Astroでホームページを作成</div>
-        </div>
+            if (!reduceMotion) {
+                const lines = Array.from(
+                    envTerminal.querySelectorAll(".env-line"),
+                );
+                lines.forEach((el, i) => {
+                    el.style.transitionDelay = `${i * 45}ms`;
+                });
+                envTerminal.classList.add("reveal-ready");
 
-        <div class="timeline-item">
-            <div class="time">2026.03.10</div>
-            <div class="desc">基本情報技術者試験 合格</div>
-        </div>
-    </div>
-</Layout>
-
-<script>
-    // Observer設定
-    const observer = new IntersectionObserver(
-        (entries) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    // 画面に入ったらクラスを追加
-                    entry.target.classList.add("visible");
-                }
-            });
-        },
-        { threshold: 0.5 },
-    ); // 50%くらい見えたら発火
-
-    // 全てのh2が監視対象
-    document.querySelectorAll(".about-content h2").forEach((h2) => {
-        observer.observe(h2);
-    });
-
-    // Environments: 一度だけ発火する reveal（h2 と同じ方式）
-    const envTerminal = document.querySelector(".env-terminal");
-    if (envTerminal) {
-        const reduceMotion = window.matchMedia(
-            "(prefers-reduced-motion: reduce)",
-        ).matches;
-
-        if (!reduceMotion) {
-            const lines = Array.from(envTerminal.querySelectorAll(".env-line"));
-            lines.forEach((el, i) => {
-                el.style.transitionDelay = `${i * 45}ms`;
-            });
-            envTerminal.classList.add("reveal-ready");
-
-            const envObserver = new IntersectionObserver(
-                (entries, obs) => {
-                    entries.forEach((entry) => {
-                        if (entry.isIntersecting) {
-                            entry.target.classList.add("is-revealed");
-                            obs.unobserve(entry.target); // 一度だけ
-                        }
-                    });
-                },
-                { threshold: 0.15 },
-            );
-            envObserver.observe(envTerminal);
+                const envObserver = new IntersectionObserver(
+                    (entries, obs) => {
+                        entries.forEach((entry) => {
+                            if (entry.isIntersecting) {
+                                entry.target.classList.add("is-revealed");
+                                obs.unobserve(entry.target); // 一度だけ
+                            }
+                        });
+                    },
+                    { threshold: 0.15 },
+                );
+                envObserver.observe(envTerminal);
+            }
         }
-    }
-</script>
+    </script>
 
-<style>
-    /* === 1. 基本設定・リセット === */
-    :global(.last-updated-on),
-    :global(time) {
-        display: none;
-    }
-
-    .about-content {
-        line-height: 1.8;
-        color: var(--text-main);
-    }
-
-    /* === h2のカスタム設定 === */
-    .about-content h2 {
-        position: relative;
-        display: block;
-        width: 100%;
-        margin-top: 4rem;
-        margin-bottom: 1.5rem;
-        border: none !important;
-        padding-bottom: 5px;
-    }
-
-    /* 下線の設定 */
-    .about-content h2::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        bottom: 0;
-        height: 1px;
-        width: 0%;
-        background-color: var(--accent-blue);
-        transition: width 0.8s ease-out;
-    }
-
-    .about-content h2.visible::after {
-        width: 100%;
-    }
-
-    /* === ライトモード視認性調整 === */
-    :global(html:not(.dark)) {
-        /* ラベル調整 */
-        .spec-label {
-            color: #2563eb;
-            opacity: 1;
+    <style>
+        /* === 1. 基本設定・リセット === */
+        :global(.last-updated-on),
+        :global(time) {
+            display: none;
         }
 
-        /* 黄色の文字の調整 */
-        .text-yellow-small,
-        .text-yellow {
-            color: #b45309;
-            font-weight: 600;
+        .about-content {
+            line-height: 1.8;
+            color: var(--text-main);
         }
 
-        /* カテゴリタイトル（Programming & Webなど） */
-        .category-title {
-            color: #1d4ed8;
-            opacity: 1;
+        /* === h2のカスタム設定 === */
+        .about-content h2 {
+            position: relative;
+            display: block;
+            width: 100%;
+            margin-top: 4rem;
+            margin-bottom: 1.5rem;
+            border: none !important;
+            padding-bottom: 5px;
         }
-    }
 
-    /* === 2. タイムライン === */
-    .timeline {
-        margin: 2.5rem 0;
-        border-left: 2px solid var(--accent-blue);
-        padding-left: 1.5rem;
-    }
-    .timeline-item {
-        margin-bottom: 2rem;
-        position: relative;
-    }
-    .timeline-item::before {
-        content: "";
-        position: absolute;
-        left: calc(-1.5rem - 6px); /*青丸の位置調整*/
-        top: 0.5rem;
-        width: 10px;
-        height: 10px;
-        background: var(--background);
-        border: 2px solid var(--accent-blue);
-        border-radius: 50%;
-    }
-    .timeline-item.current::before {
-        background: var(--accent-secondary);
-        border-color: var(--accent-secondary);
-        box-shadow: 0 0 12px var(--accent-secondary);
-    }
-    .time {
-        font-weight: bold;
-        color: var(--accent-blue);
-        font-family: var(--font-mono);
-        font-size: 1.1rem;
-    }
-    .desc {
-        margin-top: 0.3rem;
-        font-size: 0.95rem;
-    }
-
-    /* === 3. カード・レイアウト === */
-    .specs-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.5rem;
-        margin: 2rem 0;
-    }
-    .glass-card {
-        background: var(--glass-bg);
-        backdrop-filter: var(--glass-blur);
-        -webkit-backdrop-filter: var(--glass-blur);
-        padding: 2rem;
-        border-radius: var(--radius);
-        border: 1px solid var(--border-color);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    }
-    :global(html.dark) .glass-card {
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(10px);
-        border-color: rgba(255, 255, 255, 0.1);
-    }
-    .card-header {
-        display: flex;
-        align-items: center;
-        gap: 0.8rem;
-        margin-bottom: 1rem;
-    }
-    .card-note {
-        font-size: 0.8rem;
-        color: var(--accent-secondary);
-        margin-top: -0.5rem;
-        margin-bottom: 0.8rem;
-        font-weight: bold;
-    }
-    .spec-card h3 {
-        margin: 0;
-        font-size: 1.1rem;
-        font-weight: 700;
-    }
-
-    /* === 4. スペック表の整列 === */
-    .spec-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-    .spec-list li {
-        display: grid;
-        grid-template-columns: 80px 1fr;
-        gap: 1rem;
-        padding: 0.6rem 0;
-        border-bottom: 1px dashed var(--border-color);
-        align-items: baseline;
-    }
-    .spec-list li:last-child {
-        border-bottom: none;
-    }
-    .spec-label {
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: var(--accent-blue);
-        font-family: var(--font-mono);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        opacity: 0.8;
-    }
-    .spec-val {
-        font-size: 1.05rem;
-        font-weight: 400;
-        color: var(--text-main);
-        font-family: var(--font-sans);
-        line-height: 1.5;
-    }
-    .text-yellow,
-    .text-yellow-small {
-        font-size: 0.8rem;
-        color: var(--accent-secondary);
-        font-weight: 100;
-        margin-left: 0.5rem;
-        font-family: var(--font-mono);
-    }
-
-    /* === 5. スキルアイコン・グリッド === */
-    .skill-category {
-        margin-bottom: 3.5rem;
-    }
-    .category-title {
-        font-size: 0.9rem;
-        margin: 0 0 1.5rem 0;
-        color: var(--accent-blue);
-        font-family: var(--font-mono);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.6rem;
-        opacity: 0.9;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-    .skill-section {
-        margin: 2rem 0;
-        text-align: center;
-    }
-    .skill-intro {
-        margin-bottom: 2rem;
-        color: var(--text-main);
-        opacity: 0.8;
-        font-size: 0.9rem;
-    }
-    .skill-grid {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 1.2rem;
-    }
-    .skill-card {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        width: 100px;
-        height: 100px;
-        background: #ffffff;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        padding: 0;
-        cursor: pointer;
-        overflow: hidden;
-        outline: none;
-        -webkit-tap-highlight-color: transparent;
-    }
-    :global(html.dark) .skill-card {
-        background: #e5e5e5;
-        color: #333;
-    }
-    .icon-wrapper {
-        width: 72px;
-        height: 72px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        transform: translateY(0);
-    }
-    .skill-name {
-        position: absolute;
-        bottom: 12px;
-        font-size: 0.7rem;
-        font-weight: 700;
-        color: #333;
-        font-family: var(--font-mono);
-        line-height: 1;
-        opacity: 0;
-        transform: translateY(20px);
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    }
-    .skill-card:hover,
-    .skill-card:focus {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-    }
-    .skill-card:hover .icon-wrapper,
-    .skill-card:focus .icon-wrapper {
-        transform: translateY(-15px);
-    }
-    .skill-card:hover .skill-name,
-    .skill-card:focus .skill-name {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    .skill-img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-    }
-
-    /* === 6. 興味・好きなこと === */
-    .interests-grid {
-        display: grid;
-        grid-template-columns: 1fr; /* スマホだと1列 */
-        gap: 1.5rem;
-        margin-bottom: 3rem;
-    }
-
-    /* PCでは横並び or グリッド */
-    @media (min-width: 768px) {
-        .interests-grid {
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        /* 下線の設定 */
+        .about-content h2::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            height: 1px;
+            width: 0%;
+            background-color: var(--accent-blue);
+            transition: width 0.8s ease-out;
         }
-    }
 
-    .interest-card {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
+        .about-content h2.visible::after {
+            width: 100%;
+        }
 
-    .interest-header {
-        display: flex;
-        align-items: center;
-        gap: 0.8rem;
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: 0.8rem;
-        margin-bottom: 0.2rem;
-    }
+        /* === ライトモード視認性調整 === */
+        :global(html:not(.dark)) {
+            /* ラベル調整 */
+            .spec-label {
+                color: #2563eb;
+                opacity: 1;
+            }
 
-    .interest-title {
-        font-weight: 700;
-        font-family: var(--font-mono);
-        color: var(--text-main);
-        font-size: 1.1rem;
-    }
+            /* 黄色の文字の調整 */
+            .text-yellow-small,
+            .text-yellow {
+                color: #b45309;
+                font-weight: 600;
+            }
 
-    .tags-wrapper {
-        display: flex;
-        flex-wrap: wrap; /* 端まで行ったら折り返す */
-        gap: 0.6rem;
-    }
+            /* カテゴリタイトル（Programming & Webなど） */
+            .category-title {
+                color: #1d4ed8;
+                opacity: 1;
+            }
+        }
 
-    .interest-tag {
-        font-size: 0.9rem;
-        padding: 0.4rem 0.8rem;
-        border-radius: 20px; /* 丸っぽいタグ型 */
+        /* === 2. タイムライン === */
+        .timeline {
+            margin: 2.5rem 0;
+            border-left: 2px solid var(--accent-blue);
+            padding-left: 1.5rem;
+        }
+        .timeline-item {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        .timeline-item::before {
+            content: "";
+            position: absolute;
+            left: calc(-1.5rem - 6px); /*青丸の位置調整*/
+            top: 0.5rem;
+            width: 10px;
+            height: 10px;
+            background: var(--background);
+            border: 2px solid var(--accent-blue);
+            border-radius: 50%;
+        }
+        .timeline-item.current::before {
+            background: var(--accent-secondary);
+            border-color: var(--accent-secondary);
+            box-shadow: 0 0 12px var(--accent-secondary);
+        }
+        .time {
+            font-weight: bold;
+            color: var(--accent-blue);
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+        }
+        .desc {
+            margin-top: 0.3rem;
+            font-size: 0.95rem;
+        }
 
-        /* 色設定 */
-        background: rgba(59, 130, 246, 0.1);
-        color: var(--text-main);
-        border: 1px solid rgba(59, 130, 246, 0.2);
-
-        transition: all 0.2s ease;
-        font-family: var(--font-sans);
-        line-height: 1.4;
-    }
-
-    /* ホバー時に少し濃くする */
-    .interest-tag:hover {
-        background: rgba(59, 130, 246, 0.2);
-        /* transform: translateY(-2px); */
-    }
-
-    /* === 7. レスポンシブ === */
-    @media (max-width: 768px) {
+        /* === 3. カード・レイアウト === */
         .specs-grid {
-            grid-template-columns: 1fr;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            padding: 2rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        :global(html.dark) .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+        }
+        .card-note {
+            font-size: 0.8rem;
+            color: var(--accent-secondary);
+            margin-top: -0.5rem;
+            margin-bottom: 0.8rem;
+            font-weight: bold;
+        }
+        .spec-card h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        /* === 4. スペック表の整列 === */
+        .spec-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
         }
         .spec-list li {
-            grid-template-columns: 1fr;
-            gap: 0.1rem;
-            padding: 0.7rem 0;
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 1rem;
+            padding: 0.6rem 0;
+            border-bottom: 1px dashed var(--border-color);
+            align-items: baseline;
+        }
+        .spec-list li:last-child {
+            border-bottom: none;
         }
         .spec-label {
-            font-size: 0.7rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            opacity: 0.8;
+        }
+        .spec-val {
+            font-size: 1.05rem;
+            font-weight: 400;
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            line-height: 1.5;
+        }
+        .text-yellow,
+        .text-yellow-small {
+            font-size: 0.8rem;
+            color: var(--accent-secondary);
+            font-weight: 100;
+            margin-left: 0.5rem;
+            font-family: var(--font-mono);
+        }
+
+        /* === 5. スキルアイコン・グリッド === */
+        .skill-category {
+            margin-bottom: 3.5rem;
+        }
+        .category-title {
+            font-size: 0.9rem;
+            margin: 0 0 1.5rem 0;
+            color: var(--accent-blue);
+            font-family: var(--font-mono);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .skill-section {
+            margin: 2rem 0;
+            text-align: center;
+        }
+        .skill-intro {
+            margin-bottom: 2rem;
+            color: var(--text-main);
+            opacity: 0.8;
+            font-size: 0.9rem;
         }
         .skill-grid {
-            gap: 0.8rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.2rem;
         }
         .skill-card {
-            width: 80px;
-            height: 80px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100px;
+            height: 100px;
+            background: #ffffff;
             border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            padding: 0;
+            cursor: pointer;
+            overflow: hidden;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        :global(html.dark) .skill-card {
+            background: #e5e5e5;
+            color: #333;
         }
         .icon-wrapper {
-            width: 40px;
-            height: 40px;
+            width: 72px;
+            height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transform: translateY(0);
         }
-    }
-
-    /* === Environments (dotfile / terminal) === */
-    .environments {
-        margin: 2rem 0 3rem;
-        --env-key-w: 8rem;
-    }
-
-    .env-terminal {
-        background: var(--surface);
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
-        padding: 1.25rem 1.25rem 1.4rem;
-        font-family: var(--font-mono);
-        font-size: 0.92rem;
-        line-height: 1.7;
-        overflow-x: auto;
-    }
-
-    .env-dollar {
-        color: var(--accent-blue);
-        opacity: 0.8;
-        margin-right: 0.6rem;
-        user-select: none;
-    }
-    .env-promptline {
-        color: var(--text-main);
-        margin-bottom: 1rem;
-    }
-
-    /* ini blocks */
-    .env-block {
-        margin-bottom: 1.2rem;
-    }
-    .env-block:last-of-type {
-        margin-bottom: 0;
-    }
-    .env-section-head {
-        margin: 0.2rem 0 0.3rem;
-    }
-    .env-bracket {
-        color: var(--accent-blue);
-        opacity: 0.5;
-    }
-    .env-section {
-        color: var(--accent-blue);
-        font-weight: 700;
-    }
-    .env-comment {
-        color: var(--text-muted);
-        margin-left: 0.8rem;
-        font-size: 0.85em;
-    }
-
-    /* key = value */
-    .env-row {
-        display: grid;
-        grid-template-columns: var(--env-key-w) 1ch 1fr;
-        column-gap: 0.6rem;
-        align-items: baseline;
-        padding: 0.1rem 0.5rem;
-        margin: 0 -0.5rem;
-        border-radius: 4px;
-        transition: background-color 0.15s ease;
-    }
-    .env-k {
-        color: var(--text-muted);
-        white-space: nowrap;
-    }
-    .env-eq {
-        color: var(--text-muted);
-        opacity: 0.6;
-    }
-    .env-v {
-        color: var(--text-main);
-        /* 英数字は mono、日本語は sans にフォールバック */
-        font-family: var(--font-mono), var(--font-sans);
-        word-break: break-word;
-    }
-
-    /* follow-up command links */
-    .env-links {
-        margin-top: 1.3rem;
-        padding-top: 1rem;
-        border-top: 1px dashed var(--border-color);
-        display: flex;
-        flex-direction: column;
-        gap: 0.2rem;
-    }
-    .env-cmd {
-        display: flex;
-        align-items: baseline;
-        text-decoration: none;
-        color: var(--text-main);
-        padding: 0.25rem 0.5rem;
-        margin: 0 -0.5rem;
-        border-radius: 4px;
-        transition:
-            background-color 0.15s ease,
-            color 0.15s ease;
-    }
-    .env-tag {
-        margin-left: 0.8rem;
-    }
-    .env-arrow {
-        margin-left: 0.5rem;
-        color: var(--accent-blue);
-        transform: translateX(-4px);
-        opacity: 0;
-        transition:
-            transform 0.2s ease,
-            opacity 0.2s ease;
-    }
-
-    /* hover: pointer devices only */
-    @media (hover: hover) {
-        .env-row:hover {
-            background-color: color-mix(
-                in srgb,
-                var(--accent-blue) 10%,
-                transparent
-            );
+        .skill-name {
+            position: absolute;
+            bottom: 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #333;
+            font-family: var(--font-mono);
+            line-height: 1;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
-        .env-row:hover .env-k {
-            color: var(--accent-blue);
+        .skill-card:hover,
+        .skill-card:focus {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
         }
-        .env-cmd:hover {
-            background-color: color-mix(
-                in srgb,
-                var(--accent-blue) 10%,
-                transparent
-            );
+        .skill-card:hover .icon-wrapper,
+        .skill-card:focus .icon-wrapper {
+            transform: translateY(-15px);
         }
-        .env-cmd:hover .env-cmd-text {
-            color: var(--accent-blue);
-        }
-        .env-cmd:hover .env-arrow {
-            transform: translateX(0);
+        .skill-card:hover .skill-name,
+        .skill-card:focus .skill-name {
             opacity: 1;
+            transform: translateY(0);
         }
-    }
-
-    /* reveal (一度だけ発火 / h2 と同じ IntersectionObserver 方式) */
-    .env-terminal .env-line {
-        transition:
-            opacity 0.4s ease,
-            transform 0.4s ease;
-    }
-    .env-terminal.reveal-ready:not(.is-revealed) .env-line {
-        opacity: 0;
-        transform: translateX(-8px);
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        .env-terminal .env-line {
-            opacity: 1 !important;
-            transform: none !important;
-            transition: none !important;
+        .skill-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
-    }
 
-    /* mobile */
-    @media (max-width: 768px) {
+        /* === 6. 興味・好きなこと === */
+        .interests-grid {
+            display: grid;
+            grid-template-columns: 1fr; /* スマホだと1列 */
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        /* PCでは横並び or グリッド */
+        @media (min-width: 768px) {
+            .interests-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+        }
+
+        .interest-card {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .interest-header {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.8rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .interest-title {
+            font-weight: 700;
+            font-family: var(--font-mono);
+            color: var(--text-main);
+            font-size: 1.1rem;
+        }
+
+        .tags-wrapper {
+            display: flex;
+            flex-wrap: wrap; /* 端まで行ったら折り返す */
+            gap: 0.6rem;
+        }
+
+        .interest-tag {
+            font-size: 0.9rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px; /* 丸っぽいタグ型 */
+
+            /* 色設定 */
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--text-main);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+
+            transition: all 0.2s ease;
+            font-family: var(--font-sans);
+            line-height: 1.4;
+        }
+
+        /* ホバー時に少し濃くする */
+        .interest-tag:hover {
+            background: rgba(59, 130, 246, 0.2);
+            /* transform: translateY(-2px); */
+        }
+
+        /* === 7. レスポンシブ === */
+        @media (max-width: 768px) {
+            .specs-grid {
+                grid-template-columns: 1fr;
+            }
+            .spec-list li {
+                grid-template-columns: 1fr;
+                gap: 0.1rem;
+                padding: 0.7rem 0;
+            }
+            .spec-label {
+                font-size: 0.7rem;
+            }
+            .skill-grid {
+                gap: 0.8rem;
+            }
+            .skill-card {
+                width: 80px;
+                height: 80px;
+                border-radius: 12px;
+            }
+            .icon-wrapper {
+                width: 40px;
+                height: 40px;
+            }
+        }
+
+        /* === Environments (dotfile / terminal) === */
         .environments {
-            --env-key-w: 6.5rem;
+            margin: 2rem 0 3rem;
+            --env-key-w: 8rem;
         }
+
         .env-terminal {
-            font-size: 0.82rem;
-            padding: 1rem;
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1.25rem 1.25rem 1.4rem;
+            font-family: var(--font-mono);
+            font-size: 0.92rem;
+            line-height: 1.7;
+            overflow-x: auto;
+        }
+
+        .env-dollar {
+            color: var(--accent-blue);
+            opacity: 0.8;
+            margin-right: 0.6rem;
+            user-select: none;
+        }
+        .env-promptline {
+            color: var(--text-main);
+            margin-bottom: 1rem;
+        }
+
+        /* ini blocks */
+        .env-block {
+            margin-bottom: 1.2rem;
+        }
+        .env-block:last-of-type {
+            margin-bottom: 0;
+        }
+        .env-section-head {
+            margin: 0.2rem 0 0.3rem;
+        }
+        .env-bracket {
+            color: var(--accent-blue);
+            opacity: 0.5;
+        }
+        .env-section {
+            color: var(--accent-blue);
+            font-weight: 700;
         }
         .env-comment {
-            display: block;
-            margin-left: 0;
+            color: var(--text-muted);
+            margin-left: 0.8rem;
+            font-size: 0.85em;
+        }
+
+        /* key = value */
+        .env-row {
+            display: grid;
+            grid-template-columns: var(--env-key-w) 1ch 1fr;
+            column-gap: 0.6rem;
+            align-items: baseline;
+            padding: 0.1rem 0.5rem;
+            margin: 0 -0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.15s ease;
+        }
+        .env-k {
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        .env-eq {
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
+        .env-v {
+            color: var(--text-main);
+            /* 英数字は mono、日本語は sans にフォールバック */
+            font-family: var(--font-mono), var(--font-sans);
+            word-break: break-word;
+        }
+
+        /* follow-up command links */
+        .env-links {
+            margin-top: 1.3rem;
+            padding-top: 1rem;
+            border-top: 1px dashed var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
         }
         .env-cmd {
-            flex-wrap: wrap;
+            display: flex;
+            align-items: baseline;
+            text-decoration: none;
+            color: var(--text-main);
+            padding: 0.25rem 0.5rem;
+            margin: 0 -0.5rem;
+            border-radius: 4px;
+            transition:
+                background-color 0.15s ease,
+                color 0.15s ease;
         }
-    }
-</style>
+        .env-tag {
+            margin-left: 0.8rem;
+        }
+        .env-arrow {
+            margin-left: 0.5rem;
+            color: var(--accent-blue);
+            transform: translateX(-4px);
+            opacity: 0;
+            transition:
+                transform 0.2s ease,
+                opacity 0.2s ease;
+        }
+
+        /* hover: pointer devices only */
+        @media (hover: hover) {
+            .env-row:hover {
+                background-color: color-mix(
+                    in srgb,
+                    var(--accent-blue) 10%,
+                    transparent
+                );
+            }
+            .env-row:hover .env-k {
+                color: var(--accent-blue);
+            }
+            .env-cmd:hover {
+                background-color: color-mix(
+                    in srgb,
+                    var(--accent-blue) 10%,
+                    transparent
+                );
+            }
+            .env-cmd:hover .env-cmd-text {
+                color: var(--accent-blue);
+            }
+            .env-cmd:hover .env-arrow {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* reveal (一度だけ発火 / h2 と同じ IntersectionObserver 方式) */
+        .env-terminal .env-line {
+            transition:
+                opacity 0.4s ease,
+                transform 0.4s ease;
+        }
+        .env-terminal.reveal-ready:not(.is-revealed) .env-line {
+            opacity: 0;
+            transform: translateX(-8px);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .env-terminal .env-line {
+                opacity: 1 !important;
+                transform: none !important;
+                transition: none !important;
+            }
+        }
+
+        /* mobile */
+        @media (max-width: 768px) {
+            .environments {
+                --env-key-w: 6.5rem;
+            }
+            .env-terminal {
+                font-size: 0.82rem;
+                padding: 1rem;
+            }
+            .env-comment {
+                display: block;
+                margin-left: 0;
+            }
+            .env-cmd {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</Layout>
