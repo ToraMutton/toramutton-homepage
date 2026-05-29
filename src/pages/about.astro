@@ -470,6 +470,35 @@ import heroImage from "../assets/toramutton.jpg";
     document.querySelectorAll(".about-content h2").forEach((h2) => {
         observer.observe(h2);
     });
+
+    // Environments: 一度だけ発火する reveal（h2 と同じ方式）
+    const envTerminal = document.querySelector(".env-terminal");
+    if (envTerminal) {
+        const reduceMotion = window.matchMedia(
+            "(prefers-reduced-motion: reduce)",
+        ).matches;
+
+        if (!reduceMotion) {
+            const lines = Array.from(envTerminal.querySelectorAll(".env-line"));
+            lines.forEach((el, i) => {
+                el.style.transitionDelay = `${i * 45}ms`;
+            });
+            envTerminal.classList.add("reveal-ready");
+
+            const envObserver = new IntersectionObserver(
+                (entries, obs) => {
+                    entries.forEach((entry) => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add("is-revealed");
+                            obs.unobserve(entry.target); // 一度だけ
+                        }
+                    });
+                },
+                { threshold: 0.15 },
+            );
+            envObserver.observe(envTerminal);
+        }
+    }
 </script>
 
 <style>
