@@ -285,6 +285,8 @@ const friendLinks: FriendLink[] = [
                                     aria-label="maximize"></i>
                             </span>
                             <span class="terminal-path">~/toramutton.me</span>
+                        </div>
+                        <div class="terminal-body">
                             <div class="terminal-avatar">
                                 <Image
                                     src={heroImage}
@@ -292,8 +294,6 @@ const friendLinks: FriendLink[] = [
                                     class="terminal-avatar-img"
                                 />
                             </div>
-                        </div>
-                        <div class="terminal-body">
                             <p class="line" style="--i: 0">
                                 <span class="prompt">$</span>
                                 <span class="cmd"
@@ -984,18 +984,20 @@ const friendLinks: FriendLink[] = [
     }
 
     .terminal-avatar {
-        margin-left: auto;
-        flex-shrink: 0;
+        position: absolute;
+        top: 1.4rem;
+        right: 1.2rem;
+        z-index: 1;
     }
 
     .terminal-avatar :global(img) {
-        width: 28px;
-        height: 28px;
-        border-radius: 0;
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
         box-shadow: none;
         object-fit: cover;
         display: block;
-        opacity: 0.85;
+        border: 1px solid var(--border-color);
     }
 
     .terminal-header {
@@ -1045,6 +1047,7 @@ const friendLinks: FriendLink[] = [
     }
 
     .terminal-body {
+        position: relative;
         padding: 1.5rem 1.2rem 1.8rem;
         font-size: 0.95rem;
         line-height: 1.7;
