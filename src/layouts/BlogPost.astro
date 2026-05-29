@@ -684,30 +684,47 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
             /* --- TOC: Zenn 風サイドドロワー（≤1279px） --- */
             @media (max-width: 1279px) {
                 .blog-toc {
-                    /* 通常フローから外してパネル化 */
                     position: fixed;
                     top: var(--header-height, 64px);
                     right: 0;
-                    width: min(300px, 85vw); /* 最大 300px、狭い画面は 85vw */
+                    width: min(300px, 85vw);
                     height: calc(100dvh - var(--header-height, 64px));
                     overflow-y: auto;
-                    z-index: 1000; /* backdrop(999) より上、header(9999) より下 */
+                    z-index: 1000;
 
                     background: var(--surface);
                     border-left: 1px solid var(--border-color);
                     padding: 1.5rem 1.25rem;
 
-                    /* 右端に隠れた状態からスライドイン */
-                    transform: translateX(105%);
-                    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+                    /* 閉じた状態：右に 16px ずれ + 不可視 */
+                    opacity: 0;
+                    transform: translateX(16px);
+                    pointer-events: none;
+                    visibility: hidden;
+
+                    /* opacity は先に完了、transform は少し長めに */
+                    transition:
+                        opacity 0.18s ease-out,
+                        transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+                        visibility 0s linear 0.22s;
                 }
 
                 .blog-toc.mobile-open {
+                    opacity: 1;
                     transform: translateX(0);
+                    pointer-events: auto;
+                    visibility: visible;
+
+                    /* open 時は visibility の遅延をキャンセル */
+                    transition:
+                        opacity 0.18s ease-out,
+                        transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+                        visibility 0s linear 0s;
                 }
 
                 @media (prefers-reduced-motion: reduce) {
-                    .blog-toc {
+                    .blog-toc,
+                    .blog-toc.mobile-open {
                         transition: none;
                     }
                 }
