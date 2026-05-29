@@ -567,18 +567,95 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
                 );
             }
 
+            /* === h3 ツリーライン === */
             .toc-level-3 {
-                padding-left: 0.8rem;
+                padding-left: 0;
+                position: relative;
             }
-            .toc-level-3 a {
+            /* 縦線：各 li が自分の高さ分だけ引く → 積み上がって1本に見える */
+            .toc-level-3::before {
+                content: "";
+                position: absolute;
+                left: 0.55rem;
+                top: 0;
+                bottom: 0;
+                width: 1px;
+                background: var(--border-color);
+            }
+            /* グループ末尾だけ縦線を上半分に切る（└── 表現）*/
+            .toc-level-3:last-child::before,
+            .toc-level-3:has(+ .toc-level-2)::before {
+                bottom: 50%;
+            }
+            /* 横ブランチ */
+            .toc-level-3 > a {
                 font-size: 0.8rem;
-            }
-            .toc-level-4 {
+                border-left: none; /* 縦線と競合するため削除 */
                 padding-left: 1.6rem;
+                position: relative;
             }
-            .toc-level-4 a {
+            .toc-level-3 > a::before {
+                content: "";
+                position: absolute;
+                left: 0.55rem;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 0.65rem;
+                height: 1px;
+                background: var(--border-color);
+                transition: background 0.2s;
+            }
+            /* アクティブ時：横ブランチも accent に */
+            .toc-level-3 > a.active {
+                border-left: none;
+            }
+            .toc-level-3 > a.active::before {
+                background: var(--accent-blue);
+            }
+
+            /* === h4 ツリーライン（h3 より右に入れ子）=== */
+            .toc-level-4 {
+                padding-left: 0.8rem;
+                position: relative;
+            }
+            .toc-level-4::before {
+                content: "";
+                position: absolute;
+                left: 0.55rem;
+                top: 0;
+                bottom: 0;
+                width: 1px;
+                background: var(--border-color);
+            }
+            /* h4 グループ末尾（次が h4 以外、またはリスト最後）で縦線カット */
+            .toc-level-4:last-child::before,
+            .toc-level-4:has(+ :not(.toc-level-4))::before {
+                bottom: 50%;
+            }
+            .toc-level-4 > a {
                 font-size: 0.78rem;
+                border-left: none;
+                padding-left: 1.6rem;
+                position: relative;
                 opacity: 0.85;
+            }
+            .toc-level-4 > a::before {
+                content: "";
+                position: absolute;
+                left: 0.55rem;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 0.65rem;
+                height: 1px;
+                background: var(--border-color);
+                transition: background 0.2s;
+            }
+            .toc-level-4 > a.active {
+                border-left: none;
+                opacity: 1;
+            }
+            .toc-level-4 > a.active::before {
+                background: var(--accent-blue);
             }
 
             /* --- TOC: Zenn 風サイドドロワー（≤1279px / 右側維持）--- */
