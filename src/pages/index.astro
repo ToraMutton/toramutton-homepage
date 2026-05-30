@@ -857,11 +857,11 @@ const friendLinks: FriendLink[] = [
                     const yearEl = document.getElementById("song-year");
                     const btn = document.getElementById("next-song-btn");
 
-                    // ---- marquee: カードを複製して無限ループ ----
+                    // ---- marquee: デスクトップのみ複製して無限ループ ----
                     const track = document.getElementById("marquee-track");
-                    if (track) {
+                    if (track && window.innerWidth > 1024) {
                         const original = track.innerHTML;
-                        track.innerHTML = original + original; // 2セット並べる
+                        track.innerHTML = original + original;
                     }
 
                     // ---- widget-card stagger reveal (IntersectionObserver) ----
