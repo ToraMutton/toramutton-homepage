@@ -10,6 +10,7 @@ import type { ImageMetadata } from "astro";
 import homepageImage from "../assets/works/toramutton.webp";
 import vextraImage from "../assets/works/vextra.webp";
 import artoramImage from "../assets/works/artoram.webp";
+import fxtwitterImage from "../assets/works/fxtwitter-bot.webp";
 import nexusImage from "../assets/works/nexus.webp";
 
 import {
@@ -27,6 +28,9 @@ import {
     Terminal,
     Grid3X3,
     Grid,
+    FileVideo,
+    TerminalSquare,
+    LayoutGrid,
 } from "lucide-astro";
 
 interface Work {
@@ -45,10 +49,10 @@ const works: Work[] = [
     {
         name: "ToraMutton's Homepage",
         description:
-            "Astro + Vercelで構築した個人用ポートフォリオサイト。GitHub Actionsを用いたZenn/Qiita記事のRSS自動取得・自作ビルドパイプライン付き。",
+            "Astro + Vercelで構築したこのサイトです。GitHub Actionsを用いたnote/Zenn/Qiita記事のRSS自動取得・ビルド機能完備。最近デザインを一新しました",
         url: "https://toramutton.me",
         github: "https://github.com/ToraMutton/toramutton-homepage",
-        tags: ["Astro", "TypeScript", "Vercel", "GitHub Actions"],
+        tags: ["Astro", "TypeScript", "Vercel"],
         icon: Code2,
         year: "2026",
         status: "completed",
@@ -77,6 +81,18 @@ const works: Work[] = [
         github: "https://github.com/ToraMutton/artoram",
         status: "completed",
         image: artoramImage,
+    },
+    {
+        name: "fxtwitter-bot",
+        description:
+            "Rust製の動画保存用discord-bot。ツイートのリンクを送るだけで、正規表現を用いて保存可能なリンクに書き換えます。",
+        tags: ["fly.io", "Rust", "Docker"],
+        icon: FileVideo,
+        year: "2026",
+        url: "",
+        github: "",
+        status: "completed",
+        image: fxtwitterImage,
     },
     {
         name: "NEXUS for UEC",
@@ -578,17 +594,17 @@ const plannedWorks = works.filter((w) => w.status === "planned");
     }
 
     .work-image-layer::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--background);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--background);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
 
     @media (hover: hover) {
         .work-row:hover .work-image-layer::after {
-            opacity: 0.5;  /* ホバー時に暗いオーバーレイが乗る */
+            opacity: 0.5; /* ホバー時に暗いオーバーレイが乗る */
         }
     }
 
@@ -646,4 +662,5 @@ const plannedWorks = works.filter((w) => w.status === "planned");
         .work-name {
             font-size: 0.9rem;
         }
+    }
 </style>
