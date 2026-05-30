@@ -10,6 +10,7 @@ import type { ImageMetadata } from "astro";
 import homepageImage from "../assets/works/toramutton.webp";
 import vextraImage from "../assets/works/vextra.webp";
 import artoramImage from "../assets/works/artoram.webp";
+import archdotImage from "../assets/works/arch.webp";
 import windotImage from "../assets/works/windotfiles.webp";
 import fxtwitterImage from "../assets/works/fxtwitter-bot.webp";
 import nexusImage from "../assets/works/nexus.webp";
@@ -58,6 +59,18 @@ const works: Work[] = [
         year: "2026",
         status: "completed",
         image: homepageImage,
+    },
+    {
+        name: "Arch Linux Dotfiles",
+        description:
+            "HyprlandやWaybar、Neovim等で構築されたArch Linuxのdotfiles。GNU Stowを用いて管理しています。",
+        tags: ["Linux", "Hyprland", "Waybar"],
+        icon: Terminal,
+        year: "2026",
+        url: "",
+        github: "https://github.com/ToraMutton/dotfiles/tree/main/arch",
+        status: "completed",
+        image: archdotImage,
     },
     {
         name: "Minecraft Skin Editor",
