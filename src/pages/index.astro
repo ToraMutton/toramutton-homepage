@@ -2219,15 +2219,15 @@ const friendLinks: FriendLink[] = [
         padding: 1rem 1.25rem 1.25rem;
     }
 
-    .mt-block {
+    .mini-terminal-body :global(.mt-block) {
         margin-bottom: 0.6rem;
     }
 
-    .mt-block:last-of-type {
+    .mini-terminal-body :global(.mt-block:last-of-type) {
         margin-bottom: 0.4rem;
     }
 
-    .mt-line {
+    .mini-terminal-body :global(.mt-line) {
         display: flex;
         align-items: center;
         gap: 0.5rem;
@@ -2236,22 +2236,22 @@ const friendLinks: FriendLink[] = [
         font-size: 0.88rem;
     }
 
-    .mt-cursor-line {
+    .mini-terminal-body :global(.mt-cursor-line) {
         margin-top: 0.2rem;
     }
 
-    .mt-prompt {
+    .mini-terminal-body :global(.mt-prompt) {
         color: var(--accent-blue);
         font-weight: 600;
         flex-shrink: 0;
     }
 
-    .mt-cmd {
+    .mini-terminal-body :global(.mt-cmd) {
         color: var(--text-main);
         font-size: 0.88rem;
     }
 
-    .mt-out {
+    .mini-terminal-body :global(.mt-out) {
         color: var(--accent-blue);
         font-size: 0.85rem;
         padding-left: 1.2rem;
@@ -2264,12 +2264,12 @@ const friendLinks: FriendLink[] = [
             transform 0.25s ease;
     }
 
-    .mt-out.is-visible {
+    .mini-terminal-body :global(.mt-out.is-visible) {
         opacity: 1;
         transform: translateY(0);
     }
 
-    .mt-cursor {
+    .mini-terminal-body :global(.mt-cursor) {
         color: var(--accent-blue);
         font-size: 0.9rem;
         animation: mt-blink 1s step-end infinite;
