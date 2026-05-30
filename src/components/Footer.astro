@@ -197,7 +197,6 @@ const year = new Date().getFullYear();
     /* === 背景: Arch ASCIIアート === */
     .footer-bg {
         position: absolute;
-        /* 右下コーナーに寄せる。少しはみ出すくらいがちょうどいい */
         bottom: -1rem;
         right: -1rem;
         margin: 0;
@@ -209,8 +208,13 @@ const year = new Date().getFullYear();
         line-height: 1.15;
         white-space: pre;
         color: var(--text-muted);
-        opacity: 0.09;
+        opacity: 0.28;
 
+        /* global.css の pre デフォルトスタイルを上書き */
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        padding: 0;
         /* pre デフォルトのスクロールバーを潰す */
         overflow: hidden;
         pointer-events: none;
@@ -353,7 +357,7 @@ const year = new Date().getFullYear();
 
         .footer-bg {
             font-size: clamp(0.36rem, 3vw, 0.58rem);
-            opacity: 0.07;
+            opacity: 0.22;
             bottom: -0.5rem;
             right: -0.5rem;
         }
