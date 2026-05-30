@@ -111,6 +111,17 @@ const TOOL_SKILLS = [
         name: "Blender",
         src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/blender/blender-original.svg",
     },
+
+    // インフラ・デプロイ
+    {
+        name: "Vercel",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vercel/vercel-original.svg",
+        darkInvert: true,
+    },
+    {
+        name: "Docker",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg",
+    },
 ];
 
 // --- 3. Operating Systems ---
@@ -132,40 +143,19 @@ const SKILL_GROUPS = [
     { cmd: "ls ./os", note: "Operating Systems", items: OS_SKILLS },
 ];
 
-// --- 4. Interests / 好きなこと（env と同じ [section] スタイル）---
+// --- 4. Interests ---
 const INTERESTS = [
     {
         section: "music",
-        items: [
-            "米津玄師",
-            "Eve",
-            "King Gnu",
-            "Mrs. GREEN APPLE",
-            "サカナクション",
-            "ヨルシカ",
-        ],
+        items: ["米津玄師", "Eve", "ヨルシカ"],
     },
     {
         section: "game",
-        items: [
-            "Minecraft",
-            "ブルーアーカイブ",
-            "ポケモン",
-            "スプラトゥーン",
-            "バカゲー",
-        ],
+        items: ["Minecraft", "Splatoon", "Blue Archive", "Pokémon"],
     },
     {
         section: "other",
-        items: [
-            "映像制作",
-            "Twitter",
-            "アニメ",
-            "漫画",
-            "映画鑑賞",
-            "睡眠",
-            "キヨ。",
-        ],
+        items: ["Twitter", "アニメ", "睡眠", "キヨ。"],
     },
 ];
 
@@ -173,7 +163,7 @@ const INTERESTS = [
 const ENV_BLOCKS = [
     {
         section: "desktop",
-        meta: "2026/02/13 ~",
+        meta: "Torapezium-08 : 2026/02/13 ~",
         rows: [
             { k: "cpu", v: "AMD Ryzen 7 7700" },
             { k: "gpu", v: "Radeon RX 9060 XT 16GB" },
@@ -188,12 +178,12 @@ const ENV_BLOCKS = [
         link: {
             cmd: "cd ./desktop && cat pc-build-2026.md",
             href: "/blog/pc-build-2026/",
-            tag: "local",
+            tag: "より詳しい情報はこちら",
         },
     },
     {
         section: "laptop",
-        meta: "Dell 14 Plus / 2025/03/28 ~",
+        meta: "Dell 14 Plus : 2025/03/28 ~",
         rows: [
             { k: "cpu", v: "Core Ultra 7 258V" },
             { k: "gpu", v: "Intel Arc Graphics 140V" },
@@ -240,18 +230,18 @@ const TIMELINE = [
         <section class="bio" data-reveal>
             <div class="bio-prompt">
                 <span class="env-dollar">$</span><span class="bio-typed"
-                    >cat ./about.md</span
+                    >cat ./README.md</span
                 >
             </div>
 
             <div class="bio-body reveal-item">
                 <p>
-                    電気通信大学 情報理工学域 I 類の<strong>トラマト</strong
-                    >です。寅松 真人(とらまつ まさと)は偽名です。<br />
-                    MMA というサークルに所属していて、主に Twitter か Discord に生息しています。<br
+                    電気通信大学 情報理工学域 I 類の
+                    <strong>ToraMutton / トラマト</strong>です。 寅松
+                    真人(とらまつ まさと)はGrok君が考えてくれた偽名です。<br />
+                    MMAというサークルに所属していて、 Twitterに生息しています。<br
                     />
-                    Web・システム・コンパイラあたりに興味があり、普段は Neovim と
-                    Arch Linux で開発しています。
+                    Web・コンパイラ・LLMあたりに興味があり、 最近はArch LinuxとWindows11の両方でRicingを楽しんでます。
                 </p>
             </div>
 
@@ -493,7 +483,7 @@ const TIMELINE = [
         .about-content {
             line-height: 1.8;
             color: var(--text-main);
-            padding-top: 1rem;
+            padding-top: 2.5rem;
         }
 
         /* === h2のカスタム設定 === */
@@ -559,20 +549,19 @@ const TIMELINE = [
             overflow: hidden;
             white-space: nowrap;
             vertical-align: bottom;
-            border-right: 0.5em solid var(--accent-blue);
+            max-width: 0;
+            /* Hero と統一: 2px の縦棒カーソル */
+            border-right: 2px solid var(--accent-blue);
             animation:
-                bio-typing 0.9s steps(14) 0.15s both,
-                bio-cursor 0.9s step-end infinite;
+                bio-typing 1s steps(15, end) 0.15s forwards,
+                bio-caret 0.7s step-end 3 1.2s;
         }
         @keyframes bio-typing {
-            from {
-                width: 0;
-            }
             to {
-                width: 14ch;
+                max-width: 16ch;
             }
         }
-        @keyframes bio-cursor {
+        @keyframes bio-caret {
             50% {
                 border-color: transparent;
             }
@@ -581,7 +570,7 @@ const TIMELINE = [
             .bio-typed {
                 animation: none;
                 border-right: none;
-                width: auto;
+                max-width: none;
             }
         }
 
@@ -650,7 +639,7 @@ const TIMELINE = [
             transition: border-color 0.3s ease;
         }
 
-        /* 斜め accent sweep */
+        /* 斜め accent sweep（hover で左から走る = yui540 系）*/
         .skill-card::before {
             content: "";
             position: absolute;
@@ -950,7 +939,7 @@ const TIMELINE = [
         }
         @media (max-width: 768px) {
             .about-content {
-                padding-top: 2rem;
+                padding-top: 3.5rem;
             }
             .environments {
                 --env-key-w: 6.5rem;
