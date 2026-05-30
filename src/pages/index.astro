@@ -186,6 +186,46 @@ const missions = [
     { title: "2026年終了まで", date: "2026-12-31", icon: Milestone },
 ];
 
+// === Mini Terminal ===
+const terminalCommands = [
+    { cmd: "whoami", out: "toramutton" },
+    { cmd: "status", out: "studying" },
+    { cmd: "mood", out: "creating something" },
+    { cmd: "cat major", out: "CS @ UEC" },
+    { cmd: "cat os", out: "Arch Linux / Windows 11" },
+    { cmd: "echo $SHELL", out: "/bin/bash" },
+    { cmd: "cat hobby", out: "Twitter / Anime / Music" },
+    { cmd: "git status", out: "on branch: main" },
+    { cmd: "pwd", out: "/home/toramutton" },
+    { cmd: "echo $LANG", out: "ja_JP.UTF-8" },
+    { cmd: "cat skills", out: "Rust / TypeScript / C" },
+    { cmd: "cat editor", out: "Neovim / VSCode" },
+    { cmd: "echo $WM", out: "Hyprland / GlazeWM" },
+    { cmd: "cat focus", out: "web / compilers / LLM" },
+    { cmd: "fortune", out: "多分動くと思うからリリースしようぜ" },
+    { cmd: "cat music", out: "米津玄師 / Eve / ヨルシカ" },
+    { cmd: "ping life", out: "64 bytes: icmp_seq=1 ttl=64" },
+    { cmd: "cat dream", out: "living happy!" },
+    { cmd: "cat gpa", out: "it's fine" },
+    { cmd: "cat sleep", out: "insufficient" },
+    { cmd: "git log --oneline", out: "abc1234 fix: everything" },
+    { cmd: "cat arch", out: "I use Arch btw" },
+    { cmd: "cat bugs", out: "feature" },
+    { cmd: "sudo make me a sandwich", out: "Okay." },
+    {
+        cmd: "rm -rf laziness",
+        out: "Permission denied: It's part of your identity",
+    },
+    { cmd: "cat motivation", out: "depends on the day" },
+    { cmd: "uptime", out: "2 years at UEC" },
+    { cmd: "ls projects", out: "too many" },
+    { cmd: "man life", out: "No manual entry for life" },
+];
+
+// ランダムで3つ選ぶ（重複なし）
+const shuffled = [...terminalCommands].sort(() => Math.random() - 0.5);
+const selectedCommands = shuffled.slice(0, 3);
+
 const today = new Date();
 const missionData = missions.map((m) => {
     const target = new Date(m.date);
@@ -526,58 +566,42 @@ const friendLinks: FriendLink[] = [
             </section>
 
             <div class="grid-container">
-                <!-- Countdown -->
-                <div class="widget-card mission-card" data-reveal>
+                <!-- Mini Terminal -->
+                <div
+                    class="widget-card mini-terminal-card"
+                    data-reveal
+                    data-mini-terminal
+                >
                     <div class="card-header">
-                        <Target class="icon-blue" size={16} />
-                        <h3>Countdown</h3>
+                        <span class="mini-terminal-dots">
+                            <i></i><i></i><i></i>
+                        </span>
+                        <span class="mini-terminal-title">~/toramutton</span>
                     </div>
-                    <div class="card-body">
-                        <div class="mission-list">
-                            {
-                                missionData.map((m) => (
-                                    <div
-                                        class="mission-item js-mission-item"
-                                        data-date={m.date}
-                                    >
-                                        <div class="mission-info">
-                                            <span class="mission-icon">
-                                                <m.icon
-                                                    size={16}
-                                                    strokeWidth={2}
-                                                />
-                                            </span>
-                                            <span class="mission-title">
-                                                {m.title}
-                                            </span>
-                                        </div>
-                                        <div class="mission-days">
-                                            <span class="days-num js-days-num">
-                                                {m.days}
-                                            </span>
-                                            <span class="days-unit">days</span>
-                                        </div>
-                                    </div>
-                                ))
-                            }
-                        </div>
-                    </div>
-                </div>
-
-                <!-- My Desktop PC -->
-                <div class="widget-card project-card" data-reveal>
-                    <div class="card-header">
-                        <Cpu class="icon-blue" size={16} />
-                        <h3>My Desktop PC</h3>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-desc">
-                            Ryzen 7 7700 + Radeon RX 9060 XT 16GB 構成。
-                            2026/02/13~
+                    <div
+                        class="card-body mini-terminal-body"
+                        id="mini-terminal-body"
+                    >
+                        {
+                            selectedCommands.map((c, i) => (
+                                <div
+                                    class="mt-block"
+                                    data-cmd={c.cmd}
+                                    data-out={c.out}
+                                    data-index={i}
+                                >
+                                    <p class="mt-line">
+                                        <span class="mt-prompt">$</span>
+                                        <span class="mt-cmd" />
+                                    </p>
+                                    <p class="mt-out" />
+                                </div>
+                            ))
+                        }
+                        <p class="mt-line mt-cursor-line">
+                            <span class="mt-prompt">$</span>
+                            <span class="mt-cursor" id="mt-cursor">▌</span>
                         </p>
-                        <div class="dedicated-link">
-                            <a href="/about#trapezium">View Details →</a>
-                        </div>
                     </div>
                 </div>
 
@@ -613,8 +637,63 @@ const friendLinks: FriendLink[] = [
                                 href="https://github.com/toramutton"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                >View GitHub Profile →</a
-                            >
+                                >View GitHub Profile →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My Desktop PC -->
+                <div class="widget-card project-card" data-reveal>
+                    <div class="card-header">
+                        <Cpu class="icon-blue" size={16} />
+                        <h3>My Desktop PC</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-desc">
+                            Ryzen 7 7700 + Radeon RX 9060 XT 16GB 構成。
+                            2026/02/13~
+                        </p>
+                        <div class="dedicated-link">
+                            <a href="/about#trapezium">View Details →</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Countdown -->
+                <div class="widget-card mission-card" data-reveal>
+                    <div class="card-header">
+                        <Target class="icon-blue" size={16} />
+                        <h3>Countdown</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="mission-list">
+                            {
+                                missionData.map((m) => (
+                                    <div
+                                        class="mission-item js-mission-item"
+                                        data-date={m.date}
+                                    >
+                                        <div class="mission-info">
+                                            <span class="mission-icon">
+                                                <m.icon
+                                                    size={16}
+                                                    strokeWidth={2}
+                                                />
+                                            </span>
+                                            <span class="mission-title">
+                                                {m.title}
+                                            </span>
+                                        </div>
+                                        <div class="mission-days">
+                                            <span class="days-num js-days-num">
+                                                {m.days}
+                                            </span>
+                                            <span class="days-unit">days</span>
+                                        </div>
+                                    </div>
+                                ))
+                            }
                         </div>
                     </div>
                 </div>
@@ -697,6 +776,34 @@ const friendLinks: FriendLink[] = [
                         }
                     </ul>
                 </div>
+            </div>
+
+            <!-- Links -->
+            <div class="widget-card links-card" data-reveal>
+                <div class="card-header">
+                    <Users class="icon-secondary" size={16} />
+                    <h3>Links</h3>
+                </div>
+                <ul class="link-row-list">
+                    {
+                        friendLinks.map((link) => (
+                            <li class="link-row">
+                                <a
+                                    href={link.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="link-row-anchor"
+                                >
+                                    <span class="link-row-prompt">▸</span>
+                                    <span class="link-row-name">
+                                        {link.name}
+                                    </span>
+                                    <span class="link-row-arrow">↗</span>
+                                </a>
+                            </li>
+                        ))
+                    }
+                </ul>
             </div>
 
             <!-- Today's Music -->
@@ -889,6 +996,72 @@ const friendLinks: FriendLink[] = [
                         },
                         { threshold: 0.12 },
                     );
+
+                    // ---- Mini Terminal タイプライター ----
+                    const miniTermCard = document.querySelector<HTMLElement>(
+                        "[data-mini-terminal]",
+                    );
+                    const mtBlocks =
+                        document.querySelectorAll<HTMLElement>(".mt-block");
+                    const mtCursor = document.getElementById("mt-cursor");
+
+                    function typeMiniTerminal() {
+                        let blockDelay = 0;
+
+                        mtBlocks.forEach((block) => {
+                            const cmd = block.dataset.cmd ?? "";
+                            const out = block.dataset.out ?? "";
+                            const cmdEl =
+                                block.querySelector<HTMLElement>(".mt-cmd");
+                            const outEl =
+                                block.querySelector<HTMLElement>(".mt-out");
+                            if (!cmdEl || !outEl) return;
+
+                            // コマンドをタイプ
+                            const cmdDelay = blockDelay;
+                            let charIndex = 0;
+                            const typeChar = () => {
+                                if (charIndex < cmd.length) {
+                                    cmdEl.textContent += cmd[charIndex++];
+                                    addTimer(typeChar, 38);
+                                } else {
+                                    // コマンド完了 → output フェードイン
+                                    outEl.textContent = out;
+                                    addTimer(
+                                        () => outEl.classList.add("is-visible"),
+                                        80,
+                                    );
+                                }
+                            };
+                            addTimer(typeChar, cmdDelay);
+
+                            // 次のブロックまでの待ち時間
+                            // コマンド打鍵時間 + output 表示時間 + ブロック間の間
+                            blockDelay += cmd.length * 38 + 80 + 300;
+                        });
+
+                        // 全ブロック完了後にカーソル表示
+                        addTimer(() => {
+                            if (mtCursor) mtCursor.style.opacity = "1";
+                        }, blockDelay);
+                    }
+
+                    // mini-terminal が画面に入ったらタイプ開始
+                    if (miniTermCard) {
+                        const mtObserver = new IntersectionObserver(
+                            (entries) => {
+                                entries.forEach((entry) => {
+                                    if (entry.isIntersecting) {
+                                        // stagger reveal の遅延後に開始
+                                        addTimer(typeMiniTerminal, 300);
+                                        mtObserver.unobserve(entry.target);
+                                    }
+                                });
+                            },
+                            { threshold: 0.2 },
+                        );
+                        mtObserver.observe(miniTermCard);
+                    }
 
                     // grid-container 内は stagger (80ms ずつ)
                     document
@@ -1159,8 +1332,9 @@ const friendLinks: FriendLink[] = [
                     setInterval(updateUptime, 1000);
                 }
             </script>
+
+            <Footer />
         </main>
-        <Footer />
     </body>
 </html>
 
@@ -1845,6 +2019,115 @@ const friendLinks: FriendLink[] = [
     }
     .icon-secondary {
         color: var(--accent-blue);
+    }
+
+    /* ====================================
+       4.5 Mini Terminal カード
+       ==================================== */
+    .mini-terminal-card {
+        font-family: var(--font-mono);
+    }
+
+    .mini-terminal-dots {
+        display: inline-flex;
+        gap: 5px;
+    }
+    .mini-terminal-dots i {
+        display: inline-block;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--border-color);
+    }
+
+    .mini-terminal-title {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        letter-spacing: 0.02em;
+    }
+
+    .mini-terminal-body {
+        gap: 0;
+        padding: 1rem 1.25rem 1.25rem;
+    }
+
+    .mt-block {
+        margin-bottom: 0.6rem;
+    }
+
+    .mt-block:last-of-type {
+        margin-bottom: 0.4rem;
+    }
+
+    .mt-line {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+        min-height: 1.5em;
+        font-size: 0.88rem;
+    }
+
+    .mt-cursor-line {
+        margin-top: 0.2rem;
+    }
+
+    .mt-prompt {
+        color: var(--accent-blue);
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .mt-cmd {
+        color: var(--text-main);
+        font-size: 0.88rem;
+    }
+
+    .mt-out {
+        color: var(--accent-blue);
+        font-size: 0.85rem;
+        padding-left: 1.2rem;
+        margin: 0.1rem 0 0;
+        min-height: 1.4em;
+        opacity: 0;
+        transform: translateY(3px);
+        transition:
+            opacity 0.25s ease,
+            transform 0.25s ease;
+    }
+
+    .mt-out.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .mt-cursor {
+        color: var(--accent-blue);
+        font-size: 0.9rem;
+        animation: mt-blink 1s step-end infinite;
+        opacity: 0; /* JS で表示 */
+    }
+
+    @keyframes mt-blink {
+        0%,
+        100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .mt-cursor {
+            animation: none;
+            opacity: 1;
+        }
+        .mt-out {
+            opacity: 1;
+            transform: none;
+            transition: none;
+        }
     }
 
     /* ====================================
