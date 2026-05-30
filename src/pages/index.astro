@@ -573,8 +573,22 @@ const friendLinks: FriendLink[] = [
                     data-mini-terminal
                 >
                     <div class="card-header">
-                        <span class="mini-terminal-dots">
-                            <i></i><i></i><i></i>
+                        <span class="mini-terminal-dots" id="mt-dots">
+                            <i
+                                data-mt-dot="red"
+                                role="button"
+                                tabindex="0"
+                                aria-label="reroll"></i>
+                            <i
+                                data-mt-dot="yellow"
+                                role="button"
+                                tabindex="0"
+                                aria-label="reroll"></i>
+                            <i
+                                data-mt-dot="green"
+                                role="button"
+                                tabindex="0"
+                                aria-label="reroll"></i>
                         </span>
                         <span class="mini-terminal-title">~/toramutton</span>
                     </div>
@@ -1017,6 +1031,190 @@ const friendLinks: FriendLink[] = [
                             if (mtCursor) mtCursor.style.opacity = "1";
                         }, blockDelay);
                     }
+
+                    // ---- Mini Terminal 再ガチャ ----
+                    // コマンドをリセットして新しいセットを選び直す
+                    function rerollMiniTerminal() {
+                        // 全コマンドリスト（フロントマターから data属性経由で取れないため JS 側にも持つ）
+                        const allCommands = [
+                            { cmd: "whoami", out: "toramutton" },
+                            { cmd: "status", out: "studying" },
+                            { cmd: "mood", out: "creating something" },
+                            { cmd: "cat major", out: "CS @ UEC" },
+                            { cmd: "cat os", out: "Arch Linux / Windows 11" },
+                            { cmd: "echo $SHELL", out: "/bin/bash" },
+                            {
+                                cmd: "cat hobby",
+                                out: "Twitter / Anime / Music",
+                            },
+                            { cmd: "git status", out: "on branch: main" },
+                            { cmd: "pwd", out: "/home/toramutton" },
+                            { cmd: "echo $LANG", out: "ja_JP.UTF-8" },
+                            { cmd: "cat skills", out: "Rust / TypeScript / C" },
+                            { cmd: "cat editor", out: "Neovim / VSCode" },
+                            { cmd: "echo $WM", out: "Hyprland / GlazeWM" },
+                            { cmd: "cat focus", out: "web / compilers / LLM" },
+                            {
+                                cmd: "fortune",
+                                out: "多分動くと思うからリリースしようぜ",
+                            },
+                            {
+                                cmd: "cat music",
+                                out: "米津玄師 / Eve / ヨルシカ",
+                            },
+                            {
+                                cmd: "ping life",
+                                out: "64 bytes: icmp_seq=1 ttl=64",
+                            },
+                            { cmd: "cat dream", out: "living happy!" },
+                            { cmd: "cat gpa", out: "it's fine" },
+                            { cmd: "cat sleep", out: "insufficient" },
+                            {
+                                cmd: "git log --oneline",
+                                out: "abc1234 fix: everything",
+                            },
+                            { cmd: "cat arch", out: "I use Arch btw" },
+                            { cmd: "cat bugs", out: "feature" },
+                            { cmd: "sudo make me a sandwich", out: "Okay." },
+                            {
+                                cmd: "rm -rf laziness",
+                                out: "Permission denied: It's part of your identity",
+                            },
+                            {
+                                cmd: "cat motivation",
+                                out: "depends on the day",
+                            },
+                            { cmd: "uptime", out: "2 years at UEC" },
+                            { cmd: "ls projects", out: "too many" },
+                            {
+                                cmd: "man life",
+                                out: "No manual entry for life",
+                            },
+                        ];
+
+                        // ランダムで3つ選択（現在表示中とは別になるよう試みる）
+                        const currentCmds = Array.from(mtBlocks).map(
+                            (b) => b.dataset.cmd,
+                        );
+                        const pool = allCommands.filter(
+                            (c) => !currentCmds.includes(c.cmd),
+                        );
+                        const source = pool.length >= 3 ? pool : allCommands;
+                        const newCmds = [...source]
+                            .sort(() => Math.random() - 0.5)
+                            .slice(0, 3);
+
+                        // DOM を更新
+                        mtBlocks.forEach((block, i) => {
+                            block.dataset.cmd = newCmds[i].cmd;
+                            block.dataset.out = newCmds[i].out;
+                            const cmdEl =
+                                block.querySelector<HTMLElement>(".mt-cmd");
+                            const outEl =
+                                block.querySelector<HTMLElement>(".mt-out");
+                            if (cmdEl) cmdEl.textContent = "";
+                            if (outEl) {
+                                outEl.textContent = "";
+                                outEl.classList.remove("is-visible");
+                            }
+                        });
+                        if (mtCursor) mtCursor.style.opacity = "0";
+
+                        // タイプアニメ再実行
+                        typeMiniTerminal();
+                    }
+
+                    // ドットクリックで各演出 → 再ガチャ
+                    const mtDotsEl = document.getElementById("mt-dots");
+                    const mtCard = document.querySelector<HTMLElement>(
+                        ".mini-terminal-card",
+                    );
+
+                    mtDotsEl
+                        ?.querySelectorAll<HTMLElement>("i[data-mt-dot]")
+                        .forEach((dot) => {
+                            dot.addEventListener("click", () => {
+                                if (mtCard?.classList.contains("mt-busy"))
+                                    return;
+                                mtCard?.classList.add("mt-busy");
+                                const kind = dot.dataset.mtDot;
+
+                                if (kind === "red") {
+                                    // exit 0 → フェードアウト → 再起動
+                                    const body =
+                                        mtCard?.querySelector<HTMLElement>(
+                                            ".mini-terminal-body",
+                                        );
+                                    if (!body) return;
+
+                                    // exit 0 を追記
+                                    const exitLine =
+                                        document.createElement("p");
+                                    exitLine.className = "mt-line";
+                                    exitLine.innerHTML = `<span class="mt-prompt">$</span><span class="mt-cmd"> exit 0</span>`;
+                                    body.appendChild(exitLine);
+
+                                    setTimeout(() => {
+                                        body.style.cssText =
+                                            "opacity:0; transition:opacity 0.3s ease";
+                                        setTimeout(() => {
+                                            body.innerHTML = `
+                                            <p class="mt-line"><span class="mt-prompt" style="color:var(--text-muted)">#</span><span class="mt-cmd"> Connection closed.</span></p>
+                                            <p class="mt-line"><span class="mt-prompt" style="color:var(--text-muted)">#</span><span class="mt-cmd"> Rebooting...</span></p>
+                                        `;
+                                            body.style.cssText =
+                                                "opacity:1; transition:opacity 0.3s ease";
+                                            setTimeout(() => {
+                                                body.style.cssText =
+                                                    "opacity:0; transition:opacity 0.3s ease";
+                                                setTimeout(() => {
+                                                    body.style.cssText = "";
+                                                    // mtBlocks は querySelector で再取得
+                                                    typeMiniTerminal();
+                                                    mtCard?.classList.remove(
+                                                        "mt-busy",
+                                                    );
+                                                }, 320);
+                                            }, 1000);
+                                        }, 350);
+                                    }, 500);
+                                } else if (kind === "yellow") {
+                                    // squish → 復元 → 再ガチャ
+                                    mtCard?.classList.add("is-squishing");
+                                    setTimeout(() => {
+                                        mtCard?.classList.remove(
+                                            "is-squishing",
+                                        );
+                                        setTimeout(() => {
+                                            rerollMiniTerminal();
+                                            mtCard?.classList.remove("mt-busy");
+                                        }, 350);
+                                    }, 500);
+                                } else if (kind === "green") {
+                                    // # re-rolling... → フェードアウト → 再ガチャ
+                                    const body =
+                                        mtCard?.querySelector<HTMLElement>(
+                                            ".mini-terminal-body",
+                                        );
+                                    if (!body) return;
+
+                                    const msg = document.createElement("p");
+                                    msg.className = "mt-line";
+                                    msg.innerHTML = `<span class="mt-prompt" style="color:var(--text-muted)">#</span><span class="mt-cmd"> re-rolling...</span>`;
+                                    body.appendChild(msg);
+
+                                    setTimeout(() => {
+                                        msg.style.cssText =
+                                            "opacity:0; transition:opacity 0.3s ease";
+                                        setTimeout(() => {
+                                            msg.remove();
+                                            rerollMiniTerminal();
+                                            mtCard?.classList.remove("mt-busy");
+                                        }, 320);
+                                    }, 800);
+                                }
+                            });
+                        });
 
                     // mini-terminal が画面に入ったらタイプ開始
                     if (miniTermCard) {
@@ -1998,6 +2196,10 @@ const friendLinks: FriendLink[] = [
        ==================================== */
     .mini-terminal-card {
         font-family: var(--font-mono);
+        transform-origin: top center;
+        transition:
+            transform 0.3s cubic-bezier(0, 0, 0.2, 1.4),
+            opacity 0.3s ease;
     }
 
     .mini-terminal-dots {
@@ -2010,6 +2212,27 @@ const friendLinks: FriendLink[] = [
         height: 9px;
         border-radius: 50%;
         background: var(--border-color);
+        cursor: pointer;
+        transition: background 0.15s ease;
+    }
+
+    @media (hover: hover) {
+        .mini-terminal-dots:hover i[data-mt-dot="red"] {
+            background: #ff5f57;
+        }
+        .mini-terminal-dots:hover i[data-mt-dot="yellow"] {
+            background: #ffbd2e;
+        }
+        .mini-terminal-dots:hover i[data-mt-dot="green"] {
+            background: #28c840;
+        }
+    }
+
+    /* squish アニメ（黄） */
+    .mini-terminal-card.is-squishing {
+        transform: scaleY(0.04);
+        opacity: 0;
+        pointer-events: none;
     }
 
     .mini-terminal-title {
