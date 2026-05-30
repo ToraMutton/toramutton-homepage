@@ -10,6 +10,7 @@ import type { ImageMetadata } from "astro";
 import homepageImage from "../assets/works/toramutton.webp";
 import vextraImage from "../assets/works/vextra.webp";
 import artoramImage from "../assets/works/artoram.webp";
+import windotImage from "../assets/works/windotfiles.webp";
 import fxtwitterImage from "../assets/works/fxtwitter-bot.webp";
 import nexusImage from "../assets/works/nexus.webp";
 
@@ -81,6 +82,18 @@ const works: Work[] = [
         github: "https://github.com/ToraMutton/artoram",
         status: "completed",
         image: artoramImage,
+    },
+    {
+        name: "Windows11 Dotfiles",
+        description:
+            "GlazeWMとzebarを用いた、タイル型ウィンドウマネージャ環境のWindows11用設定ファイル。Reactを用いたバーカスタマイズが可能です。",
+        tags: ["GlazeWM", "zebar", "React"],
+        icon: LayoutGrid,
+        year: "2026",
+        url: "",
+        github: "https://github.com/ToraMutton/dotfiles/tree/main/windows",
+        status: "completed",
+        image: windotImage,
     },
     {
         name: "fxtwitter-bot",
