@@ -253,6 +253,8 @@ const buildTime = new Intl.DateTimeFormat("ja-JP", {
 
         background: var(--background);
         z-index: 2;
+
+        max-width: fit-content;
     }
 
     .build-item {
@@ -353,6 +355,21 @@ const buildTime = new Intl.DateTimeFormat("ja-JP", {
 
         .footer-main {
             gap: 1rem;
+        }
+
+        .build-info {
+            flex-direction: column;
+            width: 100%;
+            max-width: 100%;
+            padding: 0.8rem 1rem;
+            gap: 0.5rem;
+            background: var(--surface);
+        }
+
+        .build-item {
+            width: 100%;
+            justify-content: space-between; /* ラベルを左端、値を右端に押しやる */
+            /* border-bottom: 1px dashed var(--border-color); */
         }
     }
 </style>
