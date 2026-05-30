@@ -158,7 +158,7 @@ if (!isDev) {
 // 統合・ソート・抽出
 const latestPosts = [...localPosts, ...notePosts, ...zennPosts, ...qiitaPosts]
     .sort((a, b) => b.date.valueOf() - a.date.valueOf())
-    .slice(0, 3); // 最新記事、3選
+    .slice(0, 5); // 最新記事、5選
 
 // === GitHub Contributions取得 ===
 type ContributionDay = { date: string; count: number; level: number };
@@ -462,195 +462,220 @@ const friendLinks: FriendLink[] = [
                     <h2>最新の記事</h2>
                     <a href="/blog" class="view-all">すべての記事を見る →</a>
                 </div>
-                <div class="post-grid">
-                    {
-                        latestPosts.map((post) => (
-                            <a
-                                href={post.url}
-                                class="post-card-mini"
-                                target={
-                                    post.source !== "local" ? "_blank" : "_self"
-                                }
-                            >
-                                <div class="post-thumb">
-                                    {/* 1. 画像を先に */}
-                                    {post.source === "local" &&
-                                    typeof post.image === "object" ? (
-                                        <Image src={post.image} alt="" />
-                                    ) : post.image &&
-                                      typeof post.image === "string" ? (
-                                        <img
-                                            src={post.image}
-                                            alt=""
-                                            loading="lazy"
-                                        />
-                                    ) : (
-                                        <div class="no-image-placeholder">
-                                            No Image
-                                        </div>
-                                    )}
-
-                                    {/* 2. バッジを後に */}
-                                    <span class={`badge badge-${post.source}`}>
-                                        {post.source.toUpperCase()}
-                                    </span>
-                                </div>
-                                <div class="post-info">
-                                    <time datetime={post.date.toISOString()}>
-                                        {post.date.toLocaleDateString("ja-JP", {
-                                            year: "numeric",
-                                            month: "2-digit",
-                                            day: "2-digit",
-                                        })}
-                                    </time>
-                                    <h3 class="post-title">{post.title}</h3>
-                                </div>
-                            </a>
-                        ))
-                    }
+                <!-- marquee outer: overflow hidden でスクロールバー完全非表示 -->
+                <div class="marquee-outer">
+                    <div class="marquee-track" id="marquee-track">
+                        {
+                            latestPosts.map((post) => (
+                                <a
+                                    href={post.url}
+                                    class="post-card-mini"
+                                    target={
+                                        post.source !== "local"
+                                            ? "_blank"
+                                            : "_self"
+                                    }
+                                    rel={
+                                        post.source !== "local"
+                                            ? "noopener noreferrer"
+                                            : undefined
+                                    }
+                                >
+                                    <div class="post-thumb">
+                                        {post.source === "local" &&
+                                        typeof post.image === "object" ? (
+                                            <Image src={post.image} alt="" />
+                                        ) : post.image &&
+                                          typeof post.image === "string" ? (
+                                            <img
+                                                src={post.image}
+                                                alt=""
+                                                loading="lazy"
+                                            />
+                                        ) : (
+                                            <div class="no-image-placeholder">
+                                                No Image
+                                            </div>
+                                        )}
+                                        <span
+                                            class={`badge badge-${post.source}`}
+                                        >
+                                            {post.source.toUpperCase()}
+                                        </span>
+                                    </div>
+                                    <div class="post-info">
+                                        <time
+                                            datetime={post.date.toISOString()}
+                                        >
+                                            {post.date.toLocaleDateString(
+                                                "ja-JP",
+                                                {
+                                                    year: "numeric",
+                                                    month: "2-digit",
+                                                    day: "2-digit",
+                                                },
+                                            )}
+                                        </time>
+                                        <h3 class="post-title">{post.title}</h3>
+                                    </div>
+                                </a>
+                            ))
+                        }
+                    </div>
                 </div>
             </section>
 
             <div class="grid-container">
-                <div class="glass-card mission-card">
+                <!-- Countdown -->
+                <div class="widget-card mission-card" data-reveal>
                     <div class="card-header">
-                        <Target class="icon-blue" size={24} />
+                        <Target class="icon-blue" size={16} />
                         <h3>Countdown</h3>
                     </div>
-                    <div class="mission-list">
-                        {
-                            missionData.map((m) => (
-                                <div
-                                    class="mission-item js-mission-item"
-                                    data-date={m.date}
-                                >
-                                    <div class="mission-info">
-                                        <span class="mission-icon">
-                                            <m.icon
-                                                size={20}
-                                                strokeWidth={2.5}
-                                            />
-                                        </span>
-                                        <span class="mission-title">
-                                            {m.title}
-                                        </span>
+                    <div class="card-body">
+                        <div class="mission-list">
+                            {
+                                missionData.map((m) => (
+                                    <div
+                                        class="mission-item js-mission-item"
+                                        data-date={m.date}
+                                    >
+                                        <div class="mission-info">
+                                            <span class="mission-icon">
+                                                <m.icon
+                                                    size={16}
+                                                    strokeWidth={2}
+                                                />
+                                            </span>
+                                            <span class="mission-title">
+                                                {m.title}
+                                            </span>
+                                        </div>
+                                        <div class="mission-days">
+                                            <span class="days-num js-days-num">
+                                                {m.days}
+                                            </span>
+                                            <span class="days-unit">days</span>
+                                        </div>
                                     </div>
-                                    <div class="mission-days">
-                                        <span class="days-num js-days-num">
-                                            {m.days}
-                                        </span>
-                                        <span class="days-unit">days</span>
-                                    </div>
-                                </div>
-                            ))
-                        }
+                                ))
+                            }
+                        </div>
                     </div>
                 </div>
 
-                <div class="glass-card project-card">
+                <!-- My Desktop PC -->
+                <div class="widget-card project-card" data-reveal>
                     <div class="card-header">
-                        <Cpu class="icon-blue" size={24} />
+                        <Cpu class="icon-blue" size={16} />
                         <h3>My Desktop PC</h3>
                     </div>
-                    <p class="card-desc">
-                        Ryzen 7 7700 + Radeon RX 9060 XT 16GB 構成。 2026/02/13~
-                    </p>
-                    <div class="dedicated-link">
-                        <a href="/about#trapezium">View Details →</a>
+                    <div class="card-body">
+                        <p class="card-desc">
+                            Ryzen 7 7700 + Radeon RX 9060 XT 16GB 構成。
+                            2026/02/13~
+                        </p>
+                        <div class="dedicated-link">
+                            <a href="/about#trapezium">View Details →</a>
+                        </div>
                     </div>
                 </div>
 
-                <!-- GitHub Contributions Card -->
-                <div class="glass-card gh-card">
+                <!-- GitHub Contributions -->
+                <div class="widget-card gh-card" data-reveal>
                     <div class="card-header">
-                        <GitGraph class="icon-blue" size={24} />
+                        <GitGraph class="icon-blue" size={16} />
                         <h3>GitHub Contributions</h3>
-                        <span class="gh-total"
-                            >{ghTotal} contributions in the last year</span
-                        >
+                        <span class="gh-total">{ghTotal} / yr</span>
                     </div>
-                    <div class="gh-grid" id="gh-grid">
-                        {
-                            recentContributions.map((day) => (
-                                <div
-                                    class={`gh-cell gh-level-${day.level}`}
-                                    data-date={day.date}
-                                    data-count={day.count}
-                                    title={`${day.date}: ${day.count} contributions`}
-                                />
-                            ))
-                        }
-                    </div>
-                    <div class="gh-legend">
-                        <span class="gh-legend-label">Less</span>
-                        <div class="gh-cell gh-level-0"></div>
-                        <div class="gh-cell gh-level-1"></div>
-                        <div class="gh-cell gh-level-2"></div>
-                        <div class="gh-cell gh-level-3"></div>
-                        <div class="gh-cell gh-level-4"></div>
-                        <span class="gh-legend-label">More</span>
-                    </div>
-                    <div class="dedicated-link">
-                        <a
-                            href="https://github.com/toramutton"
-                            target="_blank"
-                            rel="noopener noreferrer">View GitHub Profile →</a
-                        >
+                    <div class="card-body">
+                        <div class="gh-grid" id="gh-grid">
+                            {
+                                recentContributions.map((day) => (
+                                    <div
+                                        class={`gh-cell gh-level-${day.level}`}
+                                        title={`${day.date}: ${day.count}`}
+                                    />
+                                ))
+                            }
+                        </div>
+                        <div class="gh-legend">
+                            <span class="gh-legend-label">Less</span>
+                            <div class="gh-cell gh-level-0"></div>
+                            <div class="gh-cell gh-level-1"></div>
+                            <div class="gh-cell gh-level-2"></div>
+                            <div class="gh-cell gh-level-3"></div>
+                            <div class="gh-cell gh-level-4"></div>
+                            <span class="gh-legend-label">More</span>
+                        </div>
+                        <div class="dedicated-link">
+                            <a
+                                href="https://github.com/toramutton"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                >View GitHub Profile →</a
+                            >
+                        </div>
                     </div>
                 </div>
 
-                <!-- Uptime Card -->
-                <div class="glass-card uptime-card">
+                <!-- Uptime -->
+                <div class="widget-card uptime-card" data-reveal>
                     <div class="card-header">
-                        <Timer class="icon-blue" size={24} />
+                        <Timer class="icon-blue" size={16} />
                         <h3>Uptime</h3>
                     </div>
-                    <div class="uptime-list">
-                        <div class="uptime-item">
-                            <div class="uptime-label">
-                                <Cake size={16} class="uptime-icon" /> 生まれてから
+                    <div class="card-body">
+                        <div class="uptime-list">
+                            <div class="uptime-item">
+                                <div class="uptime-label">
+                                    <Cake size={14} class="uptime-icon" /> 生まれてから
+                                </div>
+                                <div class="uptime-value">
+                                    <span class="uptime-num" id="uptime-birth"
+                                        >--</span
+                                    >
+                                    <span class="uptime-unit">days</span>
+                                </div>
+                                <div class="uptime-date">since 2006/06/20</div>
                             </div>
-                            <div class="uptime-value">
-                                <span class="uptime-num" id="uptime-birth"
-                                    >--</span
-                                >
-                                <span class="uptime-unit">days</span>
+                            <div class="uptime-item">
+                                <div class="uptime-label">
+                                    <Rocket size={14} class="uptime-icon" /> このサイトができてから
+                                </div>
+                                <div class="uptime-value">
+                                    <span class="uptime-num" id="uptime-site"
+                                        >--</span
+                                    >
+                                    <span class="uptime-unit">days</span>
+                                </div>
+                                <div class="uptime-date">since 2026/01/02</div>
                             </div>
-                            <div class="uptime-date">since 2006/06/20</div>
                         </div>
-                        <div class="uptime-item">
-                            <div class="uptime-label">
-                                <Rocket size={16} class="uptime-icon" /> このサイトができてから
-                            </div>
-                            <div class="uptime-value">
-                                <span class="uptime-num" id="uptime-site"
-                                    >--</span
-                                >
-                                <span class="uptime-unit">days</span>
-                            </div>
-                            <div class="uptime-date">since 2026/01/02</div>
-                        </div>
+                        <div class="uptime-clock" id="uptime-clock"></div>
                     </div>
-                    <div class="uptime-clock" id="uptime-clock"></div>
                 </div>
 
-                <div class="glass-card advent-card">
+                <!-- Advent 2026 -->
+                <div class="widget-card advent-card" data-reveal>
                     <div class="card-header">
-                        <Sparkles class="icon-blue" size={24} />
+                        <Sparkles class="icon-blue" size={16} />
                         <h3>Advent 2026</h3>
                     </div>
-                    <p class="card-desc">
-                        一人アドベントカレンダー2026開催予定地
-                    </p>
-                    <div class="coming-soon-badge">Coming soon...</div>
+                    <div class="card-body">
+                        <p class="card-desc">
+                            一人アドベントカレンダー2026開催予定地
+                        </p>
+                        <div class="coming-soon-badge">Coming soon...</div>
+                    </div>
                 </div>
 
-                <div class="glass-card links-card">
+                <!-- Links -->
+                <div class="widget-card links-card" data-reveal>
                     <div class="card-header">
-                        <Users class="icon-secondary" size={24} />
+                        <Users class="icon-secondary" size={16} />
                         <h3>Links</h3>
                     </div>
-
                     <div class="link-list">
                         {
                             friendLinks.map((link) => (
@@ -674,12 +699,12 @@ const friendLinks: FriendLink[] = [
                 </div>
             </div>
 
-            <div class="glass-card recommendation-card">
+            <!-- Today's Music -->
+            <div class="widget-card recommendation-card" data-reveal>
                 <div class="card-header">
-                    <Music class="icon-secondary" size={24} />
+                    <Music class="icon-secondary" size={16} />
                     <h3>Today's Music</h3>
                 </div>
-
                 <div id="song-display" class="song-container">
                     <p class="song-title" id="song-title">Loading...</p>
                     <p class="song-year-wrapper">
@@ -688,9 +713,8 @@ const friendLinks: FriendLink[] = [
                         >
                     </p>
                 </div>
-
                 <button id="next-song-btn" class="secondary-btn">
-                    リロード <span class="arrow">→</span>
+                    reload →
                 </button>
             </div>
 
@@ -833,16 +857,61 @@ const friendLinks: FriendLink[] = [
                     const yearEl = document.getElementById("song-year");
                     const btn = document.getElementById("next-song-btn");
 
+                    // ---- marquee: カードを複製して無限ループ ----
+                    const track = document.getElementById("marquee-track");
+                    if (track) {
+                        const original = track.innerHTML;
+                        track.innerHTML = original + original; // 2セット並べる
+                    }
+
+                    // ---- widget-card stagger reveal (IntersectionObserver) ----
+                    const revealCards =
+                        document.querySelectorAll<HTMLElement>("[data-reveal]");
+                    const revealObserver = new IntersectionObserver(
+                        (entries) => {
+                            entries.forEach((entry) => {
+                                if (entry.isIntersecting) {
+                                    const el = entry.target as HTMLElement;
+                                    const delay = el.dataset.revealDelay ?? "0";
+                                    el.style.transitionDelay = `${delay}ms`;
+                                    el.classList.add("is-visible");
+                                    revealObserver.unobserve(el);
+                                }
+                            });
+                        },
+                        { threshold: 0.12 },
+                    );
+
+                    // grid-container 内は stagger (80ms ずつ)
+                    document
+                        .querySelectorAll<HTMLElement>(
+                            ".grid-container [data-reveal]",
+                        )
+                        .forEach((el, i) => {
+                            el.dataset.revealDelay = String(i * 80);
+                            revealObserver.observe(el);
+                        });
+
+                    // recommendation-card は単独
+                    document
+                        .querySelectorAll<HTMLElement>(
+                            ".recommendation-card[data-reveal]",
+                        )
+                        .forEach((el) => revealObserver.observe(el));
+
                     function updateSong() {
                         if (!titleEl || !yearEl) return;
                         const randomSong =
                             songs[Math.floor(Math.random() * songs.length)];
-                        titleEl.innerText = randomSong.title;
-                        yearEl.innerText = randomSong.year;
 
-                        titleEl.classList.remove("fade-in");
-                        void titleEl.offsetWidth; // リフロー
-                        titleEl.classList.add("fade-in");
+                        // ワイプをリセット → 次フレームで再発火
+                        titleEl.classList.remove("song-wipe");
+                        void titleEl.offsetWidth; // reflow
+                        titleEl.textContent = randomSong.title;
+                        yearEl.textContent = randomSong.year;
+                        requestAnimationFrame(() => {
+                            titleEl.classList.add("song-wipe");
+                        });
                     }
 
                     btn?.addEventListener("click", updateSong);
@@ -1328,7 +1397,9 @@ const friendLinks: FriendLink[] = [
         }
     }
 
-    /* 3. 最新の記事リスト */
+    /* ====================================
+       3. 最新の記事 — marquee
+       ==================================== */
     .recent-posts {
         margin: 4rem 0;
     }
@@ -1345,84 +1416,139 @@ const friendLinks: FriendLink[] = [
         font-size: 1.5rem;
     }
 
+    /* view-all: glass 廃止 → flat border リンク */
     .view-all {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
-        background: var(--glass-bg);
-        backdrop-filter: var(--glass-blur);
-        -webkit-backdrop-filter: var(--glass-blur);
+        gap: 0.4rem;
         color: var(--text-muted);
         text-decoration: none;
-        padding: 0.6rem 1.2rem;
-        border-radius: 99px;
-        font-size: 0.9rem;
-        font-weight: 600;
+        padding: 0.45rem 0.9rem;
+        font-size: 0.82rem;
+        font-family: var(--font-mono);
         border: 1px solid var(--border-color);
-        transition: all 0.2s ease;
+        border-radius: 0;
+        transition:
+            color 0.18s ease,
+            border-color 0.18s ease;
         white-space: nowrap;
     }
 
-    .view-all:hover {
-        border-color: var(--accent-blue);
-        color: var(--accent-blue);
-        background: rgba(2, 132, 199, 0.05);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-        text-decoration: none;
+    @media (hover: hover) {
+        .view-all:hover {
+            color: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
     }
 
-    .post-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1.5rem;
+    /* ---- marquee wrapper ---- */
+    .marquee-outer {
+        overflow: hidden; /* スクロールバー完全非表示 */
+        /* 左右に fade mask */
+        -webkit-mask-image: linear-gradient(
+            to right,
+            transparent 0%,
+            black 6%,
+            black 94%,
+            transparent 100%
+        );
+        mask-image: linear-gradient(
+            to right,
+            transparent 0%,
+            black 6%,
+            black 94%,
+            transparent 100%
+        );
     }
 
-    .blog-card {
+    .marquee-track {
         display: flex;
-        flex-direction: column;
-        background: var(--glass-bg);
-        backdrop-filter: var(--glass-blur);
-        -webkit-backdrop-filter: var(--glass-blur);
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        border-radius: 8px;
-        overflow: hidden;
-        transition:
-            transform 0.2s ease,
-            box-shadow 0.2s ease;
-        text-decoration: none;
-        color: inherit;
+        gap: 1.25rem;
+        width: max-content;
+        animation: marquee-scroll 28s linear infinite;
+        will-change: transform;
     }
 
+    /* hover / touch: pause */
+    .marquee-outer:hover .marquee-track,
+    .marquee-outer:focus-within .marquee-track {
+        animation-play-state: paused;
+    }
+
+    @keyframes marquee-scroll {
+        0% {
+            transform: translateX(0);
+        }
+        100% {
+            transform: translateX(-50%);
+        }
+    }
+
+    /* prefers-reduced-motion: 静止 */
+    @media (prefers-reduced-motion: reduce) {
+        .marquee-track {
+            animation: none;
+        }
+        .marquee-outer {
+            overflow-x: auto;
+            scrollbar-width: none;
+            -webkit-mask-image: none;
+            mask-image: none;
+        }
+        .marquee-outer::-webkit-scrollbar {
+            display: none;
+        }
+    }
+
+    /* ---- post-card-mini: de-glass ---- */
     .post-card-mini {
         display: flex;
         flex-direction: column;
+        flex-shrink: 0;
+        width: 280px;
         background: var(--surface);
-        border: 1px solid rgba(0, 0, 0, 0.08);
-        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
         overflow: hidden;
         text-decoration: none;
         color: var(--text-main);
-        transition:
-            transform 0.2s ease,
-            box-shadow 0.2s ease;
+        position: relative;
     }
 
-    :global(html.dark) .post-card-mini {
-        background: #ffffff08;
-        border-color: rgba(255, 255, 255, 0.1);
+    /* サムネ上の斜め clip-path ワイプ（yui540 演出）*/
+    .post-thumb::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--accent-blue);
+        opacity: 0.18;
+        clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+        transition: clip-path 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+        z-index: 1;
     }
 
-    .post-card-mini:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    @media (hover: hover) {
+        .post-card-mini:hover .post-thumb::after {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+        }
+
+        /* 画像ズーム */
+        .post-card-mini:hover .post-thumb img {
+            transform: scale(1.05);
+        }
+
+        /* タイトル accent */
+        .post-card-mini:hover .post-title {
+            color: var(--accent-blue);
+        }
     }
 
     .post-thumb {
         position: relative;
         width: 100%;
-        aspect-ratio: 16/9;
-        background: #333;
+        aspect-ratio: 16 / 9;
+        background: var(--elevated);
         overflow: hidden;
     }
 
@@ -1430,11 +1556,8 @@ const friendLinks: FriendLink[] = [
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transition: transform 0.4s ease;
-    }
-
-    .post-card-mini:hover .post-thumb img {
-        transform: scale(1.05);
+        transition: transform 0.42s ease;
+        display: block;
     }
 
     .no-image-placeholder {
@@ -1443,44 +1566,45 @@ const friendLinks: FriendLink[] = [
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(125, 211, 252, 0.1);
+        background: var(--elevated);
         color: var(--text-muted);
-        font-size: 0.8rem;
-        font-weight: 700;
+        font-size: 0.75rem;
+        font-family: var(--font-mono);
     }
 
     .badge {
         position: absolute;
         top: 8px;
         right: 8px;
-        padding: 2px 8px;
+        padding: 2px 7px;
         font-size: 0.6rem;
-        font-weight: 800;
+        font-weight: 700;
+        font-family: var(--font-mono);
         color: #fff;
-        border-radius: 4px;
-        backdrop-filter: blur(4px);
-        letter-spacing: 0.05em;
+        border-radius: 0;
+        letter-spacing: 0.06em;
+        z-index: 2;
     }
 
     .badge-local {
-        background: rgba(2, 132, 199, 0.8);
+        background: #2563eb;
     }
     .badge-note {
-        background: rgba(45, 187, 160, 0.9);
+        background: #2dbb9f;
     }
     .badge-zenn {
-        background: rgba(62, 168, 255, 0.9);
+        background: #3ea8ff;
     }
     .badge-qiita {
-        background: rgba(85, 197, 0, 0.9);
+        background: #55c500;
     }
 
     .post-info {
-        padding: 1rem;
+        padding: 0.85rem 1rem;
     }
 
     .post-info time {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         color: var(--text-muted);
         font-family: var(--font-mono);
         display: block;
@@ -1488,345 +1612,301 @@ const friendLinks: FriendLink[] = [
     }
 
     .post-title {
-        font-size: 1rem;
+        font-size: 0.92rem;
         margin: 0;
         line-height: 1.5;
         font-weight: 600;
+        font-family: var(--font-mono);
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
+        transition: color 0.18s ease;
     }
 
-    /* =========================================
-       4. グリッドコンテナ & 共通カードスタイル
-       ========================================= */
+    /* ====================================
+       4. widget-card — border-card ベース
+       ==================================== */
     .grid-container {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
+        gap: 1.5rem;
         margin: 3rem 0;
     }
 
-    /* 共通ガラス風カード */
-    .glass-card {
+    /* stagger reveal: JS で .is-visible を付与 */
+    .widget-card {
         display: flex;
         flex-direction: column;
-        height: 100%;
-        padding: 1.5rem;
-        border-radius: 16px;
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        background: var(--glass-bg);
-        backdrop-filter: var(--glass-blur);
-        -webkit-backdrop-filter: var(--glass-blur);
+        background: var(--surface);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        overflow: hidden; /* header の border-bottom が角から溢れないよう */
+
+        opacity: 0;
+        transform: translateY(16px);
+        transition:
+            opacity 0.45s ease,
+            transform 0.45s ease;
     }
 
-    :global(html.dark) .glass-card {
-        background: rgba(255, 255, 255, 0.03);
-        border-color: rgba(255, 255, 255, 0.1);
+    .widget-card.is-visible {
+        opacity: 1;
+        transform: translateY(0);
     }
 
+    /* カードヘッダー: terminal-header と同じ tone */
     .card-header {
         display: flex;
         align-items: center;
-        gap: 0.8rem;
-        margin-bottom: 1rem;
+        gap: 0.7rem;
+        padding: 0.75rem 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--elevated);
+        flex-shrink: 0;
     }
 
-    .glass-card h3 {
+    .card-header h3 {
         margin: 0;
-        font-size: 1.2rem;
-        color: var(--accent-secondary);
+        font-size: 0.88rem;
+        font-family: var(--font-mono);
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    /* カードボディ共通 padding */
+    .card-body {
+        padding: 1.25rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
     }
 
     .card-desc {
         font-size: 0.85rem;
         color: var(--text-muted);
-        line-height: 1.6;
+        line-height: 1.7;
         flex-grow: 1;
+        margin: 0;
     }
 
     .icon-blue {
         color: var(--accent-blue);
     }
     .icon-secondary {
-        color: var(--accent-secondary);
+        color: var(--accent-blue);
     }
 
-    /* 5. 各種カード詳細 (Mission, PC, Advent)*/
-
-    /* Countdownカード */
+    /* ====================================
+       5. Countdown カード
+       ==================================== */
     .mission-list {
         display: flex;
         flex-direction: column;
-        gap: 0.8rem;
-        margin: 1rem 0;
+        gap: 0.6rem;
     }
 
     .mission-item {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0.8rem 1rem;
-        background: rgba(0, 0, 0, 0.03);
-        border-radius: 8px;
-        border-left: 3px solid var(--accent-blue);
+        padding: 0.65rem 0;
+        border-bottom: 1px dashed var(--border-color);
     }
 
-    :global(html.dark) .mission-item {
-        background: rgba(255, 255, 255, 0.03);
+    .mission-item:last-child {
+        border-bottom: none;
     }
 
     .mission-info {
         display: flex;
         align-items: center;
-        gap: 0.8rem;
+        gap: 0.6rem;
+    }
+
+    .mission-icon {
+        color: var(--text-muted);
+        flex-shrink: 0;
     }
 
     .mission-title {
+        font-size: 0.88rem;
         font-weight: 600;
-        font-size: 0.95rem;
+        color: var(--text-main);
     }
 
     .mission-days {
         display: flex;
         align-items: baseline;
-        gap: 0.3rem;
+        gap: 0.25rem;
         font-family: var(--font-mono);
+        flex-shrink: 0;
     }
 
     .days-num {
-        font-size: 1.4rem;
+        font-size: 1.3rem;
         font-weight: 800;
-        color: var(--accent-secondary);
+        color: var(--accent-blue);
     }
 
     .days-unit {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
 
-    /* 自作PCカード */
+    /* ====================================
+       6. dedicated-link / coming-soon
+       ==================================== */
     .dedicated-link {
-        margin-top: 1.5rem;
+        margin-top: 1.25rem;
     }
 
     .dedicated-link a {
         display: block;
-        padding: 0.6rem 1.2rem;
-        background: rgba(2, 132, 199, 0.08);
-        border: 1px solid rgba(2, 132, 199, 0.3);
-        border-radius: 8px;
+        padding: 0.55rem 1rem;
+        border: 1px solid var(--border-color);
         text-align: center;
-        font-size: 0.75rem;
-        font-weight: 800;
+        font-size: 0.72rem;
+        font-family: var(--font-mono);
+        font-weight: 700;
         color: var(--accent-blue);
         text-transform: uppercase;
         letter-spacing: 0.1em;
         text-decoration: none;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 0;
+        transition:
+            border-color 0.18s ease,
+            background 0.18s ease;
     }
 
-    :global(html.dark) .dedicated-link a {
-        background: rgba(125, 211, 252, 0.05);
-        border-color: rgba(125, 211, 252, 0.2);
+    @media (hover: hover) {
+        .dedicated-link a:hover {
+            border-color: var(--accent-blue);
+            background: rgba(34, 211, 238, 0.06);
+        }
     }
 
-    .dedicated-link a:hover {
-        background: rgba(2, 132, 199, 0.15);
-        border-color: var(--accent-blue);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-    }
-
-    /* 一人ドベカレ2026カード */
     .coming-soon-badge {
-        margin-top: 1.5rem;
-        padding: 0.5rem;
-        background: rgba(122, 122, 122, 0.08);
-        border: 1px solid rgba(0, 0, 0, 0.1);
+        margin-top: 1.25rem;
+        padding: 0.5rem 1rem;
+        border: 1px dashed var(--border-color);
         color: var(--text-muted);
-        border-radius: 6px;
         text-align: center;
-        font-size: 0.75rem;
-        font-weight: 800;
+        font-size: 0.72rem;
+        font-family: var(--font-mono);
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.1em;
-    }
-
-    :global(html.dark) .coming-soon-badge {
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        color: rgba(255, 255, 255, 0.2);
+        border-radius: 0;
     }
 
     .advent-card {
-        border: 2px dashed rgba(142, 142, 142, 0.3) !important;
-        background: rgba(217, 119, 6, 0.03) !important;
+        border-style: dashed !important;
     }
 
-    :global(html.dark) .advent-card {
-        border: 2px dashed rgba(99, 99, 99, 0.2) !important;
-        background: rgba(103, 103, 103, 0.02) !important;
-    }
-
-    /*  6. リンク集カード (Links) */
+    /* ====================================
+       7. Links カード
+       ==================================== */
     .links-card {
         grid-column: 1 / -1;
     }
 
     .link-list {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1rem;
-        margin: 1rem 0;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 0;
     }
 
     .link-item {
         display: flex;
         flex-direction: column;
-        padding: 0.8rem 1rem;
-        background: rgba(0, 0, 0, 0.03);
-        border-radius: 8px;
+        padding: 0.75rem 1rem;
         text-decoration: none;
-        border-left: 3px solid var(--accent-blue);
-        transition: all 0.2s ease;
+        border-bottom: 1px solid var(--border-color);
+        border-right: 1px solid var(--border-color);
+        transition: background 0.18s ease;
     }
 
-    :global(html.dark) .link-item {
-        background: rgba(255, 255, 255, 0.03);
+    /* 右端の余計なボーダーを消す */
+    .link-item:nth-child(4n) {
+        border-right: none;
     }
 
-    .link-item:hover {
-        background: rgba(255, 255, 255, 0.1);
-        transform: scale(1.02);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    @media (hover: hover) {
+        .link-item:hover {
+            background: var(--elevated);
+        }
+
+        /* ↗ アイコンがスライドイン */
+        .link-item:hover .external-icon {
+            transform: translate(2px, -2px);
+            color: var(--accent-blue);
+        }
     }
 
     .link-name {
+        font-size: 0.85rem;
         font-weight: 700;
         color: var(--text-main);
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.4rem;
     }
 
     .external-icon {
-        font-size: 0.8em;
-        color: var(--accent-secondary);
-        opacity: 0.7;
+        font-size: 0.75em;
+        color: var(--text-muted);
+        transition:
+            transform 0.18s ease,
+            color 0.18s ease;
     }
 
     .link-desc {
-        font-size: 0.85rem;
+        font-size: 0.78rem;
         color: var(--text-muted);
-        margin-top: 0.2rem;
+        margin-top: 0.25rem;
+        line-height: 1.5;
     }
 
-    /* 7. Today's Musicカード & アニメーション */
-
-    .recommendation-card {
-        margin-top: 2rem;
-        text-align: center;
-        min-height: 250px;
-        justify-content: space-between;
-    }
-
-    .song-container {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        padding: 1rem 0;
-    }
-
-    .song-title {
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: var(--accent-blue);
-        margin: 0;
-        line-height: 1.2;
-        padding: 0 1rem;
-    }
-
-    .song-year-wrapper {
-        margin-top: 0.5rem;
-        font-size: 0.9rem;
-        color: var(--text-muted);
-        font-family: var(--font-mono);
-        opacity: 0.8;
-    }
-
-    .song-year {
-        font-weight: 700;
-        color: var(--text-main);
-    }
-
-    .secondary-btn {
-        margin-top: auto;
-        padding: 0.6rem 1.2rem;
-        background: transparent;
-        border: 1px solid var(--border-color);
-        color: var(--text-muted);
-        border-radius: 99px;
-        cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        font-size: 0.85rem;
-        font-weight: 600;
-    }
-
-    .secondary-btn:hover {
-        border-color: var(--accent-blue);
-        color: var(--accent-blue);
-        background: rgba(2, 132, 199, 0.05);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-    }
-
-    .fade-in {
-        animation: fadeIn 0.5s ease-out;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(5px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* 7.5 GitHub Contributions Card */
-    .gh-card .card-header {
-        flex-wrap: wrap;
-    }
+    /* ====================================
+       8. GitHub Contributions カード
+       ==================================== */
     .gh-total {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         color: var(--text-muted);
         font-family: var(--font-mono);
         margin-left: auto;
     }
+
     .gh-grid {
         display: grid;
         grid-template-rows: repeat(7, 1fr);
         grid-auto-flow: column;
         grid-auto-columns: minmax(0, 1fr);
         gap: 3px;
-        margin: 1rem 0;
+        margin: 0 0 0.75rem;
         overflow-x: auto;
+        scrollbar-width: none;
     }
+    .gh-grid::-webkit-scrollbar {
+        display: none;
+    }
+
     .gh-cell {
         width: 100%;
         aspect-ratio: 1;
-        border-radius: 3px;
+        border-radius: 2px;
         min-width: 10px;
         min-height: 10px;
     }
+
+    /* dark */
     .gh-level-0 {
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--elevated);
     }
     .gh-level-1 {
         background: #0e4429;
@@ -1841,6 +1921,7 @@ const friendLinks: FriendLink[] = [
         background: #39d353;
     }
 
+    /* light */
     :global(html:not(.dark)) .gh-level-0 {
         background: #ebedf0;
     }
@@ -1862,50 +1943,49 @@ const friendLinks: FriendLink[] = [
         align-items: center;
         gap: 4px;
         justify-content: flex-end;
-        margin-bottom: 1rem;
+        margin-bottom: 0.75rem;
     }
+
     .gh-legend .gh-cell {
-        width: 12px;
-        height: 12px;
-        min-width: 12px;
-        min-height: 12px;
+        width: 11px;
+        height: 11px;
+        min-width: 11px;
+        min-height: 11px;
         aspect-ratio: auto;
     }
+
     .gh-legend-label {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         color: var(--text-muted);
         font-family: var(--font-mono);
     }
 
-    /* 7.6 Uptime Card */
+    /* ====================================
+       9. Uptime カード
+       ==================================== */
     .uptime-list {
         display: flex;
         flex-direction: column;
-        gap: 0.8rem;
-        margin: 0.5rem 0;
+        gap: 0.5rem;
     }
 
     .uptime-item {
-        padding: 1rem 1.2rem;
-        background: rgba(0, 0, 0, 0.03);
-        border-radius: 10px;
-        border-left: 3px solid var(--accent-blue);
+        padding: 0.85rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 0;
         display: flex;
         flex-direction: column;
-        gap: 0.3rem;
-    }
-
-    :global(html.dark) .uptime-item {
-        background: rgba(255, 255, 255, 0.03);
+        gap: 0.25rem;
     }
 
     .uptime-label {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         font-weight: 600;
-        color: var(--text-body);
+        color: var(--text-muted);
         display: flex;
         align-items: center;
         gap: 0.4rem;
+        font-family: var(--font-mono);
     }
 
     .uptime-icon {
@@ -1916,19 +1996,19 @@ const friendLinks: FriendLink[] = [
     .uptime-value {
         display: flex;
         align-items: baseline;
-        gap: 0.4rem;
+        gap: 0.35rem;
     }
 
     .uptime-num {
-        font-size: 2rem;
+        font-size: 1.8rem;
         font-weight: 800;
         font-family: var(--font-mono);
-        color: var(--accent-secondary);
+        color: var(--accent-blue);
         letter-spacing: -0.02em;
     }
 
     .uptime-unit {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         font-weight: 700;
         color: var(--text-muted);
         text-transform: uppercase;
@@ -1936,110 +2016,134 @@ const friendLinks: FriendLink[] = [
     }
 
     .uptime-date {
-        font-size: 0.7rem;
+        font-size: 0.68rem;
         color: var(--text-muted);
         font-family: var(--font-mono);
     }
 
     .uptime-clock {
-        margin-top: auto;
-        padding-top: 1rem;
+        margin-top: 0.75rem;
         text-align: center;
         font-family: var(--font-mono);
-        font-size: 1.1rem;
+        font-size: 1rem;
         font-weight: 600;
         color: var(--text-muted);
-        letter-spacing: 0.1em;
+        letter-spacing: 0.12em;
+        border-top: 1px solid var(--border-color);
+        padding-top: 0.75rem;
     }
 
-    @keyframes float-natural {
-        0%,
-        100% {
-            transform: translateY(0);
-        }
-        50% {
-            transform: translateY(-8px);
+    /* ====================================
+       10. Today's Music カード
+       ==================================== */
+    .recommendation-card {
+        margin-top: 1.5rem;
+    }
+
+    .song-container {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem 1rem 1.5rem;
+        gap: 0.5rem;
+    }
+
+    /* clip-path ワイプ演出 — JS で .song-wipe クラスを付け外し */
+    .song-title {
+        font-size: 1.4rem;
+        font-weight: 800;
+        font-family: var(--font-mono);
+        color: var(--accent-blue);
+        margin: 0;
+        line-height: 1.3;
+        padding: 0 1rem;
+        text-align: center;
+
+        clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+        transition: clip-path 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .song-title.song-wipe {
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    }
+
+    .song-year-wrapper {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        opacity: 0;
+        transform: translateY(4px);
+        transition:
+            opacity 0.35s ease 0.3s,
+            transform 0.35s ease 0.3s;
+    }
+
+    .song-title.song-wipe ~ .song-year-wrapper {
+        opacity: 0.8;
+        transform: translateY(0);
+    }
+
+    .song-year {
+        font-weight: 700;
+        color: var(--text-main);
+    }
+
+    .secondary-btn {
+        margin: 0 1.25rem 1.25rem;
+        padding: 0.55rem 1rem;
+        background: transparent;
+        border: 1px solid var(--border-color);
+        border-radius: 0;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 0.78rem;
+        font-family: var(--font-mono);
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        transition:
+            border-color 0.18s ease,
+            color 0.18s ease;
+        align-self: flex-end;
+    }
+
+    @media (hover: hover) {
+        .secondary-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
         }
     }
 
-    /* 8. レスポンシブ設定 (スマホ・タブレット) */
-
-    @media (max-width: 1024px) {
-        .grid-container {
-            gap: 2rem;
-        }
-    }
-
+    /* ====================================
+       11. レスポンシブ
+       ==================================== */
     @media (max-width: 720px) {
-        .hero {
-            padding: 4rem 0 6rem;
+        .section-header h2 {
+            font-size: 1.2rem;
         }
 
-        .hero-container {
-            flex-direction: column;
-            gap: 2rem;
-            text-align: center;
+        .post-card-mini {
+            width: 220px;
         }
 
-        .hero-img {
-            margin-bottom: 2rem;
-        }
-
-        .hero-text-group {
-            text-align: center;
-        }
-
-        .hero-title {
-            font-size: 2rem;
-        }
-
-        .social-links {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.8rem;
-            width: 100%;
-        }
-
-        .social-btn {
-            justify-content: center;
-            width: 100%;
-            padding: 0.6rem 0.4rem;
-        }
-
-        .post-grid {
+        .grid-container {
             grid-template-columns: 1fr;
             gap: 1rem;
         }
 
-        .post-card-mini {
-            flex-direction: row;
-            align-items: center;
-            height: 100px;
+        .links-card {
+            grid-column: auto;
         }
 
-        .post-thumb {
-            width: 100px;
-            height: 100%;
-            aspect-ratio: auto;
-            flex-shrink: 0;
+        .link-list {
+            grid-template-columns: 1fr 1fr;
         }
+    }
 
-        .post-info {
-            padding: 0.8rem;
-            flex-grow: 1;
-        }
-
-        .post-title {
-            font-size: 0.9rem;
-            -webkit-line-clamp: 2;
-            margin-bottom: 0;
-        }
-
-        .badge {
-            font-size: 0.5rem;
-            padding: 1px 4px;
-            top: 4px;
-            right: 4px;
+    @media (max-width: 480px) {
+        .link-list {
+            grid-template-columns: 1fr;
         }
     }
 </style>
