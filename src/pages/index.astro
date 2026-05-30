@@ -1762,7 +1762,7 @@ const friendLinks: FriendLink[] = [
        6. dedicated-link / coming-soon
        ==================================== */
     .dedicated-link {
-        margin-top: 1.25rem;
+        margin-top: auto;
     }
 
     .dedicated-link a {
@@ -2121,23 +2121,28 @@ const friendLinks: FriendLink[] = [
 
     /* タブレット以下: marquee → 横スクロールに切替 */
     @media (max-width: 1024px) {
+        /* marquee-outer: 幅の制限だけ担当、マスクは外す */
+        .marquee-outer {
+            overflow: hidden;
+            -webkit-mask-image: none;
+            mask-image: none;
+        }
+
+        /* marquee-track: アニメーション停止 → 横スクロールコンテナに */
         .marquee-track {
             animation: none;
+            width: 100%; /* max-content を解除して親に合わせる */
             overflow-x: auto;
             scrollbar-width: none;
-            /* gap は継承のまま */
+            /* flex + gap はそのまま継承 */
         }
         .marquee-track::-webkit-scrollbar {
             display: none;
         }
-        .marquee-outer {
-            /* フェードマスク解除（端が見える方がスクロール可能と気づける） */
-            -webkit-mask-image: none;
-            mask-image: none;
-            overflow: visible;
-        }
+
         .post-card-mini {
             width: min(260px, 72vw);
+            flex-shrink: 0; /* スクロール時に縮まないよう明示 */
         }
     }
 
