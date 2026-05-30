@@ -202,12 +202,12 @@ interface FriendLink {
 
 const friendLinks: FriendLink[] = [
     {
-        name: "しおり🔖のホームページ",
+        name: "しおり🔖",
         url: "https://shiori-02-14.github.io/Homepage/index.html",
         description: "推し愛に溢れる最高のサイト",
     },
     {
-        name: "しばかぷメモ",
+        name: "柴犬被り",
         url: "https://memo.shibadogcap.com/",
         description: "クレーンゲームと自作キーボード熱血",
     },
@@ -217,22 +217,22 @@ const friendLinks: FriendLink[] = [
         description: "PGP Keyが置いてあります",
     },
     {
-        name: "ThunFaskyのサイト",
+        name: "ThunFasky",
         url: "https://thunfasky.com/",
         description: "PC構成の恩師であり、1クラのキチガイ担当",
     },
     {
-        name: "Cotton's website",
+        name: "こっとん",
         url: "https://cotton7.me/",
         description: "同じ.me派閥でうれしい",
     },
     {
-        name: "yonu33のホームページ",
+        name: "yonu",
         url: "https://yonu.work/",
         description: "VSCodeリソース爆食い問題なんとかしていきましょう！",
     },
     {
-        name: "Np's pages",
+        name: "Np",
         url: "https://negapainter.work/",
         description: "Switch改造大魔神",
     },
@@ -247,7 +247,7 @@ const friendLinks: FriendLink[] = [
         description: "武道強そう(小並感)",
     },
     {
-        name: "どらさいと",
+        name: "ど　ら",
         url: "https://natamoko.jp/",
         description: "相互リンクやろうとしたら既にやってくれててびっくり",
     },
@@ -1809,67 +1809,82 @@ const friendLinks: FriendLink[] = [
     }
 
     /* ====================================
-       7. Links カード
+       7. Links カード — row-list
        ==================================== */
     .links-card {
         grid-column: 1 / -1;
     }
 
-    .link-list {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 0;
+    .link-row-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
     }
 
-    .link-item {
-        display: flex;
-        flex-direction: column;
-        padding: 0.75rem 1rem;
-        text-decoration: none;
+    .link-row {
         border-bottom: 1px solid var(--border-color);
-        border-right: 1px solid var(--border-color);
-        transition: background 0.18s ease;
     }
 
-    /* 右端の余計なボーダーを消す */
-    .link-item:nth-child(4n) {
-        border-right: none;
+    .link-row:last-child {
+        border-bottom: none;
     }
 
-    @media (hover: hover) {
-        .link-item:hover {
-            background: var(--elevated);
-        }
-
-        /* ↗ アイコンがスライドイン */
-        .link-item:hover .external-icon {
-            transform: translate(2px, -2px);
-            color: var(--accent-blue);
-        }
-    }
-
-    .link-name {
-        font-size: 0.85rem;
-        font-weight: 700;
-        color: var(--text-main);
+    .link-row-anchor {
         display: flex;
         align-items: center;
-        gap: 0.4rem;
+        gap: 0.75rem;
+        padding: 0.7rem 1.25rem;
+        text-decoration: none;
+        color: var(--text-main);
+        transition: color 0.18s ease;
     }
 
-    .external-icon {
-        font-size: 0.75em;
+    .link-row-prompt {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
         color: var(--text-muted);
+        flex-shrink: 0;
         transition:
+            color 0.18s ease,
+            transform 0.22s ease;
+    }
+
+    .link-row-name {
+        font-size: 0.88rem;
+        font-weight: 600;
+        font-family: var(--font-mono);
+        flex: 1;
+        transition:
+            transform 0.22s ease,
+            color 0.18s ease;
+    }
+
+    .link-row-arrow {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        flex-shrink: 0;
+        opacity: 0;
+        transform: translateX(-4px);
+        transition:
+            opacity 0.18s ease,
             transform 0.18s ease,
             color 0.18s ease;
     }
 
-    .link-desc {
-        font-size: 0.78rem;
-        color: var(--text-muted);
-        margin-top: 0.25rem;
-        line-height: 1.5;
+    @media (hover: hover) {
+        .link-row-anchor:hover .link-row-prompt {
+            color: var(--accent-blue);
+            transform: translateX(2px);
+        }
+        .link-row-anchor:hover .link-row-name {
+            transform: translateX(6px);
+            color: var(--accent-blue);
+        }
+        .link-row-anchor:hover .link-row-arrow {
+            opacity: 1;
+            transform: translateX(0);
+            color: var(--accent-blue);
+        }
     }
 
     /* ====================================
