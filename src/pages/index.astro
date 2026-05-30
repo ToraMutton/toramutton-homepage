@@ -565,6 +565,12 @@ const friendLinks: FriendLink[] = [
                 </div>
             </section>
 
+            <script
+                id="terminal-commands-data"
+                type="application/json"
+                set:html={JSON.stringify(terminalCommands)}
+            />
+
             <div class="grid-container">
                 <!-- Mini Terminal -->
                 <div
@@ -983,148 +989,127 @@ const friendLinks: FriendLink[] = [
                         { threshold: 0.12 },
                     );
 
-                    // ---- Mini Terminal タイプライター ----
+                    // ====================================
+                    // Mini Terminal
+                    // ====================================
                     const miniTermCard = document.querySelector<HTMLElement>(
                         "[data-mini-terminal]",
                     );
-                    const mtBlocks =
-                        document.querySelectorAll<HTMLElement>(".mt-block");
-                    const mtCursor = document.getElementById("mt-cursor");
+                    const mtBody =
+                        document.getElementById("mini-terminal-body");
 
+                    // 全コマンド（JSON から取得、二重定義なし）
+                    const allCommands: { cmd: string; out: string }[] =
+                        JSON.parse(
+                            document.getElementById("terminal-commands-data")
+                                ?.textContent ?? "[]",
+                        );
+
+                    // 現在表示中の3コマンド（reroll で更新される）
+                    let currentCommands: { cmd: string; out: string }[] =
+                        Array.from(
+                            mtBody?.querySelectorAll<HTMLElement>(
+                                ".mt-block",
+                            ) ?? [],
+                        ).map((b) => ({
+                            cmd: b.dataset.cmd ?? "",
+                            out: b.dataset.out ?? "",
+                        }));
+
+                    // currentCommands を元に DOM を再構築（mt-block 群 + カーソル行）
+                    function renderMiniTerminal() {
+                        if (!mtBody) return;
+                        const blocksHTML = currentCommands
+                            .map(
+                                () => `
+                                <div class="mt-block">
+                                    <p class="mt-line">
+                                        <span class="mt-prompt">$</span>
+                                        <span class="mt-cmd"></span>
+                                    </p>
+                                    <p class="mt-out"></p>
+                                </div>`,
+                            )
+                            .join("");
+                        mtBody.innerHTML =
+                            blocksHTML +
+                            `<p class="mt-line mt-cursor-line">
+                                <span class="mt-prompt">$</span>
+                                <span class="mt-cursor" id="mt-cursor">▌</span>
+                            </p>`;
+                    }
+
+                    // タイプアニメ実行（currentCommands を読む）
                     function typeMiniTerminal() {
+                        if (!mtBody) return;
+                        const blocks =
+                            mtBody.querySelectorAll<HTMLElement>(".mt-block");
+                        const cursor =
+                            mtBody.querySelector<HTMLElement>("#mt-cursor");
                         let blockDelay = 0;
 
-                        mtBlocks.forEach((block) => {
-                            const cmd = block.dataset.cmd ?? "";
-                            const out = block.dataset.out ?? "";
+                        blocks.forEach((block, idx) => {
+                            // ★クロージャ対策: ブロックごとにローカル変数で閉じ込める
+                            const { cmd, out } = currentCommands[idx];
                             const cmdEl =
                                 block.querySelector<HTMLElement>(".mt-cmd");
                             const outEl =
                                 block.querySelector<HTMLElement>(".mt-out");
                             if (!cmdEl || !outEl) return;
 
-                            // コマンドをタイプ
-                            const cmdDelay = blockDelay;
-                            let charIndex = 0;
-                            const typeChar = () => {
-                                if (charIndex < cmd.length) {
-                                    cmdEl.textContent += cmd[charIndex++];
-                                    addTimer(typeChar, 38);
-                                } else {
-                                    // コマンド完了 → output フェードイン
-                                    outEl.textContent = out;
-                                    addTimer(
-                                        () => outEl.classList.add("is-visible"),
-                                        80,
-                                    );
-                                }
-                            };
-                            addTimer(typeChar, cmdDelay);
+                            const startDelay = blockDelay;
+                            addTimer(() => {
+                                let charIndex = 0;
+                                const typeChar = () => {
+                                    if (charIndex < cmd.length) {
+                                        cmdEl.textContent = cmd.slice(
+                                            0,
+                                            ++charIndex,
+                                        );
+                                        addTimer(typeChar, 38);
+                                    } else {
+                                        outEl.textContent = out;
+                                        addTimer(
+                                            () =>
+                                                outEl.classList.add(
+                                                    "is-visible",
+                                                ),
+                                            80,
+                                        );
+                                    }
+                                };
+                                typeChar();
+                            }, startDelay);
 
-                            // 次のブロックまでの待ち時間
-                            // コマンド打鍵時間 + output 表示時間 + ブロック間の間
                             blockDelay += cmd.length * 38 + 80 + 300;
                         });
 
-                        // 全ブロック完了後にカーソル表示
+                        // 全部終わったらカーソル表示
                         addTimer(() => {
-                            if (mtCursor) mtCursor.style.opacity = "1";
+                            if (cursor) cursor.style.opacity = "1";
                         }, blockDelay);
                     }
 
-                    // ---- Mini Terminal 再ガチャ ----
-                    // コマンドをリセットして新しいセットを選び直す
-                    function rerollMiniTerminal() {
-                        // 全コマンドリスト（フロントマターから data属性経由で取れないため JS 側にも持つ）
-                        const allCommands = [
-                            { cmd: "whoami", out: "toramutton" },
-                            { cmd: "status", out: "studying" },
-                            { cmd: "mood", out: "creating something" },
-                            { cmd: "cat major", out: "CS @ UEC" },
-                            { cmd: "cat os", out: "Arch Linux / Windows 11" },
-                            { cmd: "echo $SHELL", out: "/bin/bash" },
-                            {
-                                cmd: "cat hobby",
-                                out: "Twitter / Anime / Music",
-                            },
-                            { cmd: "git status", out: "on branch: main" },
-                            { cmd: "pwd", out: "/home/toramutton" },
-                            { cmd: "echo $LANG", out: "ja_JP.UTF-8" },
-                            { cmd: "cat skills", out: "Rust / TypeScript / C" },
-                            { cmd: "cat editor", out: "Neovim / VSCode" },
-                            { cmd: "echo $WM", out: "Hyprland / GlazeWM" },
-                            { cmd: "cat focus", out: "web / compilers / LLM" },
-                            {
-                                cmd: "fortune",
-                                out: "多分動くと思うからリリースしようぜ",
-                            },
-                            {
-                                cmd: "cat music",
-                                out: "米津玄師 / Eve / ヨルシカ",
-                            },
-                            {
-                                cmd: "ping life",
-                                out: "64 bytes: icmp_seq=1 ttl=64",
-                            },
-                            { cmd: "cat dream", out: "living happy!" },
-                            { cmd: "cat gpa", out: "it's fine" },
-                            { cmd: "cat sleep", out: "insufficient" },
-                            {
-                                cmd: "git log --oneline",
-                                out: "abc1234 fix: everything",
-                            },
-                            { cmd: "cat arch", out: "I use Arch btw" },
-                            { cmd: "cat bugs", out: "feature" },
-                            { cmd: "sudo make me a sandwich", out: "Okay." },
-                            {
-                                cmd: "rm -rf laziness",
-                                out: "Permission denied: It's part of your identity",
-                            },
-                            {
-                                cmd: "cat motivation",
-                                out: "depends on the day",
-                            },
-                            { cmd: "uptime", out: "2 years at UEC" },
-                            { cmd: "ls projects", out: "too many" },
-                            {
-                                cmd: "man life",
-                                out: "No manual entry for life",
-                            },
-                        ];
-
-                        // ランダムで3つ選択（現在表示中とは別になるよう試みる）
-                        const currentCmds = Array.from(mtBlocks).map(
-                            (b) => b.dataset.cmd,
-                        );
+                    // 新しい3コマンドを選ぶ（現在と被らないよう試みる）
+                    function pickNewCommands() {
+                        const currentCmds = currentCommands.map((c) => c.cmd);
                         const pool = allCommands.filter(
                             (c) => !currentCmds.includes(c.cmd),
                         );
                         const source = pool.length >= 3 ? pool : allCommands;
-                        const newCmds = [...source]
+                        currentCommands = [...source]
                             .sort(() => Math.random() - 0.5)
                             .slice(0, 3);
+                    }
 
-                        // DOM を更新
-                        mtBlocks.forEach((block, i) => {
-                            block.dataset.cmd = newCmds[i].cmd;
-                            block.dataset.out = newCmds[i].out;
-                            const cmdEl =
-                                block.querySelector<HTMLElement>(".mt-cmd");
-                            const outEl =
-                                block.querySelector<HTMLElement>(".mt-out");
-                            if (cmdEl) cmdEl.textContent = "";
-                            if (outEl) {
-                                outEl.textContent = "";
-                                outEl.classList.remove("is-visible");
-                            }
-                        });
-                        if (mtCursor) mtCursor.style.opacity = "0";
-
-                        // タイプアニメ再実行
+                    // reroll: 新コマンド選択 → DOM 再構築 → タイプ
+                    function rerollMiniTerminal() {
+                        pickNewCommands();
+                        renderMiniTerminal();
                         typeMiniTerminal();
                     }
 
-                    // ドットクリックで各演出 → 再ガチャ
+                    // ---- ドットクリック演出 ----
                     const mtDotsEl = document.getElementById("mt-dots");
                     const mtCard = document.querySelector<HTMLElement>(
                         ".mini-terminal-card",
@@ -1136,41 +1121,33 @@ const friendLinks: FriendLink[] = [
                             dot.addEventListener("click", () => {
                                 if (mtCard?.classList.contains("mt-busy"))
                                     return;
+                                if (!mtBody) return;
                                 mtCard?.classList.add("mt-busy");
                                 const kind = dot.dataset.mtDot;
 
                                 if (kind === "red") {
-                                    // exit 0 → フェードアウト → 再起動
-                                    const body =
-                                        mtCard?.querySelector<HTMLElement>(
-                                            ".mini-terminal-body",
-                                        );
-                                    if (!body) return;
-
-                                    // exit 0 を追記
+                                    // exit 0 → 再起動メッセージ → reroll
                                     const exitLine =
                                         document.createElement("p");
                                     exitLine.className = "mt-line";
                                     exitLine.innerHTML = `<span class="mt-prompt">$</span><span class="mt-cmd"> exit 0</span>`;
-                                    body.appendChild(exitLine);
+                                    mtBody.appendChild(exitLine);
 
                                     setTimeout(() => {
-                                        body.style.cssText =
+                                        mtBody.style.cssText =
                                             "opacity:0; transition:opacity 0.3s ease";
                                         setTimeout(() => {
-                                            body.innerHTML = `
-                                            <p class="mt-line"><span class="mt-prompt" style="color:var(--text-muted)">#</span><span class="mt-cmd"> Connection closed.</span></p>
-                                            <p class="mt-line"><span class="mt-prompt" style="color:var(--text-muted)">#</span><span class="mt-cmd"> Rebooting...</span></p>
-                                        `;
-                                            body.style.cssText =
+                                            mtBody.innerHTML = `
+                                                <p class="mt-line"><span class="mt-prompt" style="color:var(--text-muted)">#</span><span class="mt-cmd"> Connection closed.</span></p>
+                                                <p class="mt-line"><span class="mt-prompt" style="color:var(--text-muted)">#</span><span class="mt-cmd"> Rebooting...</span></p>`;
+                                            mtBody.style.cssText =
                                                 "opacity:1; transition:opacity 0.3s ease";
                                             setTimeout(() => {
-                                                body.style.cssText =
+                                                mtBody.style.cssText =
                                                     "opacity:0; transition:opacity 0.3s ease";
                                                 setTimeout(() => {
-                                                    body.style.cssText = "";
-                                                    // mtBlocks は querySelector で再取得
-                                                    typeMiniTerminal();
+                                                    mtBody.style.cssText = "";
+                                                    rerollMiniTerminal();
                                                     mtCard?.classList.remove(
                                                         "mt-busy",
                                                     );
@@ -1179,35 +1156,32 @@ const friendLinks: FriendLink[] = [
                                         }, 350);
                                     }, 500);
                                 } else if (kind === "yellow") {
-                                    // squish → 復元 → 再ガチャ
+                                    // squish → reroll
                                     mtCard?.classList.add("is-squishing");
                                     setTimeout(() => {
+                                        rerollMiniTerminal();
                                         mtCard?.classList.remove(
                                             "is-squishing",
                                         );
-                                        setTimeout(() => {
-                                            rerollMiniTerminal();
-                                            mtCard?.classList.remove("mt-busy");
-                                        }, 350);
+                                        setTimeout(
+                                            () =>
+                                                mtCard?.classList.remove(
+                                                    "mt-busy",
+                                                ),
+                                            350,
+                                        );
                                     }, 500);
                                 } else if (kind === "green") {
-                                    // # re-rolling... → フェードアウト → 再ガチャ
-                                    const body =
-                                        mtCard?.querySelector<HTMLElement>(
-                                            ".mini-terminal-body",
-                                        );
-                                    if (!body) return;
-
+                                    // # re-rolling... → reroll
                                     const msg = document.createElement("p");
                                     msg.className = "mt-line";
                                     msg.innerHTML = `<span class="mt-prompt" style="color:var(--text-muted)">#</span><span class="mt-cmd"> re-rolling...</span>`;
-                                    body.appendChild(msg);
+                                    mtBody.appendChild(msg);
 
                                     setTimeout(() => {
                                         msg.style.cssText =
                                             "opacity:0; transition:opacity 0.3s ease";
                                         setTimeout(() => {
-                                            msg.remove();
                                             rerollMiniTerminal();
                                             mtCard?.classList.remove("mt-busy");
                                         }, 320);
@@ -1216,13 +1190,12 @@ const friendLinks: FriendLink[] = [
                             });
                         });
 
-                    // mini-terminal が画面に入ったらタイプ開始
+                    // 画面に入ったら初回タイプ
                     if (miniTermCard) {
                         const mtObserver = new IntersectionObserver(
                             (entries) => {
                                 entries.forEach((entry) => {
                                     if (entry.isIntersecting) {
-                                        // stagger reveal の遅延後に開始
                                         addTimer(typeMiniTerminal, 300);
                                         mtObserver.unobserve(entry.target);
                                     }
