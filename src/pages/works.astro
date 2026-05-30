@@ -8,9 +8,9 @@ import { Image } from "astro:assets";
 import type { ImageMetadata } from "astro";
 
 import homepageImage from "../assets/works/toramutton.webp";
-import vextraImage from "../assets/works/vextra.webp";
-import artoramImage from "../assets/works/artoram.webp";
 import archdotImage from "../assets/works/arch.webp";
+import artoramImage from "../assets/works/artoram.webp";
+import vextraImage from "../assets/works/vextra.webp";
 import windotImage from "../assets/works/windotfiles.webp";
 import fxtwitterImage from "../assets/works/fxtwitter-bot.webp";
 import nexusImage from "../assets/works/nexus.webp";
@@ -73,18 +73,6 @@ const works: Work[] = [
         image: archdotImage,
     },
     {
-        name: "Minecraft Skin Editor",
-        description:
-            "ブラウザ上で完結するMinecraftスキンエディター。Three.jsによるリアルタイム3Dプレビューとピクセル単位のペイント機能、オートセーブ機能付き。",
-        tags: ["TypeScript", "Three.js", "React"],
-        icon: Gamepad2,
-        year: "2026",
-        url: "https://vextra.toramutton.me/",
-        github: "https://github.com/ToraMutton/minecraft-skin-editor",
-        status: "completed",
-        image: vextraImage,
-    },
-    {
         name: "Artoram",
         description:
             "Canvas APIを使った幾何学アートジェネレーター。数式のパラメータをリアルタイムで操作し、生成された画像をエクスポートできるWebツール。",
@@ -95,6 +83,18 @@ const works: Work[] = [
         github: "https://github.com/ToraMutton/artoram",
         status: "completed",
         image: artoramImage,
+    },
+    {
+        name: "Minecraft Skin Editor",
+        description:
+            "ブラウザ上で完結するMinecraftスキンエディター。Three.jsによるリアルタイム3Dプレビューとピクセル単位のペイント機能、オートセーブ機能付き。",
+        tags: ["TypeScript", "Three.js", "React"],
+        icon: Gamepad2,
+        year: "2026",
+        url: "https://vextra.toramutton.me/",
+        github: "https://github.com/ToraMutton/minecraft-skin-editor",
+        status: "completed",
+        image: vextraImage,
     },
     {
         name: "Windows11 Dotfiles",
