@@ -1,0 +1,517 @@
+---
+import BaseHead from "../components/BaseHead.astro";
+import { SITE_TITLE } from "../consts";
+---
+
+<!doctype html>
+<html lang="ja">
+    <head>
+        <BaseHead
+            title={`404 Not Found | ${SITE_TITLE}`}
+            description="お探しのページは見つかりませんでした。"
+        />
+    </head>
+    <body>
+        <div class="page-wrapper">
+            <div class="terminal-window" id="terminal">
+                <!-- ヘッダーバー -->
+                <div class="terminal-header">
+                    <span class="terminal-title">toramutton.me @ 404</span>
+                </div>
+
+                <!-- ターミナル本体 -->
+                <div class="terminal-body">
+                    <!-- フェーズ①: コマンド入力行 -->
+                    <div class="line">
+                        <span class="prompt">$</span>
+                        <span class="cmd" id="cmd-text"></span><span
+                            class="cursor"
+                            id="cursor">▋</span
+                        >
+                    </div>
+
+                    <!-- フェーズ②: エラーメッセージ -->
+                    <div class="line error-line" id="error-line">
+                        <span class="error-text"
+                            >bash: cd: /???: No such file or directory</span
+                        >
+                    </div>
+
+                    <!-- フェーズ③: exit code -->
+                    <div class="line exit-line" id="exit-line">
+                        <span class="exit-label">exit code:</span>
+                        <span class="exit-code">404</span>
+                    </div>
+
+                    <!-- フェーズ④: ブリンクカーソル行（アイドル状態） -->
+                    <div class="line idle-line" id="idle-line">
+                        <span class="prompt">$</span>
+                        <span class="blink-cursor">▋</span>
+                    </div>
+
+                    <!-- セパレータ -->
+                    <div class="separator" id="separator"></div>
+
+                    <!-- フェーズ⑤: ナビゲーション -->
+                    <nav
+                        class="nav-links"
+                        id="nav-links"
+                        aria-label="ナビゲーション"
+                    >
+                        <a
+                            href="/"
+                            class="nav-item"
+                            data-dest="Home"
+                            data-path="/"
+                        >
+                            <span class="nav-prompt">&gt;</span>
+                            <span class="nav-cmd">cd /</span>
+                            <span class="nav-arrow">→</span>
+                            <span class="nav-label">Home</span>
+                        </a>
+                        <a
+                            href="/blog"
+                            class="nav-item"
+                            data-dest="Blog"
+                            data-path="/blog"
+                        >
+                            <span class="nav-prompt">&gt;</span>
+                            <span class="nav-cmd">cd /blog</span>
+                            <span class="nav-arrow">→</span>
+                            <span class="nav-label">Blog</span>
+                        </a>
+                        <a
+                            href="/works"
+                            class="nav-item"
+                            data-dest="Works"
+                            data-path="/works"
+                        >
+                            <span class="nav-prompt">&gt;</span>
+                            <span class="nav-cmd">cd /works</span>
+                            <span class="nav-arrow">→</span>
+                            <span class="nav-label">Works</span>
+                        </a>
+                    </nav>
+
+                    <!-- リダイレクトメッセージ（クリック時に追記される） -->
+                    <div
+                        class="line redirect-line"
+                        id="redirect-line"
+                        aria-live="polite"
+                    >
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+
+<script>
+    document.addEventListener("astro:page-load", () => {
+        const cmdText = document.getElementById("cmd-text") as HTMLElement;
+        const cursor = document.getElementById("cursor") as HTMLElement;
+        const errorLine = document.getElementById("error-line") as HTMLElement;
+        const exitLine = document.getElementById("exit-line") as HTMLElement;
+        const idleLine = document.getElementById("idle-line") as HTMLElement;
+        const separator = document.getElementById("separator") as HTMLElement;
+        const navLinks = document.getElementById("nav-links") as HTMLElement;
+        const redirectLine = document.getElementById(
+            "redirect-line",
+        ) as HTMLElement;
+        const navItems =
+            document.querySelectorAll<HTMLAnchorElement>(".nav-item");
+
+        const CMD = "cd /???";
+        const REDUCED = window.matchMedia(
+            "(prefers-reduced-motion: reduce)",
+        ).matches;
+
+        // --- prefers-reduced-motion: 即全表示 ---
+        if (REDUCED) {
+            cmdText.textContent = CMD;
+            cursor.style.display = "none";
+            errorLine.classList.add("visible");
+            exitLine.classList.add("visible");
+            idleLine.classList.add("visible");
+            separator.classList.add("visible");
+            navLinks.classList.add("visible");
+            navItems.forEach((el, i) => {
+                el.style.opacity = "1";
+                el.style.transform = "translateY(0)";
+            });
+            setupNavClick();
+            return;
+        }
+
+        // --- アニメーション実行 ---
+        let charIndex = 0;
+
+        // フェーズ①: タイプライター
+        function typeWriter() {
+            if (charIndex < CMD.length) {
+                cmdText.textContent = CMD.slice(0, charIndex + 1);
+                charIndex++;
+                setTimeout(typeWriter, 60);
+            } else {
+                // 入力完了: カーソルを消してフェーズ②へ
+                cursor.style.display = "none";
+                setTimeout(showError, 180);
+            }
+        }
+
+        // フェーズ②: エラーライン
+        function showError() {
+            errorLine.classList.add("visible");
+            setTimeout(showExit, 300);
+        }
+
+        // フェーズ③: exit code
+        function showExit() {
+            exitLine.classList.add("visible");
+            setTimeout(showIdle, 250);
+        }
+
+        // フェーズ④: アイドルカーソル + フェーズ⑤同時
+        function showIdle() {
+            idleLine.classList.add("visible");
+            setTimeout(showNav, 150);
+        }
+
+        // フェーズ⑤: セパレータ + ナビ stagger
+        function showNav() {
+            separator.classList.add("visible");
+
+            setTimeout(() => {
+                navLinks.classList.add("visible");
+                navItems.forEach((el, i) => {
+                    setTimeout(() => {
+                        el.style.opacity = "1";
+                        el.style.transform = "translateY(0)";
+                    }, i * 80);
+                });
+                setupNavClick();
+            }, 100);
+        }
+
+        // フォントロード後に開始
+        document.fonts.ready.then(() => {
+            setTimeout(typeWriter, 200);
+        });
+    });
+
+    function setupNavClick() {
+        const navItems =
+            document.querySelectorAll<HTMLAnchorElement>(".nav-item");
+        const redirectLine = document.getElementById(
+            "redirect-line",
+        ) as HTMLElement;
+        const idleLine = document.getElementById("idle-line") as HTMLElement;
+
+        navItems.forEach((item) => {
+            item.addEventListener("click", (e) => {
+                e.preventDefault();
+                const dest = item.dataset.dest ?? "";
+                const path = item.dataset.path ?? "/";
+
+                // アイドルカーソルを消す
+                idleLine.style.opacity = "0";
+
+                // redirecting... を追記
+                redirectLine.innerHTML =
+                    `<span class="prompt">$</span> ` +
+                    `<span class="redirect-text">redirecting to ${path}...</span>`;
+                redirectLine.classList.add("visible");
+
+                setTimeout(() => {
+                    window.location.href = path;
+                }, 320);
+            });
+        });
+    }
+</script>
+
+<style>
+    /* ローカル変数 */
+    :root {
+        --error-color: #f87171;
+        --terminal-bg: #0d1117;
+        --terminal-surface: #161b22;
+        --terminal-border: #30363d;
+        --terminal-header-h: 2.4rem;
+    }
+
+    /* ページ全体: 中央配置 */
+    body {
+        margin: 0;
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--background);
+        font-family: "JetBrains Mono", "Menlo", "Consolas", monospace;
+    }
+
+    .page-wrapper {
+        width: 100%;
+        max-width: 600px;
+        padding: 1.5rem;
+    }
+
+    /* ターミナルウィンドウ */
+    .terminal-window {
+        background: var(--terminal-bg);
+        border: 1px solid var(--terminal-border);
+        border-radius: 0;
+        overflow: hidden;
+    }
+
+    /* ヘッダーバー */
+    .terminal-header {
+        height: var(--terminal-header-h);
+        background: var(--terminal-surface);
+        border-bottom: 1px solid var(--terminal-border);
+        display: flex;
+        align-items: center;
+        padding: 0 1rem;
+    }
+
+    .terminal-title {
+        font-size: 0.75rem;
+        color: var(--text-muted, #7d8590);
+        font-family: "JetBrains Mono", monospace;
+        letter-spacing: 0.04em;
+    }
+
+    /* ターミナル本文 */
+    .terminal-body {
+        padding: 1.4rem 1.6rem 1.6rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    /* 各行 */
+    .line {
+        display: flex;
+        align-items: baseline;
+        gap: 0.6rem;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        min-height: 1.6em;
+    }
+
+    .prompt {
+        color: #22d3ee; /* accent-cyan */
+        font-weight: 700;
+        flex-shrink: 0;
+        user-select: none;
+    }
+
+    .cmd {
+        color: #e6edf3;
+    }
+
+    /* タイプライター中カーソル */
+    #cursor {
+        color: #22d3ee;
+        animation: none; /* タイプ中は点滅しない */
+    }
+
+    /* エラーライン */
+    .error-line {
+        opacity: 0;
+        transform: translateY(4px);
+        transition:
+            opacity 0.25s ease,
+            transform 0.25s ease;
+    }
+    .error-line.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .error-text {
+        color: var(--error-color);
+        font-size: 0.85rem;
+    }
+
+    /* exit code ライン */
+    .exit-line {
+        opacity: 0;
+        transform: translateY(4px);
+        transition:
+            opacity 0.25s ease,
+            transform 0.25s ease;
+        margin-top: 0.4rem;
+        gap: 0.5rem;
+    }
+    .exit-line.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .exit-label {
+        color: #7d8590;
+        font-size: 0.8rem;
+    }
+    .exit-code {
+        color: var(--error-color);
+        font-size: 1.6rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1;
+    }
+
+    /* アイドルカーソル行 */
+    .idle-line {
+        opacity: 0;
+        margin-top: 0.4rem;
+        transition: opacity 0.2s ease;
+    }
+    .idle-line.visible {
+        opacity: 1;
+    }
+    .blink-cursor {
+        color: #22d3ee;
+        animation: blink 1.1s step-end infinite;
+    }
+    @keyframes blink {
+        0%,
+        100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0;
+        }
+    }
+
+    /* セパレータ */
+    .separator {
+        height: 1px;
+        background: #30363d;
+        margin: 1rem 0 0.8rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .separator.visible {
+        opacity: 1;
+    }
+
+    /* ナビゲーション */
+    .nav-links {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+    .nav-links.visible {
+        opacity: 1;
+    }
+
+    .nav-item {
+        display: flex;
+        align-items: baseline;
+        gap: 0.6rem;
+        padding: 0.35rem 0.4rem;
+        text-decoration: none;
+        color: #7d8590;
+        font-size: 0.88rem;
+        border-radius: 0;
+        opacity: 0;
+        transform: translateY(6px);
+        transition:
+            color 0.18s ease,
+            background 0.18s ease,
+            opacity 0.25s ease,
+            transform 0.25s ease;
+    }
+
+    @media (hover: hover) {
+        .nav-item:hover {
+            color: #e6edf3;
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .nav-item:hover .nav-cmd {
+            color: #60a5fa; /* accent-blue */
+        }
+        .nav-item:hover .nav-arrow {
+            transform: translateX(3px);
+        }
+    }
+
+    .nav-prompt {
+        color: #22d3ee;
+        font-weight: 700;
+        flex-shrink: 0;
+        user-select: none;
+    }
+    .nav-cmd {
+        color: #e6edf3;
+        flex-shrink: 0;
+        transition: color 0.18s ease;
+    }
+    .nav-arrow {
+        color: #7d8590;
+        transition: transform 0.18s ease;
+        flex-shrink: 0;
+    }
+    .nav-label {
+        color: #7d8590;
+        font-size: 0.8rem;
+    }
+
+    /* リダイレクトライン */
+    .redirect-line {
+        display: flex;
+        align-items: baseline;
+        gap: 0.6rem;
+        font-size: 0.88rem;
+        min-height: 1.6em;
+        opacity: 0;
+        margin-top: 0.4rem;
+        transition: opacity 0.2s ease;
+    }
+    .redirect-line.visible {
+        opacity: 1;
+    }
+    .redirect-text {
+        color: #22d3ee;
+    }
+
+    /* ライトモード対応 */
+    :global(html:not(.dark)) {
+        --terminal-bg: #f6f8fa;
+        --terminal-surface: #eaeef2;
+        --terminal-border: #d0d7de;
+    }
+    :global(html:not(.dark)) .terminal-title {
+        color: #57606a;
+    }
+    :global(html:not(.dark)) .cmd {
+        color: #1f2328;
+    }
+    :global(html:not(.dark)) .nav-cmd {
+        color: #1f2328;
+    }
+    :global(html:not(.dark)) .exit-code {
+        color: #cf222e;
+    }
+    :global(html:not(.dark)) .error-text {
+        color: #cf222e;
+    }
+    :global(html:not(.dark)) .redirect-text {
+        color: #0969da;
+    }
+
+    /* モバイル */
+    @media (max-width: 480px) {
+        .page-wrapper {
+            padding: 1rem;
+        }
+        .terminal-body {
+            padding: 1.1rem 1.1rem 1.3rem;
+        }
+        .exit-code {
+            font-size: 1.3rem;
+        }
+    }
+</style>
