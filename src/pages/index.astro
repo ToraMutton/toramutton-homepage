@@ -2118,13 +2118,32 @@ const friendLinks: FriendLink[] = [
     /* ====================================
        11. レスポンシブ
        ==================================== */
+
+    /* タブレット以下: marquee → 横スクロールに切替 */
+    @media (max-width: 1024px) {
+        .marquee-track {
+            animation: none;
+            overflow-x: auto;
+            scrollbar-width: none;
+            /* gap は継承のまま */
+        }
+        .marquee-track::-webkit-scrollbar {
+            display: none;
+        }
+        .marquee-outer {
+            /* フェードマスク解除（端が見える方がスクロール可能と気づける） */
+            -webkit-mask-image: none;
+            mask-image: none;
+            overflow: visible;
+        }
+        .post-card-mini {
+            width: min(260px, 72vw);
+        }
+    }
+
     @media (max-width: 720px) {
         .section-header h2 {
             font-size: 1.2rem;
-        }
-
-        .post-card-mini {
-            width: 220px;
         }
 
         .grid-container {
@@ -2135,15 +2154,9 @@ const friendLinks: FriendLink[] = [
         .links-card {
             grid-column: auto;
         }
-
-        .link-list {
-            grid-template-columns: 1fr 1fr;
-        }
     }
 
     @media (max-width: 480px) {
-        .link-list {
-            grid-template-columns: 1fr;
-        }
+        /* links は row-list 化で不要になった grid 指定は削除済み */
     }
 </style>
