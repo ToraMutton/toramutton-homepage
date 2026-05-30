@@ -1,18 +1,53 @@
 ---
-import { Twitter, Github } from "lucide-astro";
-import {
-    GITHUB_URL,
-    TW_DAILY_URL,
-    NOTE_URL,
-    ZENN_URL,
-    QIITA_URL,
-} from "../consts";
-
 const year = new Date().getFullYear();
 ---
 
 <footer>
-    <!-- 背景: Arch Linux ロゴ (ASCIIアート) -->
+    <div class="footer-hex" aria-hidden="true">
+        e3 81 93 e3 82 93 e3 81 ab e3 81 a1 e3 81 af e3 80 81 e7 9c 9f e5 b3 b6
+        e8 8c 82 e6 a8 b9 e3 81 a7 e3 81 99 e3 80 82 0a 0a e3 83 91 e3 83 81 e3
+        83 b3 e3 82 b3 ef bc a3 ef bc b2 e3 83 9e e3 83 84 e3 82 b1 e3 83 b3 e3
+        82 b5 e3 83 90 e3 83 88 e3 82 a5 e3 83 bc e3 81 af e3 80 81 e8 b8 8a e3
+        82 8b e3 83 91 e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81 0a 0a e3 81
+        a7 e3 81 af e3 80 81 e5 8b 87 e6 b0 97 e3 82 92 e5 87 ba e3 81 97 e3 81
+        a6 e3 80 81 e8 b8 8a e3 81 a3 e3 81 a6 e3 81 bf e3 81 be e3 81 97 e3 82
+        87 e3 81 86 ef bc 81 0a 0a 20 0a 0a e3 83 8f e3 82 a4 e3 80 81 e3 83 af
+        e3 83 b3 e3 83 88 e3 82 a5 e3 83 bc ef bc 81 0a 0a e3 82 b5 e3 83 b3 e3
+        83 90 e3 81 ae e3 83 aa e3 82 ba e3 83 a0 e3 81 a7 e3 83 91 e3 83 bc e3
+        83 91 e3 83 bc e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81 0a 0a e3 83
+        9e e3 83 84 e3 82 b1 e3 83 b3 e3 82 b5 e3 83 b3 e3 83 90 e3 81 a7 e3 83
+        91 e3 83 bc e3 83 91 e3 83 bc e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc
+        81 0a 0a e3 80 8c e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81 e3 80 8d
+        e3 81 a7 e8 85 b0 e3 82 92 e7 aa 81 e3 81 8d e5 87 ba e3 81 97 e3 81 a6
+        e3 80 82 e3 83 bb e3 83 bb e3 83 bb e3 81 9d e3 81 86 ef bc 81 0a 0a e3
+        83 9e e3 83 84 e3 82 b1 e3 83 b3 e3 83 9c e3 83 bc e3 83 8a e3 82 b9 e5
+        87 ba e7 8e 89 e3 81 8c e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81 e3
+        83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81 0a 0a 20 0a 0a e3 83 bb e3 83
+        bb e3 83 bb e3 81 9d e3 81 86 e3 80 82 e5 88 87 e3 82 8c e3 82 88 e3 81
+        8f e3 80 8c e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81 e3 80 8d e3 80
+        8c e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81 e3 80 8d e3 81 a8 e3 80
+        82 0a 0a e3 83 95 e3 82 a3 e3 82 ae e3 83 a5 e3 82 a2 e3 81 8c e8 b8 8a
+        e3 82 8b e3 82 88 e3 83 91 e3 83 bc e3 83 91 e3 83 bc e3 83 86 e3 82 a3
+        e3 83 b3 e3 82 b3 ef bc 81 0a 0a e7 a2 ba e5 a4 89 e3 82 b2 e3 83 83 e3
+        83 88 e3 81 a7 e4 b8 8a e4 b8 8a e3 83 bb e4 b8 8b e4 b8 8b e3 83 bb e3
+        82 aa e3 83 bc e3 83 97 e3 83 b3 ef bc 81 0a 0a 20 0a 0a e3 83 9c e3 83
+        bc e3 83 8a e3 82 b9 e3 82 b2 e3 83 83 e3 83 88 e3 81 a7 e5 89 8d e3 83
+        bb e5 89 8d e3 83 bb e5 be 8c e3 82 8d ef bc 81 0a 0a e3 83 95 e3 82 a3
+        e3 82 ae e3 83 a5 e3 82 a2 e3 81 8c e8 b8 8a e3 82 8b e3 82 88 e3 83 91
+        e3 83 bc e3 83 91 e3 83 bc e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81
+        0a 0a e3 83 9e e3 83 84 e3 82 b1 e3 83 b3 e3 82 b5 e3 83 b3 e3 83 90 e3
+        81 a7 e3 83 91 e3 83 bc e3 83 91 e3 83 bc e3 83 86 e3 82 a3 e3 83 b3 e3
+        82 b3 e3 83 bc e3 83 bc e3 83 bc e3 83 bc ef bc 81 ef bc 81 ef bc 81 0a
+        0a 20 0a 0a e3 83 bb e3 83 bb e3 83 bb e3 83 86 e3 82 a3 e3 83 b3 e3 82
+        b3 ef bc 81 0a 0a e3 83 bb e3 83 bb e3 83 bb e3 82 82 e3 81 86 ef bc 91
+        e5 9b 9e e3 80 82 0a 0a e3 83 bb e3 83 bb e3 83 bb e3 83 86 e3 82 a3 e3
+        83 b3 e3 82 b3 ef bc 81 0a 0a 20 0a 0a ef bc 88 e3 81 8b e3 83 bc e3 82
+        93 ef bc 81 ef bc 81 ef bc 89 0a 0a 20 0a 0a e3 81 af e3 83 bc e3 81 84
+        e3 80 81 e4 bb 8a e6 97 a5 e3 81 af e3 81 93 e3 82 8c e3 81 8f e3 82 89
+        e3 81 84 e3 81 ab e3 81 97 e3 81 a6 e3 81 8a e3 81 8d e3 81 be e3 81 97
+        e3 82 87 e3 81 86 e3 80 82
+    </div>
+
     <pre
         class="footer-bg"
         aria-hidden="true">                  -`
@@ -36,110 +71,16 @@ const year = new Date().getFullYear();
 .`                                 `</pre>
 
     <div class="footer-main">
-        <!-- SNS リンク -->
-        <nav class="social-links" aria-label="SNS links">
-            <a
-                href={TW_DAILY_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="social-link"
-            >
-                <Twitter size={16} />
-                <span>Twitter</span>
-            </a>
-
-            <a
-                href={GITHUB_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="social-link"
-            >
-                <Github size={16} />
-                <span>GitHub</span>
-            </a>
-
-            <a
-                href={NOTE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="social-link"
-            >
-                <svg
-                    role="img"
-                    viewBox="0 0 24 24"
-                    width="14"
-                    height="14"
-                    fill="currentColor"
-                >
-                    <path
-                        d="M0 .279c4.623 0 10.953-.235 15.498-.117 6.099.156 8.39 2.813 8.468 9.374.077 3.71 0 14.335 0 14.335h-6.598c0-9.296.04-10.83 0-13.759-.078-2.578-.814-3.807-2.795-4.041-2.097-.235-7.975-.04-7.975-.04v17.84H0Z"
-                    ></path>
-                </svg>
-                <span>note</span>
-            </a>
-
-            <a
-                href={ZENN_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="social-link"
-            >
-                <svg
-                    role="img"
-                    viewBox="0 0 24 24"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                >
-                    <path
-                        d="M.264 23.771h4.984c.264 0 .498-.147.645-.352L19.614.874c.176-.293-.029-.645-.381-.645h-4.72c-.235 0-.44.117-.557.323L.03 23.361c-.088.176.029.41.234.41zM17.445 23.419l6.479-10.408c.205-.323-.029-.733-.41-.733h-4.691c-.176 0-.352.088-.44.235l-6.655 10.643c-.176.264.029.616.352.616h4.779c.234-.001.468-.118.586-.353z"
-                    ></path>
-                </svg>
-                <span>Zenn</span>
-            </a>
-
-            <a
-                href={QIITA_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="social-link"
-            >
-                <svg
-                    role="img"
-                    viewBox="0 0 24 24"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                >
-                    <path
-                        d="M12 0C5.3726 0 0 5.3726 0 12s5.3726 12 12 12c3.3984 0 6.4665-1.413 8.6498-3.6832-.383-.0574-.7746-.2062-1.1466-.4542-.7145-.4763-1.3486-.9263-1.6817-1.674-1.2945 1.3807-3.0532 1.835-5.1822 2.0503-4.311.4359-8.0456-1.4893-8.4979-6.2996-.1922-2.045.2628-3.989 1.1804-5.582l-.5342-2.1009c-.0862-.3652.2498-.7126.6057-.6262l1.8456.448c1.0974-.9012 2.4249-1.49 3.8892-1.638 1.2526-.1267 2.467.0834 3.571.5624l1.7348-1.0494c.3265-.1974.7399.0257.7711.4164l.1 2.4747v.0002c1.334 1.4084 2.2424 3.3319 2.4478 5.516.116 1.2339-.012 2.1776-.339 3.078-.1531.4215-.1992.7778.0776 1.1305.2674.3408.6915 1.0026 1.1644.8917.7107-.1666 1.4718-.1223 1.9422.1715C23.4925 15.9525 24 14.0358 24 12c0-6.6274-5.3726-12-12-12Zm-.0727 5.727a5.2731 5.2731 0 0 0-.6146.0273c-2.2084.2233-3.9572 1.8135-4.4937 3.8484l-1.3176-.1996-.014.2589 1.2972.1407c-.0352.1497-.0643.2384-.086.3923l-1.1319.0902.0103.2025 1.1032-.088c-.0194.1713-.031.2814-.0332.4565l-1.0078.412.0495.2499.9598-.4492c.002.1339.008.2053.0207.3407.2667 2.8371 2.6364 3.3981 5.4677 3.1118 2.8312-.2863 5.0517-1.3114 4.785-4.1486-.013-.1361-.0324-.2068-.0553-.3392l1.0397.2257.0242-.229-1.0906-.207c-.0342-.1687-.0765-.271-.1264-.4327l1.1208-.1374-.0158-.2019-1.1499.1409a5.1093 5.1093 0 0 0-.1665-.4259l1.2665-.4042-.0397-.2536-1.3471.4667c-.819-1.7168-2.5002-2.8224-4.4546-2.8482Z"
-                    ></path>
-                </svg>
-                <span>Qiita</span>
-            </a>
-        </nav>
-
-        <!-- ページナビ -->
-        <nav class="page-nav" aria-label="ページナビ">
-            <a href="/" class="nav-link">Home</a>
-            <a href="/blog" class="nav-link">Blog</a>
-            <a href="/works" class="nav-link">Works</a>
-            <a href="/about" class="nav-link">About</a>
-        </nav>
-
-        <!-- 時間帯メッセージ (JavaScriptで描画) -->
         <p class="time-message" id="footer-time-msg"># ...</p>
 
-        <!-- クレジット -->
         <p class="credit">
             &copy; {year} ToraMutton · Built with <a
-                href="https://astro.build"
+                href="[https://astro.build](https://astro.build)"
                 target="_blank"
                 rel="noopener noreferrer">Astro</a
             >
         </p>
 
-        <!-- おまけ -->
         <p class="kaomoji">( ∩՞ټ՞∩) ﾝﾌ～～</p>
     </div>
 </footer>
@@ -191,6 +132,36 @@ const year = new Date().getFullYear();
         background: var(--background);
     }
 
+    /* === 背景: Hex Dump with maji === */
+    .footer-hex {
+        position: absolute;
+        bottom: -0.5rem;
+        left: -0.5rem;
+        width: 40%;
+        max-height: 100%;
+        z-index: 0;
+
+        font-family: var(--font-mono);
+        font-size: clamp(0.4rem, 1.8vw, 0.7rem);
+        line-height: 1.4;
+        word-break: break-all;
+        color: var(--text-muted);
+        opacity: 0.5;
+        text-transform: uppercase;
+
+        /* 上に向かって徐々に消えていくグラデーションマスク */
+        mask-image: linear-gradient(to top right, black 10%, transparent 80%);
+        -webkit-mask-image: linear-gradient(
+            to top right,
+            black 10%,
+            transparent 80%
+        );
+
+        overflow: hidden;
+        pointer-events: none;
+        user-select: none;
+    }
+
     /* === 背景: Arch ASCIIアート === */
     .footer-bg {
         position: absolute;
@@ -231,69 +202,6 @@ const year = new Date().getFullYear();
         text-align: center;
     }
 
-    /* === SNS リンク === */
-    .social-links {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 0.6rem;
-    }
-
-    .social-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        padding: 0.4rem 0.8rem;
-
-        font-family: var(--font-mono);
-        font-size: 0.78rem;
-        font-weight: 600;
-        text-decoration: none;
-        color: var(--text-muted);
-
-        /* 背景ASCIIと被っても読めるよう不透明な surface 系で塗る */
-        background: var(--elevated, var(--surface));
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
-
-        transition:
-            color 0.2s ease,
-            border-color 0.2s ease;
-    }
-
-    .social-link svg {
-        flex-shrink: 0;
-    }
-
-    /* === ページナビ === */
-    .page-nav {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 0.6rem;
-    }
-
-    /* SNS チップと完全に同じスタイルを共有 */
-    .nav-link {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.4rem 0.8rem;
-
-        font-family: var(--font-mono);
-        font-size: 0.78rem;
-        font-weight: 600;
-        text-decoration: none;
-        color: var(--text-muted);
-
-        background: var(--elevated, var(--surface));
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
-
-        transition:
-            color 0.2s ease,
-            border-color 0.2s ease;
-    }
-
     /* === 時間帯メッセージ === */
     .time-message {
         margin: 0;
@@ -330,12 +238,6 @@ const year = new Date().getFullYear();
 
     /* === hover (ポインタデバイスのみ) === */
     @media (hover: hover) {
-        .social-link:hover,
-        .nav-link:hover {
-            color: var(--accent-blue);
-            border-color: var(--accent-blue);
-        }
-
         .credit a:hover {
             color: var(--accent-blue);
         }
@@ -343,8 +245,6 @@ const year = new Date().getFullYear();
 
     /* === reduced-motion 配慮 === */
     @media (prefers-reduced-motion: reduce) {
-        .social-link,
-        .nav-link,
         .credit a {
             transition: none;
         }
@@ -356,6 +256,14 @@ const year = new Date().getFullYear();
             padding: 2.5rem 1rem 2rem;
         }
 
+        /* モバイル時のHex表示領域調整 */
+        .footer-hex {
+            width: 50%;
+            font-size: clamp(0.35rem, 2.5vw, 0.6rem);
+            bottom: -0.2rem;
+            left: -0.2rem;
+        }
+
         .footer-bg {
             font-size: clamp(0.36rem, 3vw, 0.58rem);
             opacity: 0.22;
@@ -365,24 +273,6 @@ const year = new Date().getFullYear();
 
         .footer-main {
             gap: 1rem;
-        }
-
-        /*
-         * チップ幅を 33% 固定 → 1行に3つ収まり、
-         * 余りの2つは justify-content:center でセンタリングされる
-         */
-        .social-link {
-            flex: 0 0 calc(33.33% - 0.45rem);
-            justify-content: center;
-            font-size: 0.74rem;
-            padding: 0.38rem 0.5rem;
-        }
-
-        .nav-link {
-            flex: 0 0 calc(50% - 0.35rem);
-            justify-content: center;
-            font-size: 0.74rem;
-            padding: 0.38rem 0.5rem;
         }
     }
 </style>
