@@ -706,8 +706,16 @@ const friendLinks: FriendLink[] = [
                     <h3>Today's Music</h3>
                 </div>
                 <div id="song-display" class="song-container">
-                    <p class="song-title" id="song-title">Loading...</p>
-                    <p class="song-year-wrapper">
+                    <p class="song-cmd-line" id="song-cmd-line">
+                        <span class="song-cmd-prompt">$</span><span
+                            id="song-cmd-text"></span>
+                    </p>
+                    <p class="song-title" id="song-title">
+                        <span id="song-title-text"></span><span
+                            class="song-cursor"
+                            id="song-cursor"></span>
+                    </p>
+                    <p class="song-year-wrapper" id="song-year-wrapper">
                         released in <span id="song-year" class="song-year"
                             >----</span
                         >
@@ -899,18 +907,158 @@ const friendLinks: FriendLink[] = [
                         )
                         .forEach((el) => revealObserver.observe(el));
 
+                    // --- 要素取得を id ベースに切り替え ---
+                    const cmdTextEl = document.getElementById("song-cmd-text");
+                    const titleTextEl =
+                        document.getElementById("song-title-text");
+                    const cursorEl = document.getElementById("song-cursor");
+                    const yearWrapEl =
+                        document.getElementById("song-year-wrapper");
+
+                    // グリッチ用文字プール
+                    const GLITCH_CHARS =
+                        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*<>/\\|";
+                    const randChar = () =>
+                        GLITCH_CHARS[
+                            Math.floor(Math.random() * GLITCH_CHARS.length)
+                        ];
+
+                    // タイマー管理（reload 時に前のアニメを全キャンセル）
+                    let timers: ReturnType<typeof setTimeout>[] = [];
+                    const addTimer = (fn: () => void, ms: number) => {
+                        timers.push(setTimeout(fn, ms));
+                    };
+                    const clearAllTimers = () => {
+                        timers.forEach(clearTimeout);
+                        timers = [];
+                    };
+
+                    // タイプライター（コマンド行）
+                    function typeCmd(text: string, onDone: () => void) {
+                        if (!cmdTextEl) return;
+                        cmdTextEl.textContent = "";
+                        let i = 0;
+                        const tick = () => {
+                            if (i >= text.length) {
+                                onDone();
+                                return;
+                            }
+                            cmdTextEl.textContent += text[i++];
+                            addTimer(tick, 32);
+                        };
+                        tick();
+                    }
+
+                    // グリッチタイプライター（タイトル行）
+                    function glitchType(text: string, onDone: () => void) {
+                        if (!titleTextEl) return;
+                        titleTextEl.textContent = "";
+
+                        // 各文字を順番に確定させる
+                        const chars = [...text]; // Unicode 対応
+                        let confirmed = 0;
+
+                        const nextChar = () => {
+                            if (confirmed >= chars.length) {
+                                onDone();
+                                return;
+                            }
+
+                            const targetChar = chars[confirmed];
+                            let glitchCount = 0;
+                            // スペースや記号はグリッチしない
+                            const shouldGlitch = /[\p{L}\p{N}]/u.test(
+                                targetChar,
+                            );
+                            const maxGlitch = shouldGlitch ? 3 : 0;
+
+                            const glitchTick = () => {
+                                if (glitchCount >= maxGlitch) {
+                                    // 確定
+                                    const base = chars
+                                        .slice(0, confirmed)
+                                        .join("");
+                                    titleTextEl.textContent = base + targetChar;
+                                    confirmed++;
+                                    addTimer(nextChar, 45);
+                                } else {
+                                    // グリッチ中
+                                    const base = chars
+                                        .slice(0, confirmed)
+                                        .join("");
+                                    titleTextEl.textContent = base + randChar();
+                                    glitchCount++;
+                                    addTimer(glitchTick, 38);
+                                }
+                            };
+                            glitchTick();
+                        };
+                        nextChar();
+                    }
+
+                    // スロット年号
+                    function slotYear(targetYear: string, onDone: () => void) {
+                        if (!yearEl) return;
+                        const target = parseInt(targetYear, 10);
+                        const duration = 900; // ms
+                        const start = performance.now();
+
+                        const tick = (now: number) => {
+                            const elapsed = now - start;
+                            const progress = Math.min(elapsed / duration, 1);
+                            // easeOut: 終盤がスロー
+                            const eased = 1 - Math.pow(1 - progress, 3);
+
+                            if (progress < 1) {
+                                // ランダム数字を表示
+                                const display = Math.floor(
+                                    Math.random() * 10000,
+                                )
+                                    .toString()
+                                    .padStart(4, "0");
+                                yearEl.textContent = display;
+                                requestAnimationFrame(tick);
+                            } else {
+                                yearEl.textContent = targetYear;
+                                onDone();
+                            }
+                        };
+                        requestAnimationFrame(tick);
+                    }
+
                     function updateSong() {
-                        if (!titleEl || !yearEl) return;
                         const randomSong =
                             songs[Math.floor(Math.random() * songs.length)];
 
-                        // ワイプをリセット → 次フレームで再発火
-                        titleEl.classList.remove("song-wipe");
-                        void titleEl.offsetWidth; // reflow
-                        titleEl.textContent = randomSong.title;
-                        yearEl.textContent = randomSong.year;
-                        requestAnimationFrame(() => {
-                            titleEl.classList.add("song-wipe");
+                        // 前のアニメ全キャンセル＆リセット
+                        clearAllTimers();
+                        if (cmdTextEl) cmdTextEl.textContent = "";
+                        if (titleTextEl) titleTextEl.textContent = "";
+                        if (cursorEl) cursorEl.classList.remove("blink");
+                        if (yearEl) yearEl.textContent = "----";
+                        if (yearWrapEl) yearWrapEl.style.opacity = "0";
+
+                        // Phase 1: $ play --random をタイプ
+                        typeCmd("play --random", () => {
+                            // Phase 2: タイトルをグリッチタイプ ＋ 年号スロット同時起動
+                            addTimer(() => {
+                                // 年号ラッパーをフェードイン
+                                if (yearWrapEl) {
+                                    yearWrapEl.style.transition =
+                                        "opacity 0.3s ease";
+                                    yearWrapEl.style.opacity = "0.8";
+                                }
+
+                                // スロット開始
+                                slotYear(randomSong.year, () => {});
+
+                                // グリッチタイプ開始
+                                glitchType(randomSong.title, () => {
+                                    // タイトル確定後: カーソル点滅
+                                    if (cursorEl)
+                                        cursorEl.classList.add("blink");
+                                });
+                            }, 150);
                         });
                     }
 
@@ -2061,50 +2209,81 @@ const friendLinks: FriendLink[] = [
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        padding: 2rem 1rem 1.5rem;
-        gap: 0.5rem;
+        padding: 1.5rem 1rem 1.25rem;
+        gap: 0.6rem;
+        min-height: 140px;
     }
 
-    /* clip-path ワイプ演出 — JS で .song-wipe クラスを付け外し */
+    /* $ play --random の実行行 */
+    .song-cmd-line {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        align-self: flex-start;
+        padding-left: 0.25rem;
+        min-height: 1.2em;
+        letter-spacing: 0.02em;
+    }
+
+    .song-cmd-line .song-cmd-prompt {
+        color: var(--accent-blue);
+        margin-right: 0.4em;
+    }
+
+    /* タイトル：グリッチタイプライター */
     .song-title {
-        font-size: 1.4rem;
+        font-size: 1.35rem;
         font-weight: 800;
         font-family: var(--font-mono);
         color: var(--accent-blue);
         margin: 0;
         line-height: 1.3;
-        padding: 0 1rem;
         text-align: center;
-
-        clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
-        transition: clip-path 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        min-height: 1.6em;
+        word-break: break-all;
     }
 
-    .song-title.song-wipe {
-        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    /* カーソル点滅（確定後） */
+    .song-cursor {
+        display: inline-block;
+        width: 2px;
+        height: 1.1em;
+        background: var(--accent-blue);
+        margin-left: 3px;
+        vertical-align: middle;
+        opacity: 0;
     }
 
+    .song-cursor.blink {
+        animation: cursor-blink 0.8s step-end infinite;
+    }
+
+    @keyframes cursor-blink {
+        0%,
+        100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0;
+        }
+    }
+
+    /* 年号ラッパー */
     .song-year-wrapper {
         font-size: 0.82rem;
         color: var(--text-muted);
         font-family: var(--font-mono);
-        opacity: 0;
-        transform: translateY(4px);
-        transition:
-            opacity 0.35s ease 0.3s,
-            transform 0.35s ease 0.3s;
+        min-height: 1.2em;
     }
 
-    .song-title.song-wipe ~ .song-year-wrapper {
-        opacity: 0.8;
-        transform: translateY(0);
-    }
-
+    /* スロット中の年号 */
     .song-year {
         font-weight: 700;
         color: var(--text-main);
+        display: inline-block;
+        min-width: 2.5em;
+        text-align: center;
     }
-
     .secondary-btn {
         margin: 0 1.25rem 1.25rem;
         padding: 0.55rem 1rem;
