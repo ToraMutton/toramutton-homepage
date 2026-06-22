@@ -1,0 +1,21 @@
+---
+// サーバーサイドは何もなし
+---
+
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Survey</title>
+    </head>
+    <body>
+        <p>リダイレクト中...</p>
+        <script>
+            const forms = [
+                "https://docs.google.com/forms/d/e/1FAIpQLSfIToVtg755B-1VXrZe1G3CRG8itfTIjQkh5MyApb0LqAOtDQ/viewform",
+                "https://docs.google.com/forms/d/e/1FAIpQLSchAuLLacqyMwkseHuE0u2Zm3RNUrGlc6xBtdSWuHlb8-Tqvw/viewform",
+            ];
+            window.location.href = forms[Math.floor(Math.random() * 2)];
+        </script>
+    </body>
+</html>
