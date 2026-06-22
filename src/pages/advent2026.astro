@@ -1,0 +1,287 @@
+---
+export const prerender = true;
+import BaseHead from "../components/BaseHead.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import { SITE_TITLE } from "../consts";
+import { Lock, Unlock, CalendarDays } from "lucide-astro";
+
+// 1日〜25日までのデータ配列を生成
+// 12月になったら status を 'open' にして title と url を入れる
+const adventDays = Array.from({ length: 25 }, (_, i) => {
+    const day = i + 1;
+    return {
+        day,
+        title: `Day ${day} の記事`,
+        status: "locked", // 'locked' | 'open'
+        url: "#",
+    };
+});
+---
+
+<!doctype html>
+<html lang="ja">
+    <head>
+        <BaseHead
+            title={`${SITE_TITLE} | Advent 2026`}
+            description="寅松の一人アドベントカレンダー2026"
+        />
+    </head>
+    <body>
+        <Header />
+        <main>
+            <section class="advent-section">
+                <div class="advent-header">
+                    <h1 class="advent-title">
+                        <span class="prompt">$</span> ./advent2026.sh
+                    </h1>
+                    <p class="advent-desc">
+                        トラマトによるはじめての一人アドベントカレンダー2026。<br
+                        />
+                        12月1日から25日まで、たぶん毎日1記事更新します。
+                    </p>
+                </div>
+
+                <div class="calendar-grid">
+                    {
+                        adventDays.map((item) => (
+                            <a
+                                href={
+                                    item.status === "open"
+                                        ? item.url
+                                        : undefined
+                                }
+                                class={`day-card ${item.status}`}
+                                tabindex={item.status === "locked" ? -1 : 0}
+                                aria-disabled={
+                                    item.status === "locked" ? "true" : "false"
+                                }
+                            >
+                                <div class="day-number">
+                                    <span class="day-label">Dec</span>
+                                    <span class="day-val">{item.day}</span>
+                                </div>
+                                <div class="day-content">
+                                    {item.status === "locked" ? (
+                                        <Lock size={24} class="icon-locked" />
+                                    ) : (
+                                        <Unlock size={24} class="icon-open" />
+                                    )}
+                                    <span class="day-title">
+                                        {item.status === "locked"
+                                            ? "Coming soon..."
+                                            : item.title}
+                                    </span>
+                                </div>
+
+                                {/* ホバーした時にちょっとアクセントを出す装飾 */}
+                                <div class="accent-sweep" />
+                            </a>
+                        ))
+                    }
+                </div>
+            </section>
+        </main>
+        <Footer />
+    </body>
+</html>
+
+<style>
+    main {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 6rem 1.5rem 3rem;
+    }
+
+    /* === Header === */
+    .advent-header {
+        margin-bottom: 3rem;
+        border-bottom: 1px dashed var(--border-color);
+        padding-bottom: 1.5rem;
+    }
+
+    .advent-title {
+        font-size: 2rem;
+        margin: 0 0 0.5rem;
+        color: var(--text-main);
+        font-family: var(--font-mono, "JetBrains Mono", monospace);
+        letter-spacing: -0.02em;
+    }
+
+    .prompt {
+        color: var(--accent-blue);
+    }
+
+    .advent-desc {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    /* === Grid === */
+    .calendar-grid {
+        display: grid;
+        /* スマホなら2列、PCなら最大5列くらいになるように自動調整 */
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 1rem;
+    }
+
+    /* === Day Card === */
+    .day-card {
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 1.2rem 1rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        outline: none;
+    }
+
+    .accent-sweep {
+        content: "";
+        position: absolute;
+        inset: -2px -45%;
+        background: color-mix(in srgb, var(--accent-blue) 18%, transparent);
+        transform: translateX(-135%) skewX(-14deg);
+        transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    /* === 未公開 (Locked) === */
+    .day-card.locked {
+        opacity: 0.6;
+        cursor: not-allowed;
+        background: repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 10px,
+            rgba(0, 0, 0, 0.03) 10px,
+            rgba(0, 0, 0, 0.03) 20px
+        );
+    }
+
+    :global(html.dark) .day-card.locked {
+        background: repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 10px,
+            rgba(255, 255, 255, 0.02) 10px,
+            rgba(255, 255, 255, 0.02) 20px
+        );
+    }
+
+    /* === 公開済み (Open) ホバーアクション === */
+    .day-card.open {
+        cursor: pointer;
+    }
+
+    .day-card.open:focus-visible {
+        border-color: var(--accent-blue);
+    }
+
+    .day-card.open:focus-visible .accent-sweep {
+        transform: translateX(0) skewX(-14deg);
+    }
+
+    @media (hover: hover) {
+        .day-card.open:hover {
+            border-color: var(--accent-blue);
+        }
+        .day-card.open:hover .accent-sweep {
+            transform: translateX(0) skewX(-14deg);
+        }
+        .day-card.open:hover .icon-open {
+            transform: scale(1.1);
+        }
+    }
+
+    /* === Card Contents === */
+    .day-number,
+    .day-content {
+        position: relative;
+        z-index: 1; /* accent-sweepより上に配置 */
+    }
+
+    .day-number {
+        display: flex;
+        align-items: baseline;
+        gap: 0.3rem;
+        margin-bottom: 1.2rem;
+        font-family: var(--font-mono, "JetBrains Mono", monospace);
+        color: var(--text-muted);
+        border-bottom: 1px dashed var(--border-color);
+        padding-bottom: 0.4rem;
+        transition: color 0.3s ease;
+    }
+
+    .day-card.open .day-number {
+        color: var(--accent-blue);
+        border-bottom-color: var(--accent-blue);
+    }
+
+    .day-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .day-val {
+        font-size: 1.6rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .day-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.8rem;
+        text-align: center;
+        flex-grow: 1;
+        justify-content: center;
+    }
+
+    .icon-locked {
+        color: var(--border-color);
+    }
+
+    .icon-open {
+        color: var(--accent-blue);
+        transition: transform 0.2s ease;
+    }
+
+    .day-title {
+        font-size: 0.82rem;
+        color: var(--text-main);
+        font-weight: 600;
+        line-height: 1.4;
+        word-break: break-word;
+    }
+
+    .day-card.locked .day-title {
+        color: var(--text-muted);
+        font-family: var(--font-mono, "JetBrains Mono", monospace);
+        font-size: 0.75rem;
+    }
+
+    /* === レスポンシブ === */
+    @media (max-width: 720px) {
+        main {
+            padding: 5rem 1rem 2rem;
+        }
+        .calendar-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .day-card {
+            padding: 1rem 0.8rem;
+        }
+        .day-val {
+            font-size: 1.4rem;
+        }
+    }
+</style>
