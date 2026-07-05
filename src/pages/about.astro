@@ -394,6 +394,7 @@ const TIMELINE = [
         {/* 5. Timeline (git log style) */}
         <h2>Timeline</h2>
         <div class="timeline" data-reveal>
+            <div class="timeline-line" aria-hidden="true"></div>
             <div class="git-line" aria-hidden="true">
                 <span class="git-dollar">$</span> git log --oneline --graph
             </div>
@@ -452,6 +453,24 @@ const TIMELINE = [
                     });
                     container.classList.add("reveal-ready");
                     revealObserver.observe(container);
+                });
+
+            // === Timeline: 線の描画とダイヤモンドマーカーを同期 ===
+            document
+                .querySelectorAll<HTMLElement>(".timeline")
+                .forEach((timeline) => {
+                    const rows = Array.from(
+                        timeline.querySelectorAll<HTMLElement>(".git-row"),
+                    );
+                    const lineDuration = rows.length * 130 + 300; // ms
+                    timeline.style.setProperty(
+                        "--line-duration",
+                        `${lineDuration}ms`,
+                    );
+                    rows.forEach((row, i) => {
+                        const delay = (i / rows.length) * lineDuration;
+                        row.style.setProperty("--delay", `${delay}ms`);
+                    });
                 });
 
             // === ターミナルブロック（env / interests）の行 stagger reveal ===
@@ -745,8 +764,19 @@ const TIMELINE = [
         .timeline {
             margin: 2rem 0 3rem;
             font-family: var(--font-mono);
-            border-left: 1px solid var(--border-color);
             margin-left: 0.35rem;
+            position: relative;
+        }
+        .timeline-line {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: var(--border-color);
+            transform: scaleY(0);
+            transform-origin: top;
+            transition: transform var(--line-duration, 1.2s) ease-out;
         }
         .git-line {
             color: var(--text-muted);
@@ -768,16 +798,24 @@ const TIMELINE = [
             padding: 0.55rem 0 0.55rem 1.4rem;
         }
         .git-row::before {
-            content: "*";
+            content: "";
             position: absolute;
             left: 0;
-            top: 0.5rem;
-            transform: translateX(-50%);
-            color: var(--accent-blue);
+            top: 0.65rem;
+            width: 6px;
+            height: 6px;
             background: var(--background);
-            font-weight: 700;
-            line-height: 1;
-            padding: 0.15rem 0;
+            border: 1.5px solid var(--accent-blue);
+            transform: translateX(-50%) rotate(45deg) scale(0);
+            opacity: 0;
+            transition:
+                transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 0.35s ease;
+            transition-delay: var(--delay, 0s);
+        }
+        [data-reveal].is-revealed .git-row::before {
+            transform: translateX(-50%) rotate(45deg) scale(1);
+            opacity: 1;
         }
         .git-date {
             color: var(--accent-blue);
@@ -794,6 +832,10 @@ const TIMELINE = [
         @media (hover: hover) {
             .git-row:hover .git-msg {
                 color: var(--accent-blue);
+            }
+            .git-row:hover::before {
+                transform: translateX(-50%) rotate(45deg) scale(1.3);
+                background: var(--accent-blue);
             }
         }
 
