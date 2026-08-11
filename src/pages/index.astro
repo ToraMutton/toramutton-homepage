@@ -1038,20 +1038,41 @@ const friendLinks: FriendLink[] = [
                     // ---- widget-card stagger reveal ----
                     const revealCards =
                         document.querySelectorAll<HTMLElement>("[data-reveal]");
+
+                    // ---- widget-card stagger reveal (top → bottom) ----
                     const revealObserver = new IntersectionObserver(
                         (entries) => {
-                            entries.forEach((entry) => {
-                                if (entry.isIntersecting) {
+                            entries
+                                .filter((e) => e.isIntersecting)
+                                .sort(
+                                    (a, b) =>
+                                        a.boundingClientRect.top -
+                                            b.boundingClientRect.top ||
+                                        a.boundingClientRect.left -
+                                            b.boundingClientRect.left,
+                                )
+                                .forEach((entry, i) => {
                                     const el = entry.target as HTMLElement;
-                                    const delay = el.dataset.revealDelay ?? "0";
-                                    el.style.transitionDelay = `${delay}ms`;
+                                    el.style.transitionDelay = `${i * 90}ms`;
                                     el.classList.add("is-visible");
                                     revealObserver.unobserve(el);
-                                }
-                            });
+                                });
                         },
-                        { threshold: 0.12 },
+                        { threshold: 0.12, rootMargin: "0px 0px -8% 0px" },
                     );
+
+                    // ---- favicon fallback ----
+                    document
+                        .querySelectorAll<HTMLImageElement>(".link-favicon")
+                        .forEach((img) => {
+                            const fail = () =>
+                                img
+                                    .closest(".link-icon")
+                                    ?.classList.add("is-fallback");
+                            // スクリプト実行前に error 済みのケースも拾う
+                            if (img.complete && img.naturalWidth === 0) fail();
+                            img.addEventListener("error", fail);
+                        });
 
                     // ====================================
                     // Mini Terminal
@@ -1260,18 +1281,7 @@ const friendLinks: FriendLink[] = [
                     }
 
                     document
-                        .querySelectorAll<HTMLElement>(
-                            ".grid-container [data-reveal]",
-                        )
-                        .forEach((el, i) => {
-                            el.dataset.revealDelay = String(i * 80);
-                            revealObserver.observe(el);
-                        });
-
-                    document
-                        .querySelectorAll<HTMLElement>(
-                            ".recommendation-card[data-reveal]",
-                        )
+                        .querySelectorAll<HTMLElement>("[data-reveal]")
                         .forEach((el) => revealObserver.observe(el));
 
                     // --- 要素取得を id ベースに切り替え ---
@@ -1849,6 +1859,14 @@ const friendLinks: FriendLink[] = [
         .terminal-avatar {
             opacity: 1;
             transform: none;
+            transition: none;
+        }
+        .widget-card {
+            opacity: 1 !important;
+            transform: none !important;
+            transition: none !important;
+        }
+        .link-item::after {
             transition: none;
         }
     }
