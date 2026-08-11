@@ -234,6 +234,17 @@ const missionData = missions.map((m) => {
     return { ...m, days };
 });
 
+const getDomain = (url: string) => {
+    try {
+        return new URL(url).hostname.replace(/^www\./, "");
+    } catch {
+        return url;
+    }
+};
+
+const getFavicon = (url: string) =>
+    `https://www.google.com/s2/favicons?domain=${getDomain(url)}&sz=64`;
+
 interface FriendLink {
     name: string;
     url: string;
@@ -786,27 +797,51 @@ const friendLinks: FriendLink[] = [
                     <div class="card-header">
                         <Users class="icon-secondary" size={16} />
                         <h3>Links</h3>
+                        <span class="links-count"
+                            >{friendLinks.length} sites</span
+                        >
                     </div>
-                    <ul class="link-row-list">
+                    <div class="link-grid">
                         {
                             friendLinks.map((link) => (
-                                <li class="link-row">
-                                    <a
-                                        href={link.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        class="link-row-anchor"
-                                    >
-                                        <span class="link-row-prompt">▸</span>
-                                        <span class="link-row-name">
-                                            {link.name}
+                                <a
+                                    href={link.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="link-item"
+                                >
+                                    <span class="link-icon">
+                                        <span class="link-initial">
+                                            {link.name.trim().charAt(0)}
                                         </span>
-                                        <span class="link-row-arrow">↗</span>
-                                    </a>
-                                </li>
+                                        <img
+                                            class="link-favicon"
+                                            src={getFavicon(link.url)}
+                                            alt=""
+                                            width="32"
+                                            height="32"
+                                            loading="lazy"
+                                            decoding="async"
+                                        />
+                                    </span>
+                                    <span class="link-body">
+                                        <span class="link-head">
+                                            <span class="link-name">
+                                                {link.name}
+                                            </span>
+                                            <span class="link-arrow">↗</span>
+                                        </span>
+                                        <span class="link-desc">
+                                            {link.description}
+                                        </span>
+                                        <span class="link-domain">
+                                            {getDomain(link.url)}
+                                        </span>
+                                    </span>
+                                </a>
                             ))
                         }
-                    </ul>
+                    </div>
                 </div>
             </div>
 
@@ -2392,81 +2427,171 @@ const friendLinks: FriendLink[] = [
     }
 
     /* ====================================
-       7. Links カード — row-list
+       7. Links カード — card grid
        ==================================== */
     .links-card {
         grid-column: 1 / -1;
     }
 
-    .link-row-list {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-    }
-
-    .link-row {
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .link-row:last-child {
-        border-bottom: none;
-    }
-
-    .link-row-anchor {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.7rem 1.25rem;
-        text-decoration: none;
-        color: var(--text-main);
-        transition: color 0.18s ease;
-    }
-
-    .link-row-prompt {
-        font-family: var(--font-mono);
+    .links-count {
         font-size: 0.75rem;
         color: var(--text-muted);
-        flex-shrink: 0;
+        font-family: var(--font-mono);
+        margin-left: auto;
+    }
+
+    .link-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 0.75rem;
+        padding: 1.25rem;
+    }
+
+    .link-item {
+        position: relative;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.85rem 0.9rem;
+        border: 1px solid var(--border-color);
+        border-radius: 0;
+        text-decoration: none;
+        color: var(--text-main);
+        overflow: hidden;
         transition:
-            color 0.18s ease,
+            border-color 0.18s ease,
             transform 0.22s ease;
     }
 
-    .link-row-name {
-        font-size: 0.88rem;
-        font-weight: 600;
-        font-family: var(--font-mono);
-        flex: 1;
-        transition:
-            transform 0.22s ease,
-            color 0.18s ease;
+    /* post-card と同じ斜めワイプ */
+    .link-item::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--accent-blue);
+        opacity: 0.08;
+        clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+        transition: clip-path 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
     }
 
-    .link-row-arrow {
-        font-size: 0.8rem;
+    @media (hover: hover) {
+        .link-item:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+        }
+        .link-item:hover::after {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+        }
+        .link-item:hover .link-name {
+            color: var(--accent-blue);
+        }
+        .link-item:hover .link-arrow {
+            opacity: 1;
+            transform: translate(0, 0);
+            color: var(--accent-blue);
+        }
+    }
+
+    /* ---- favicon ---- */
+    .link-icon {
+        position: relative;
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--border-color);
+        background: var(--elevated);
+        overflow: hidden;
+    }
+
+    .link-initial {
+        font-family: var(--font-mono);
+        font-size: 0.9rem;
+        font-weight: 800;
+        color: var(--accent-blue);
+        line-height: 1;
+    }
+
+    .link-favicon {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 4px;
+        background: var(--surface);
+    }
+
+    /* 取得失敗時は頭文字にフォールバック */
+    .link-icon.is-fallback .link-favicon {
+        display: none;
+    }
+
+    /* ---- text ---- */
+    .link-body {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .link-head {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .link-name {
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        font-weight: 700;
+        line-height: 1.4;
+        transition: color 0.18s ease;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .link-arrow {
+        font-size: 0.75rem;
         color: var(--text-muted);
+        margin-left: auto;
         flex-shrink: 0;
         opacity: 0;
-        transform: translateX(-4px);
+        transform: translate(-3px, 3px);
         transition:
             opacity 0.18s ease,
             transform 0.18s ease,
             color 0.18s ease;
     }
 
-    @media (hover: hover) {
-        .link-row-anchor:hover .link-row-prompt {
-            color: var(--accent-blue);
-            transform: translateX(2px);
-        }
-        .link-row-anchor:hover .link-row-name {
-            transform: translateX(6px);
-            color: var(--accent-blue);
-        }
-        .link-row-anchor:hover .link-row-arrow {
-            opacity: 1;
-            transform: translateX(0);
-            color: var(--accent-blue);
+    .link-desc {
+        font-size: 0.75rem;
+        line-height: 1.6;
+        color: var(--text-muted);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .link-domain {
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        opacity: 0.7;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    @media (max-width: 480px) {
+        .link-grid {
+            grid-template-columns: 1fr;
+            padding: 1rem;
         }
     }
 
@@ -2783,10 +2908,6 @@ const friendLinks: FriendLink[] = [
         .grid-container {
             grid-template-columns: 1fr;
             gap: 1rem;
-        }
-
-        .links-card {
-            grid-column: auto;
         }
     }
 
