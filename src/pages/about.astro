@@ -1,10 +1,10 @@
 ---
 export const prerender = true;
+import { datetimeRegex } from "astro:schema";
 import Layout from "../layouts/BaseLayout.astro";
 
-// --- 1. Programming & Web ---
-const PROG_SKILLS = [
-    // 基礎・システム系言語
+// --- 1. Languages ---
+const LANGUAGE_SKILLS = [
     {
         name: "C",
         src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/c/c-original.svg",
@@ -18,8 +18,6 @@ const PROG_SKILLS = [
         name: "Java",
         src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg",
     },
-
-    // スクリプト・汎用言語
     {
         name: "Python",
         src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg",
@@ -37,16 +35,6 @@ const PROG_SKILLS = [
         src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/bash/bash-original.svg",
         darkInvert: true,
     },
-
-    // Webフロントエンド
-    {
-        name: "HTML",
-        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg",
-    },
-    {
-        name: "CSS",
-        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg",
-    },
     {
         name: "JavaScript",
         src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg",
@@ -56,7 +44,23 @@ const PROG_SKILLS = [
         src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg",
     },
 
-    // Webフレームワーク・環境
+    // Caelestia / Quickshell
+    {
+        name: "QML",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/qt/qt-original.svg",
+    },
+];
+
+// --- 2. Web ---
+const WEB_SKILLS = [
+    {
+        name: "HTML",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg",
+    },
+    {
+        name: "CSS",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg",
+    },
     {
         name: "React",
         src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg",
@@ -70,22 +74,44 @@ const PROG_SKILLS = [
         name: "Vite",
         src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vitejs/vitejs-original.svg",
     },
+];
 
-    // ドキュメント・組版
+// --- 3. Desktop & Ricing ---
+const DESKTOP_SKILLS = [
     {
-        name: "LaTeX",
-        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/latex/latex-original.svg",
+        name: "Qt",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/qt/qt-original.svg",
+    },
+    {
+        name: "Qt Quick",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/qt/qt-original.svg",
+    },
+    {
+        name: "Quickshell",
+        src: "/icons/quickshell.svg",
         darkInvert: true,
     },
 ];
 
-// --- 2. Tools & Creative ---
+// --- 4. AI & Compute ---
+const AI_SKILLS = [
+    {
+        name: "ROCm",
+        src: "/icons/rocm.svg",
+        darkInvert: true,
+    },
+    {
+        name: "Ollama",
+        src: "/icons/ollama.svg",
+        darkInvert: true,
+    },
+];
+
+// --- 5. Tools & Creative ---
 const TOOL_SKILLS = [
-    // エディタ・IDE系
     {
         name: "Zed",
-        src: "https://zed.dev/_next/static/media/logo-new-white.0gnyg5qr0_x6r.png", // Pure White（一番おすすめ）
-        // darkInvert: true,  ← 絶対に付けない
+        src: "https://zed.dev/_next/static/media/logo-new-white.0gnyg5qr0_x6r.png",
     },
     {
         name: "Neovim",
@@ -99,8 +125,6 @@ const TOOL_SKILLS = [
         name: "IntelliJ",
         src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/intellij/intellij-original.svg",
     },
-
-    // バージョン管理
     {
         name: "Git",
         src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg",
@@ -110,26 +134,27 @@ const TOOL_SKILLS = [
         src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg",
         darkInvert: true,
     },
-
-    // クリエイティブ
     {
-        name: "Blender",
-        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/blender/blender-original.svg",
+        name: "Docker",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg",
     },
-
-    // インフラ・デプロイ
     {
         name: "Vercel",
         src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vercel/vercel-original.svg",
         darkInvert: true,
     },
     {
-        name: "Docker",
-        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg",
+        name: "LaTeX",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/latex/latex-original.svg",
+        darkInvert: true,
+    },
+    {
+        name: "Blender",
+        src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/blender/blender-original.svg",
     },
 ];
 
-// --- 3. Operating Systems ---
+// --- 6. Operating Systems ---
 const OS_SKILLS = [
     {
         name: "Windows",
@@ -143,9 +168,36 @@ const OS_SKILLS = [
 ];
 
 const SKILL_GROUPS = [
-    { cmd: "ls ./programming", note: "Programming & Web", items: PROG_SKILLS },
-    { cmd: "ls ./tools", note: "Tools & Creative", items: TOOL_SKILLS },
-    { cmd: "ls ./os", note: "Operating Systems", items: OS_SKILLS },
+    {
+        cmd: "ls ./languages",
+        note: "Languages",
+        items: LANGUAGE_SKILLS,
+    },
+    {
+        cmd: "ls ./web",
+        note: "Web",
+        items: WEB_SKILLS,
+    },
+    {
+        cmd: "ls ./desktop",
+        note: "Desktop & Ricing",
+        items: DESKTOP_SKILLS,
+    },
+    {
+        cmd: "ls ./ai",
+        note: "AI & Compute",
+        items: AI_SKILLS,
+    },
+    {
+        cmd: "ls ./tools",
+        note: "Tools & Creative",
+        items: TOOL_SKILLS,
+    },
+    {
+        cmd: "ls ./os",
+        note: "Operating Systems",
+        items: OS_SKILLS,
+    },
 ];
 
 // --- 4. Interests ---
@@ -210,14 +262,19 @@ const ENV_BLOCKS = [
             { k: "monitor.sub", v: "27-inch WQHD 75Hz" },
             { k: "editor", v: "Zed" },
             { k: "browser", v: "Google Chrome" },
-            { k: "wm", v: "Hyprland / GlazeWM" },
-            { k: "bar", v: "Waybar / Zebar" },
+
+            { k: "linux.wm", v: "Hyprland" },
+            { k: "linux.shell", v: "Caelestia Shell" },
+
+            { k: "windows.wm", v: "GlazeWM" },
+            { k: "windows.bar", v: "Zebar" },
         ],
     },
 ];
 
 // --- Timeline (git log style / newest first) ---
 const TIMELINE = [
+    { date: "2026.08.14", desc: "デスクトップシェルをCaelestia Shellへ移行" },
     { date: "2026.05.30", desc: "ホームページをターミナル風デザインに大改造" },
     { date: "2026.04.24", desc: "UEC Career Boot Festa 2026のNOCに参加" },
     { date: "2026.03.10", desc: "基本情報技術者試験 合格" },
