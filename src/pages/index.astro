@@ -16,6 +16,8 @@ import {
 } from "../consts";
 import { Image } from "astro:assets";
 import heroImage from "../assets/toramutton.jpg";
+import pcDesktopImg from "../assets/desktop/fastfetch.jpeg";
+import pcCaseImg from "../assets/desktop/trapezium-8.png";
 import rssParser from "rss-parser";
 import { fetchOgpImage } from "../utils/rss";
 import { fetchFavicon } from "../utils/favicon";
@@ -706,6 +708,24 @@ const linksWithIcons = await Promise.all(
                         <h3>My Desktop PC</h3>
                     </div>
                     <div class="card-body">
+                        <div class="pc-visual">
+                            <div class="pc-visual-base">
+                                <Image
+                                    src={pcDesktopImg}
+                                    alt="Hyprland desktop, trapezium-08"
+                                    class="pc-visual-img"
+                                />
+                            </div>
+                            <div class="pc-visual-shadow" aria-hidden="true">
+                            </div>
+                            <div class="pc-visual-overlay">
+                                <Image
+                                    src={pcCaseImg}
+                                    alt="Ryzen 7 7700 + Radeon RX 9060 XT machine interior"
+                                    class="pc-visual-img"
+                                />
+                            </div>
+                        </div>
                         <p class="card-desc">
                             Ryzen 7 7700 + Radeon RX 9060 XT 16GB 構成。
                             2026/02/13~
@@ -2202,6 +2222,79 @@ const linksWithIcons = await Promise.all(
     }
     .icon-secondary {
         color: var(--accent-blue);
+    }
+
+    /* ====================================
+       4.3 My Desktop PC — ビジュアル
+       ==================================== */
+    .pc-visual {
+        position: relative;
+        aspect-ratio: 8 / 5;
+        margin-bottom: calc(6% + 1rem);
+    }
+
+    .pc-visual-base {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        border: 1px solid var(--border-color);
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 24% 100%, 0 76%);
+        transition: transform 0.35s cubic-bezier(0.2, 0, 0.2, 1);
+    }
+
+    .pc-visual-shadow {
+        position: absolute;
+        left: -4%;
+        bottom: -8%;
+        width: 46%;
+        aspect-ratio: 4 / 5;
+        z-index: 2;
+        background: var(--border-color);
+        clip-path: polygon(0 6%, 88% 0, 100% 92%, 12% 100%);
+        transform: translate(7px, 7px);
+        transition:
+            transform 0.35s cubic-bezier(0.2, 0, 0.2, 1),
+            background-color 0.35s ease;
+    }
+
+    .pc-visual-overlay {
+        position: absolute;
+        left: -4%;
+        bottom: -8%;
+        width: 46%;
+        aspect-ratio: 4 / 5;
+        z-index: 3;
+        border: 1px solid var(--border-color);
+        clip-path: polygon(0 6%, 88% 0, 100% 92%, 12% 100%);
+        transition: transform 0.35s cubic-bezier(0.2, 0, 0.2, 1);
+    }
+
+    .pc-visual-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    @media (hover: hover) {
+        .project-card:hover .pc-visual-shadow {
+            transform: translate(12px, 12px);
+            background: var(--accent-blue);
+        }
+        .project-card:hover .pc-visual-overlay {
+            transform: translate(-3px, -3px);
+        }
+        .project-card:hover .pc-visual-base {
+            transform: scale(1.02);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .pc-visual-base,
+        .pc-visual-shadow,
+        .pc-visual-overlay {
+            transition: none;
+        }
     }
 
     /* ====================================
