@@ -331,20 +331,17 @@ n進数・キャッシュ・アセンブリ言語(MIPS)・仮想記憶など、�
 
 ここからはほぼ自分用ですが、この2年前期(4月～7月)で学業以外でしたことをまとめます。
 
-### UEC-ENOC
+### 技術記事
 
-4月にて、研究室の先輩達のもと大学のイベントのNOC(Network Operations Center)をやりました。
-11月受験予定の**応用情報技術者試験**のネットワーク分野がこれでサクサク理解できてます。本当に貴重な経験だ...
+2年前期に書いた記事はこちら。
 
-詳しくは下の記事にて！
+- [UEC-ENOC](https://zenn.dev/toramutton/articles/uec-enoc2026)
 
-https://zenn.dev/toramutton/articles/uec-enoc2026
+- [自己紹介](https://note.com/toramutton/n/n338320294cf6)
 
-### 技術記事の執筆
+- [C言語のコンパイル時短](https://zenn.dev/toramutton/articles/clang-bash-gcr)
 
-TODO(Zenn・note・Qiitaでのアウトプット。今期書いた本数と、伸びた記事の話)
-
-TODO(代表的な記事へのリンクを2〜3本)
+- [VSCodeからZedへ](https://zenn.dev/toramutton/articles/zed-debut-ssh)
 
 ### Discord Bot (Rust + Fly.io)
 
@@ -353,12 +350,6 @@ TODO(fxtwitter-botの話。Shuttle.rsが終了してFly.ioに移行した経緯)
 ### AtCoder
 
 TODO(Rustでの参戦記録。cargo-competeの環境構築、現在のレート)
-
-### 開発環境
-
-TODO(AstroNvim → Zed への完全移行)
-
-TODO(Zenn記事へのリンク)
 
 ### バイト
 
