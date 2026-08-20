@@ -1,6 +1,6 @@
 ---
 export const prerender = true;
-import { getCollection } from "astro:content";
+import { getVisiblePosts } from "../utils/post";
 import BaseHead from "../components/BaseHead.astro";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
@@ -19,11 +19,7 @@ import { Rocket, Milestone } from "lucide-astro";
 // === 記事データの解決 ===
 // status: "locked" のエントリは title/note を一切参照せず、
 // 問答無用で「ロック状態」だけを返す(=HTMLにネタバレが出ない)
-const isDev = import.meta.env.DEV;
-const localPosts = await getCollection(
-    "blog",
-    ({ data }) => isDev || data.draft !== true,
-);
+const localPosts = await getVisiblePosts();
 
 interface ResolvedEntry {
     status: "locked" | "open";

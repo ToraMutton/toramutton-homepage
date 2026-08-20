@@ -8,6 +8,7 @@ import Footer from "../../components/Footer.astro";
 import Header from "../../components/Header.astro";
 import { SITE_DESCRIPTION, SITE_TITLE } from "../../consts";
 import { fetchOgpImage } from "../../utils/rss";
+import { getVisiblePosts } from "../../utils/post";
 
 type UnifiedPost = {
     title: string;
@@ -39,12 +40,8 @@ const getImageUrl = (item: any) => {
     return item.content?.match(/src="(https:\/\/[^"]+)"/)?.[1];
 };
 
-const isDev = import.meta.env.DEV;
-
 // A. ローカル記事
-const localPostsRaw = await getCollection("blog", ({ data }) => {
-    return isDev || data.draft !== true;
-});
+const localPostsRaw = await getVisiblePosts();
 const localPosts: UnifiedPost[] = localPostsRaw.map((post) => ({
     title: post.data.title,
     url: `/blog/${post.id}/`,
