@@ -1,71 +1,24 @@
-import { getCollection } from "astro:content";
 import rss from "@astrojs/rss";
 import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
+import { getVisiblePosts } from "../utils/post";
+// note / Zenn / Qiita の取得は src/utils/feeds.ts に集約している
+import { getExternalPosts } from "../utils/feeds";
 
 export const prerender = true;
 
-import rssParser from "rss-parser";
-
 export async function GET(context) {
-  const isDev = import.meta.env.DEV;
-  const posts = await getCollection(
-    "blog",
-    ({ data }) => isDev || data.draft !== true,
-  );
+  const posts = await getVisiblePosts();
   const localItems = posts.map((post) => ({
     ...post.data,
     link: `/blog/${post.id}/`,
   }));
 
-  const parser = new rssParser();
-  let externalItems = [];
-
-  if (!isDev) {
-    try {
-      const zennFeed = await parser.parseURL(
-        `https://zenn.dev/toramutton/feed?t=${Date.now()}`,
-      );
-      const zennItems = zennFeed.items.map((item) => ({
-        title: item.title,
-        pubDate: new Date(item.pubDate),
-        description: item.contentSnippet || item.title,
-        link: item.link,
-      }));
-      externalItems.push(...zennItems);
-    } catch (e) {
-      console.error("Zenn RSS fetch failed in rss.xml.js", e);
-    }
-
-    try {
-      const qiitaFeed = await parser.parseURL(
-        `https://qiita.com/ToraMutton/feed?t=${Date.now()}`,
-      );
-      const qiitaItems = qiitaFeed.items.map((item) => ({
-        title: item.title,
-        pubDate: new Date(item.pubDate),
-        description: item.contentSnippet || item.title,
-        link: item.link,
-      }));
-      externalItems.push(...qiitaItems);
-    } catch (e) {
-      console.error("Qiita RSS fetch failed in rss.xml.js", e);
-    }
-
-    try {
-      const noteFeed = await parser.parseURL(
-        `https://note.com/toramutton/rss?t=${Date.now()}`,
-      );
-      const noteItems = noteFeed.items.map((item) => ({
-        title: item.title,
-        pubDate: new Date(item.pubDate),
-        description: item.contentSnippet || item.title,
-        link: item.link,
-      }));
-      externalItems.push(...noteItems);
-    } catch (e) {
-      console.error("Note RSS fetch failed in rss.xml.js", e);
-    }
-  }
+  const externalItems = (await getExternalPosts()).map((post) => ({
+    title: post.title,
+    pubDate: post.date,
+    description: post.description,
+    link: post.url,
+  }));
 
   const allItems = [...localItems, ...externalItems].sort(
     (a, b) => b.pubDate.valueOf() - a.pubDate.valueOf(),
