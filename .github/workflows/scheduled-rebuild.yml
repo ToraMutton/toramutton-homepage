@@ -1,0 +1,37 @@
+# note / Zenn / Qiita の記事一覧と GitHub の草グラフは、ビルドした瞬間の内容が
+# HTML に焼き付く。放っておくと永久に古いままなので、1日1回サイトを焼き直す。
+#
+# ここでは Vercel の Deploy Hook（叩くとリビルドが始まる専用URL）を叩くだけ。
+# 実際のビルドは Vercel 側で走るので、このジョブ自体は数秒で終わる。
+#
+# 事前準備（1回だけ）:
+#   1. Vercel → プロジェクト → Settings → Git → Deploy Hooks で
+#      名前 "daily-rebuild" / ブランチ "main" のフックを作り、URL をコピー
+#   2. GitHub → リポジトリ → Settings → Secrets and variables → Actions →
+#      New repository secret に VERCEL_DEPLOY_HOOK_URL という名前で貼り付け
+name: Scheduled rebuild
+
+on:
+  schedule:
+    # GitHub Actions の時刻指定は UTC なので、JST 07:00 = UTC 22:00（前日）
+    # 混雑時は数十分ずれることがあるが、1日1回の用途なら問題ない
+    - cron: "0 22 * * *"
+  # Actions タブから手動でも実行できるようにしておく（動作確認用）
+  workflow_dispatch:
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel Deploy Hook
+        env:
+          HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$HOOK_URL" ]; then
+            echo "::error::VERCEL_DEPLOY_HOOK_URL が未設定です。リポジトリの Settings → Secrets and variables → Actions で登録してください。"
+            exit 1
+          fi
+          # -f: HTTPエラーで失敗扱いにする / -sS: 進捗は出さずエラーだけ出す
+          curl -fsS -X POST "$HOOK_URL"
+          echo ""
+          echo "Vercel にリビルドを依頼しました。進行状況は Vercel のダッシュボードで確認できます。"
