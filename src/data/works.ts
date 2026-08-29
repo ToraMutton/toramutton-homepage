@@ -47,7 +47,7 @@ export const works: Work[] = [
   {
     name: "ToraMutton's Homepage",
     description:
-      "Astro + Vercelで構築したこのサイトです。GitHub Actionsを用いたnote/Zenn/Qiita記事のRSS自動取得・ビルド機能完備。最近デザインを一新しました",
+      "Astro + Vercelで構築したこのサイトです。note/Zenn/Qiitaの記事をビルド時に取得し、GitHub ActionsからVercelを毎日自動リビルド。最近デザインも一新しました。",
     url: "https://toramutton.me",
     github: "https://github.com/ToraMutton/toramutton-homepage",
     tags: ["Astro", "TypeScript", "Vercel"],
@@ -59,8 +59,8 @@ export const works: Work[] = [
   {
     name: "Arch Linux Dotfiles",
     description:
-      "HyprlandやWaybar、Neovim等で構築されたArch Linuxのdotfiles。GNU Stowを用いて管理しています。",
-    tags: ["Linux", "Hyprland", "Waybar"],
+      "HyprlandとCaelestia Shellを中心に構築したArch Linuxのdotfiles。Hyprlandの設定はLuaで分割管理し、GNU Stowでホームディレクトリへ展開しています。",
+    tags: ["Linux", "Hyprland", "Caelestia"],
     icon: Terminal,
     year: "2026",
     url: "",
@@ -71,7 +71,7 @@ export const works: Work[] = [
   {
     name: "ArToram",
     description:
-      "Canvas APIを使った幾何学アートジェネレーター。数式のパラメータをリアルタイムで操作し、生成された画像をエクスポートできるWebツール。",
+      "20種類の描画アルゴリズムを備えた幾何学アートジェネレーター。数式パラメータや配色をリアルタイムで調整し、FHD・WQHD・4Kなどの高解像度画像として保存できます。",
     tags: ["TypeScript", "Canvas API", "React"],
     icon: Shapes,
     year: "2026",
@@ -142,7 +142,7 @@ export const works: Work[] = [
   {
     name: "TORANOI",
     description:
-      "自作PCの AMD Radeon RX 9060 XT 16GB と ROCm を活用した、ローカルLLM構築プロジェクト。",
+      "AMD Radeon RX 9060 XT 16GBとROCmを活用し、Ollamaを中心としたローカルLLM環境と独自チャットUIを構築するプロジェクト。",
     tags: ["Python", "ROCm", "LLM"],
     icon: Cpu,
     year: "2026",
