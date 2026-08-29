@@ -1,4 +1,8 @@
 ---
+// 全ページ共通の骨組み。
+// <html> / <head> / <body> / ヘッダー / フッターはここ1箇所だけで持つ。
+// ページ側は中身（<main> に入る部分）だけを書けばいい。
+import type { ImageMetadata } from "astro";
 import BaseHead from "../components/BaseHead.astro";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
@@ -6,16 +10,53 @@ import Footer from "../components/Footer.astro";
 interface Props {
     title: string;
     description: string;
+    /** OGP画像。省略するとサイト共通の画像になる */
+    image?: ImageMetadata;
+    /**
+     * 本文エリアの横幅。
+     *   default … サイト標準（トップページ・Aboutなど）
+     *   narrow  … 読み物向けの900px（Blog一覧 / Works / Advent）
+     *   full    … 画面いっぱい（記事ページ。ヒーロー画像を端まで出すため）
+     */
+    width?: "default" | "narrow" | "full";
 }
-const { title, description } = Astro.props;
+
+const { title, description, image, width = "default" } = Astro.props;
 ---
 
-<!-- src/layouts/BaseLayout.astro -->
 <html lang="ja">
-    <head><BaseHead {title} {description} /></head>
+    <head>
+        <BaseHead {title} {description} {image} />
+        <slot name="head" />
+    </head>
     <body>
         <Header />
-        <main><slot /></main>
+        <main class={width}><slot /></main>
         <Footer />
+        {/* ページ固有の <script> をここに置くためのスロット */}
+        <slot name="body-end" />
     </body>
 </html>
+
+<style>
+    /* 読み物向け。固定ヘッダーに隠れないよう上に余白を取る */
+    main.narrow {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 6rem 1.5rem 3rem;
+    }
+
+    /* 記事ページ。ヒーロー画像を画面端まで届かせる */
+    main.full {
+        width: 100%;
+        max-width: 100%;
+        margin: 0 auto;
+        padding-top: 80px;
+    }
+
+    @media (max-width: 720px) {
+        main.narrow {
+            padding: 5rem 1rem 2rem;
+        }
+    }
+</style>

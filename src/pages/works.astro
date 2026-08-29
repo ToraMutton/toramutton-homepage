@@ -1,8 +1,6 @@
 ---
 export const prerender = true;
-import BaseHead from '../components/BaseHead.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
+import Layout from '../layouts/BaseLayout.astro';
 import { SITE_TITLE } from '../consts';
 import { Image } from 'astro:assets';
 import { ExternalLink, Github, CheckCircle2, Hammer, Lightbulb } from 'lucide-astro';
@@ -14,14 +12,11 @@ const inProgressWorks = works.filter((w) => w.status === 'in-progress');
 const plannedWorks = works.filter((w) => w.status === 'planned');
 ---
 
-<!doctype html>
-<html lang="ja">
-    <head>
-        <BaseHead title={`${SITE_TITLE} | Works`} description="制作物一覧" />
-    </head>
-    <body>
-        <Header />
-        <main>
+<Layout
+    title={`${SITE_TITLE} | Works`}
+    description="制作物一覧"
+    width="narrow"
+>
             <section class="works-section">
                 <h1 class="works-title">Works</h1>
                 <p class="works-desc">
@@ -205,17 +200,9 @@ const plannedWorks = works.filter((w) => w.status === 'planned');
                     )
                 }
             </section>
-        </main>
-        <Footer />
-    </body>
-</html>
+</Layout>
 
 <style>
-    main {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 6rem 1.5rem 3rem;
-    }
 
     /* =========================================
        1. ヘッダ部
@@ -509,9 +496,6 @@ const plannedWorks = works.filter((w) => w.status === 'planned');
        6. モバイル対応
        ========================================= */
     @media (max-width: 720px) {
-        main {
-            padding: 5rem 1rem 2rem;
-        }
 
         .work-row {
             grid-template-columns: 2rem 1fr auto;

@@ -1,147 +1,39 @@
 ---
 export const prerender = true;
 import { Image } from "astro:assets";
-import { getCollection } from "astro:content";
-import Parser from "rss-parser";
-import BaseHead from "../../components/BaseHead.astro";
-import Footer from "../../components/Footer.astro";
-import Header from "../../components/Header.astro";
+import Layout from '../../layouts/BaseLayout.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from "../../consts";
-import { fetchOgpImage } from "../../utils/rss";
 import { getVisiblePosts } from "../../utils/post";
-
-type UnifiedPost = {
-    title: string;
-    url: string;
-    date: Date;
-    image?: string | any;
-    source: "local" | "note" | "zenn" | "qiita";
-    tags: string[];
-};
-
-const parser = new Parser({
-    customFields: {
-        item: [
-            ["media:thumbnail", "thumbnail"],
-            ["category", "categories", { keepArray: true }],
-        ],
-    },
-});
-
-const getImageUrl = (item: any) => {
-    if (item.thumbnail) {
-        return typeof item.thumbnail === "string"
-            ? item.thumbnail
-            : item.thumbnail.$?.url;
-    }
-    if (item.enclosure?.url) {
-        return item.enclosure.url;
-    }
-    return item.content?.match(/src="(https:\/\/[^"]+)"/)?.[1];
-};
+// note / Zenn / Qiita の取得は src/utils/feeds.ts に集約している
+import { getExternalPosts } from "../../utils/feeds";
 
 // A. ローカル記事
 const localPostsRaw = await getVisiblePosts();
-const localPosts: UnifiedPost[] = localPostsRaw.map((post) => ({
+const localPosts = localPostsRaw.map((post) => ({
     title: post.data.title,
     url: `/blog/${post.id}/`,
     date: post.data.pubDate,
     image: post.data.heroImage,
-    source: "local",
+    source: "local" as const,
     tags: post.data.tags || [],
 }));
 
-// B. Note記事
-let notePosts: UnifiedPost[] = [];
-try {
-    const noteFeed = await parser.parseURL("https://note.com/toramutton/rss");
-    notePosts = noteFeed.items.map((item: any) => {
-        const rawTags = item.categories;
-        const safeTags =
-            Array.isArray(rawTags) && rawTags.length > 0 ? rawTags : ["Note"];
-        return {
-            title: item.title || "無題",
-            url: item.link || "",
-            date: new Date(item.pubDate || new Date()),
-            image: getImageUrl(item),
-            source: "note",
-            tags: safeTags,
-        };
-    });
-} catch (e) {
-    console.error("Note RSS fetch failed", e);
-}
+// B. 外部記事（note / Zenn / Qiita）
+const externalPosts = await getExternalPosts();
 
-// C. Zenn記事
-let zennPosts: UnifiedPost[] = [];
-try {
-    const zennFeed = await parser.parseURL("https://zenn.dev/toramutton/feed");
-    zennPosts = zennFeed.items.map((item: any) => ({
-        title: item.title || "無題",
-        url: item.link || "",
-        date: new Date(item.pubDate || new Date()),
-        image:
-            item.enclosure?.url ||
-            item.content?.match(/src="(https:\/\/[^"]+)"/)?.[1],
-        source: "zenn",
-        tags: ["Zenn"],
-    }));
-} catch (e) {
-    console.error("Zenn RSS fetch failed", e);
-}
-
-// D. Qiita記事
-let qiitaPosts: UnifiedPost[] = [];
-try {
-    const qiitaFeed = await parser.parseURL(
-        "https://qiita.com/toramutton/feed",
-    );
-    const qiitaItems = qiitaFeed.items.map(async (item: any) => {
-        const rawTags = item.categories;
-        const safeTags =
-            Array.isArray(rawTags) && rawTags.length > 0 ? rawTags : ["Qiita"];
-
-        let imageUrl = getImageUrl(item);
-        if (!imageUrl && item.link) {
-            imageUrl = await fetchOgpImage(item.link);
-        }
-
-        return {
-            title: item.title || "無題",
-            url: item.link || "",
-            date: new Date(item.pubDate || new Date()),
-            image: imageUrl,
-            source: "qiita" as const,
-            tags: safeTags,
-        };
-    });
-    qiitaPosts = await Promise.all(qiitaItems);
-} catch (e) {
-    console.error("Qiita RSS fetch failed", e);
-}
-
-const allPosts = [
-    ...localPosts,
-    ...notePosts,
-    ...zennPosts,
-    ...qiitaPosts,
-].sort((a, b) => b.date.valueOf() - a.date.valueOf());
+const allPosts = [...localPosts, ...externalPosts].sort(
+    (a, b) => b.date.valueOf() - a.date.valueOf(),
+);
 
 // 画像レイヤーを使うソース (local + note)
 const IMAGE_SOURCES = new Set(["local", "note"]);
 ---
 
-<!doctype html>
-<html lang="ja">
-    <head>
-        <BaseHead
-            title={`${SITE_TITLE} | Blog`}
-            description={SITE_DESCRIPTION}
-        />
-    </head>
-    <body>
-        <Header />
-        <main>
+<Layout
+    title={`${SITE_TITLE} | Blog`}
+    description={SITE_DESCRIPTION}
+    width="narrow"
+>
             <section class="blog-section">
                 <h1 class="blog-title">Blog</h1>
                 <p class="blog-desc">
@@ -337,9 +229,8 @@ const IMAGE_SOURCES = new Set(["local", "note"]);
                     <p>// no posts found</p>
                 </div>
             </section>
-        </main>
-        <Footer />
 
+        <Fragment slot="body-end">
         <script>
             {
                 const searchInput = document.getElementById(
@@ -500,15 +391,10 @@ const IMAGE_SOURCES = new Set(["local", "note"]);
                 }
             }
         </script>
-    </body>
-</html>
+        </Fragment>
+</Layout>
 
 <style>
-    main {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 6rem 1.5rem 3rem;
-    }
 
     /* =========================================
        1. ヘッダ部
@@ -1025,9 +911,6 @@ const IMAGE_SOURCES = new Set(["local", "note"]);
        10. モバイル (max-width: 720px)
        ========================================= */
     @media (max-width: 720px) {
-        main {
-            padding: 5rem 1rem 2rem;
-        }
 
         .blog-title {
             font-size: 1.6rem;

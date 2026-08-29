@@ -1,9 +1,7 @@
 ---
 export const prerender = true;
 import { getCollection } from "astro:content";
-import BaseHead from "../components/BaseHead.astro";
-import Header from "../components/Header.astro";
-import Footer from "../components/Footer.astro";
+import Layout from "../layouts/BaseLayout.astro";
 import {
     SITE_TITLE,
     SITE_DESCRIPTION,
@@ -18,8 +16,8 @@ import { Image } from "astro:assets";
 import heroImage from "../assets/toramutton.jpg";
 import pcDesktopImg from "../assets/desktop/fastfetch.jpeg";
 import pcCaseImg from "../assets/desktop/trapezium-8.png";
-import rssParser from "rss-parser";
-import { fetchOgpImage } from "../utils/rss";
+// note / Zenn / Qiita の取得は src/utils/feeds.ts に集約している
+import { getExternalPosts } from "../utils/feeds";
 import friendLinks from "../data/links.json";
 import faviconMapJson from "../data/favicon-map.json";
 import {
@@ -41,45 +39,11 @@ import {
     uptimes,
 } from "../data/home";
 
-// === RSSフィード取得 ===
-const parser = new rssParser({
-    customFields: {
-        item: [
-            ["media:thumbnail", "thumbnail"],
-            ["enclosure", "enclosure"],
-        ],
-    },
-});
-
+// === 記事一覧 ===
 const isDev = import.meta.env.DEV;
 
-const getImageUrl = (item: any) => {
-    // 1. media:thumbnail
-    if (item.thumbnail) {
-        return typeof item.thumbnail === "string"
-            ? item.thumbnail
-            : item.thumbnail.$?.url;
-    }
-
-    // 2. enclosure
-    if (item.enclosure?.url) {
-        return item.enclosure.url;
-    }
-
-    // 3. undefinedを返す
-    return undefined;
-};
-
-interface UnifiedPost {
-    title: string;
-    url: string;
-    date: Date;
-    image?: string | any;
-    source: "local" | "note" | "zenn" | "qiita";
-}
-
-// Local記事
-const localPostsRaw = await getCollection("blog", ({ data }) => {
+// ローカル記事（下書きは dev でだけ見える）
+const localPostsRaw = await getCollection('blog', ({ data }) => {
     return isDev || data.draft !== true;
 });
 
@@ -89,75 +53,14 @@ const localPosts = localPostsRaw.map((post) => ({
     date: post.data.pubDate,
     image: post.data.heroImage,
     tags: post.data.tags,
-    source: "local" as const,
+    source: 'local' as const,
 }));
 
-// Note記事
-let notePosts: UnifiedPost[] = [];
-if (!isDev) {
-    try {
-        const noteFeed = await parser.parseURL(
-            `https://note.com/toramutton/rss?t=${Date.now()}`,
-        );
-        notePosts = noteFeed.items.map((item: any) => ({
-            title: item.title || "無題",
-            url: item.link || "",
-            date: new Date(item.pubDate || new Date()),
-            image: getImageUrl(item),
-            source: "note",
-        }));
-    } catch (e) {
-        console.error("Note RSS fetch failed", e);
-    }
-}
-
-// Zenn記事
-let zennPosts: UnifiedPost[] = [];
-if (!isDev) {
-    try {
-        const zennFeed = await parser.parseURL(
-            `https://zenn.dev/toramutton/feed?t=${Date.now()}`,
-        );
-        zennPosts = zennFeed.items.map((item: any) => ({
-            title: item.title || "無題",
-            url: item.link || "",
-            date: new Date(item.pubDate || new Date()),
-            image: item.enclosure?.url,
-            source: "zenn",
-        }));
-    } catch (e) {
-        console.error("Zenn RSS fetch failed", e);
-    }
-}
-
-// Qiita記事
-let qiitaPosts: UnifiedPost[] = [];
-if (!isDev) {
-    try {
-        const qiitaFeed = await parser.parseURL(
-            `https://qiita.com/ToraMutton/feed?t=${Date.now()}`,
-        );
-        const qiitaItems = qiitaFeed.items.map(async (item: any) => {
-            let imageUrl = item.enclosure?.url;
-            if (!imageUrl && item.link) {
-                imageUrl = await fetchOgpImage(item.link);
-            }
-            return {
-                title: item.title || "無題",
-                url: item.link || "",
-                date: new Date(item.pubDate || new Date()),
-                image: imageUrl,
-                source: "qiita" as const,
-            };
-        });
-        qiitaPosts = await Promise.all(qiitaItems);
-    } catch (e) {
-        console.error("Qiita RSS fetch failed", e);
-    }
-}
+// note / Zenn / Qiita。取得は src/utils/feeds.ts に集約している
+const externalPosts = await getExternalPosts();
 
 // 統合・ソート・抽出
-const latestPosts = [...localPosts, ...notePosts, ...zennPosts, ...qiitaPosts]
+const latestPosts = [...localPosts, ...externalPosts]
     .sort((a, b) => b.date.valueOf() - a.date.valueOf())
     .slice(0, 5); // 最新記事、5選
 
@@ -210,14 +113,7 @@ const linksWithIcons = friendLinks.map((link) => ({
 }));
 ---
 
-<!doctype html>
-<html lang="ja">
-    <head>
-        <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-    </head>
-    <body>
-        <Header />
-        <main>
+<Layout title={SITE_TITLE} description={SITE_DESCRIPTION}>
             <section class="hero" data-hero>
                 <div class="hero-grid">
                     <!-- 左カラム: terminal -->
@@ -1394,10 +1290,7 @@ const linksWithIcons = friendLinks.map((link) => ({
                 );
             </script>
 
-            <Footer />
-        </main>
-    </body>
-</html>
+</Layout>
 
 <style>
     /* ====================================
