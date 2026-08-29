@@ -1,14 +1,20 @@
 /**
- * 相互リンク先の favicon をダウンロードして public/favicons/auto/ に保存するスクリプト。
+ * 相互リンクのアイコンを整えるスクリプト。
  *
  *   npm run favicons
  *
- * src/data/links.json のうち "icon": null のエントリだけが対象。
- * 取得した画像は 64px の WebP に縮小してから保存し、
- * URL → 公開パスの対応表を src/data/favicon-map.json に書き出す。
+ * src/data/links.json を見て、2つのことをやる。
+ *
+ *   [1] "icon" にパスが書いてある（手動指定）→ その画像を 64px の WebP に縮小する。
+ *       public/ の中身は Astro が最適化してくれないので、ここで小さくしておく。
+ *       縮小済みのものは飛ばすので、何度実行しても画質は劣化しない。
+ *
+ *   [2] "icon": null（自動取得）→ 相手サイトから favicon を拾って
+ *       public/favicons/auto/ に縮小保存し、URL → パスの対応表を
+ *       src/data/favicon-map.json に書き出す。
  *
  * ビルド時にネットへ出ないようにするための事前準備スクリプトなので、
- * 実行後は public/favicons/auto/ と favicon-map.json をコミットすること。
+ * 実行後は public/favicons/ と links.json / favicon-map.json をコミットすること。
  */
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -17,6 +23,7 @@ import sharp from "sharp";
 const ROOT = path.resolve(import.meta.dirname, "..");
 const LINKS_PATH = path.join(ROOT, "src/data/links.json");
 const MAP_PATH = path.join(ROOT, "src/data/favicon-map.json");
+const PUBLIC_DIR = path.join(ROOT, "public");
 const OUT_DIR = path.join(ROOT, "public/favicons/auto");
 const PUBLIC_PREFIX = "/favicons/auto";
 
@@ -224,8 +231,86 @@ function baseNameOf(pageUrl) {
 
 const kb = (n) => `${(n / 1024).toFixed(1)} KB`;
 
+/**
+ * [1] 手動指定アイコンの縮小。
+ * public/ に置いた画像は Astro の最適化が効かず原寸のまま配信されるので、
+ * ここで 64px の WebP に落としておく。拡張子が変わった分は links.json に反映する。
+ * @returns links.json を書き換えたか
+ */
+async function optimizeManualIcons(links) {
+  let changed = false;
+  let before = 0;
+  let after = 0;
+  let done = 0;
+
+  for (const link of links) {
+    const icon = link.icon;
+    if (!icon || !icon.startsWith("/favicons/")) continue;
+
+    const filePath = path.join(PUBLIC_DIR, icon);
+    let buf;
+    try {
+      buf = await fs.readFile(filePath);
+    } catch {
+      console.warn(`  ✗ ${link.name} — ${icon} が見つかりません`);
+      continue;
+    }
+
+    const mime = sniffMime(buf);
+    if (!mime) {
+      console.warn(`  ✗ ${link.name} — 画像として読めませんでした（${icon}）`);
+      continue;
+    }
+    if (mime === "image/svg+xml") continue; // ベクタなので縮小しない
+
+    // すでに縮小済みなら触らない。再実行のたびに再圧縮して劣化するのを防ぐ
+    if (mime === "image/webp") {
+      const meta = await sharp(buf)
+        .metadata()
+        .catch(() => null);
+      if (meta && meta.width <= ICON_SIZE && meta.height <= ICON_SIZE) continue;
+    }
+
+    const optimized = await optimize(buf, mime);
+    if (!optimized || optimized.ext !== "webp") {
+      console.warn(`  ✗ ${link.name} — 変換できませんでした（${mime}）`);
+      continue;
+    }
+
+    const newIcon = `${icon.replace(/\.[^./]+$/, "")}.${optimized.ext}`;
+    await fs.writeFile(path.join(PUBLIC_DIR, newIcon), optimized.data);
+    if (newIcon !== icon) {
+      await fs.rm(filePath); // 拡張子が変わったので元ファイルは不要
+      link.icon = newIcon;
+      changed = true;
+    }
+
+    before += buf.length;
+    after += optimized.data.length;
+    done++;
+    console.log(
+      `  ✓ ${link.name} — ${kb(buf.length)} → ${kb(optimized.data.length)}  ${path.basename(newIcon)}`,
+    );
+  }
+
+  if (done === 0) console.log("  すべて最適化済みでした");
+  else console.log(`  合計 ${kb(before)} → ${kb(after)}`);
+
+  return changed;
+}
+
 async function main() {
   const links = JSON.parse(await fs.readFile(LINKS_PATH, "utf8"));
+  const manualCount = links.filter((l) => l.icon).length;
+  const targets = links.filter((l) => !l.icon);
+
+  console.log(`[1/2] 手動アイコンの縮小 — ${manualCount} 件`);
+  if (await optimizeManualIcons(links)) {
+    await fs.writeFile(LINKS_PATH, `${JSON.stringify(links, null, 2)}\n`);
+    console.log("  links.json のパスを更新しました");
+  }
+
+  console.log(`\n[2/2] favicon の自動取得 — ${targets.length} 件`);
 
   /** 前回の結果。取得に失敗したサイトは前回のアイコンを使い続ける */
   let prevMap = {};
@@ -234,11 +319,6 @@ async function main() {
   } catch {
     /* 初回は空 */
   }
-
-  const targets = links.filter((l) => !l.icon);
-  console.log(
-    `対象 ${targets.length} 件 / 全 ${links.length} 件（手動アイコン指定は除外）\n`,
-  );
 
   await fs.mkdir(OUT_DIR, { recursive: true });
 
@@ -285,8 +365,8 @@ async function main() {
   const sorted = Object.fromEntries(Object.entries(map).sort(([a], [b]) => (a < b ? -1 : 1)));
   await fs.writeFile(MAP_PATH, `${JSON.stringify(sorted, null, 2)}\n`);
 
-  console.log(`\n合計 ${kb(totalBefore)} → ${kb(totalAfter)}`);
-  console.log(`対応表を書き出しました: src/data/favicon-map.json`);
+  console.log(`  合計 ${kb(totalBefore)} → ${kb(totalAfter)}`);
+  console.log("  対応表を書き出しました: src/data/favicon-map.json");
 }
 
 main().catch((e) => {

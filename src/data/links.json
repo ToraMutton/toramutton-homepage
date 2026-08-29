@@ -15,19 +15,19 @@
     "name": "綿糸てせ",
     "url": "https://ctes091x.net/",
     "description": "PGP Keyが置いてあります",
-    "icon": "/favicons/ctes091x.jpg"
+    "icon": "/favicons/ctes091x.webp"
   },
   {
     "name": "ThunFasky",
     "url": "https://thunfasky.com/",
     "description": "PC構成の恩師であり、1クラのキチガイ担当",
-    "icon": "/favicons/thunfasky.jpg"
+    "icon": "/favicons/thunfasky.webp"
   },
   {
     "name": "こっとん",
     "url": "https://cotton7.me/",
     "description": "同じ.me派閥でうれしい",
-    "icon": "/favicons/cotton.jpg"
+    "icon": "/favicons/cotton.webp"
   },
   {
     "name": "yonu",
@@ -39,19 +39,19 @@
     "name": "Np",
     "url": "https://negapainter.work/",
     "description": "Switch改造大魔神",
-    "icon": "/favicons/np.jpg"
+    "icon": "/favicons/np.webp"
   },
   {
     "name": "ぽりとす",
     "url": "https://polythos.net/",
     "description": "目指せキリ番",
-    "icon": "/favicons/polythos.jpg"
+    "icon": "/favicons/polythos.webp"
   },
   {
     "name": "RM",
     "url": "https://my-homepage-2qz3.vercel.app/",
     "description": "イラストうますぎです",
-    "icon": "/favicons/rm.jpg"
+    "icon": "/favicons/rm.webp"
   },
   {
     "name": "ど　ら",
@@ -63,7 +63,7 @@
     "name": "サンバ",
     "url": "https://babasanbaba.github.io/",
     "description": "全部やるぞ感",
-    "icon": "/favicons/sanba.jpg"
+    "icon": "/favicons/sanba.webp"
   },
   {
     "name": "lizelit",
@@ -81,24 +81,24 @@
     "name": "Lanips",
     "url": "https://lanips-homepage.vercel.app/profile",
     "description": "homeの図形生成かっこよすぎだろ！",
-    "icon": "/favicons/lanips.jpg"
+    "icon": "/favicons/lanips.webp"
   },
   {
     "name": "鯛",
     "url": "https://my-homepage-olive.vercel.app/",
     "description": "半値の由来になった鯛焼きを見てみたい",
-    "icon": "/favicons/tai.jpg"
+    "icon": "/favicons/tai.webp"
   },
   {
     "name": "あみーご",
     "url": "https://amigo-homepage.vercel.app/",
     "description": "シールをペタペタ",
-    "icon": "/favicons/amigo.jpg"
+    "icon": "/favicons/amigo.webp"
   },
   {
     "name": "水木",
     "url": "https://my-homepage-rosy-rho.vercel.app/",
     "description": "Aboutページ、こわい",
-    "icon": "/favicons/mk.png"
+    "icon": "/favicons/mk.webp"
   }
 ]
