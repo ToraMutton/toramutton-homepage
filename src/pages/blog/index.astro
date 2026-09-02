@@ -232,7 +232,11 @@ const IMAGE_SOURCES = new Set(["local", "note"]);
 
         <Fragment slot="body-end">
         <script>
-            {
+            // ClientRouter(View Transitions)有効なので、モジュールスコープ直書きだと
+            // 初回ロード時にしか走らず、クライアント遷移で来たときに
+            // フィルタ/ソートのイベントが張られない(= リロードするまで効かない)。
+            // 他ページと同じく astro:page-load で毎回初期化する。
+            document.addEventListener("astro:page-load", () => {
                 const searchInput = document.getElementById(
                     "blog-search",
                 ) as HTMLInputElement;
@@ -389,7 +393,7 @@ const IMAGE_SOURCES = new Set(["local", "note"]);
                     });
                     sortSelect.addEventListener("change", triggerFilterAndSort);
                 }
-            }
+            });
         </script>
         </Fragment>
 </Layout>
