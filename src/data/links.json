@@ -100,5 +100,11 @@
         "url": "https://my-homepage-rosy-rho.vercel.app/",
         "description": "Aboutページ、こわい",
         "icon": "/favicons/mk.webp"
+    },
+    {
+        "name": "かき",
+        "url": "https://my-homepage-one-murex.vercel.app/",
+        "description": "成績つよつよ",
+        "icon": null
     }
 ]
