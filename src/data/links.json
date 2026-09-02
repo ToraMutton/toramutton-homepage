@@ -106,5 +106,11 @@
         "url": "https://my-homepage-one-murex.vercel.app/",
         "description": "成績つよつよ",
         "icon": null
+    },
+    {
+        "name": "しー",
+        "url": "https://c-homepage.vercel.app/",
+        "description": "なんとダーツが投げられます",
+        "icon": null
     }
 ]
