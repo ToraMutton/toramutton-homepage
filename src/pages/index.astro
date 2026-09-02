@@ -332,19 +332,22 @@ const linksWithIcons = friendLinks.map((link) => ({
                 </div>
             </section>
 
-            <section class="recent-posts">
+            <section class="recent-posts" data-reveal>
                 <div class="section-header">
                     <h2>最新の記事</h2>
                     <a href="/blog" class="view-all">すべての記事を見る →</a>
                 </div>
-                <!-- marquee outer: overflow hidden でスクロールバー完全非表示 -->
-                <div class="marquee-outer">
+                <!-- marquee outer: 実スクロールコンテナ。自動送りは JS が
+                     scrollLeft を進めるだけなので、掴んで動かすことも
+                     ホイール/トラックパッド/スワイプで動かすこともできる -->
+                <div class="marquee-outer" id="marquee-outer">
                     <div class="marquee-track" id="marquee-track">
                         {
-                            latestPosts.map((post) => (
+                            latestPosts.map((post, i) => (
                                 <a
                                     href={post.url}
                                     class="post-card-mini"
+                                    style={`--i:${i}`}
                                     target={
                                         post.source !== "local"
                                             ? "_blank"
@@ -693,12 +696,13 @@ const linksWithIcons = friendLinks.map((link) => ({
                     </div>
                     <div class="link-grid">
                         {
-                            linksWithIcons.map((link) => (
+                            linksWithIcons.map((link, i) => (
                                 <a
                                     href={link.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     class="link-item"
+                                    style={`--i:${i}`}
                                 >
                                     <span class="link-icon">
                                         {link.icon ? (
@@ -706,9 +710,10 @@ const linksWithIcons = friendLinks.map((link) => ({
                                                 class="link-favicon"
                                                 src={link.icon}
                                                 alt=""
-                                                width="32"
-                                                height="32"
+                                                width="44"
+                                                height="44"
                                                 decoding="async"
+                                                loading="lazy"
                                             />
                                         ) : (
                                             <span class="link-initial">
@@ -723,14 +728,14 @@ const linksWithIcons = friendLinks.map((link) => ({
                                             </span>
                                             <span class="link-arrow">↗</span>
                                         </span>
-                                        <span class="link-desc">
-                                            {link.description}
-                                        </span>
                                         <span
                                             class="link-domain"
                                             title={link.domain}
                                         >
                                             {link.domain}
+                                        </span>
+                                        <span class="link-desc">
+                                            {link.description}
                                         </span>
                                     </span>
                                 </a>
@@ -968,11 +973,151 @@ const linksWithIcons = friendLinks.map((link) => ({
                     const yearEl = document.getElementById("song-year");
                     const btn = document.getElementById("next-song-btn");
 
-                    // ---- marquee ----
-                    const track = document.getElementById("marquee-track");
-                    if (track && window.innerWidth > 1024) {
-                        const original = track.innerHTML;
-                        track.innerHTML = original + original;
+                    // ---- marquee: 実スクロール + rAF による自動送り ----
+                    // scrollLeft を進めるだけなので、ユーザーはいつでも
+                    // ホイール / トラックパッド / スワイプ / ドラッグで
+                    // 手動操作できる(自動送りは操作中だけ止まる)
+                    const mqOuter = document.getElementById("marquee-outer");
+                    const mqTrack = document.getElementById("marquee-track");
+                    if (mqOuter && mqTrack) {
+                        // 中身を2周分に複製し、半分進んだら巻き戻して無限ループに
+                        const needsLoop =
+                            mqTrack.scrollWidth > mqOuter.clientWidth;
+                        if (needsLoop) {
+                            mqTrack.innerHTML =
+                                mqTrack.innerHTML + mqTrack.innerHTML;
+                        }
+
+                        const halfWidth = () => mqTrack.scrollWidth / 2;
+                        let pos = mqOuter.scrollLeft;
+
+                        // 半分を超えたら巻き戻す(逆方向も同様)
+                        const wrap = () => {
+                            const h = halfWidth();
+                            if (h <= 0) return;
+                            if (mqOuter.scrollLeft >= h) {
+                                mqOuter.scrollLeft -= h;
+                            } else if (mqOuter.scrollLeft < 0) {
+                                mqOuter.scrollLeft += h;
+                            }
+                            pos = mqOuter.scrollLeft;
+                        };
+                        mqOuter.addEventListener("scroll", wrap, {
+                            passive: true,
+                        });
+
+                        // --- 一時停止の管理 ---
+                        let hovering = false;
+                        let dragging = false;
+                        let idleTimer: ReturnType<typeof setTimeout> | null =
+                            null;
+                        let interacting = false;
+                        // ホイールやスワイプの直後はしばらく自動送りを止める
+                        const nudge = () => {
+                            interacting = true;
+                            if (idleTimer) clearTimeout(idleTimer);
+                            idleTimer = setTimeout(() => {
+                                interacting = false;
+                            }, 1200);
+                        };
+                        mqOuter.addEventListener(
+                            "pointerenter",
+                            () => (hovering = true),
+                        );
+                        mqOuter.addEventListener(
+                            "pointerleave",
+                            () => (hovering = false),
+                        );
+                        mqOuter.addEventListener(
+                            "focusin",
+                            () => (hovering = true),
+                        );
+                        mqOuter.addEventListener(
+                            "focusout",
+                            () => (hovering = false),
+                        );
+                        mqOuter.addEventListener("wheel", nudge, {
+                            passive: true,
+                        });
+                        mqOuter.addEventListener("touchstart", nudge, {
+                            passive: true,
+                        });
+
+                        // --- 掴んで動かす ---
+                        // setPointerCapture を使うので window にリスナーを
+                        // 足さずに済む(ページ遷移でリークしない)
+                        let startX = 0;
+                        let startScroll = 0;
+                        let moved = 0;
+                        mqOuter.addEventListener("pointerdown", (e) => {
+                            if (e.pointerType === "mouse" && e.button !== 0)
+                                return;
+                            dragging = true;
+                            moved = 0;
+                            startX = e.clientX;
+                            startScroll = mqOuter.scrollLeft;
+                            mqOuter.setPointerCapture(e.pointerId);
+                            mqOuter.classList.add("is-dragging");
+                        });
+                        mqOuter.addEventListener("pointermove", (e) => {
+                            if (!dragging) return;
+                            const dx = e.clientX - startX;
+                            moved = Math.max(moved, Math.abs(dx));
+                            mqOuter.scrollLeft = startScroll - dx;
+                        });
+                        const endDrag = () => {
+                            if (!dragging) return;
+                            dragging = false;
+                            mqOuter.classList.remove("is-dragging");
+                            nudge();
+                        };
+                        mqOuter.addEventListener("pointerup", endDrag);
+                        mqOuter.addEventListener("pointercancel", endDrag);
+                        // ドラッグ後のクリックでリンクに飛ばないように
+                        mqOuter.addEventListener(
+                            "click",
+                            (e) => {
+                                if (moved > 6) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                }
+                            },
+                            true,
+                        );
+
+                        // --- 自動送り ---
+                        const reduceMotion = window.matchMedia(
+                            "(prefers-reduced-motion: reduce)",
+                        ).matches;
+                        if (needsLoop && !reduceMotion) {
+                            const SPEED = 28; // px / sec
+                            let last = performance.now();
+                            const step = (now: number) => {
+                                // ページ遷移で外れたらループを終了
+                                if (!mqOuter.isConnected) return;
+                                const dt = Math.min(now - last, 100);
+                                last = now;
+                                const idle =
+                                    !hovering &&
+                                    !dragging &&
+                                    !interacting &&
+                                    !document.hidden;
+                                if (idle) {
+                                    // 手動操作でズレた分を拾い直してから進める
+                                    if (
+                                        Math.abs(mqOuter.scrollLeft - pos) > 1
+                                    ) {
+                                        pos = mqOuter.scrollLeft;
+                                    }
+                                    pos += (SPEED * dt) / 1000;
+                                    const h = halfWidth();
+                                    if (h > 0 && pos >= h) pos -= h;
+                                    mqOuter.scrollLeft = pos;
+                                }
+                                requestAnimationFrame(step);
+                            };
+                            requestAnimationFrame(step);
+                        }
                     }
 
                     // ---- widget-card stagger reveal (top → bottom) ----
@@ -1827,8 +1972,27 @@ const linksWithIcons = friendLinks.map((link) => ({
     /* ====================================
        3. 最新の記事 — marquee
        ==================================== */
+    /* セクションごと reveal(下のカード群と同じ [data-reveal] の仕組み) */
     .recent-posts {
         margin: 4rem 0;
+        opacity: 0;
+        transform: translateY(16px);
+        transition:
+            opacity 0.45s ease,
+            transform 0.45s ease;
+    }
+
+    .recent-posts.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .recent-posts {
+            opacity: 1;
+            transform: none;
+            transition: none;
+        }
     }
 
     .section-header {
@@ -1868,9 +2032,20 @@ const linksWithIcons = friendLinks.map((link) => ({
         }
     }
 
-    /* ---- marquee wrapper ---- */
+    /* ---- marquee wrapper ----
+       CSS の transform アニメーションではなく「本物の横スクロール領域」。
+       自動送りは JS が scrollLeft を進めるだけなので、ホイール・
+       トラックパッド・スワイプ・ドラッグでいつでも手で動かせる。
+       上下の padding は hover 時のオフセット影を切らないための逃げ
+       (overflow-x を指定すると overflow-y も auto に計算されるため)。 */
     .marquee-outer {
-        overflow: hidden; /* スクロールバー完全非表示 */
+        overflow-x: auto;
+        overflow-y: hidden;
+        overscroll-behavior-x: contain;
+        scrollbar-width: none;
+        padding: 8px 0;
+        margin: -8px 0;
+        cursor: grab;
         /* 左右に fade mask */
         -webkit-mask-image: linear-gradient(
             to right,
@@ -1888,43 +2063,25 @@ const linksWithIcons = friendLinks.map((link) => ({
         );
     }
 
+    .marquee-outer::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* ドラッグ中はカーソルを変えて、テキスト選択・画像ドラッグを止める */
+    .marquee-outer.is-dragging {
+        cursor: grabbing;
+        user-select: none;
+    }
+
     .marquee-track {
         display: flex;
         gap: 1.25rem;
         width: max-content;
-        animation: marquee-scroll 28s linear infinite;
-        will-change: transform;
     }
 
-    /* hover / touch: pause */
-    .marquee-outer:hover .marquee-track,
-    .marquee-outer:focus-within .marquee-track {
-        animation-play-state: paused;
-    }
-
-    @keyframes marquee-scroll {
-        0% {
-            transform: translateX(0);
-        }
-        100% {
-            transform: translateX(-50%);
-        }
-    }
-
-    /* prefers-reduced-motion: 静止 */
-    @media (prefers-reduced-motion: reduce) {
-        .marquee-track {
-            animation: none;
-        }
-        .marquee-outer {
-            overflow-x: auto;
-            scrollbar-width: none;
-            -webkit-mask-image: none;
-            mask-image: none;
-        }
-        .marquee-outer::-webkit-scrollbar {
-            display: none;
-        }
+    .marquee-track :global(img) {
+        -webkit-user-drag: none;
+        user-select: none;
     }
 
     /* ---- post-card-mini: de-glass ---- */
@@ -1940,6 +2097,61 @@ const linksWithIcons = friendLinks.map((link) => ({
         text-decoration: none;
         color: var(--text-main);
         position: relative;
+        /* widget-card と同じホバー語彙(border accent + ぼかさない影) */
+        transition:
+            border-color 0.18s ease,
+            box-shadow 0.35s cubic-bezier(0.2, 0, 0.2, 1);
+    }
+
+    /* カード下端のアクセントバー。Countdown の mission-bar と同じく
+       左から伸びる。レイアウトには影響しない */
+    .post-card-mini::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 2px;
+        background: var(--accent-blue);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.35s cubic-bezier(0.2, 0, 0.2, 1);
+        z-index: 3;
+    }
+
+    /* reveal: セクションが出たあと、カードが1枚ずつ持ち上がる */
+    .recent-posts .post-card-mini {
+        opacity: 0;
+    }
+
+    .recent-posts.is-visible .post-card-mini {
+        opacity: 1;
+        animation: post-pop 0.5s cubic-bezier(0.2, 0, 0.2, 1) backwards;
+        animation-delay: calc(var(--i, 0) * 70ms);
+    }
+
+    @keyframes post-pop {
+        from {
+            opacity: 0;
+            transform: translateY(14px);
+        }
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .recent-posts .post-card-mini {
+            opacity: 1;
+        }
+        .recent-posts.is-visible .post-card-mini {
+            animation: none;
+        }
+        .post-card-mini,
+        .post-card-mini::after {
+            transition: none;
+        }
     }
 
     /* サムネ上の斜め clip-path ワイプ（yui540 演出）*/
@@ -1968,6 +2180,16 @@ const linksWithIcons = friendLinks.map((link) => ({
         /* タイトル accent */
         .post-card-mini:hover .post-title {
             color: var(--accent-blue);
+        }
+
+        /* widget-card / link-item と揃えた border + オフセット影 */
+        .post-card-mini:hover {
+            border-color: var(--accent-blue);
+            box-shadow: 5px 5px 0 var(--accent-blue);
+        }
+
+        .post-card-mini:hover::after {
+            transform: scaleX(1);
         }
     }
 
@@ -2754,9 +2976,11 @@ const linksWithIcons = friendLinks.map((link) => ({
         margin-left: auto;
     }
 
+    /* フォロワー一覧のような「行」を、画面幅に応じた列数で並べる。
+       1行が広めなので minmax は 300px(狭い画面 = 1列、広い画面 = 3〜4列) */
     .link-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 0.75rem;
         padding: 1.25rem;
     }
@@ -2765,8 +2989,8 @@ const linksWithIcons = friendLinks.map((link) => ({
         position: relative;
         display: flex;
         align-items: flex-start;
-        gap: 0.75rem;
-        padding: 0.85rem 0.9rem;
+        gap: 0.85rem;
+        padding: 0.9rem 1rem;
         border: 1px solid var(--border-color);
         border-radius: 0;
         text-decoration: none;
@@ -2775,6 +2999,37 @@ const linksWithIcons = friendLinks.map((link) => ({
         transition:
             border-color 0.18s ease,
             box-shadow 0.35s cubic-bezier(0.2, 0, 0.2, 1);
+    }
+
+    /* reveal: カードが出たあと、行が1枚ずつ立ち上がる */
+    .links-card .link-item {
+        opacity: 0;
+    }
+
+    .links-card.is-visible .link-item {
+        opacity: 1;
+        animation: link-pop 0.45s cubic-bezier(0.2, 0, 0.2, 1) backwards;
+        animation-delay: calc(var(--i, 0) * 35ms);
+    }
+
+    @keyframes link-pop {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .links-card .link-item {
+            opacity: 1;
+        }
+        .links-card.is-visible .link-item {
+            animation: none;
+        }
     }
 
     /* post-card と同じ斜めワイプ */
@@ -2807,23 +3062,35 @@ const linksWithIcons = friendLinks.map((link) => ({
             transform: translate(0, 0);
             color: var(--accent-blue);
         }
+        /* アバターが少し前に出て cyan のリングをまとう */
+        .link-item:hover .link-icon {
+            border-color: var(--accent-blue);
+            transform: scale(1.08);
+        }
+        .link-item:hover .link-domain {
+            color: var(--accent-blue);
+        }
     }
 
-    /* ---- favicon ---- */
+    /* ---- avatar(円形) ---- */
     .link-icon {
-        width: 32px;
-        height: 32px;
+        width: 44px;
+        height: 44px;
         flex-shrink: 0;
         display: grid;
         place-items: center;
         border: 1px solid var(--border-color);
-        background: var(--surface);
+        border-radius: 50%;
+        background: var(--elevated);
         overflow: hidden;
+        transition:
+            border-color 0.25s ease,
+            transform 0.25s cubic-bezier(0.2, 0, 0.2, 1);
     }
 
     .link-initial {
         font-family: var(--font-mono);
-        font-size: 0.9rem;
+        font-size: 1.1rem;
         font-weight: 800;
         color: var(--accent-blue);
         line-height: 1;
@@ -2833,16 +3100,17 @@ const linksWithIcons = friendLinks.map((link) => ({
         width: 100%;
         height: 100%;
         object-fit: contain;
-        padding: 4px;
+        padding: 7px;
         box-sizing: border-box;
         display: block;
+        border-radius: 50%;
     }
 
-    /* ---- text ---- */
+    /* ---- text(表示名 → ドメイン → 説明 の順) ---- */
     .link-body {
         display: flex;
         flex-direction: column;
-        gap: 0.2rem;
+        gap: 0.1rem;
         min-width: 0;
         flex: 1;
     }
@@ -2855,7 +3123,7 @@ const linksWithIcons = friendLinks.map((link) => ({
 
     .link-name {
         font-family: var(--font-mono);
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         font-weight: 700;
         line-height: 1.4;
         transition: color 0.18s ease;
@@ -2877,24 +3145,28 @@ const linksWithIcons = friendLinks.map((link) => ({
             color 0.18s ease;
     }
 
+    /* 表示名の下、@handle の位置づけ */
+    .link-domain {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        opacity: 0.75;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        transition: color 0.18s ease;
+    }
+
+    /* bio 相当。行の高さを揃えるため2行で固定 */
     .link-desc {
-        font-size: 0.75rem;
+        margin-top: 0.35rem;
+        font-size: 0.76rem;
         line-height: 1.6;
         color: var(--text-muted);
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
-    }
-
-    .link-domain {
-        font-family: var(--font-mono);
-        font-size: 0.65rem;
-        color: var(--text-muted);
-        opacity: 0.7;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
     }
 
     @media (max-width: 480px) {
@@ -3282,23 +3554,10 @@ const linksWithIcons = friendLinks.map((link) => ({
 
     /* タブレット以下: marquee → 横スクロールに切替 */
     @media (max-width: 1024px) {
-        /* marquee-outer: 幅の制限だけ担当、マスクは外す */
+        /* 狭い画面では端のフェードを外す(カードが見切れて見えるため) */
         .marquee-outer {
-            overflow: hidden;
             -webkit-mask-image: none;
             mask-image: none;
-        }
-
-        /* marquee-track: アニメーション停止 → 横スクロールコンテナに */
-        .marquee-track {
-            animation: none;
-            width: 100%; /* max-content を解除して親に合わせる */
-            overflow-x: auto;
-            scrollbar-width: none;
-            /* flex + gap はそのまま継承 */
-        }
-        .marquee-track::-webkit-scrollbar {
-            display: none;
         }
 
         .post-card-mini {
