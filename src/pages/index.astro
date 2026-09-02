@@ -980,10 +980,22 @@ const linksWithIcons = friendLinks.map((link) => ({
                     const mqOuter = document.getElementById("marquee-outer");
                     const mqTrack = document.getElementById("marquee-track");
                     if (mqOuter && mqTrack) {
-                        // 中身を2周分に複製し、半分進んだら巻き戻して無限ループに
-                        const needsLoop =
+                        // 自動送りはマウスのある環境(= PC)だけ。
+                        // スマホ・タブレットは普通の横スワイプ領域にして、
+                        // 複製も無限ループもしない(同じ記事が2周見えるため)
+                        const isDesktop = window.matchMedia(
+                            "(hover: hover) and (pointer: fine)",
+                        ).matches;
+                        const reduceMotion = window.matchMedia(
+                            "(prefers-reduced-motion: reduce)",
+                        ).matches;
+                        const overflows =
                             mqTrack.scrollWidth > mqOuter.clientWidth;
-                        if (needsLoop) {
+                        const autoScroll =
+                            isDesktop && !reduceMotion && overflows;
+
+                        // 中身を2周分に複製し、半分進んだら巻き戻して無限ループに
+                        if (autoScroll) {
                             mqTrack.innerHTML =
                                 mqTrack.innerHTML + mqTrack.innerHTML;
                         }
@@ -991,20 +1003,23 @@ const linksWithIcons = friendLinks.map((link) => ({
                         const halfWidth = () => mqTrack.scrollWidth / 2;
                         let pos = mqOuter.scrollLeft;
 
-                        // 半分を超えたら巻き戻す(逆方向も同様)
-                        const wrap = () => {
-                            const h = halfWidth();
-                            if (h <= 0) return;
-                            if (mqOuter.scrollLeft >= h) {
-                                mqOuter.scrollLeft -= h;
-                            } else if (mqOuter.scrollLeft < 0) {
-                                mqOuter.scrollLeft += h;
-                            }
-                            pos = mqOuter.scrollLeft;
-                        };
-                        mqOuter.addEventListener("scroll", wrap, {
-                            passive: true,
-                        });
+                        // 半分を超えたら巻き戻す(逆方向も同様)。
+                        // 複製していないときは巻き戻す基準が無いので付けない
+                        if (autoScroll) {
+                            const wrap = () => {
+                                const h = halfWidth();
+                                if (h <= 0) return;
+                                if (mqOuter.scrollLeft >= h) {
+                                    mqOuter.scrollLeft -= h;
+                                } else if (mqOuter.scrollLeft < 0) {
+                                    mqOuter.scrollLeft += h;
+                                }
+                                pos = mqOuter.scrollLeft;
+                            };
+                            mqOuter.addEventListener("scroll", wrap, {
+                                passive: true,
+                            });
+                        }
 
                         // --- 一時停止の管理 ---
                         let hovering = false;
@@ -1050,8 +1065,10 @@ const linksWithIcons = friendLinks.map((link) => ({
                         let startScroll = 0;
                         let moved = 0;
                         mqOuter.addEventListener("pointerdown", (e) => {
-                            if (e.pointerType === "mouse" && e.button !== 0)
-                                return;
+                            // タッチはネイティブのスワイプに任せる
+                            // (自前で scrollLeft を動かすと二重に効く)
+                            if (e.pointerType !== "mouse") return;
+                            if (e.button !== 0) return;
                             dragging = true;
                             moved = 0;
                             startX = e.clientX;
@@ -1085,11 +1102,8 @@ const linksWithIcons = friendLinks.map((link) => ({
                             true,
                         );
 
-                        // --- 自動送り ---
-                        const reduceMotion = window.matchMedia(
-                            "(prefers-reduced-motion: reduce)",
-                        ).matches;
-                        if (needsLoop && !reduceMotion) {
+                        // --- 自動送り(PC のみ) ---
+                        if (autoScroll) {
                             const SPEED = 28; // px / sec
                             let last = performance.now();
                             const step = (now: number) => {
@@ -2045,7 +2059,8 @@ const linksWithIcons = friendLinks.map((link) => ({
         scrollbar-width: none;
         padding: 8px 0;
         margin: -8px 0;
-        cursor: grab;
+        /* 掴んで動かせるのはマウスのある環境だけ(タッチはスワイプ) */
+        -webkit-overflow-scrolling: touch;
         /* 左右に fade mask */
         -webkit-mask-image: linear-gradient(
             to right,
@@ -2067,10 +2082,15 @@ const linksWithIcons = friendLinks.map((link) => ({
         display: none;
     }
 
-    /* ドラッグ中はカーソルを変えて、テキスト選択・画像ドラッグを止める */
-    .marquee-outer.is-dragging {
-        cursor: grabbing;
-        user-select: none;
+    @media (hover: hover) and (pointer: fine) {
+        .marquee-outer {
+            cursor: grab;
+        }
+        /* ドラッグ中はカーソルを変えて、テキスト選択・画像ドラッグを止める */
+        .marquee-outer.is-dragging {
+            cursor: grabbing;
+            user-select: none;
+        }
     }
 
     .marquee-track {
