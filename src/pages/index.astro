@@ -87,11 +87,14 @@ const shuffled = [...terminalCommands].sort(() => Math.random() - 0.5);
 const selectedCommands = shuffled.slice(0, 3);
 
 const today = new Date();
+// バーグラフは固定365日を100%とした「残量ゲージ」。日が近づくほど縮む
+const MISSION_WINDOW_DAYS = 365;
 const missionData = missions.map((m) => {
     const target = new Date(m.date);
     const diff = target.getTime() - today.getTime();
     const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-    return { ...m, days };
+    const p = Math.min(Math.max(days, 0) / MISSION_WINDOW_DAYS, 1);
+    return { ...m, days, p };
 });
 
 // === Advent 2026 カウントダウン ===
@@ -101,6 +104,25 @@ const adventDaysLeft = Math.ceil(
     (ADVENT_START.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
 );
 const adventOpenCount = adventDays.filter((d) => d.status === "open").length;
+
+// 円形グラフ: 25日分を円周上のセグメントにする(12時の位置から時計回り)
+const RING_R = 40;
+const RING_C = 50;
+const RING_GAP_DEG = 3.5;
+const ringPolar = (deg: number) => {
+    const rad = ((deg - 90) * Math.PI) / 180;
+    return [RING_C + RING_R * Math.cos(rad), RING_C + RING_R * Math.sin(rad)];
+};
+const ringStep = 360 / adventDays.length;
+const ringSegments = adventDays.map((d, i) => {
+    const [x0, y0] = ringPolar(i * ringStep + RING_GAP_DEG / 2);
+    const [x1, y1] = ringPolar((i + 1) * ringStep - RING_GAP_DEG / 2);
+    return {
+        day: d.day,
+        status: d.status,
+        d: `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${RING_R} ${RING_R} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`,
+    };
+});
 
 const getDomain = (url: string) => {
     try {
@@ -448,14 +470,17 @@ const linksWithIcons = friendLinks.map((link) => ({
                     <div class="card-body">
                         <div class="gh-grid" id="gh-grid">
                             {
-                                contributionHistory.map((day) => (
+                                contributionHistory.map((day, i) => (
                                     <div
                                         class={`gh-cell gh-level-${day.level}`}
-                                        title={`${day.date}: ${day.count}`}
+                                        data-date={day.date}
+                                        data-count={day.count}
+                                        style={`--i:${i}`}
                                     />
                                 ))
                             }
                         </div>
+                        <div class="gh-tip" id="gh-tip" aria-hidden="true"></div>
                         <div class="gh-legend">
                             <span class="gh-legend-label">Less</span>
                             <div class="gh-cell gh-level-0"></div>
@@ -520,10 +545,11 @@ const linksWithIcons = friendLinks.map((link) => ({
                     <div class="card-body">
                         <div class="mission-list">
                             {
-                                missionData.map((m) => (
+                                missionData.map((m, i) => (
                                     <div
                                         class="mission-item js-mission-item"
                                         data-date={m.date}
+                                        style={`--i:${i}`}
                                     >
                                         <div class="mission-info">
                                             <span class="mission-icon">
@@ -535,12 +561,21 @@ const linksWithIcons = friendLinks.map((link) => ({
                                             <span class="mission-title">
                                                 {m.title}
                                             </span>
+                                            <span class="mission-date">
+                                                {m.date.replace(/-/g, "/")}
+                                            </span>
                                         </div>
                                         <div class="mission-days">
                                             <span class="days-num js-days-num">
                                                 {m.days}
                                             </span>
                                             <span class="days-unit">days</span>
+                                        </div>
+                                        <div class="mission-bar">
+                                            <div
+                                                class="mission-bar-fill js-mission-fill"
+                                                style={`--p:${m.p}`}
+                                            />
                                         </div>
                                     </div>
                                 ))
@@ -592,40 +627,54 @@ const linksWithIcons = friendLinks.map((link) => ({
                     <div class="card-header">
                         <Sparkles class="icon-blue" size={16} />
                         <h3>Advent 2026</h3>
-                        <span class="advent-progress"
-                            >{adventOpenCount} / {adventDays.length} open</span
-                        >
                     </div>
                     <div class="card-body">
                         <p class="card-desc card-desc-compact">
                             一人アドベントカレンダー2026開催予定地
                         </p>
-                        <div
-                            class="mission-item js-mission-item advent-countdown"
-                            data-date="2026-12-01"
-                        >
-                            <div class="mission-info">
-                                <span class="mission-icon">
-                                    <Sparkles size={16} strokeWidth={2} />
-                                </span>
-                                <span class="mission-title">開催まで</span>
+                        <div class="advent-layout">
+                            <!-- 左: 開催までのカウントダウン -->
+                            <div
+                                class="mission-item js-mission-item advent-countdown"
+                                data-date="2026-12-01"
+                            >
+                                <div class="mission-info">
+                                    <span class="mission-icon">
+                                        <Sparkles size={16} strokeWidth={2} />
+                                    </span>
+                                    <span class="mission-title">開催まで</span>
+                                </div>
+                                <div class="mission-days">
+                                    <span class="days-num js-days-num">
+                                        {adventDaysLeft}
+                                    </span>
+                                    <span class="days-unit">days</span>
+                                </div>
                             </div>
-                            <div class="mission-days">
-                                <span class="days-num js-days-num">
-                                    {adventDaysLeft}
-                                </span>
-                                <span class="days-unit">days</span>
+                            <!-- 右: 公開状況の円形グラフ -->
+                            <div class="advent-ring" aria-hidden="true">
+                                <svg viewBox="0 0 100 100">
+                                    <g class="advent-ring-rot">
+                                        {
+                                            ringSegments.map((s, i) => (
+                                                <path
+                                                    class={`advent-seg advent-seg-${s.status}`}
+                                                    d={s.d}
+                                                    style={`--i:${i}`}
+                                                >
+                                                    <title>12/{s.day}</title>
+                                                </path>
+                                            ))
+                                        }
+                                    </g>
+                                </svg>
+                                <div class="advent-ring-center">
+                                    <span class="advent-ring-num">
+                                        {adventOpenCount}
+                                    </span>
+                                    <span class="advent-ring-label">open</span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="advent-mini-grid">
-                            {
-                                adventDays.map((d) => (
-                                    <span
-                                        class={`advent-mini-cell advent-mini-${d.status}`}
-                                        title={`12/${d.day}`}
-                                    />
-                                ))
-                            }
                         </div>
                         <div class="dedicated-link">
                             <a href="/advent2026/">View Calendar →</a>
@@ -868,7 +917,52 @@ const linksWithIcons = friendLinks.map((link) => ({
                         if (numEl) {
                             numEl.innerText = days.toString();
                         }
+
+                        // バーグラフ(固定365日を100%とした残量)
+                        const fillEl =
+                            item.querySelector<HTMLElement>(".js-mission-fill");
+                        if (fillEl) {
+                            const p = Math.min(Math.max(days, 0) / 365, 1);
+                            fillEl.style.setProperty("--p", p.toString());
+                        }
                     });
+
+                    // ---- GitHub Contributions: 日別ツールチップ ----
+                    const ghGrid = document.getElementById("gh-grid");
+                    const ghTip = document.getElementById("gh-tip");
+                    if (ghGrid && ghTip) {
+                        const showTip = (cell: HTMLElement) => {
+                            const count = cell.dataset.count ?? "0";
+                            ghTip.textContent = `${cell.dataset.date} · ${count} contribution${count === "1" ? "" : "s"}`;
+
+                            // card-body(offsetParent)基準の座標に変換
+                            const base =
+                                ghTip.offsetParent as HTMLElement | null;
+                            if (!base) return;
+                            const br = base.getBoundingClientRect();
+                            const cr = cell.getBoundingClientRect();
+                            const cx = cr.left - br.left + cr.width / 2;
+                            const above = cr.top - br.top > 36;
+                            ghTip.style.left = `${cx}px`;
+                            ghTip.style.top = `${above ? cr.top - br.top - 6 : cr.bottom - br.top + 6}px`;
+                            ghTip.classList.toggle("is-below", !above);
+                            ghTip.classList.add("is-visible");
+                        };
+                        ghGrid.addEventListener("mouseover", (e) => {
+                            const cell = (e.target as HTMLElement).closest<HTMLElement>(
+                                ".gh-cell",
+                            );
+                            if (cell) showTip(cell);
+                        });
+                        ghGrid.addEventListener("mouseleave", () =>
+                            ghTip.classList.remove("is-visible"),
+                        );
+                        ghGrid.addEventListener(
+                            "scroll",
+                            () => ghTip.classList.remove("is-visible"),
+                            { passive: true },
+                        );
+                    }
 
                     const titleEl = document.getElementById("song-title");
                     const yearEl = document.getElementById("song-year");
@@ -2017,10 +2111,44 @@ const linksWithIcons = friendLinks.map((link) => ({
         transform: translateY(0);
     }
 
+    /* ホバーでカード自体は動かさない(座標がズレてカーソル下の対象が
+       変わってしまうため)。動かすのは中身側だけにする。 */
     @media (hover: hover) {
         .widget-card:hover {
             border-color: var(--accent-blue);
-            transform: translateY(-2px);
+        }
+    }
+
+    /* ====================================
+       4.1 オフセット影 — 主役ブロック共通の語彙
+       ====================================
+       My Desktop PC の .pc-visual-shadow と同じ考え方:
+       ぼかさない実体の影を静止時から敷いておき、hover で距離が伸びて
+       cyan に変わる。本体は逆方向に -3px 出して奥行きを作る。
+       影も transform もレイアウトに影響しないので、カードの箱と
+       カーソル下の座標は動かない。
+       (GitHub / Countdown / Advent はそれぞれ固有のグラフ演出に
+       切り替えたため、この影は Uptime と Links のみ) */
+    .uptime-item {
+        --off: 5px;
+        --off-color: var(--border-color);
+        box-shadow: var(--off) var(--off) 0 var(--off-color);
+        transition:
+            box-shadow 0.35s cubic-bezier(0.2, 0, 0.2, 1),
+            transform 0.35s cubic-bezier(0.2, 0, 0.2, 1);
+    }
+
+    @media (hover: hover) {
+        .uptime-card:hover .uptime-item {
+            --off: 9px;
+            --off-color: var(--accent-blue);
+            transform: translate(-3px, -3px);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .uptime-item {
+            transition: none;
         }
     }
 
@@ -2285,10 +2413,13 @@ const linksWithIcons = friendLinks.map((link) => ({
         gap: 0.6rem;
     }
 
+    /* 1行 = [info | days] の2列 + 全幅のバーグラフ */
     .mission-item {
-        display: flex;
-        justify-content: space-between;
+        --i: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
+        row-gap: 0.5rem;
         padding: 0.65rem 0;
         border-bottom: 1px dashed var(--border-color);
     }
@@ -2333,6 +2464,73 @@ const linksWithIcons = friendLinks.map((link) => ({
         color: var(--text-muted);
         text-transform: uppercase;
         letter-spacing: 0.05em;
+    }
+
+    /* 目標日: 行 hover で横から現れる(hover の無い端末では常時表示) */
+    .mission-date {
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        color: var(--text-muted);
+        opacity: 0;
+        transform: translateX(-4px);
+        transition:
+            opacity 0.2s ease,
+            transform 0.2s ease;
+    }
+
+    /* 残量ゲージ: 固定365日を100%とし、日が近づくほど縮む。
+       reveal(.is-visible)で左から伸び、行ごとに --i で少しずつ遅らせる。
+       transition-delay は transform だけに付けて、hover 側の
+       height / opacity には遅延が乗らないようにしている */
+    .mission-bar {
+        grid-column: 1 / -1;
+        position: relative;
+        height: 4px;
+        border: 1px solid var(--border-color);
+        transition: height 0.2s ease;
+    }
+
+    .mission-bar-fill {
+        position: absolute;
+        inset: 0;
+        background: var(--accent-blue);
+        opacity: 0.55;
+        transform-origin: left;
+        transform: scaleX(0);
+        transition:
+            transform 0.9s cubic-bezier(0.2, 0, 0.2, 1) calc(var(--i) * 90ms),
+            opacity 0.2s ease;
+    }
+
+    .mission-card.is-visible .mission-bar-fill {
+        transform: scaleX(var(--p, 0));
+    }
+
+    @media (hover: hover) {
+        .mission-item:hover .mission-bar {
+            height: 8px;
+        }
+        .mission-item:hover .mission-bar-fill {
+            opacity: 1;
+        }
+        .mission-item:hover .mission-date {
+            opacity: 1;
+            transform: none;
+        }
+    }
+
+    @media (hover: none) {
+        .mission-date {
+            opacity: 1;
+            transform: none;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .mission-bar-fill,
+        .mission-date {
+            transition: none;
+        }
     }
 
     /* ====================================
@@ -2395,42 +2593,151 @@ const linksWithIcons = friendLinks.map((link) => ({
         margin-top: 0;
     }
 
-    .advent-progress {
-        font-size: 0.7rem;
-        color: var(--text-muted);
-        font-family: var(--font-mono);
-        margin-left: auto;
-    }
-
     .card-desc-compact {
         flex-grow: 0;
         margin-bottom: 0.9rem;
     }
 
+    /* 左: カウントダウンのタイル / 右: 円形グラフ */
+    .advent-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    /* .mission-item の2列グリッドを上書きして縦積みの stat タイルに */
     .advent-countdown {
-        border: 1px dashed var(--border-color);
-        padding: 0.65rem 0.9rem;
-        margin-bottom: 0.9rem;
-    }
-
-    .advent-mini-grid {
         display: flex;
-        flex-wrap: wrap;
-        gap: 4px;
-        margin-bottom: 0.9rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.3rem;
+        border: 1px dashed var(--border-color);
+        padding: 0.8rem 0.9rem;
+        transition:
+            border-color 0.35s ease,
+            border-style 0.35s ease;
     }
 
-    .advent-mini-cell {
-        width: 13px;
-        height: 13px;
-        border-radius: 2px;
-        background: var(--elevated);
-        border: 1px solid var(--border-color);
+    .advent-countdown .days-num {
+        font-size: 2rem;
+        line-height: 1;
     }
 
-    .advent-mini-open {
-        background: var(--accent-blue);
-        border-color: var(--accent-blue);
+    /* ---- 円形グラフ ---- */
+    .advent-ring {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        flex-shrink: 0;
+    }
+
+    .advent-ring svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+        overflow: visible;
+    }
+
+    .advent-ring-rot {
+        transform-box: view-box;
+        transform-origin: center;
+        transition: transform 0.5s cubic-bezier(0.2, 0, 0.2, 1);
+    }
+
+    /* セグメント: reveal で 12時の位置から順にポップイン。
+       animation-fill backwards なので、終わった後は通常の cascade に戻り
+       hover 側の stroke-width / opacity の transition が効く */
+    .advent-seg {
+        fill: none;
+        stroke: var(--border-color);
+        stroke-width: 8;
+        opacity: 0;
+        transform-box: fill-box;
+        transform-origin: center;
+        transition:
+            stroke-width 0.35s ease,
+            opacity 0.35s ease;
+    }
+
+    .advent-seg-open {
+        stroke: var(--accent-blue);
+    }
+
+    .advent-card.is-visible .advent-seg {
+        opacity: 1;
+        animation: advent-pop 0.4s cubic-bezier(0.2, 0, 0.2, 1) backwards;
+        animation-delay: calc(var(--i, 0) * 40ms);
+    }
+
+    @keyframes advent-pop {
+        from {
+            opacity: 0;
+            transform: scale(0.5);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .advent-ring-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+    }
+
+    .advent-ring-num {
+        font-family: var(--font-mono);
+        font-size: 1.5rem;
+        font-weight: 800;
+        line-height: 1;
+        color: var(--text-main);
+        transition: color 0.35s ease;
+    }
+
+    .advent-ring-label {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-top: 0.2rem;
+    }
+
+    /* hover: 円が1目盛り回り、open が太く・locked が沈む */
+    @media (hover: hover) {
+        .advent-card:hover .advent-ring-rot {
+            transform: rotate(14.4deg);
+        }
+        .advent-card:hover .advent-seg-open {
+            stroke-width: 11;
+        }
+        .advent-card:hover .advent-seg-locked {
+            opacity: 0.45;
+        }
+        .advent-card:hover .advent-ring-num {
+            color: var(--accent-blue);
+        }
+        .advent-card:hover .advent-countdown {
+            border-color: var(--accent-blue);
+            border-style: solid;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .advent-card.is-visible .advent-seg {
+            animation: none;
+        }
+        .advent-ring-rot,
+        .advent-seg,
+        .advent-countdown {
+            transition: none;
+        }
     }
 
     /* ====================================
@@ -2467,7 +2774,7 @@ const linksWithIcons = friendLinks.map((link) => ({
         overflow: hidden;
         transition:
             border-color 0.18s ease,
-            transform 0.22s ease;
+            box-shadow 0.35s cubic-bezier(0.2, 0, 0.2, 1);
     }
 
     /* post-card と同じ斜めワイプ */
@@ -2483,9 +2790,11 @@ const linksWithIcons = friendLinks.map((link) => ({
     }
 
     @media (hover: hover) {
+        /* 18枚あるので静止時の影は置かず、個別 hover のときだけ
+           同じ語彙(ぼかさない cyan の影)で反応させる */
         .link-item:hover {
             border-color: var(--accent-blue);
-            transform: translateY(-2px);
+            box-shadow: 5px 5px 0 var(--accent-blue);
         }
         .link-item:hover::after {
             clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
@@ -2616,7 +2925,12 @@ const linksWithIcons = friendLinks.map((link) => ({
            overflow-x のスクロールに逃がす。 */
         grid-auto-columns: minmax(10px, 1fr);
         gap: 3px;
-        margin: 0 0 0.75rem;
+        /* overflow-x: auto を指定すると overflow-y も auto に計算されるため、
+           hover で scale(1.4) したセルが最上段・最下段(と左右端)で
+           切れてしまう。内側に 5px の余白を作って逃がし、同じ分だけ
+           負のマージンで引き戻して見た目の位置は元のまま保つ。 */
+        padding: 5px;
+        margin: -5px -5px calc(0.75rem - 5px);
         overflow-x: auto;
         scrollbar-width: none;
     }
@@ -2630,6 +2944,92 @@ const linksWithIcons = friendLinks.map((link) => ({
         border-radius: 2px;
         min-width: 10px;
         min-height: 10px;
+    }
+
+    /* reveal: 1日ずつ左上から順にポップイン(--i は日付のインデックス)。
+       transition ではなく animation にしているのは、遅延を
+       hover 側の transform に漏らさないため。fill backwards なので
+       終わった後は通常の cascade に戻る */
+    .gh-grid .gh-cell {
+        opacity: 0;
+        transition:
+            transform 0.18s ease,
+            box-shadow 0.18s ease;
+    }
+
+    .gh-card.is-visible .gh-grid .gh-cell {
+        opacity: 1;
+        animation: gh-pop 0.4s cubic-bezier(0.2, 0, 0.2, 1) backwards;
+        animation-delay: calc(var(--i, 0) * 3ms);
+    }
+
+    @keyframes gh-pop {
+        from {
+            opacity: 0;
+            transform: translateY(6px) scale(0.4);
+        }
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+
+    @media (hover: hover) {
+        .gh-card.is-visible .gh-grid .gh-cell:hover {
+            position: relative;
+            z-index: 1;
+            transform: scale(1.4);
+            box-shadow: 0 0 0 1px var(--accent-blue);
+        }
+    }
+
+    /* 日別ツールチップ: gh-grid は overflow-x: auto で切れるので、
+       card-body 直下に1つだけ置いて JS で位置を合わせる。
+       left / top も transition に入れて、セル間をすべるように移動させる */
+    .gh-card .card-body {
+        position: relative;
+    }
+
+    .gh-tip {
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: 5;
+        padding: 0.3rem 0.55rem;
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        color: var(--text-main);
+        background: var(--elevated);
+        border: 1px solid var(--accent-blue);
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        transform: translate(-50%, calc(-100% + 4px));
+        transition:
+            opacity 0.16s ease,
+            transform 0.16s ease,
+            left 0.12s ease,
+            top 0.12s ease;
+    }
+    .gh-tip.is-visible {
+        opacity: 1;
+        transform: translate(-50%, -100%);
+    }
+    .gh-tip.is-below {
+        transform: translate(-50%, -4px);
+    }
+    .gh-tip.is-below.is-visible {
+        transform: translate(-50%, 0);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .gh-card.is-visible .gh-grid .gh-cell {
+            animation: none;
+        }
+        .gh-grid .gh-cell,
+        .gh-tip {
+            transition: none;
+        }
     }
 
     /* dark */
@@ -2694,7 +3094,9 @@ const linksWithIcons = friendLinks.map((link) => ({
     .uptime-list {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        /* 各ボックスがオフセット影を持つので、影が下のボックスに
+           かぶらないよう 0.5rem から広げている */
+        gap: 0.75rem;
     }
 
     .uptime-item {
