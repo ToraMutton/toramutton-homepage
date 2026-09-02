@@ -20,6 +20,7 @@ import pcCaseImg from "../assets/desktop/trapezium-8.png";
 import { getExternalPosts } from "../utils/feeds";
 import friendLinks from "../data/links.json";
 import faviconMapJson from "../data/favicon-map.json";
+import { adventDays } from "../data/advent2026";
 import {
     Twitter,
     Github,
@@ -78,8 +79,8 @@ try {
 } catch (e) {
     console.error("GitHub contributions fetch failed", e);
 }
-// 直近13週分（91日）だけ表示
-const recentContributions = ghContributions.slice(-91);
+// 取得できた分は全部表示(y=last で約1年分)。カード自体が横長になったので出し切る
+const contributionHistory = ghContributions;
 
 // ランダムで3つ選ぶ（重複なし）
 const shuffled = [...terminalCommands].sort(() => Math.random() - 0.5);
@@ -92,6 +93,14 @@ const missionData = missions.map((m) => {
     const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
     return { ...m, days };
 });
+
+// === Advent 2026 カウントダウン ===
+// 開催開始日(12/1)までの日数と、公開済みの日数を出しておく
+const ADVENT_START = new Date("2026-12-01T00:00:00+09:00");
+const adventDaysLeft = Math.ceil(
+    (ADVENT_START.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+);
+const adventOpenCount = adventDays.filter((d) => d.status === "open").length;
 
 const getDomain = (url: string) => {
     try {
@@ -439,7 +448,7 @@ const linksWithIcons = friendLinks.map((link) => ({
                     <div class="card-body">
                         <div class="gh-grid" id="gh-grid">
                             {
-                                recentContributions.map((day) => (
+                                contributionHistory.map((day) => (
                                     <div
                                         class={`gh-cell gh-level-${day.level}`}
                                         title={`${day.date}: ${day.count}`}
@@ -583,11 +592,41 @@ const linksWithIcons = friendLinks.map((link) => ({
                     <div class="card-header">
                         <Sparkles class="icon-blue" size={16} />
                         <h3>Advent 2026</h3>
+                        <span class="advent-progress"
+                            >{adventOpenCount} / {adventDays.length} open</span
+                        >
                     </div>
                     <div class="card-body">
-                        <p class="card-desc">
+                        <p class="card-desc card-desc-compact">
                             一人アドベントカレンダー2026開催予定地
                         </p>
+                        <div
+                            class="mission-item js-mission-item advent-countdown"
+                            data-date="2026-12-01"
+                        >
+                            <div class="mission-info">
+                                <span class="mission-icon">
+                                    <Sparkles size={16} strokeWidth={2} />
+                                </span>
+                                <span class="mission-title">開催まで</span>
+                            </div>
+                            <div class="mission-days">
+                                <span class="days-num js-days-num">
+                                    {adventDaysLeft}
+                                </span>
+                                <span class="days-unit">days</span>
+                            </div>
+                        </div>
+                        <div class="advent-mini-grid">
+                            {
+                                adventDays.map((d) => (
+                                    <span
+                                        class={`advent-mini-cell advent-mini-${d.status}`}
+                                        title={`12/${d.day}`}
+                                    />
+                                ))
+                            }
+                        </div>
                         <div class="dedicated-link">
                             <a href="/advent2026/">View Calendar →</a>
                         </div>
@@ -1911,11 +1950,38 @@ const linksWithIcons = friendLinks.map((link) => ({
     /* ====================================
        4. widget-card — border-card ベース
        ==================================== */
+    /* 12カラムグリッド。上段(Terminal 3 / GitHub 6 / PC 3)・
+       下段(Countdown 5 / Uptime 3 / Advent 4)ともに列合計が12になるよう
+       span を組んでいるので、折返しや余りの隙間は発生しない。
+       行の高さは各行内で最も背の高いカードに揃う(既存の
+       .dedicated-link { margin-top: auto } が下端を吸収する)。 */
     .grid-container {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-template-columns: repeat(12, minmax(0, 1fr));
         gap: 1.5rem;
         margin: 3rem 0;
+    }
+
+    /* 上段: Terminal / GitHub Contributions(hero) / My Desktop PC */
+    .mini-terminal-card {
+        grid-column: span 3;
+    }
+    .gh-card {
+        grid-column: span 6;
+    }
+    .project-card {
+        grid-column: span 3;
+    }
+
+    /* 下段: Countdown / Uptime / Advent 2026 */
+    .mission-card {
+        grid-column: span 5;
+    }
+    .uptime-card {
+        grid-column: span 3;
+    }
+    .advent-card {
+        grid-column: span 4;
     }
 
     /* stagger reveal: JS で .is-visible を付与 */
@@ -1926,17 +1992,26 @@ const linksWithIcons = friendLinks.map((link) => ({
         border: 1px solid var(--border-color);
         border-radius: 4px;
         overflow: hidden; /* header の border-bottom が角から溢れないよう */
+        position: relative;
 
         opacity: 0;
         transform: translateY(16px);
         transition:
             opacity 0.45s ease,
-            transform 0.45s ease;
+            transform 0.45s ease,
+            border-color 0.18s ease;
     }
 
     .widget-card.is-visible {
         opacity: 1;
         transform: translateY(0);
+    }
+
+    @media (hover: hover) {
+        .widget-card:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+        }
     }
 
     /* カードヘッダー: terminal-header と同じ tone */
@@ -2064,7 +2139,8 @@ const linksWithIcons = friendLinks.map((link) => ({
         transform-origin: top center;
         transition:
             transform 0.3s cubic-bezier(0, 0, 0.2, 1.4),
-            opacity 0.3s ease;
+            opacity 0.3s ease,
+            border-color 0.18s ease;
     }
 
     .mini-terminal-dots {
@@ -2297,6 +2373,54 @@ const linksWithIcons = friendLinks.map((link) => ({
 
     .advent-card {
         border-style: dashed !important;
+    }
+
+    /* Countdown カードと同じ行で高さが揃うため、中身に余りが出た分は
+       各ブロック間に均等配分する(CTA だけを margin-top: auto で
+       下端に寄せると、間に一箇所だけ大きな空白ができてしまうため) */
+    .advent-card .card-body {
+        justify-content: space-between;
+    }
+    .advent-card .dedicated-link {
+        margin-top: 0;
+    }
+
+    .advent-progress {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        margin-left: auto;
+    }
+
+    .card-desc-compact {
+        flex-grow: 0;
+        margin-bottom: 0.9rem;
+    }
+
+    .advent-countdown {
+        border: 1px dashed var(--border-color);
+        padding: 0.65rem 0.9rem;
+        margin-bottom: 0.9rem;
+    }
+
+    .advent-mini-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-bottom: 0.9rem;
+    }
+
+    .advent-mini-cell {
+        width: 13px;
+        height: 13px;
+        border-radius: 2px;
+        background: var(--elevated);
+        border: 1px solid var(--border-color);
+    }
+
+    .advent-mini-open {
+        background: var(--accent-blue);
+        border-color: var(--accent-blue);
     }
 
     /* ====================================
@@ -2764,6 +2888,29 @@ const linksWithIcons = friendLinks.map((link) => ({
             width: min(260px, 72vw);
             flex-shrink: 0; /* スクロール時に縮まないよう明示 */
         }
+
+        /* 12列 → 2列に単純化。GitHub Contributions は内容量的に
+           全幅のほうが収まりが良いので先頭に回して全幅表示、
+           Advent 2026 も全幅、残りは2枚1組でペアにして隙間なく並べる。 */
+        .grid-container {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .mini-terminal-card,
+        .project-card,
+        .mission-card,
+        .uptime-card {
+            grid-column: span 1;
+        }
+
+        .gh-card {
+            grid-column: span 2;
+            order: -1;
+        }
+
+        .advent-card {
+            grid-column: span 2;
+        }
     }
 
     @media (max-width: 720px) {
@@ -2774,6 +2921,12 @@ const linksWithIcons = friendLinks.map((link) => ({
         .grid-container {
             grid-template-columns: 1fr;
             gap: 1rem;
+        }
+
+        /* 1列表示では span・並び替えを全部解除して DOM順に素直に積む */
+        .grid-container > .widget-card {
+            grid-column: auto;
+            order: 0;
         }
     }
 
