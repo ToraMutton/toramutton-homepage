@@ -6,7 +6,7 @@ heroImage: ./3d-holiday.jpg
 tags:
     - 大学
     - review
-draft: true
+draft: false
 ---
 
 どうも、UEC25の1クラ → Aクラのトラマトです。
