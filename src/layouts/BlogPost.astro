@@ -938,6 +938,8 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
             ) {
                 tocSidebarMobile.classList.remove("mobile-open");
                 if (tocToggleBtn) tocToggleBtn.classList.remove("active");
+                const backdrop = document.getElementById("toc-backdrop");
+                if (backdrop) backdrop.classList.remove("visible");
             }
         });
     });
