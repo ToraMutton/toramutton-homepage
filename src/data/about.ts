@@ -9,49 +9,70 @@
 const devicon = (dir: string) =>
   `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${dir}/${dir}-original.svg`;
 
+/** 熟練度。5 が一番できる。意味は下の SKILL_LEVELS を参照 */
+export type SkillLevel = 1 | 2 | 3 | 4 | 5;
+
+/** 凡例。Aboutページの Skills & Tools 見出し下に出る */
+export const SKILL_LEVELS: { level: SkillLevel; label: string }[] = [
+  { level: 5, label: "つよつよ" },
+  { level: 4, label: "それなり" },
+  { level: 3, label: "まぁまぁ" },
+  { level: 2, label: "触った" },
+  { level: 1, label: "入門中" },
+];
+
 export interface Skill {
   name: string;
   /** devicon("...") か、/icons/ 配下のパスか、直URL */
   src: string;
+  /** 熟練度 5〜1。カード下の5分割メーターになる */
+  level: SkillLevel;
   /** ダークモードで白黒反転させる（黒一色のロゴ向け） */
   darkInvert?: boolean;
 }
 
 // --- 1. Languages ---
 export const LANGUAGE_SKILLS: Skill[] = [
-  { name: "C", src: devicon("c") },
-  { name: "Rust", src: devicon("rust"), darkInvert: true },
-  { name: "Java", src: devicon("java") },
-  { name: "Python", src: devicon("python") },
-  { name: "Ruby", src: devicon("ruby") },
-  { name: "Lua", src: devicon("lua") },
-  { name: "Bash", src: devicon("bash"), darkInvert: true },
-  { name: "JavaScript", src: devicon("javascript") },
-  { name: "TypeScript", src: devicon("typescript") },
+  { name: "C", src: devicon("c"), level: 4 },
+  { name: "C++", src: devicon("cplusplus"), level: 2 },
+  { name: "C#", src: devicon("csharp"), level: 2 },
+  { name: "Rust", src: devicon("rust"), level: 3, darkInvert: true },
+  { name: "Java", src: devicon("java"), level: 2 },
+  { name: "Python", src: devicon("python"), level: 3 },
+  { name: "Ruby", src: devicon("ruby"), level: 2 },
+  { name: "Lua", src: devicon("lua"), level: 2 },
+  { name: "Bash", src: devicon("bash"), level: 3, darkInvert: true },
+  { name: "JavaScript", src: devicon("javascript"), level: 4 },
+  { name: "TypeScript", src: devicon("typescript"), level: 4 },
   // Caelestia / Quickshell
-  { name: "QML", src: devicon("qt") },
+  { name: "QML", src: devicon("qt"), level: 1 },
 ];
 
 // --- 2. Web ---
 export const WEB_SKILLS: Skill[] = [
-  { name: "HTML", src: devicon("html5") },
-  { name: "CSS", src: devicon("css3") },
-  { name: "React", src: devicon("react") },
-  { name: "Astro", src: devicon("astro"), darkInvert: true },
-  { name: "Vite", src: devicon("vitejs") },
+  { name: "HTML", src: devicon("html5"), level: 4 },
+  { name: "CSS", src: devicon("css3"), level: 4 },
+  { name: "React", src: devicon("react"), level: 3 },
+  { name: "Astro", src: devicon("astro"), level: 4, darkInvert: true },
+  { name: "Vite", src: devicon("vitejs"), level: 2 },
 ];
 
 // --- 3. Desktop & Ricing ---
 export const DESKTOP_SKILLS: Skill[] = [
-  { name: "Qt", src: devicon("qt") },
-  { name: "Qt Quick", src: devicon("qt") },
-  { name: "Quickshell", src: "/icons/quickshell.svg", darkInvert: true },
+  { name: "Qt", src: devicon("qt"), level: 1 },
+  { name: "Qt Quick", src: devicon("qt"), level: 1 },
+  {
+    name: "Quickshell",
+    src: "/icons/quickshell.svg",
+    level: 1,
+    darkInvert: true,
+  },
 ];
 
 // --- 4. AI & Compute ---
 export const AI_SKILLS: Skill[] = [
-  { name: "ROCm", src: "/icons/rocm.svg", darkInvert: true },
-  { name: "Ollama", src: "/icons/ollama.svg", darkInvert: true },
+  { name: "ROCm", src: "/icons/rocm.svg", level: 2, darkInvert: true },
+  { name: "Ollama", src: "/icons/ollama.svg", level: 2, darkInvert: true },
 ];
 
 // --- 5. Tools & Creative ---
@@ -59,22 +80,23 @@ export const TOOL_SKILLS: Skill[] = [
   {
     name: "Zed",
     src: "https://zed.dev/_next/static/media/logo-new-white.0gnyg5qr0_x6r.png",
+    level: 5,
   },
-  { name: "Neovim", src: devicon("neovim") },
-  { name: "VS Code", src: devicon("vscode") },
-  { name: "IntelliJ", src: devicon("intellij") },
-  { name: "Git", src: devicon("git") },
-  { name: "GitHub", src: devicon("github"), darkInvert: true },
-  { name: "Docker", src: devicon("docker") },
-  { name: "Vercel", src: devicon("vercel"), darkInvert: true },
-  { name: "LaTeX", src: devicon("latex"), darkInvert: true },
-  { name: "Blender", src: devicon("blender") },
+  { name: "Neovim", src: devicon("neovim"), level: 3 },
+  { name: "VS Code", src: devicon("vscode"), level: 3 },
+  { name: "IntelliJ", src: devicon("intellij"), level: 2 },
+  { name: "Git", src: devicon("git"), level: 3 },
+  { name: "GitHub", src: devicon("github"), level: 3, darkInvert: true },
+  { name: "Docker", src: devicon("docker"), level: 2 },
+  { name: "Vercel", src: devicon("vercel"), level: 3 },
+  { name: "LaTeX", src: devicon("latex"), level: 4 },
+  { name: "Blender", src: devicon("blender"), level: 3 },
 ];
 
 // --- 6. Operating Systems ---
 export const OS_SKILLS: Skill[] = [
-  { name: "Windows", src: devicon("windows8") },
-  { name: "Arch Linux", src: devicon("archlinux"), darkInvert: true },
+  { name: "Windows", src: devicon("windows8"), level: 3 },
+  { name: "Arch Linux", src: devicon("archlinux"), level: 4, darkInvert: true },
 ];
 
 /** 上のグループを画面に並べる順番。グループごと足したいときはここに1行足す */

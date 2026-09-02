@@ -2,7 +2,7 @@
 export const prerender = true;
 import Layout from '../layouts/BaseLayout.astro';
 // 表示する中身は src/data/about.ts にまとめてある
-import { SKILL_GROUPS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../data/about';
+import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../data/about';
 ---
 
 <Layout
@@ -49,6 +49,17 @@ import { SKILL_GROUPS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../data/about';
 
         <section class="skill-section">
             <p class="skill-intro"># 使用している言語とかツールとか</p>
+            <p class="skill-intro skill-legend">
+                <span># 熟練度:</span>
+                {
+                    SKILL_LEVELS.map((lv) => (
+                        <span class="legend-item">
+                            <span class="legend-n">{lv.level}</span>
+                            {lv.label}
+                        </span>
+                    ))
+                }
+            </p>
 
             {
                 SKILL_GROUPS.map((group) => (
@@ -76,7 +87,29 @@ import { SKILL_GROUPS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../data/about';
                                             loading="lazy"
                                         />
                                     </span>
-                                    <span class="skill-name">{skill.name}</span>
+                                    <span class="skill-meta">
+                                        <span class="skill-name">
+                                            {skill.name}
+                                        </span>
+                                        <span
+                                            class="skill-level"
+                                            role="img"
+                                            aria-label={`熟練度 ${skill.level} / 5`}
+                                        >
+                                            {[1, 2, 3, 4, 5].map((i) => (
+                                                <span
+                                                    class:list={[
+                                                        "lv-seg",
+                                                        {
+                                                            "is-on":
+                                                                i <=
+                                                                skill.level,
+                                                        },
+                                                    ]}
+                                                />
+                                            ))}
+                                        </span>
+                                    </span>
                                 </div>
                             ))}
                         </div>
@@ -396,10 +429,27 @@ import { SKILL_GROUPS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../data/about';
             margin: 2rem 0;
         }
         .skill-intro {
-            margin: 0 0 2rem;
+            margin: 0 0 0.35rem;
             color: var(--text-muted);
             font-family: var(--font-mono);
             font-size: 0.85rem;
+        }
+        /* 凡例（5〜1 が何を意味するか）。折り返しても読める並び */
+        .skill-intro.skill-legend {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 0.15rem 0.9rem;
+            margin-bottom: 2rem;
+            font-size: 0.78rem;
+        }
+        .legend-item {
+            white-space: nowrap;
+        }
+        .legend-n {
+            color: var(--accent-blue);
+            font-weight: 700;
+            margin-right: 0.3rem;
         }
         .skill-category {
             margin-bottom: 2.8rem;
@@ -471,15 +521,40 @@ import { SKILL_GROUPS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../data/about';
             filter: invert(0.92) hue-rotate(180deg) brightness(1.05);
         }
 
-        .skill-name {
+        /* 名前 + 熟練度メーターは1かたまり（card の gap とは別の詰め具合にする）*/
+        .skill-meta {
             position: relative;
             z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .skill-name {
             font-family: var(--font-mono);
             font-size: 0.72rem;
             font-weight: 700;
             line-height: 1;
             color: var(--text-muted);
             transition: color 0.25s ease;
+        }
+
+        /* --- 熟練度メーター（5分割ブロック）--- */
+        .skill-level {
+            display: flex;
+            gap: 2px;
+        }
+        .lv-seg {
+            width: 6px;
+            height: 3px;
+            background: var(--border-color);
+            transition:
+                background-color 0.25s ease,
+                opacity 0.25s ease;
+        }
+        .lv-seg.is-on {
+            background: var(--accent-blue);
+            opacity: 0.6;
         }
 
         .skill-card:focus-visible {
@@ -491,6 +566,9 @@ import { SKILL_GROUPS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../data/about';
         .skill-card:focus-visible .skill-name {
             color: var(--accent-blue);
         }
+        .skill-card:focus-visible .lv-seg.is-on {
+            opacity: 1;
+        }
         @media (hover: hover) {
             .skill-card:hover {
                 border-color: var(--accent-blue);
@@ -500,6 +578,9 @@ import { SKILL_GROUPS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../data/about';
             }
             .skill-card:hover .skill-name {
                 color: var(--accent-blue);
+            }
+            .skill-card:hover .lv-seg.is-on {
+                opacity: 1;
             }
         }
 
@@ -799,6 +880,13 @@ import { SKILL_GROUPS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../data/about';
             }
             .skill-name {
                 font-size: 0.65rem;
+            }
+            .skill-meta {
+                gap: 0.35rem;
+            }
+            /* 4カラムでもメーターが card 幅を超えないよう少し詰める */
+            .lv-seg {
+                width: 5px;
             }
         }
     </style>
