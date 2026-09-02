@@ -63,7 +63,11 @@ const externalPosts = await getExternalPosts();
 // 統合・ソート・抽出
 const latestPosts = [...localPosts, ...externalPosts]
     .sort((a, b) => b.date.valueOf() - a.date.valueOf())
-    .slice(0, 5); // 最新記事、5選
+    .slice(0, 10); // 最新記事、10選
+
+// marquee のサムネは 280px 枠(2x で 560px)。元画像がそれより小さいときは
+// 拡大すると逆に重くなるので、上限としてだけ使う
+const THUMB_W = 560;
 
 // === GitHub Contributions取得 ===
 type ContributionDay = { date: string; count: number; level: number };
@@ -362,13 +366,23 @@ const linksWithIcons = friendLinks.map((link) => ({
                                     <div class="post-thumb">
                                         {post.source === "local" &&
                                         typeof post.image === "object" ? (
-                                            <Image src={post.image} alt="" />
+                                            <Image
+                                                src={post.image}
+                                                alt=""
+                                                width={Math.min(
+                                                    THUMB_W,
+                                                    post.image.width,
+                                                )}
+                                            />
                                         ) : post.image &&
                                           typeof post.image === "string" ? (
                                             <img
                                                 src={post.image}
                                                 alt=""
+                                                width="560"
+                                                height="315"
                                                 loading="lazy"
+                                                decoding="async"
                                             />
                                         ) : (
                                             <div class="no-image-placeholder">
@@ -1000,19 +1014,27 @@ const linksWithIcons = friendLinks.map((link) => ({
                                 mqTrack.innerHTML + mqTrack.innerHTML;
                         }
 
-                        const halfWidth = () => mqTrack.scrollWidth / 2;
+                        // 折り返し幅は毎フレーム scrollWidth を読むと
+                        // その都度レイアウトが同期計算されてしまうので、
+                        // 一度だけ測ってサイズ変化時に測り直す
+                        let half = mqTrack.scrollWidth / 2;
+                        let ro: ResizeObserver | null = null;
                         let pos = mqOuter.scrollLeft;
 
                         // 半分を超えたら巻き戻す(逆方向も同様)。
                         // 複製していないときは巻き戻す基準が無いので付けない
                         if (autoScroll) {
+                            ro = new ResizeObserver(() => {
+                                half = mqTrack.scrollWidth / 2;
+                            });
+                            ro.observe(mqOuter);
+
                             const wrap = () => {
-                                const h = halfWidth();
-                                if (h <= 0) return;
-                                if (mqOuter.scrollLeft >= h) {
-                                    mqOuter.scrollLeft -= h;
+                                if (half <= 0) return;
+                                if (mqOuter.scrollLeft >= half) {
+                                    mqOuter.scrollLeft -= half;
                                 } else if (mqOuter.scrollLeft < 0) {
-                                    mqOuter.scrollLeft += h;
+                                    mqOuter.scrollLeft += half;
                                 }
                                 pos = mqOuter.scrollLeft;
                             };
@@ -1104,11 +1126,20 @@ const linksWithIcons = friendLinks.map((link) => ({
 
                         // --- 自動送り(PC のみ) ---
                         if (autoScroll) {
-                            const SPEED = 28; // px / sec
+                            // 記事が増えても一周が伸びすぎないよう、全長から
+                            // 速度を決める(ただし 28〜70px/秒 に収める)
+                            const LOOP_SECONDS = 60;
+                            const speed = Math.min(
+                                Math.max(half / LOOP_SECONDS, 28),
+                                70,
+                            );
                             let last = performance.now();
                             const step = (now: number) => {
                                 // ページ遷移で外れたらループを終了
-                                if (!mqOuter.isConnected) return;
+                                if (!mqOuter.isConnected) {
+                                    ro?.disconnect();
+                                    return;
+                                }
                                 const dt = Math.min(now - last, 100);
                                 last = now;
                                 const idle =
@@ -1123,9 +1154,8 @@ const linksWithIcons = friendLinks.map((link) => ({
                                     ) {
                                         pos = mqOuter.scrollLeft;
                                     }
-                                    pos += (SPEED * dt) / 1000;
-                                    const h = halfWidth();
-                                    if (h > 0 && pos >= h) pos -= h;
+                                    pos += (speed * dt) / 1000;
+                                    if (half > 0 && pos >= half) pos -= half;
                                     mqOuter.scrollLeft = pos;
                                 }
                                 requestAnimationFrame(step);
