@@ -18,8 +18,6 @@ import pcDesktopImg from "../assets/desktop/fastfetch.jpeg";
 import pcCaseImg from "../assets/desktop/trapezium-8.png";
 // note / Zenn / Qiita の取得は src/utils/feeds.ts に集約している
 import { getExternalPosts } from "../utils/feeds";
-import friendLinks from "../data/links.json";
-import faviconMapJson from "../data/favicon-map.json";
 import { adventDays } from "../data/advent2026";
 import {
     Twitter,
@@ -28,7 +26,6 @@ import {
     Target,
     Cpu,
     Music,
-    Users,
     Timer,
     GitGraph,
 } from "lucide-astro";
@@ -128,24 +125,6 @@ const ringSegments = adventDays.map((d, i) => {
     };
 });
 
-const getDomain = (url: string) => {
-    try {
-        return new URL(url).hostname.replace(/^www\./, "");
-    } catch {
-        return url;
-    }
-};
-
-// 相互リンク。リンク自体は src/data/links.json で管理する。
-// icon が null のサイトは favicon を自動取得する対象で、その実ファイルと
-// URL→パスの対応表は `npm run favicons` が用意する（ここではネットに出ない）。
-const faviconMap: Record<string, string> = faviconMapJson;
-
-const linksWithIcons = friendLinks.map((link) => ({
-    ...link,
-    domain: getDomain(link.url),
-    icon: link.icon ?? faviconMap[link.url] ?? null,
-}));
 ---
 
 <Layout title={SITE_TITLE} description={SITE_DESCRIPTION}>
@@ -699,64 +678,6 @@ const linksWithIcons = friendLinks.map((link) => ({
                     </div>
                 </div>
 
-                <!-- Links -->
-                <div class="widget-card links-card" data-reveal>
-                    <div class="card-header">
-                        <Users class="icon-secondary" size={16} />
-                        <h3>Links</h3>
-                        <span class="links-count"
-                            >{linksWithIcons.length} sites</span
-                        >
-                    </div>
-                    <div class="link-grid">
-                        {
-                            linksWithIcons.map((link, i) => (
-                                <a
-                                    href={link.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="link-item"
-                                    style={`--i:${i}`}
-                                >
-                                    <span class="link-icon">
-                                        {link.icon ? (
-                                            <img
-                                                class="link-favicon"
-                                                src={link.icon}
-                                                alt=""
-                                                width="44"
-                                                height="44"
-                                                decoding="async"
-                                                loading="lazy"
-                                            />
-                                        ) : (
-                                            <span class="link-initial">
-                                                {link.name.trim().charAt(0)}
-                                            </span>
-                                        )}
-                                    </span>
-                                    <span class="link-body">
-                                        <span class="link-head">
-                                            <span class="link-name">
-                                                {link.name}
-                                            </span>
-                                            <span class="link-arrow">↗</span>
-                                        </span>
-                                        <span
-                                            class="link-domain"
-                                            title={link.domain}
-                                        >
-                                            {link.domain}
-                                        </span>
-                                        <span class="link-desc">
-                                            {link.description}
-                                        </span>
-                                    </span>
-                                </a>
-                            ))
-                        }
-                    </div>
-                </div>
             </div>
 
             <!-- Today's Music -->
@@ -1980,9 +1901,6 @@ const linksWithIcons = friendLinks.map((link) => ({
             transform: none !important;
             transition: none !important;
         }
-        .link-item::after {
-            transition: none;
-        }
     }
 
     /* ====================================
@@ -2232,7 +2150,7 @@ const linksWithIcons = friendLinks.map((link) => ({
             color: var(--accent-blue);
         }
 
-        /* widget-card / link-item と揃えた border + オフセット影 */
+        /* widget-card と揃えた border + オフセット影 */
         .post-card-mini:hover {
             border-color: var(--accent-blue);
             box-shadow: 5px 5px 0 var(--accent-blue);
@@ -2400,7 +2318,7 @@ const linksWithIcons = friendLinks.map((link) => ({
        影も transform もレイアウトに影響しないので、カードの箱と
        カーソル下の座標は動かない。
        (GitHub / Countdown / Advent はそれぞれ固有のグラフ演出に
-       切り替えたため、この影は Uptime と Links のみ) */
+       切り替えたため、この影は Uptime のみ) */
     .uptime-item {
         --off: 5px;
         --off-color: var(--border-color);
@@ -3009,220 +2927,6 @@ const linksWithIcons = friendLinks.map((link) => ({
         .advent-seg,
         .advent-countdown {
             transition: none;
-        }
-    }
-
-    /* ====================================
-       7. Links カード — card grid
-       ==================================== */
-    .links-card {
-        grid-column: 1 / -1;
-    }
-
-    .links-count {
-        font-size: 0.75rem;
-        color: var(--text-muted);
-        font-family: var(--font-mono);
-        margin-left: auto;
-    }
-
-    /* フォロワー一覧のような「行」を、画面幅に応じた列数で並べる。
-       1行が広めなので minmax は 300px(狭い画面 = 1列、広い画面 = 3〜4列) */
-    .link-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 0.75rem;
-        padding: 1.25rem;
-    }
-
-    .link-item {
-        position: relative;
-        display: flex;
-        align-items: flex-start;
-        gap: 0.85rem;
-        padding: 0.9rem 1rem;
-        border: 1px solid var(--border-color);
-        border-radius: 0;
-        text-decoration: none;
-        color: var(--text-main);
-        overflow: hidden;
-        transition:
-            border-color 0.18s ease,
-            box-shadow 0.35s cubic-bezier(0.2, 0, 0.2, 1);
-    }
-
-    /* reveal: カードが出たあと、行が1枚ずつ立ち上がる */
-    .links-card .link-item {
-        opacity: 0;
-    }
-
-    .links-card.is-visible .link-item {
-        opacity: 1;
-        animation: link-pop 0.45s cubic-bezier(0.2, 0, 0.2, 1) backwards;
-        animation-delay: calc(var(--i, 0) * 35ms);
-    }
-
-    @keyframes link-pop {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        to {
-            opacity: 1;
-            transform: none;
-        }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        .links-card .link-item {
-            opacity: 1;
-        }
-        .links-card.is-visible .link-item {
-            animation: none;
-        }
-    }
-
-    /* post-card と同じ斜めワイプ */
-    .link-item::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: var(--accent-blue);
-        opacity: 0.08;
-        clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
-        transition: clip-path 0.42s cubic-bezier(0.4, 0, 0.2, 1);
-        pointer-events: none;
-    }
-
-    @media (hover: hover) {
-        /* 18枚あるので静止時の影は置かず、個別 hover のときだけ
-           同じ語彙(ぼかさない cyan の影)で反応させる */
-        .link-item:hover {
-            border-color: var(--accent-blue);
-            box-shadow: 5px 5px 0 var(--accent-blue);
-        }
-        .link-item:hover::after {
-            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-        }
-        .link-item:hover .link-name {
-            color: var(--accent-blue);
-        }
-        .link-item:hover .link-arrow {
-            opacity: 1;
-            transform: translate(0, 0);
-            color: var(--accent-blue);
-        }
-        /* アバターが少し前に出て cyan のリングをまとう */
-        .link-item:hover .link-icon {
-            border-color: var(--accent-blue);
-            transform: scale(1.08);
-        }
-        .link-item:hover .link-domain {
-            color: var(--accent-blue);
-        }
-    }
-
-    /* ---- avatar(円形) ---- */
-    .link-icon {
-        width: 44px;
-        height: 44px;
-        flex-shrink: 0;
-        display: grid;
-        place-items: center;
-        border: 1px solid var(--border-color);
-        border-radius: 50%;
-        background: var(--elevated);
-        overflow: hidden;
-        transition:
-            border-color 0.25s ease,
-            transform 0.25s cubic-bezier(0.2, 0, 0.2, 1);
-    }
-
-    .link-initial {
-        font-family: var(--font-mono);
-        font-size: 1.1rem;
-        font-weight: 800;
-        color: var(--accent-blue);
-        line-height: 1;
-    }
-
-    .link-favicon {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        padding: 7px;
-        box-sizing: border-box;
-        display: block;
-        border-radius: 50%;
-    }
-
-    /* ---- text(表示名 → ドメイン → 説明 の順) ---- */
-    .link-body {
-        display: flex;
-        flex-direction: column;
-        gap: 0.1rem;
-        min-width: 0;
-        flex: 1;
-    }
-
-    .link-head {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-    }
-
-    .link-name {
-        font-family: var(--font-mono);
-        font-size: 0.9rem;
-        font-weight: 700;
-        line-height: 1.4;
-        transition: color 0.18s ease;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .link-arrow {
-        font-size: 0.75rem;
-        color: var(--text-muted);
-        margin-left: auto;
-        flex-shrink: 0;
-        opacity: 0;
-        transform: translate(-3px, 3px);
-        transition:
-            opacity 0.18s ease,
-            transform 0.18s ease,
-            color 0.18s ease;
-    }
-
-    /* 表示名の下、@handle の位置づけ */
-    .link-domain {
-        font-family: var(--font-mono);
-        font-size: 0.7rem;
-        color: var(--text-muted);
-        opacity: 0.75;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        transition: color 0.18s ease;
-    }
-
-    /* bio 相当。行の高さを揃えるため2行で固定 */
-    .link-desc {
-        margin-top: 0.35rem;
-        font-size: 0.76rem;
-        line-height: 1.6;
-        color: var(--text-muted);
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    @media (max-width: 480px) {
-        .link-grid {
-            grid-template-columns: 1fr;
-            padding: 1rem;
         }
     }
 
