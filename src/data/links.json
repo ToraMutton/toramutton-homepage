@@ -118,5 +118,11 @@
     "url": "https://my-homepage-rose-nine.vercel.app/",
     "description": "Let's ローカルLLMやりましょう！",
     "icon": "/favicons/arsk.webp"
+  },
+  {
+    "name": "しわた",
+    "url": "https://intro-shiwata.vercel.app/",
+    "description": "Let's ローカルLLMやりましょう！",
+    "icon": "/favicons/shiwata.webp"
   }
 ]
