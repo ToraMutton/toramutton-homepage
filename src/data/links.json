@@ -124,5 +124,11 @@
     "url": "https://intro-shiwata.vercel.app/",
     "description": "Let's ローカルLLMやりましょう！",
     "icon": "/favicons/shiwata.webp"
+  },
+  {
+    "name": "みり",
+    "url": "https://my-pages-3kvr.vercel.app/",
+    "description": "いつかvaloやりましょう",
+    "icon": "/favicons/miri.webp"
   }
 ]
