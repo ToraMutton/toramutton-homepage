@@ -168,6 +168,8 @@ export function bindDots(opts: {
         setTimeout(() => {
           msg.style.cssText = "opacity:0; transition:opacity 0.3s ease";
           setTimeout(() => {
+            // 足した行は自分で消す(Today's Music は body を描き直さないため)
+            msg.remove();
             done();
             reroll();
           }, 320);
