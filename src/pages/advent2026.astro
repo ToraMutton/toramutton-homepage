@@ -6,8 +6,19 @@ import { SITE_TITLE } from "../consts";
 import { getVisiblePosts } from "../utils/post";
 import { fetchOgpImage } from "../utils/rss";
 import { resolveAdventEntry } from "../utils/advent";
-import { adventCalendar, adventDays, adventKickoff, adventFinale } from "../data/advent2026";
-import { ArrowDown, ArrowUpRight, CalendarDays, Lock, BookOpen, Rocket, Milestone } from "lucide-astro";
+import {
+    adventCalendar,
+    adventDays,
+    adventKickoff,
+    adventFinale,
+} from "../data/advent2026";
+import {
+    ArrowDown,
+    ArrowUpRight,
+    CalendarDays,
+    Lock,
+    BookOpen,
+} from "lucide-astro";
 
 const localPosts = await getVisiblePosts();
 const entries = await Promise.all(
@@ -19,7 +30,9 @@ const entries = await Promise.all(
         return resolved;
     }),
 );
-const resolvedDays = entries.slice(0, adventDays.length).sort((a, b) => a.day - b.day);
+const resolvedDays = entries
+    .slice(0, adventDays.length)
+    .sort((a, b) => a.day - b.day);
 const [resolvedKickoff, resolvedFinale] = entries.slice(adventDays.length);
 const openCount = resolvedDays.filter((entry) => entry.url).length;
 const year = adventCalendar.year;
@@ -41,66 +54,207 @@ const ringSegments = resolvedDays.map((entry, index) => {
 });
 ---
 
-<Layout title={`${SITE_TITLE} | Advent ${year}`} description={`トラマトの一人アドベントカレンダー${year}。12月1日から25日までの記事をここに。`} width="narrow">
+<Layout
+    title={`${SITE_TITLE} | Advent ${year}`}
+    description={`トラマトの一人アドベントカレンダー${year}。12月1日から25日までの記事をここに。`}
+    width="narrow"
+>
     <div class="advent-page">
         <header class="advent-hero" data-advent-reveal>
             <p class="command"><span class="prompt">$</span> ./advent{year}</p>
             <div class="hero-layout">
                 <div class="hero-copy">
-                    <h1>Advent <span>{year}</span><span class="title-dot" aria-hidden="true">_</span></h1>
-                    <p class="hero-subtitle">トラマトの一人アドベントカレンダー</p>
-                    <p class="hero-description">作ったもの、考えたこと、日々のこと。<br />はじめての一人アドベント。<br />12月1日から25日まで、たぶん毎日1記事更新します。</p>
-                    <a class="calendar-jump" href="#calendar">25日分のカレンダーへ <ArrowDown size={15} aria-hidden="true" /></a>
+                    <h1>
+                        Advent <span>{year}</span><span
+                            class="title-dot"
+                            aria-hidden="true">_</span
+                        >
+                    </h1>
+                    <p class="hero-subtitle">
+                        トラマトの一人アドベントカレンダー2026
+                    </p>
+                    <p class="hero-description">
+                        トラマトによるはじめての一人アドベントカレンダー。<br
+                        />12月1日から25日まで、頑張って毎日1記事更新します。
+                    </p>
+                    <a class="calendar-jump" href="#calendar"
+                        >25日分のカレンダーへ <ArrowDown
+                            size={15}
+                            aria-hidden="true"
+                        /></a
+                    >
                 </div>
-                <div class="progress-panel" aria-label={`${resolvedDays.length}記事中${openCount}記事公開済み`}>
+                <div
+                    class="progress-panel"
+                    aria-label={`${resolvedDays.length}記事中${openCount}記事公開済み`}
+                >
                     <div class="progress-orbit" aria-hidden="true">
                         <svg viewBox="0 0 200 200" class="progress-ring">
-                            <circle class="orbit-guide" cx="100" cy="100" r="96" />
-                            <circle class="orbit-inner" cx="100" cy="100" r="61" />
-                            {ringSegments.map((entry, index) => (
-                                <path d={entry.path} class:list={["ring-segment", { "is-open": Boolean(entry.url) }]} style={`--i:${index}`} />
-                            ))}
+                            <circle class="orbit-guide" cx="100" cy="100" r="96"
+                            ></circle>
+                            <circle class="orbit-inner" cx="100" cy="100" r="61"
+                            ></circle>
+                            {
+                                ringSegments.map((entry, index) => (
+                                    <path
+                                        d={entry.path}
+                                        class:list={[
+                                            "ring-segment",
+                                            { "is-open": Boolean(entry.url) },
+                                        ]}
+                                        style={`--i:${index}`}
+                                    />
+                                ))
+                            }
                         </svg>
-                        <div class="progress-center"><span class="progress-label">PUBLISHED</span><span class="progress-count">{String(openCount).padStart(2, "0")}<span> / {resolvedDays.length}</span></span></div>
+                        <div class="progress-center">
+                            <span class="progress-label">PUBLISHED</span><span
+                                class="progress-count"
+                                >{String(openCount).padStart(2, "0")}<span>
+                                    / {resolvedDays.length}</span
+                                ></span
+                            >
+                        </div>
                     </div>
-                    <p class="progress-period"><span class="status-dot" aria-hidden="true"></span> DEC 01 — 25 / {year}</p>
+                    <p class="progress-period">
+                        <span class="status-dot" aria-hidden="true"></span> DEC 01
+                        — 25 / {year}
+                    </p>
                 </div>
             </div>
             <div class="hero-footer">
-                <span><CalendarDays size={14} aria-hidden="true" /> {year}.12.01 — 12.25</span>
-                <span><BookOpen size={14} aria-hidden="true" /> {openCount} / {resolvedDays.length} 記事公開</span>
-                {latestEntry ? <a href={`#day-${latestEntry.day}`}>最新の記事へ <ArrowDown size={13} aria-hidden="true" /></a> : <span class="waiting">最初の記事をお楽しみに</span>}
+                <span
+                    ><CalendarDays size={14} aria-hidden="true" />
+                    {year}.12.01 — 12.25</span
+                >
+                <span
+                    ><BookOpen size={14} aria-hidden="true" />
+                    {openCount} / {resolvedDays.length} 記事公開</span
+                >
+                {
+                    latestEntry ? (
+                        <a href={`#day-${latestEntry.day}`}>
+                            最新の記事へ{" "}
+                            <ArrowDown size={13} aria-hidden="true" />
+                        </a>
+                    ) : (
+                        <span class="waiting">最初の記事をお楽しみに</span>
+                    )
+                }
             </div>
         </header>
 
-        <section id="calendar" class="calendar-section" aria-labelledby="calendar-heading">
+        <section
+            id="calendar"
+            class="calendar-section"
+            aria-labelledby="calendar-heading"
+        >
             <div class="section-heading" data-advent-reveal>
-                <div><p class="eyebrow">THE DAILY LOG</p><h2 id="calendar-heading">December <span>{year}</span></h2></div>
-                <div class="calendar-legend"><span><span class="legend-open" aria-hidden="true"></span>公開済み</span><span><Lock size={12} aria-hidden="true" />公開待ち</span></div>
+                <div>
+                    <p class="eyebrow">THE DAILY LOG</p><h2
+                        id="calendar-heading"
+                    >
+                        December <span>{year}</span>
+                    </h2>
+                </div>
+                <div class="calendar-legend">
+                    <span
+                        ><BookOpen
+                            size={12}
+                            class="legend-open"
+                            aria-hidden="true"
+                        />公開済み</span
+                    ><span><Lock size={12} aria-hidden="true" />公開待ち</span>
+                </div>
             </div>
             <div class="extra-entry" data-advent-reveal>
-                <AdventDayCard {...resolvedKickoff} sublabel="PROLOGUE" label="Begin" special openIcon={Rocket} />
+                <AdventDayCard
+                    {...resolvedKickoff}
+                    sublabel="PROLOGUE"
+                    label="Begin"
+                    special
+                />
             </div>
             <div class="calendar-grid">
-                {weekdayLabels.map((label, index) => <span class:list={["weekday-cell", { weekend: index === 0 || index === 6 }]} aria-hidden="true">{label}</span>)}
-                {resolvedDays.map((entry) => (
-                    <div class="calendar-cell" id={`day-${entry.day}`} style={`--column:${columnOf(entry.day)}; --i:${columnOf(entry.day) - 1}`} data-advent-reveal>
-                        <AdventDayCard {...entry} sublabel="DEC" label={entry.day} />
-                    </div>
-                ))}
+                {
+                    weekdayLabels.map((label, index) => (
+                        <span
+                            class:list={[
+                                "weekday-cell",
+                                { weekend: index === 0 || index === 6 },
+                            ]}
+                            aria-hidden="true"
+                        >
+                            {label}
+                        </span>
+                    ))
+                }
+                {
+                    resolvedDays.map((entry) => (
+                        <div
+                            class="calendar-cell"
+                            id={`day-${entry.day}`}
+                            style={`--column:${columnOf(entry.day)}; --i:${columnOf(entry.day) - 1}`}
+                            data-advent-reveal
+                        >
+                            <AdventDayCard
+                                {...entry}
+                                sublabel="DEC"
+                                label={entry.day}
+                            />
+                        </div>
+                    ))
+                }
             </div>
             <div class="extra-entry" data-advent-reveal>
-                <AdventDayCard {...resolvedFinale} sublabel="EPILOGUE" label="Finish" special openIcon={Milestone} />
+                <AdventDayCard
+                    {...resolvedFinale}
+                    sublabel="EPILOGUE"
+                    label="Finish"
+                    special
+                />
             </div>
-            <p class="calendar-note">公開された日付から記事を読めます。何を書くかは、その日のお楽しみ。</p>
         </section>
 
-        <aside class="adventar-panel" aria-labelledby="adventar-heading" data-advent-reveal>
-            <div class="adventar-icon" aria-hidden="true"><CalendarDays size={23} /></div>
-            <div class="adventar-copy"><p class="eyebrow">ALSO ON</p><h2 id="adventar-heading">Adventar</h2><p>{adventCalendar.adventarUrl ? "Adventarにも、同じ25日間の記録を。" : "Adventarのカレンダーも、ここから。公開までお待ちください。"}</p></div>
-            {adventCalendar.adventarUrl ? (
-                <a class="adventar-link" href={adventCalendar.adventarUrl} target="_blank" rel="noopener noreferrer">Adventarで見る <ArrowUpRight size={17} aria-hidden="true" /><span class="sr-only">（新しいタブで開く）</span></a>
-            ) : <span class="adventar-pending">カレンダー準備中 <span aria-hidden="true">↗</span></span>}
+        <aside
+            class="adventar-panel"
+            aria-labelledby="adventar-heading"
+            data-advent-reveal
+        >
+            <div class="adventar-icon" aria-hidden="true">
+                <CalendarDays size={23} />
+            </div>
+            <div class="adventar-copy">
+                <p class="eyebrow">ALSO ON</p><h2 id="adventar-heading">
+                    Adventar
+                </h2><p>
+                    {
+                        adventCalendar.adventarUrl
+                            ? "Adventarはこちら。"
+                            : "Adventarはこちら。公開までお待ちください。"
+                    }
+                </p>
+            </div>
+            {
+                adventCalendar.adventarUrl ? (
+                    <a
+                        class="adventar-link"
+                        href={adventCalendar.adventarUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        Adventarで見る{" "}
+                        <>
+                            <ArrowUpRight size={17} aria-hidden="true" />
+                            <span class="sr-only">（新しいタブで開く）</span>
+                        </>
+                    </a>
+                ) : (
+                    <span class="adventar-pending">
+                        カレンダー準備中 <span aria-hidden="true">↗</span>
+                    </span>
+                )
+            }
         </aside>
     </div>
 
@@ -109,17 +263,28 @@ const ringSegments = resolvedDays.map((entry, index) => {
             const page = document.querySelector<HTMLElement>(".advent-page");
             if (!page || page.dataset.initialized) return;
             page.dataset.initialized = "true";
-            const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+            const motion = window.matchMedia(
+                "(prefers-reduced-motion: reduce)",
+            );
             if (motion.matches) return;
-            const observer = new IntersectionObserver((entries) => {
-                for (const entry of entries) {
-                    if (!entry.isIntersecting) continue;
-                    entry.target.classList.add("is-visible");
-                    observer.unobserve(entry.target);
-                }
-            }, { threshold: 0.08 });
-            page.querySelectorAll("[data-advent-reveal]").forEach((element) => observer.observe(element));
-            document.addEventListener("astro:before-swap", () => observer.disconnect(), { once: true });
+            const observer = new IntersectionObserver(
+                (entries) => {
+                    for (const entry of entries) {
+                        if (!entry.isIntersecting) continue;
+                        entry.target.classList.add("is-visible");
+                        observer.unobserve(entry.target);
+                    }
+                },
+                { threshold: 0.08 },
+            );
+            page.querySelectorAll("[data-advent-reveal]").forEach((element) =>
+                observer.observe(element),
+            );
+            document.addEventListener(
+                "astro:before-swap",
+                () => observer.disconnect(),
+                { once: true },
+            );
         }
         document.addEventListener("astro:page-load", initializeAdvent);
         initializeAdvent();
@@ -131,7 +296,11 @@ const ringSegments = resolvedDays.map((entry, index) => {
         --advent-ease: cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    .command, .eyebrow, .progress-panel, .hero-footer, .calendar-legend, .calendar-note {
+    .command,
+    .eyebrow,
+    .progress-panel,
+    .hero-footer,
+    .calendar-legend {
         font-family: var(--font-mono);
     }
 
@@ -206,14 +375,19 @@ const ringSegments = resolvedDays.map((entry, index) => {
         font-size: 0.78rem;
     }
 
-    .calendar-jump :global(svg), .adventar-link :global(svg) {
+    .calendar-jump :global(svg),
+    .adventar-link :global(svg) {
         transition: transform 0.25s var(--advent-ease);
     }
 
     .progress-panel {
         position: relative;
         padding: 0.5rem;
-        background: radial-gradient(circle, color-mix(in srgb, var(--accent-blue) 6%, transparent), transparent 68%);
+        background: radial-gradient(
+            circle,
+            color-mix(in srgb, var(--accent-blue) 6%, transparent),
+            transparent 68%
+        );
     }
 
     .progress-orbit {
@@ -291,7 +465,7 @@ const ringSegments = resolvedDays.map((entry, index) => {
         color: var(--text-muted);
     }
 
-    .status-dot, .legend-open {
+    .status-dot {
         display: inline-block;
         width: 6px;
         height: 6px;
@@ -310,7 +484,8 @@ const ringSegments = resolvedDays.map((entry, index) => {
         color: var(--text-muted);
     }
 
-    .hero-footer > span, .hero-footer > a {
+    .hero-footer > span,
+    .hero-footer > a {
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
@@ -359,7 +534,8 @@ const ringSegments = resolvedDays.map((entry, index) => {
         margin-bottom: 0.35rem;
     }
 
-    .calendar-legend, .calendar-legend > span {
+    .calendar-legend,
+    .calendar-legend > span {
         display: flex;
         align-items: center;
         gap: 0.45rem;
@@ -370,6 +546,10 @@ const ringSegments = resolvedDays.map((entry, index) => {
         font-size: 0.62rem;
         color: var(--text-muted);
         padding-bottom: 0.1rem;
+    }
+
+    .calendar-legend :global(.legend-open) {
+        color: var(--accent-blue);
     }
 
     .calendar-grid {
@@ -400,13 +580,6 @@ const ringSegments = resolvedDays.map((entry, index) => {
         outline: 2px solid var(--accent-blue);
         outline-offset: 3px;
         border-radius: var(--radius);
-    }
-
-    .calendar-note {
-        margin: 1.2rem 0 0;
-        font-size: 0.65rem;
-        line-height: 1.8;
-        color: var(--text-muted);
     }
 
     .adventar-panel {
@@ -451,7 +624,8 @@ const ringSegments = resolvedDays.map((entry, index) => {
         color: var(--text-muted);
     }
 
-    .adventar-link, .adventar-pending {
+    .adventar-link,
+    .adventar-pending {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -467,7 +641,9 @@ const ringSegments = resolvedDays.map((entry, index) => {
 
     .adventar-link {
         background: var(--background);
-        transition: border-color 0.25s, background 0.25s;
+        transition:
+            border-color 0.25s,
+            background 0.25s;
     }
 
     .adventar-pending {
@@ -499,7 +675,11 @@ const ringSegments = resolvedDays.map((entry, index) => {
 
         .adventar-link:hover {
             border-color: var(--accent-blue);
-            background: color-mix(in srgb, var(--accent-blue) 6%, var(--background));
+            background: color-mix(
+                in srgb,
+                var(--accent-blue) 6%,
+                var(--background)
+            );
         }
 
         .adventar-link:hover :global(svg) {
@@ -556,7 +736,9 @@ const ringSegments = resolvedDays.map((entry, index) => {
     }
 
     @media (prefers-reduced-motion: reduce) {
-        .calendar-jump :global(svg), .adventar-link, .adventar-link :global(svg) {
+        .calendar-jump :global(svg),
+        .adventar-link,
+        .adventar-link :global(svg) {
             transition: none;
         }
     }
@@ -588,7 +770,8 @@ const ringSegments = resolvedDays.map((entry, index) => {
             font-size: 0.65rem;
         }
 
-        .progress-label, .progress-period {
+        .progress-label,
+        .progress-period {
             font-size: 0.48rem;
         }
 
@@ -606,7 +789,8 @@ const ringSegments = resolvedDays.map((entry, index) => {
             display: none;
         }
 
-        .calendar-section, .adventar-panel {
+        .calendar-section,
+        .adventar-panel {
             margin-top: 2.25rem;
         }
 
@@ -616,7 +800,8 @@ const ringSegments = resolvedDays.map((entry, index) => {
             gap: 0.85rem;
         }
 
-        .adventar-link, .adventar-pending {
+        .adventar-link,
+        .adventar-pending {
             margin-left: 0;
             width: 100%;
         }

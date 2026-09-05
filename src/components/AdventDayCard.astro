@@ -1,7 +1,7 @@
 ---
 import { Image } from "astro:assets";
 import type { ImageMetadata } from "astro";
-import { ArrowUpRight, BookOpen, Lock, Unlock } from "lucide-astro";
+import { ArrowUpRight, BookOpen, Lock } from "lucide-astro";
 import { adventCalendar, type AdventSource } from "../data/advent2026";
 
 interface Props {
@@ -13,7 +13,6 @@ interface Props {
     sublabel?: string;
     label: string | number;
     special?: boolean;
-    openIcon?: typeof Unlock;
 }
 
 const {
@@ -25,25 +24,37 @@ const {
     sublabel,
     label,
     special = false,
-    openIcon,
 } = Astro.props;
 const clickable = status === "open" && Boolean(url);
-const isExternal = clickable && (source ? source !== "local" : /^https?:\/\//.test(url ?? ""));
+const isExternal =
+    clickable && (source ? source !== "local" : /^https?:\/\//.test(url ?? ""));
 const Tag = clickable ? "a" : "div";
-const OpenIcon = openIcon ?? BookOpen;
 const sourceLabels: Record<AdventSource, string> = {
-    local: "Blog", zenn: "Zenn", note: "note", qiita: "Qiita",
+    local: "Blog",
+    zenn: "Zenn",
+    note: "note",
+    qiita: "Qiita",
 };
 const displayTitle = clickable
     ? title || "記事を読む"
-    : status === "locked" ? "公開待ち" : "記事を準備中";
-const displayLabel = typeof label === "number" ? String(label).padStart(2, "0") : label;
-const dateLabel = typeof label === "number" ? `12月${label}日` : label === "Begin" ? "はじまりの記録" : "おわりの記録";
+    : "公開待ち";
+const displayLabel =
+    typeof label === "number" ? String(label).padStart(2, "0") : label;
+const dateLabel =
+    typeof label === "number"
+        ? `12月${label}日`
+        : label === "Begin"
+          ? "はじまり"
+          : "おわり";
 ---
 
 <Tag
     href={clickable ? url : undefined}
-    class:list={["day-card", status, { special, clickable, "no-link": status === "open" && !clickable }]}
+    class:list={[
+        "day-card",
+        clickable ? "open" : "locked",
+        { special, clickable },
+    ]}
     target={isExternal ? "_blank" : undefined}
     rel={isExternal ? "noopener noreferrer" : undefined}
     role={clickable ? undefined : "group"}
@@ -52,29 +63,74 @@ const dateLabel = typeof label === "number" ? `12月${label}日` : label === "Be
     <div class="day-top">
         <div class="day-date">
             <span class="day-label">{sublabel}</span>
-            {typeof label === "number" ? (
-                <time class="day-number" datetime={`${adventCalendar.year}-12-${displayLabel}`}>
-                    {displayLabel}
-                </time>
-            ) : <span class="day-number">{displayLabel}</span>}
+            {
+                typeof label === "number" ? (
+                    <time
+                        class="day-number"
+                        datetime={`${adventCalendar.year}-12-${displayLabel}`}
+                    >
+                        {displayLabel}
+                    </time>
+                ) : (
+                    <span class="day-number">{displayLabel}</span>
+                )
+            }
         </div>
-        <span class="day-status" aria-hidden="true">{status === "locked" ? <Lock size={13} /> : <OpenIcon size={15} />}</span>
+        <span class="day-status" aria-hidden="true"
+            >{
+                clickable ? <BookOpen size={15} /> : <Lock size={13} />
+            }</span
+        >
     </div>
-    {clickable && (
-        <div class="day-thumbnail" aria-hidden="true">
-            {typeof image === "object" && image ? (
-                <Image src={image} alt="" width={240} height={135} loading="lazy" />
-            ) : typeof image === "string" && image ? (
-                <img src={image} alt="" loading="lazy" decoding="async" width="240" height="135" />
-            ) : <BookOpen size={22} />}
-        </div>
-    )}
+    {
+        clickable && (
+            <div class="day-thumbnail" aria-hidden="true">
+                {typeof image === "object" && image ? (
+                    <Image
+                        src={image}
+                        alt=""
+                        width={240}
+                        height={135}
+                        loading="lazy"
+                    />
+                ) : typeof image === "string" && image ? (
+                    <img
+                        src={image}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        width="240"
+                        height="135"
+                    />
+                ) : (
+                    <BookOpen size={22} />
+                )}
+            </div>
+        )
+    }
     <div class="day-body">
-        {(special || status === "open") && (
-            <span class="day-title">{special && !clickable ? dateLabel : displayTitle}</span>
-        )}
+        {
+            (special || clickable) && (
+                <span class="day-title">
+                    {special && !clickable ? dateLabel : displayTitle}
+                </span>
+            )
+        }
         <span class="day-meta">
-            {clickable ? <><span>{source ? sourceLabels[source] : "記事を読む"}</span><ArrowUpRight size={12} aria-hidden="true" /></> : <span>{status === "locked" ? "COMING SOON" : "準備中"}</span>}
+            {
+                clickable ? (
+                    <>
+                        <>
+                            <span>
+                                {source ? sourceLabels[source] : "記事を読む"}
+                            </span>
+                            <ArrowUpRight size={12} aria-hidden="true" />
+                        </>
+                    </>
+                ) : (
+                    <span>COMING SOON</span>
+                )
+            }
         </span>
     </div>
     <span class="accent-sweep" aria-hidden="true"></span>
@@ -96,7 +152,10 @@ const dateLabel = typeof label === "number" ? `12月${label}日` : label === "Be
         text-decoration: none;
         overflow: hidden;
         isolation: isolate;
-        transition: border-color 0.25s ease, background 0.25s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        transition:
+            border-color 0.25s ease,
+            background 0.25s ease,
+            transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .day-card > :not(.accent-sweep) {
@@ -106,10 +165,6 @@ const dateLabel = typeof label === "number" ? `12月${label}日` : label === "Be
 
     .day-card.locked {
         background: var(--background);
-    }
-
-    .day-card.no-link {
-        border-style: dashed;
     }
 
     .day-top {
@@ -150,7 +205,8 @@ const dateLabel = typeof label === "number" ? `12月${label}日` : label === "Be
         color: var(--text-muted);
     }
 
-    .open .day-status, .clickable .day-number {
+    .open .day-status,
+    .clickable .day-number {
         color: var(--accent-blue);
     }
 
@@ -169,7 +225,7 @@ const dateLabel = typeof label === "number" ? `12月${label}日` : label === "Be
         overflow-wrap: anywhere;
     }
 
-    .locked .day-title, .no-link .day-title {
+    .locked .day-title {
         font-size: 0.65rem;
         color: var(--text-muted);
     }
@@ -218,7 +274,12 @@ const dateLabel = typeof label === "number" ? `12月${label}日` : label === "Be
         inset: 0;
         z-index: 0;
         pointer-events: none;
-        background: linear-gradient(110deg, transparent 20%, color-mix(in srgb, var(--accent-blue) 8%, transparent) 50%, transparent 80%);
+        background: linear-gradient(
+            110deg,
+            transparent 20%,
+            color-mix(in srgb, var(--accent-blue) 8%, transparent) 50%,
+            transparent 80%
+        );
         transform: translateX(-110%);
         transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
     }
@@ -331,7 +392,8 @@ const dateLabel = typeof label === "number" ? `12月${label}日` : label === "Be
             gap: 0.3rem;
         }
 
-        .day-title, .locked .day-title, .no-link .day-title {
+        .day-title,
+        .locked .day-title {
             font-size: 0.78rem;
         }
 
@@ -390,11 +452,14 @@ const dateLabel = typeof label === "number" ? `12月${label}日` : label === "Be
     }
 
     @media (prefers-reduced-motion: reduce) {
-        .day-card, .accent-sweep, .day-thumbnail :global(img) {
+        .day-card,
+        .accent-sweep,
+        .day-thumbnail :global(img) {
             transition: none;
         }
 
-        .clickable:hover, .clickable:hover .day-thumbnail :global(img) {
+        .clickable:hover,
+        .clickable:hover .day-thumbnail :global(img) {
             transform: none;
         }
     }

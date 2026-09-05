@@ -27,7 +27,7 @@ export interface AdventEntry {
 }
 
 // 一人アドベントカレンダー BEGIN
-// 最初から open 扱い(=見た目はアンロック)にしておき、
+// open 指定でも、記事リンクを設定するまでは他の未公開カードと同じ表示。
 export const adventKickoff: AdventEntry = {
   day: 0,
   status: "open",
