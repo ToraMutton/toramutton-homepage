@@ -66,7 +66,7 @@ export const heroSpecs: HeroSpec[] = [
     copy: true,
   },
   // 今やっていること。気が向いたら書き換える
-  { key: "Now", icon: Activity, value: "コンパイラ自作中", live: true },
+  { key: "Now", icon: Activity, value: "Rust勉強中", live: true },
   { key: "Time", icon: Clock, kind: "clock" },
 ];
 
