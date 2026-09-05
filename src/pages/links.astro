@@ -128,6 +128,13 @@ const links = friendLinks.map((link) => ({
         min-width: 0;
     }
 
+    /* 全ページ共通の [data-reveal] は --i(通し番号)がそのまま遅延になるため、
+       件数の多いこのページではスクロール追従が悪くなる。段差は数件分だけ残して頭打ちにする。 */
+    .link-entry[data-reveal].is-visible {
+        animation-duration: 0.4s;
+        animation-delay: calc(min(var(--i, 0), 3) * 40ms);
+    }
+
     /* 枠・背景・hover(枠がシアン + オフセット影)は global.css の .ui-card 系 */
     .link-item {
         position: relative;
