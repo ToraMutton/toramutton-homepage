@@ -6,7 +6,7 @@ import PageHeader from "../components/PageHeader.astro";
 import { SITE_TITLE } from "../consts";
 import friendLinks from "../data/links.json";
 import faviconMapJson from "../data/favicon-map.json";
-import { ExternalLink, Users } from "lucide-astro";
+import { BookOpen, Dices, ExternalLink, Users } from "lucide-astro";
 
 const getDomain = (url: string) => {
     try {
@@ -37,16 +37,42 @@ const links = friendLinks.map((link) => ({
             title="Links"
             description="友人や知り合いのウェブサイトを集めた相互リンク集です。"
         >
-            <span class="links-count" slot="aside">
-                <Users size={16} aria-hidden="true" />
-                {links.length} sites
-            </span>
+            <p class="links-story" slot="meta">
+                <BookOpen size={15} aria-hidden="true" />
+                <span>
+                    Zennで公開している<a
+                        href="https://zenn.dev/toramutton/books/homepage-guide"
+                        target="_blank"
+                        rel="noopener noreferrer">ホームページ制作ガイド</a
+                    >を読んで自分のサイトを作ってくれた人達もいます。
+                </span>
+            </p>
+
+            <div class="links-aside" slot="aside">
+                <span class="links-count">
+                    <Users size={16} aria-hidden="true" />
+                    {links.length} sites
+                </span>
+                <button type="button" class="random-jump" data-random-jump>
+                    <Dices size={16} aria-hidden="true" />
+                    <span class="random-jump-label">Random Jump</span>
+                </button>
+            </div>
         </PageHeader>
+
+        {/* 抽選結果のアナウンス（画面には出さず、読み上げだけに使う） */}
+        <p class="sr-only" aria-live="polite" data-random-status></p>
 
         <ol class="links-grid">
             {
                 links.map((link, index) => (
-                    <li class="link-entry" style={`--i:${index}`} data-reveal>
+                    <li
+                        class="link-entry"
+                        style={`--i:${index}`}
+                        data-reveal
+                        data-link-entry
+                        data-link-name={link.name}
+                    >
                         <a
                             href={link.url}
                             target="_blank"
@@ -93,12 +119,140 @@ const links = friendLinks.map((link) => ({
             }
         </ol>
     </section>
-
 </Layout>
+
+<script>
+    // Random Jump 🎲
+    // 「どれが当たったか」を見せてから飛ばしたいので、
+    //   1. サイコロを回す(短い演出)
+    //   2. 当たったカードまでスクロールして強調
+    //   3. 少し見せてから別タブで開く
+    // の3段階にしている。
+    //
+    // 3 の window.open は click から時間が空くと popup blocker に弾かれうるので、
+    // 弾かれた場合はカードにフォーカスを移して、本人の Enter で開けるようにする。
+    document.addEventListener("astro:page-load", () => {
+        const button =
+            document.querySelector<HTMLButtonElement>("[data-random-jump]");
+        const status = document.querySelector<HTMLElement>(
+            "[data-random-status]",
+        );
+        const entries = Array.from(
+            document.querySelectorAll<HTMLLIElement>("[data-link-entry]"),
+        );
+        if (!button || entries.length === 0) return;
+
+        const reduced = window.matchMedia(
+            "(prefers-reduced-motion: reduce)",
+        ).matches;
+
+        // 演出の長さ。reduced-motion のときは待たせず即座に飛ばす
+        const ROLL_MS = reduced ? 0 : 380;
+        const SHOW_MS = reduced ? 0 : 620;
+
+        let timers: number[] = [];
+        const clearTimers = () => {
+            timers.forEach((id) => window.clearTimeout(id));
+            timers = [];
+        };
+
+        button.addEventListener("click", () => {
+            clearTimers();
+            entries.forEach((entry) => entry.removeAttribute("data-picked"));
+
+            const picked = entries[Math.floor(Math.random() * entries.length)];
+            const anchor = picked.querySelector<HTMLAnchorElement>("a[href]");
+            if (!anchor) return;
+
+            button.dataset.rolling = "";
+
+            timers.push(
+                window.setTimeout(() => {
+                    delete button.dataset.rolling;
+                    picked.dataset.picked = "";
+                    // reveal 待ちのカードが当たっても見えるようにしておく
+                    picked.classList.add("is-visible");
+                    picked.scrollIntoView({
+                        behavior: reduced ? "auto" : "smooth",
+                        block: "center",
+                    });
+                    if (status) {
+                        status.textContent = `${picked.dataset.linkName ?? "サイト"} に飛びます`;
+                    }
+
+                    timers.push(
+                        window.setTimeout(() => {
+                            const opened = window.open(
+                                anchor.href,
+                                "_blank",
+                                "noopener",
+                            );
+                            // ブロックされたら本人のアクションで開いてもらう
+                            if (!opened) anchor.focus();
+                        }, SHOW_MS),
+                    );
+                }, ROLL_MS),
+            );
+        });
+
+        document.addEventListener("astro:before-swap", clearTimers, {
+            once: true,
+        });
+    });
+</script>
 
 <style>
     .links-page {
         color: var(--text-main);
+    }
+
+    .sr-only {
+        position: absolute;
+        overflow: hidden;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        border: 0;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    /* --- ヘッダー左下のストーリー行 --- */
+    .links-story {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.45rem;
+        margin: 0.6rem 0 0;
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        line-height: 1.7;
+    }
+
+    .links-story :global(svg) {
+        flex-shrink: 0;
+        margin-top: 0.25rem;
+        color: var(--accent-blue);
+    }
+
+    .links-story a {
+        color: var(--accent-blue);
+        font-weight: 600;
+        text-decoration: none;
+        border-bottom: 1px solid transparent;
+        transition: border-color 0.18s ease;
+    }
+
+    .links-story a:hover {
+        border-bottom-color: var(--accent-blue);
+    }
+
+    /* --- ヘッダー右側（件数 + サイコロ） --- */
+    .links-aside {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        flex-shrink: 0;
     }
 
     .links-count {
@@ -113,6 +267,58 @@ const links = friendLinks.map((link) => ({
 
     .links-count :global(svg) {
         color: var(--accent-blue);
+    }
+
+    .random-jump {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        flex-shrink: 0;
+        padding: 0.45rem 0.75rem;
+        background: var(--surface);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        color: var(--text-main);
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        cursor: pointer;
+        transition:
+            border-color 0.18s ease,
+            color 0.18s ease,
+            background 0.18s ease;
+    }
+
+    .random-jump :global(svg) {
+        color: var(--accent-blue);
+        transition: transform 0.18s ease;
+    }
+
+    @media (hover: hover) {
+        .random-jump:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .random-jump:hover :global(svg) {
+            transform: rotate(-18deg);
+        }
+    }
+
+    /* 抽選中はボタンを押せなくして、サイコロだけ回す */
+    .random-jump[data-rolling] {
+        pointer-events: none;
+        border-color: var(--accent-blue);
+        color: var(--accent-blue);
+    }
+
+    .random-jump[data-rolling] :global(svg) {
+        animation: dice-roll 0.4s linear infinite;
+    }
+
+    @keyframes dice-roll {
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     .links-grid {
@@ -260,6 +466,46 @@ const links = friendLinks.map((link) => ({
         }
     }
 
+    /* --- サイコロで当たったカード --- */
+    /* 飛ぶ前に「どれが当たったか」を必ず見せるための強調表示 */
+    .link-entry[data-picked] .link-item {
+        border-color: var(--accent-blue);
+        box-shadow: var(--shadow-offset);
+        transform: translate(-2px, -2px);
+    }
+
+    .link-entry[data-picked] .link-name,
+    .link-entry[data-picked] .link-domain,
+    .link-entry[data-picked] .link-arrow {
+        color: var(--accent-blue);
+    }
+
+    .link-entry[data-picked] .link-arrow {
+        opacity: 1;
+        transform: none;
+    }
+
+    .link-entry[data-picked] .link-icon {
+        border-color: var(--accent-blue);
+        animation: picked-pulse 0.5s var(--ease-out) 2;
+    }
+
+    @keyframes picked-pulse {
+        50% {
+            transform: scale(1.14);
+        }
+    }
+
+    @media (max-width: 720px) {
+        .random-jump-label {
+            display: none;
+        }
+
+        .random-jump {
+            padding: 0.45rem 0.55rem;
+        }
+    }
+
     @media (max-width: 640px) {
         .links-grid {
             grid-template-columns: 1fr;
@@ -270,8 +516,15 @@ const links = friendLinks.map((link) => ({
         .link-icon,
         .link-arrow,
         .link-name,
-        .link-domain {
+        .link-domain,
+        .random-jump,
+        .random-jump :global(svg) {
             transition: none;
+        }
+
+        .random-jump[data-rolling] :global(svg),
+        .link-entry[data-picked] .link-icon {
+            animation: none;
         }
     }
 </style>
