@@ -1466,15 +1466,17 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
     /* ---- fastfetch の出力: 左ロゴ / 右情報 ---- */
     .ff {
         display: grid;
-        grid-template-columns: auto minmax(0, 1fr);
-        gap: 0 3rem;
-        align-items: start;
-        padding: 0.4rem 0 0.2rem 1.2rem;
+        grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.15fr);
+        gap: 0 clamp(2rem, 4vw, 4rem);
+        align-items: center;
+        padding: 1.2rem 0;
     }
 
     /* ASCII アート。行ごとに .line で順に出る。
        global.css のコードブロック用 pre 装飾(背景・余白・枠)は打ち消す */
     .ff-logo {
+        justify-self: center;
+        width: 64ch;
         margin: 0;
         padding: 0;
         background: none;
@@ -1483,8 +1485,8 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
         box-shadow: none;
         overflow: visible;
         font: inherit;
-        font-size: 0.8rem;
-        line-height: 1.15;
+        font-size: clamp(0.45rem, 0.88vw, 0.72rem);
+        line-height: 1.2;
         color: var(--accent-blue);
         user-select: none;
     }
@@ -1564,7 +1566,7 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
         flex-shrink: 0;
     }
     .ff-section-dots {
-        flex: 0 1 12ch;
+        flex: 1 1 auto;
         min-width: 0;
         overflow: hidden;
         white-space: nowrap;
@@ -1572,7 +1574,7 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
         opacity: 0.7;
     }
     .ff-section-dots::before {
-        content: "┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈";
+        content: "┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈";
     }
 
     /* 情報行: アイコン  キー  値 */
@@ -1832,12 +1834,10 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
         /* ロゴを上、情報を下に縦積み。ロゴは小さくして幅に収める */
         .ff {
             grid-template-columns: 1fr;
-            gap: 1rem 0;
-            padding-left: 0.6rem;
+            gap: 2rem 0;
         }
         .ff-logo {
-            font-size: 0.5rem;
-            line-height: 1.1;
+            font-size: clamp(0.4rem, 1.65vw, 0.62rem);
         }
         .ff-palette {
             padding-left: 0.6rem;
