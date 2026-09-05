@@ -1,242 +1,668 @@
 ---
 export const prerender = true;
-import { getVisiblePosts } from "../utils/post";
-import Layout from '../layouts/BaseLayout.astro';
+import Layout from "../layouts/BaseLayout.astro";
 import AdventDayCard from "../components/AdventDayCard.astro";
 import { SITE_TITLE } from "../consts";
+import { getVisiblePosts } from "../utils/post";
 import { fetchOgpImage } from "../utils/rss";
-import {
-    adventDays,
-    adventKickoff,
-    adventFinale,
-    type AdventEntry,
-    type AdventSource,
-} from "../data/advent2026";
-import { Rocket, Milestone } from "lucide-astro";
+import { resolveAdventEntry } from "../utils/advent";
+import { adventCalendar, adventDays, adventKickoff, adventFinale } from "../data/advent2026";
+import { ArrowDown, ArrowUpRight, CalendarDays, Lock, BookOpen, Rocket, Milestone } from "lucide-astro";
 
-// === 記事データの解決 ===
-// status: "locked" のエントリは title/note を一切参照せず、
-// 問答無用で「ロック状態」だけを返す(=HTMLにネタバレが出ない)
 const localPosts = await getVisiblePosts();
-
-interface ResolvedEntry {
-    status: "locked" | "open";
-    url?: string;
-    title?: string;
-    image?: any;
-    source?: AdventSource;
-}
-
-async function resolveEntry(entry: AdventEntry): Promise<ResolvedEntry> {
-    if (entry.status !== "open") {
-        return { status: "locked" };
-    }
-
-    // ローカル記事: blog collectionからタイトル・サムネ・URLを自動取得
-    if (entry.source === "local" && entry.slug) {
-        const post = localPosts.find((p) => p.id === entry.slug);
-        if (!post) {
-            // 記事が見つからない場合は安全側でロック扱いにしておく
-            return { status: "locked" };
+const entries = await Promise.all(
+    [...adventDays, adventKickoff, adventFinale].map(async (entry) => {
+        const resolved = resolveAdventEntry(entry, localPosts);
+        if (resolved.url && resolved.source !== "local") {
+            resolved.image = await fetchOgpImage(resolved.url);
         }
-        return {
-            status: "open",
-            url: `/blog/${post.id}/`,
-            title: post.data.title,
-            image: post.data.heroImage,
-            source: "local",
-        };
-    }
+        return resolved;
+    }),
+);
+const resolvedDays = entries.slice(0, adventDays.length).sort((a, b) => a.day - b.day);
+const [resolvedKickoff, resolvedFinale] = entries.slice(adventDays.length);
+const openCount = resolvedDays.filter((entry) => entry.url).length;
+const year = adventCalendar.year;
+const weekdayLabels = ["日", "月", "火", "水", "木", "金", "土"];
+const firstDow = new Date(Date.UTC(year, 11, 1)).getUTCDay();
+const columnOf = (day: number) => ((firstDow + day - 1) % 7) + 1;
+const latestEntry = resolvedDays.filter((entry) => entry.url).at(-1);
 
-    // 外部記事(note/Zenn/Qiita): OGP画像をビルド時に取得
-    if (entry.url) {
-        const image = await fetchOgpImage(entry.url);
-        return {
-            status: "open",
-            url: entry.url,
-            title: entry.title,
-            image,
-            source: entry.source,
-        };
-    }
-
-    // open指定だがリンク先未設定(例: 記事を書く前の「開始」バナー)
-    // → 見た目はアンロックだが、クリックはできない状態として扱う
-    return { status: "open" };
-}
-
-const resolvedDays = await Promise.all(adventDays.map(resolveEntry));
-const resolvedKickoff = await resolveEntry(adventKickoff);
-const resolvedFinale = await resolveEntry(adventFinale);
-
-// === カレンダーの曜日配置 ===
-const WEEK_START = 0; // 0 = 日曜始まり, 1 = 月曜始まり
-const weekdayLabels =
-    WEEK_START === 0
-        ? ["日", "月", "火", "水", "木", "金", "土"]
-        : ["月", "火", "水", "木", "金", "土", "日"];
-
-const firstDow = new Date(2026, 11, 1).getDay(); // 0=日 ... 6=土
-const columnOf = (day: number) => {
-    const dow = (firstDow + (day - 1)) % 7;
-    return ((dow - WEEK_START + 7) % 7) + 1;
+// トップページの円形メーターと同じく、1セグメント = 1日。
+const ringStep = 360 / resolvedDays.length;
+const polar = (deg: number) => {
+    const rad = ((deg - 90) * Math.PI) / 180;
+    return [100 + 78 * Math.cos(rad), 100 + 78 * Math.sin(rad)];
 };
+const ringSegments = resolvedDays.map((entry, index) => {
+    const [x0, y0] = polar(index * ringStep + 2);
+    const [x1, y1] = polar((index + 1) * ringStep - 2);
+    return { ...entry, path: `M ${x0} ${y0} A 78 78 0 0 1 ${x1} ${y1}` };
+});
 ---
 
-<Layout
-    title={`${SITE_TITLE} | Advent 2026`}
-    description="トラマト一人アドベントカレンダー2026"
-    width="narrow"
->
-            <section class="advent-section">
-                <div class="advent-header">
-                    <h1 class="advent-title">
-                        トラマトの一人アドベントカレンダー2026
-                    </h1>
-                    <p class="advent-command">
-                        <span class="prompt">$</span> ./advent2026
-                    </p>
-                    <p class="advent-desc">
-                        トラマトによるはじめての一人アドベントカレンダー2026。<br
-                        />
-                        12月1日から25日まで、たぶん毎日1記事更新します。
-                    </p>
+<Layout title={`${SITE_TITLE} | Advent ${year}`} description={`トラマトの一人アドベントカレンダー${year}。12月1日から25日までの記事をここに。`} width="narrow">
+    <div class="advent-page">
+        <header class="advent-hero" data-advent-reveal>
+            <p class="command"><span class="prompt">$</span> ./advent{year}</p>
+            <div class="hero-layout">
+                <div class="hero-copy">
+                    <h1>Advent <span>{year}</span><span class="title-dot" aria-hidden="true">_</span></h1>
+                    <p class="hero-subtitle">トラマトの一人アドベントカレンダー</p>
+                    <p class="hero-description">作ったもの、考えたこと、日々のこと。<br />はじめての一人アドベント。<br />12月1日から25日まで、たぶん毎日1記事更新します。</p>
+                    <a class="calendar-jump" href="#calendar">25日分のカレンダーへ <ArrowDown size={15} aria-hidden="true" /></a>
                 </div>
-
-                <AdventDayCard
-                    status={resolvedKickoff.status}
-                    url={resolvedKickoff.url}
-                    title={resolvedKickoff.title}
-                    image={resolvedKickoff.image}
-                    source={resolvedKickoff.source}
-                    sublabel="EXTRA"
-                    label="Begin"
-                    special
-                    openIcon={Rocket}
-                />
-
-                <div class="calendar-grid">
-                    {
-                        weekdayLabels.map((wlabel, i) => {
-                            const actualDow = (WEEK_START + i) % 7;
-                            return (
-                                <span
-                                    class={`weekday-cell ${actualDow === 0 ? "sun" : ""} ${actualDow === 6 ? "sat" : ""}`}
-                                    style={`grid-column: ${i + 1};`}
-                                    aria-hidden="true"
-                                >
-                                    {wlabel}
-                                </span>
-                            );
-                        })
-                    }
-
-                    {
-                        resolvedDays.map((r, i) => (
-                            <AdventDayCard
-                                status={r.status}
-                                url={r.url}
-                                title={r.title}
-                                image={r.image}
-                                source={r.source}
-                                sublabel="Dec"
-                                label={i + 1}
-                                gridColumn={columnOf(i + 1)}
-                            />
-                        ))
-                    }
+                <div class="progress-panel" aria-label={`${resolvedDays.length}記事中${openCount}記事公開済み`}>
+                    <div class="progress-orbit" aria-hidden="true">
+                        <svg viewBox="0 0 200 200" class="progress-ring">
+                            <circle class="orbit-guide" cx="100" cy="100" r="96" />
+                            <circle class="orbit-inner" cx="100" cy="100" r="61" />
+                            {ringSegments.map((entry, index) => (
+                                <path d={entry.path} class:list={["ring-segment", { "is-open": Boolean(entry.url) }]} style={`--i:${index}`} />
+                            ))}
+                        </svg>
+                        <div class="progress-center"><span class="progress-label">PUBLISHED</span><span class="progress-count">{String(openCount).padStart(2, "0")}<span> / {resolvedDays.length}</span></span></div>
+                    </div>
+                    <p class="progress-period"><span class="status-dot" aria-hidden="true"></span> DEC 01 — 25 / {year}</p>
                 </div>
+            </div>
+            <div class="hero-footer">
+                <span><CalendarDays size={14} aria-hidden="true" /> {year}.12.01 — 12.25</span>
+                <span><BookOpen size={14} aria-hidden="true" /> {openCount} / {resolvedDays.length} 記事公開</span>
+                {latestEntry ? <a href={`#day-${latestEntry.day}`}>最新の記事へ <ArrowDown size={13} aria-hidden="true" /></a> : <span class="waiting">最初の記事をお楽しみに</span>}
+            </div>
+        </header>
 
-                <AdventDayCard
-                    status={resolvedFinale.status}
-                    url={resolvedFinale.url}
-                    title={resolvedFinale.title}
-                    image={resolvedFinale.image}
-                    source={resolvedFinale.source}
-                    sublabel="EXTRA"
-                    label="Finish"
-                    special
-                    openIcon={Milestone}
-                />
-            </section>
+        <section id="calendar" class="calendar-section" aria-labelledby="calendar-heading">
+            <div class="section-heading" data-advent-reveal>
+                <div><p class="eyebrow">THE DAILY LOG</p><h2 id="calendar-heading">December <span>{year}</span></h2></div>
+                <div class="calendar-legend"><span><span class="legend-open" aria-hidden="true"></span>公開済み</span><span><Lock size={12} aria-hidden="true" />公開待ち</span></div>
+            </div>
+            <div class="extra-entry" data-advent-reveal>
+                <AdventDayCard {...resolvedKickoff} sublabel="PROLOGUE" label="Begin" special openIcon={Rocket} />
+            </div>
+            <div class="calendar-grid">
+                {weekdayLabels.map((label, index) => <span class:list={["weekday-cell", { weekend: index === 0 || index === 6 }]} aria-hidden="true">{label}</span>)}
+                {resolvedDays.map((entry) => (
+                    <div class="calendar-cell" id={`day-${entry.day}`} style={`--column:${columnOf(entry.day)}; --i:${columnOf(entry.day) - 1}`} data-advent-reveal>
+                        <AdventDayCard {...entry} sublabel="DEC" label={entry.day} />
+                    </div>
+                ))}
+            </div>
+            <div class="extra-entry" data-advent-reveal>
+                <AdventDayCard {...resolvedFinale} sublabel="EPILOGUE" label="Finish" special openIcon={Milestone} />
+            </div>
+            <p class="calendar-note">公開された日付から記事を読めます。何を書くかは、その日のお楽しみ。</p>
+        </section>
+
+        <aside class="adventar-panel" aria-labelledby="adventar-heading" data-advent-reveal>
+            <div class="adventar-icon" aria-hidden="true"><CalendarDays size={23} /></div>
+            <div class="adventar-copy"><p class="eyebrow">ALSO ON</p><h2 id="adventar-heading">Adventar</h2><p>{adventCalendar.adventarUrl ? "Adventarにも、同じ25日間の記録を。" : "Adventarのカレンダーも、ここから。公開までお待ちください。"}</p></div>
+            {adventCalendar.adventarUrl ? (
+                <a class="adventar-link" href={adventCalendar.adventarUrl} target="_blank" rel="noopener noreferrer">Adventarで見る <ArrowUpRight size={17} aria-hidden="true" /><span class="sr-only">（新しいタブで開く）</span></a>
+            ) : <span class="adventar-pending">カレンダー準備中 <span aria-hidden="true">↗</span></span>}
+        </aside>
+    </div>
+
+    <script>
+        function initializeAdvent() {
+            const page = document.querySelector<HTMLElement>(".advent-page");
+            if (!page || page.dataset.initialized) return;
+            page.dataset.initialized = "true";
+            const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+            if (motion.matches) return;
+            const observer = new IntersectionObserver((entries) => {
+                for (const entry of entries) {
+                    if (!entry.isIntersecting) continue;
+                    entry.target.classList.add("is-visible");
+                    observer.unobserve(entry.target);
+                }
+            }, { threshold: 0.08 });
+            page.querySelectorAll("[data-advent-reveal]").forEach((element) => observer.observe(element));
+            document.addEventListener("astro:before-swap", () => observer.disconnect(), { once: true });
+        }
+        document.addEventListener("astro:page-load", initializeAdvent);
+        initializeAdvent();
+    </script>
 </Layout>
 
 <style>
-
-    /* === Header === */
-    .advent-header {
-        margin-bottom: 3rem;
-        border-bottom: 1px dashed var(--border-color);
-        padding-bottom: 1.5rem;
+    .advent-page {
+        --advent-ease: cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    .advent-title {
-        font-size: 1.9rem;
-        margin: 0 0 0.6rem;
-        color: var(--text-main);
-        letter-spacing: 0.01em;
+    .command, .eyebrow, .progress-panel, .hero-footer, .calendar-legend, .calendar-note {
+        font-family: var(--font-mono);
     }
 
-    .advent-command {
-        margin: 0 0 1rem;
-        font-family: var(--font-mono, "JetBrains Mono", monospace);
-        font-size: 0.85rem;
+    .command {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin: 0;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
         color: var(--text-muted);
+        font-size: 0.8rem;
     }
 
     .prompt {
         color: var(--accent-blue);
     }
 
-    .advent-desc {
+    .hero-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 245px;
+        align-items: center;
+        gap: 1.8rem;
+        padding: 2.5rem 0 2rem;
+    }
+
+    .eyebrow {
+        margin: 0 0 0.7rem;
         color: var(--text-muted);
-        font-size: 0.95rem;
-        line-height: 1.6;
-        margin-bottom: 0;
+        font-size: 0.62rem;
+        letter-spacing: 0.13em;
     }
 
-    /* === 番外編バー(カレンダーの上下に独立配置) === */
-    .advent-section > :global(.day-card.special) {
+    h1 {
         display: block;
-        margin: 1.5rem 0;
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: clamp(2.1rem, 4.8vw, 3.3rem);
+        line-height: 1.2;
+        letter-spacing: -0.065em;
+        color: var(--text-main);
+        white-space: nowrap;
     }
 
-    /* === Grid(PC: 曜日整列の7列カレンダー) === */
+    h1 > span {
+        color: var(--accent-blue);
+    }
+
+    .title-dot {
+        display: inline-block;
+    }
+
+    .hero-subtitle {
+        margin: 0.85rem 0 1.25rem;
+        font-size: 0.92rem;
+        font-weight: 700;
+    }
+
+    .hero-description {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        line-height: 1.95;
+    }
+
+    .calendar-jump {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        margin-top: 1.5rem;
+        text-decoration: none;
+        font-size: 0.78rem;
+    }
+
+    .calendar-jump :global(svg), .adventar-link :global(svg) {
+        transition: transform 0.25s var(--advent-ease);
+    }
+
+    .progress-panel {
+        position: relative;
+        padding: 0.5rem;
+        background: radial-gradient(circle, color-mix(in srgb, var(--accent-blue) 6%, transparent), transparent 68%);
+    }
+
+    .progress-orbit {
+        position: relative;
+        aspect-ratio: 1;
+    }
+
+    .progress-ring {
+        display: block;
+        width: 100%;
+        height: 100%;
+        fill: none;
+    }
+
+    .orbit-guide {
+        stroke: var(--border-color);
+        stroke-width: 0.6;
+        stroke-dasharray: 1 5;
+    }
+
+    .orbit-inner {
+        stroke: var(--border-color);
+        stroke-width: 0.5;
+    }
+
+    .ring-segment {
+        stroke: var(--border-color);
+        stroke-width: 9;
+        transform-origin: 100px 100px;
+    }
+
+    .ring-segment.is-open {
+        stroke: var(--accent-blue);
+    }
+
+    .progress-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+    }
+
+    .progress-label {
+        color: var(--accent-blue);
+        font-size: 0.53rem;
+        letter-spacing: 0.18em;
+    }
+
+    .progress-count {
+        font-size: 2.6rem;
+        line-height: 1;
+        font-weight: 700;
+        letter-spacing: -0.07em;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .progress-count > span {
+        font-size: 0.85rem;
+        font-weight: 400;
+        letter-spacing: 0;
+        color: var(--text-muted);
+    }
+
+    .progress-period {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0.4rem 0 0;
+        font-size: 0.58rem;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+    }
+
+    .status-dot, .legend-open {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent-blue);
+    }
+
+    .hero-footer {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.7rem 1.5rem;
+        padding: 0.9rem 0;
+        border-block: 1px solid var(--border-color);
+        font-size: 0.65rem;
+        color: var(--text-muted);
+    }
+
+    .hero-footer > span, .hero-footer > a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .hero-footer > :last-child {
+        margin-left: auto;
+    }
+
+    .hero-footer a {
+        text-decoration: none;
+    }
+
+    .calendar-section {
+        margin-top: 3rem;
+        scroll-margin-top: 90px;
+    }
+
+    .section-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 1rem;
+        margin-bottom: 1.35rem;
+    }
+
+    h2 {
+        width: auto;
+        padding: 0;
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 1.3rem;
+    }
+
+    h2::after {
+        display: none;
+    }
+
+    h2 > span {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        font-weight: 400;
+    }
+
+    .section-heading .eyebrow {
+        margin-bottom: 0.35rem;
+    }
+
+    .calendar-legend, .calendar-legend > span {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+    }
+
+    .calendar-legend {
+        gap: 1rem;
+        font-size: 0.62rem;
+        color: var(--text-muted);
+        padding-bottom: 0.1rem;
+    }
+
     .calendar-grid {
         display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 0.8rem;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 0.55rem;
+        margin: 1rem 0;
     }
 
     .weekday-cell {
         text-align: center;
-        font-family: var(--font-mono, "JetBrains Mono", monospace);
-        font-size: 0.8rem;
+        padding: 0.4rem 0;
+        font-size: 0.65rem;
         color: var(--text-muted);
-        padding-bottom: 0.5rem;
-        border-bottom: 1px dashed var(--border-color);
     }
 
-    .weekday-cell.sun,
-    .weekday-cell.sat {
-        color: color-mix(in srgb, var(--accent-blue) 55%, var(--text-muted));
+    .weekday-cell.weekend {
+        color: var(--accent-blue);
     }
 
-    /* === レスポンシブ: スマホは縦1列のロウリストに切り替え === */
+    .calendar-cell {
+        min-width: 0;
+        grid-column: var(--column);
+        scroll-margin-top: 100px;
+    }
+
+    .calendar-cell:target {
+        outline: 2px solid var(--accent-blue);
+        outline-offset: 3px;
+        border-radius: var(--radius);
+    }
+
+    .calendar-note {
+        margin: 1.2rem 0 0;
+        font-size: 0.65rem;
+        line-height: 1.8;
+        color: var(--text-muted);
+    }
+
+    .adventar-panel {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        margin-top: 3rem;
+        padding: 1.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        background: var(--surface);
+    }
+
+    .adventar-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 46px;
+        height: 46px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        color: var(--accent-blue);
+        background: var(--background);
+    }
+
+    .adventar-copy {
+        min-width: 0;
+    }
+
+    .adventar-copy .eyebrow {
+        margin-bottom: 0.15rem;
+    }
+
+    .adventar-copy h2 {
+        font-size: 1.1rem;
+    }
+
+    .adventar-copy > p:last-child {
+        margin: 0.35rem 0 0;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .adventar-link, .adventar-pending {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        margin-left: auto;
+        padding: 0.7rem 0.9rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        font-size: 0.72rem;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .adventar-link {
+        background: var(--background);
+        transition: border-color 0.25s, background 0.25s;
+    }
+
+    .adventar-pending {
+        color: var(--text-muted);
+        border-style: dashed;
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    a:focus-visible {
+        outline: 2px solid var(--accent-blue);
+        outline-offset: 5px;
+        border-radius: var(--radius);
+    }
+
+    @media (hover: hover) {
+        .calendar-jump:hover :global(svg) {
+            transform: translateY(3px);
+        }
+
+        .adventar-link:hover {
+            border-color: var(--accent-blue);
+            background: color-mix(in srgb, var(--accent-blue) 6%, var(--background));
+        }
+
+        .adventar-link:hover :global(svg) {
+            transform: translate(2px, -2px);
+        }
+    }
+
+    /* 表示は常に保証し、画面に入ったときだけ一度アニメーションする。 */
+
+    @media (prefers-reduced-motion: no-preference) {
+        [data-advent-reveal].is-visible {
+            animation: advent-enter 0.55s var(--advent-ease) both;
+            animation-delay: calc(var(--i, 0) * 35ms);
+        }
+
+        .advent-hero.is-visible .ring-segment {
+            animation: segment-enter 0.5s var(--advent-ease) backwards;
+            animation-delay: calc(0.12s + var(--i) * 25ms);
+        }
+
+        .advent-hero.is-visible .title-dot {
+            animation: cursor-arrive 1s step-end 3;
+        }
+
+        @keyframes advent-enter {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        @keyframes segment-enter {
+            from {
+                opacity: 0;
+                transform: scale(0.88) rotate(-6deg);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        @keyframes cursor-arrive {
+            50% {
+                opacity: 0;
+            }
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .calendar-jump :global(svg), .adventar-link, .adventar-link :global(svg) {
+            transition: none;
+        }
+    }
+
     @media (max-width: 720px) {
+        .hero-layout {
+            grid-template-columns: minmax(0, 1fr) 175px;
+            gap: 0.5rem;
+            padding: 2rem 0;
+        }
 
-        .advent-title {
-            font-size: 1.5rem;
+        h1 {
+            font-size: clamp(1.85rem, 5vw, 2.7rem);
+        }
+
+        .hero-subtitle {
+            font-size: 0.8rem;
+        }
+
+        .hero-description {
+            font-size: 0.78rem;
+        }
+
+        .progress-count {
+            font-size: 2rem;
+        }
+
+        .progress-count > span {
+            font-size: 0.65rem;
+        }
+
+        .progress-label, .progress-period {
+            font-size: 0.48rem;
         }
 
         .calendar-grid {
-            display: flex;
-            flex-direction: column;
+            grid-template-columns: minmax(0, 1fr);
             gap: 0;
+        }
+
+        .calendar-cell {
+            grid-column: auto;
+            --i: 0 !important;
         }
 
         .weekday-cell {
             display: none;
+        }
+
+        .calendar-section, .adventar-panel {
+            margin-top: 2.25rem;
+        }
+
+        .adventar-panel {
+            flex-wrap: wrap;
+            padding: 1.2rem;
+            gap: 0.85rem;
+        }
+
+        .adventar-link, .adventar-pending {
+            margin-left: 0;
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .hero-layout {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 1.4rem;
+            padding-bottom: 1.5rem;
+        }
+
+        h1 {
+            font-size: clamp(2.1rem, 10vw, 2.9rem);
+        }
+
+        .hero-subtitle {
+            font-size: 0.82rem;
+        }
+
+        .progress-panel {
+            width: 200px;
+            justify-self: center;
+        }
+
+        .progress-count {
+            font-size: 2.4rem;
+        }
+
+        .hero-footer {
+            gap: 0.6rem 1rem;
+            font-size: 0.6rem;
+        }
+
+        .hero-footer > :last-child {
+            margin-left: 0;
+        }
+
+        .section-heading {
+            align-items: start;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .adventar-copy {
+            flex: 1;
         }
     }
 </style>

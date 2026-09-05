@@ -1,30 +1,19 @@
 ---
-// src/components/AdventDayCard.astro
 import { Image } from "astro:assets";
 import type { ImageMetadata } from "astro";
-import { Lock, Unlock } from "lucide-astro";
-import type { AdventSource } from "../data/advent2026";
+import { ArrowUpRight, BookOpen, Lock, Unlock } from "lucide-astro";
+import { adventCalendar, type AdventSource } from "../data/advent2026";
 
 interface Props {
-    /** "locked" なら見た目もロック状態。"open" なら見た目はアンロック */
     status: "locked" | "open";
-    /** リンク先。無ければ open でもクリック不可(バナー扱い) */
     url?: string;
-    /** 公開用タイトル。clickableなときのみ表示 */
     title?: string;
-    /** ImageMetadata(ローカル画像) か 文字列URL(OGP画像) */
     image?: ImageMetadata | string;
     source?: AdventSource;
-    /** カード上部に出す小さいラベル。通常日は "Dec"、番外編は "EXTRA" */
     sublabel?: string;
-    /** メインラベル。通常日は日付の数字、番外編は "Begin" / "Finish" */
     label: string | number;
-    /** PC 7列グリッドでの配置列(1〜7)。番外編では指定しない */
-    gridColumn?: number;
-    /** 番外編(Begin・Finish)かどうか。true だとカレンダーとは別枠の横長バー表示になる */
     special?: boolean;
-    /** open時のアイコンを差し替えたい場合(番外編用。例: Rocket, Milestone) */
-    openIcon?: any;
+    openIcon?: typeof Unlock;
 }
 
 const {
@@ -35,463 +24,378 @@ const {
     source,
     sublabel,
     label,
-    gridColumn,
     special = false,
     openIcon,
-} = Astro.props as Props;
-
-// クリック可能なのは「open かつ リンク先がある」ときだけ
+} = Astro.props;
 const clickable = status === "open" && Boolean(url);
-const isExternal = clickable && source && source !== "local";
-
-const OpenIcon = openIcon ?? Unlock;
-const iconSize = special ? 26 : 20;
+const isExternal = clickable && (source ? source !== "local" : /^https?:\/\//.test(url ?? ""));
+const Tag = clickable ? "a" : "div";
+const OpenIcon = openIcon ?? BookOpen;
+const sourceLabels: Record<AdventSource, string> = {
+    local: "Blog", zenn: "Zenn", note: "note", qiita: "Qiita",
+};
+const displayTitle = clickable
+    ? title || "記事を読む"
+    : status === "locked" ? "公開待ち" : "記事を準備中";
+const displayLabel = typeof label === "number" ? String(label).padStart(2, "0") : label;
+const dateLabel = typeof label === "number" ? `12月${label}日` : label === "Begin" ? "はじまりの記録" : "おわりの記録";
 ---
 
-<a
+<Tag
     href={clickable ? url : undefined}
-    class={`day-card ${status} ${special ? "special" : ""} ${
-        status === "open" && !clickable ? "no-link" : ""
-    }`}
-    style={gridColumn ? `grid-column: ${gridColumn};` : undefined}
-    tabindex={clickable ? 0 : -1}
-    aria-disabled={clickable ? "false" : "true"}
+    class:list={["day-card", status, { special, clickable, "no-link": status === "open" && !clickable }]}
     target={isExternal ? "_blank" : undefined}
     rel={isExternal ? "noopener noreferrer" : undefined}
+    role={clickable ? undefined : "group"}
+    aria-label={`${dateLabel}：${displayTitle}${isExternal ? "（新しいタブで開く）" : ""}`}
 >
-    <!-- === PC表示: 最小限のカード === -->
-    <div class="day-card-inner">
-        <div class="day-number">
-            {sublabel && <span class="day-label">{sublabel}</span>}
-            <span class="day-val">{label}</span>
+    <div class="day-top">
+        <div class="day-date">
+            <span class="day-label">{sublabel}</span>
+            {typeof label === "number" ? (
+                <time class="day-number" datetime={`${adventCalendar.year}-12-${displayLabel}`}>
+                    {displayLabel}
+                </time>
+            ) : <span class="day-number">{displayLabel}</span>}
         </div>
-        <div class="day-content">
-            {
-                status === "locked" ? (
-                    <Lock size={iconSize} class="icon-locked" />
-                ) : (
-                    <OpenIcon size={iconSize} class="icon-open" />
-                )
-            }
-        </div>
-        <div class="accent-sweep"></div>
+        <span class="day-status" aria-hidden="true">{status === "locked" ? <Lock size={13} /> : <OpenIcon size={15} />}</span>
     </div>
-
-    <!-- === PC表示: ホバー/フォーカスで出るサムネポップアップ(clickableのときだけ) === -->
-    {
-        clickable && (
-            <div class="day-popup">
-                <div class="day-popup-thumb">
-                    {typeof image === "object" && image ? (
-                        <Image src={image} alt="" width={320} height={180} />
-                    ) : typeof image === "string" && image ? (
-                        <img src={image} alt="" loading="lazy" />
-                    ) : (
-                        <div class="day-popup-noimg">No Image</div>
-                    )}
-                </div>
-                {title && <p class="day-popup-title">{title}</p>}
-            </div>
-        )
-    }
-
-    <!-- === スマホ表示: サムネ埋め込みの1行リスト === -->
-    <div class={`day-row-mobile ${special ? "special" : ""}`}>
-        <div class="day-row-thumb">
-            {
-                status === "locked" ? (
-                    <Lock size={18} class="icon-locked" />
-                ) : typeof image === "object" && image ? (
-                    <Image src={image} alt="" width={160} height={90} />
-                ) : typeof image === "string" && image ? (
-                    <img src={image} alt="" loading="lazy" />
-                ) : (
-                    <OpenIcon size={18} class="icon-open" />
-                )
-            }
+    {clickable && (
+        <div class="day-thumbnail" aria-hidden="true">
+            {typeof image === "object" && image ? (
+                <Image src={image} alt="" width={240} height={135} loading="lazy" />
+            ) : typeof image === "string" && image ? (
+                <img src={image} alt="" loading="lazy" decoding="async" width="240" height="135" />
+            ) : <BookOpen size={22} />}
         </div>
-        <div class="day-row-main">
-            <span class="day-row-date">
-                {sublabel ? `${sublabel} ${label}` : label}
-            </span>
-            <span class="day-row-title">
-                {clickable ? title : "Coming soon..."}
-            </span>
-        </div>
-        {
-            status === "locked" ? (
-                <Lock size={16} class="icon-locked" />
-            ) : (
-                <OpenIcon size={16} class="icon-open" />
-            )
-        }
+    )}
+    <div class="day-body">
+        {(special || status === "open") && (
+            <span class="day-title">{special && !clickable ? dateLabel : displayTitle}</span>
+        )}
+        <span class="day-meta">
+            {clickable ? <><span>{source ? sourceLabels[source] : "記事を読む"}</span><ArrowUpRight size={12} aria-hidden="true" /></> : <span>{status === "locked" ? "COMING SOON" : "準備中"}</span>}
+        </span>
     </div>
-</a>
+    <span class="accent-sweep" aria-hidden="true"></span>
+</Tag>
 
 <style>
-    /* =========================================
-       共通: カード外枠(リンク領域 = ポップアップ表示の基準位置)
-       ========================================= */
     .day-card {
-        display: block;
         position: relative;
-        text-decoration: none;
-        outline: none;
-        /* ポップアップがはみ出せるよう overflow は visible のまま */
-    }
-
-    .day-card.locked,
-    .day-card.no-link {
-        cursor: not-allowed;
-    }
-
-    .day-card.open:not(.no-link) {
-        cursor: pointer;
-    }
-
-    /* =========================================
-       PC表示: カード本体
-       ========================================= */
-    .day-card-inner {
         display: flex;
         flex-direction: column;
-        background: var(--surface);
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
-        padding: 1.2rem 1rem;
-        position: relative;
-        overflow: hidden;
+        gap: 0.9rem;
         height: 100%;
-        transition:
-            border-color 0.3s ease,
-            opacity 0.3s ease;
+        min-height: 158px;
+        padding: 0.8rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        background: var(--surface);
+        color: var(--text-main);
+        text-decoration: none;
+        overflow: hidden;
+        isolation: isolate;
+        transition: border-color 0.25s ease, background 0.25s ease, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    .accent-sweep {
-        content: "";
-        position: absolute;
-        inset: -2px -45%;
-        background: color-mix(in srgb, var(--accent-blue) 18%, transparent);
-        transform: translateX(-135%) skewX(-14deg);
-        transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-        z-index: 0;
-        pointer-events: none;
-    }
-
-    /* --- locked --- */
-    .day-card.locked .day-card-inner {
-        opacity: 0.6;
-        background: repeating-linear-gradient(
-            45deg,
-            transparent,
-            transparent 10px,
-            rgba(0, 0, 0, 0.03) 10px,
-            rgba(0, 0, 0, 0.03) 20px
-        );
-    }
-
-    :global(html.dark) .day-card.locked .day-card-inner {
-        background: repeating-linear-gradient(
-            45deg,
-            transparent,
-            transparent 10px,
-            rgba(255, 255, 255, 0.02) 10px,
-            rgba(255, 255, 255, 0.02) 20px
-        );
-    }
-
-    /* --- open --- */
-    .day-card.open:not(.no-link):focus-visible .day-card-inner {
-        border-color: var(--accent-blue);
-    }
-    .day-card.open:not(.no-link):focus-visible .accent-sweep {
-        transform: translateX(0) skewX(-14deg);
-    }
-
-    @media (hover: hover) {
-        .day-card.open:not(.no-link):hover .day-card-inner {
-            border-color: var(--accent-blue);
-        }
-        .day-card.open:not(.no-link):hover .accent-sweep {
-            transform: translateX(0) skewX(-14deg);
-        }
-        .day-card.open:hover .icon-open {
-            transform: scale(1.1);
-        }
-    }
-
-    /* open だがリンク先が無い(番外編の開始バナーなど) */
-    .day-card.no-link .day-card-inner {
-        border-style: dashed;
-        border-color: var(--accent-blue);
-    }
-
-    /* === カード内コンテンツ === */
-    .day-number,
-    .day-content {
+    .day-card > :not(.accent-sweep) {
         position: relative;
         z-index: 1;
     }
 
-    .day-number {
-        display: flex;
-        align-items: baseline;
-        gap: 0.3rem;
-        margin-bottom: 1.2rem;
-        font-family: var(--font-mono, "JetBrains Mono", monospace);
-        color: var(--text-muted);
-        border-bottom: 1px dashed var(--border-color);
-        padding-bottom: 0.4rem;
-        transition: color 0.3s ease;
+    .day-card.locked {
+        background: var(--background);
     }
 
-    .day-card.open .day-number {
-        color: var(--accent-blue);
-        border-bottom-color: var(--accent-blue);
+    .day-card.no-link {
+        border-style: dashed;
+    }
+
+    .day-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        gap: 0.3rem;
+    }
+
+    .day-date {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        font-family: var(--font-mono);
     }
 
     .day-label {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
+        font-size: 0.55rem;
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
     }
 
-    .day-val {
-        font-size: 1.6rem;
-        font-weight: 700;
+    .day-number {
+        font-size: 1.8rem;
         line-height: 1;
+        font-weight: 500;
+        letter-spacing: -0.06em;
+        font-variant-numeric: tabular-nums;
     }
 
-    .day-content {
+    .locked .day-number {
+        color: var(--text-muted);
+    }
+
+    .day-status {
+        display: flex;
+        margin-top: 0.15rem;
+        color: var(--text-muted);
+    }
+
+    .open .day-status, .clickable .day-number {
+        color: var(--accent-blue);
+    }
+
+    .day-body {
+        min-width: 0;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        flex-grow: 1;
-        padding: 0.5rem 0;
+        gap: 0.65rem;
+        flex: 1;
     }
 
-    .icon-locked {
-        color: var(--border-color);
-    }
-
-    .icon-open {
-        color: var(--accent-blue);
-        transition: transform 0.2s ease;
-    }
-
-    /* === Begin / Finish は横長バー表示(カレンダーの上下に独立配置) === */
-    .day-card.special {
+    .day-title {
         display: block;
-        width: 100%;
+        font-size: 0.72rem;
+        line-height: 1.65;
+        overflow-wrap: anywhere;
     }
-    .day-card.special .day-card-inner {
-        flex-direction: row;
+
+    .locked .day-title, .no-link .day-title {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+    }
+
+    .day-meta {
+        display: flex;
+        justify-content: space-between;
         align-items: center;
-        justify-content: flex-start;
-        gap: 1.2rem;
-        padding: 1.2rem 1.5rem;
-    }
-    .day-card.special .day-number {
-        margin-bottom: 0;
-        border-bottom: none;
-        padding-bottom: 0;
-        flex-direction: row;
-        align-items: baseline;
-        gap: 0.6rem;
-    }
-    .day-card.special .day-label {
-        font-size: 0.7rem;
-        letter-spacing: 0.15em;
-        opacity: 0.7;
-    }
-    .day-card.special .day-val {
-        font-size: 1.3rem;
-        letter-spacing: 0.08em;
-        font-family: var(--font-mono, "JetBrains Mono", monospace);
-        text-transform: uppercase;
-    }
-    .day-card.special .day-content {
-        flex-grow: 0;
-        padding: 0;
-        margin-left: auto;
+        gap: 0.25rem;
+        margin-top: auto;
+        padding-top: 0.45rem;
+        border-top: 1px solid var(--border-color);
+        font-family: var(--font-mono);
+        font-size: 0.55rem;
+        letter-spacing: 0.035em;
+        color: var(--text-muted);
     }
 
-    /* =========================================
-       PC表示: ホバー/フォーカス時のサムネポップアップ
-       ========================================= */
-    .day-popup {
-        position: absolute;
-        left: 50%;
-        bottom: calc(100% + 10px);
-        transform: translate(-50%, 6px);
-        width: 220px;
-        background: var(--elevated);
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
-        padding: 0.5rem;
-        opacity: 0;
-        pointer-events: none;
-        transition:
-            opacity 0.25s ease,
-            transform 0.25s ease;
-        z-index: 20;
+    .clickable .day-meta {
+        color: var(--accent-blue);
     }
 
-    .day-popup-thumb {
-        width: 100%;
-        aspect-ratio: 16 / 9;
-        overflow: hidden;
-        border-radius: 2px;
-        background: var(--surface);
+    .day-thumbnail {
         display: flex;
         align-items: center;
         justify-content: center;
+        aspect-ratio: 16 / 9;
+        margin: -0.15rem 0;
+        overflow: hidden;
+        border-radius: 2px;
+        color: var(--accent-blue);
+        background: var(--elevated);
     }
 
-    .day-popup-thumb :global(img) {
+    .day-thumbnail :global(img) {
         width: 100%;
         height: 100%;
         object-fit: cover;
         border-radius: 0;
         box-shadow: none;
+        transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    .day-popup-noimg {
-        color: var(--text-muted);
+    .accent-sweep {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        background: linear-gradient(110deg, transparent 20%, color-mix(in srgb, var(--accent-blue) 8%, transparent) 50%, transparent 80%);
+        transform: translateX(-110%);
+        transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .clickable:focus-visible {
+        outline: 2px solid var(--accent-blue);
+        outline-offset: 3px;
+        border-color: var(--accent-blue);
+    }
+
+    .clickable:focus-visible .accent-sweep {
+        transform: translateX(0);
+    }
+
+    .special {
+        flex-direction: row;
+        align-items: center;
+        gap: 1.4rem;
+        padding: 1rem 1.2rem;
+        min-height: 0;
+    }
+
+    .special .day-top {
+        align-items: center;
+        gap: 1.3rem;
+        min-width: 130px;
+    }
+
+    .special .day-date {
+        gap: 0.35rem;
+    }
+
+    .special .day-number {
+        font-size: 1.05rem;
+        letter-spacing: -0.02em;
+    }
+
+    .special .day-body {
+        flex-direction: row;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .special .day-title {
         font-size: 0.75rem;
-        font-family: var(--font-mono, "JetBrains Mono", monospace);
     }
 
-    .day-popup-title {
-        margin: 0.5rem 0 0;
-        font-size: 0.78rem;
-        font-weight: 600;
-        color: var(--text-main);
-        line-height: 1.4;
+    .special .day-meta {
+        flex-shrink: 0;
+        margin-top: 0;
+        margin-left: auto;
+        border-top: 0;
+        padding-top: 0;
+        gap: 0.6rem;
+        font-size: 0.56rem;
+    }
+
+    .special .day-thumbnail {
+        width: 90px;
+        flex-shrink: 0;
     }
 
     @media (hover: hover) {
-        .day-card.open:not(.no-link):hover .day-popup {
-            opacity: 1;
-            transform: translate(-50%, 0);
+        .clickable:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-blue);
         }
-    }
-    .day-card.open:not(.no-link):focus-visible .day-popup {
-        opacity: 1;
-        transform: translate(-50%, 0);
-    }
 
-    /* =========================================
-       スマホ表示: サムネ埋め込みの1行リスト
-       ========================================= */
-    .day-row-mobile {
-        display: none;
+        .clickable:hover .accent-sweep {
+            transform: translateX(0);
+        }
+
+        .clickable:hover .day-thumbnail :global(img) {
+            transform: scale(1.06);
+        }
     }
 
     @media (max-width: 720px) {
-        .day-card-inner,
-        .day-popup {
-            display: none;
-        }
-
-        .day-row-mobile {
-            display: flex;
+        .day-card:not(.special) {
+            flex-direction: row;
             align-items: center;
-            gap: 0.9rem;
-            padding: 0.8rem 0.2rem;
+            gap: 1rem;
+            min-height: 86px;
+            padding: 0.95rem 0.25rem;
+            border: 0;
             border-bottom: 1px solid var(--border-color);
-            transition: background-color 0.2s ease;
-        }
-
-        .day-card:active .day-row-mobile {
-            background-color: color-mix(
-                in srgb,
-                var(--accent-blue) 8%,
-                transparent
-            );
-        }
-
-        .day-row-mobile.special {
-            border: 1px dashed var(--accent-blue);
-            border-radius: 4px;
-            padding: 0.9rem 0.8rem;
-            margin: 0.5rem 0;
-        }
-
-        .day-row-thumb {
-            flex-shrink: 0;
-            width: 96px;
-            aspect-ratio: 16 / 9;
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: 2px;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .day-card.locked .day-row-thumb {
-            background: repeating-linear-gradient(
-                45deg,
-                transparent,
-                transparent 8px,
-                rgba(0, 0, 0, 0.03) 8px,
-                rgba(0, 0, 0, 0.03) 16px
-            );
-        }
-        :global(html.dark) .day-card.locked .day-row-thumb {
-            background: repeating-linear-gradient(
-                45deg,
-                transparent,
-                transparent 8px,
-                rgba(255, 255, 255, 0.02) 8px,
-                rgba(255, 255, 255, 0.02) 16px
-            );
-        }
-
-        .day-row-thumb :global(img) {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
             border-radius: 0;
-            box-shadow: none;
+            background: transparent;
         }
 
-        .day-row-main {
-            display: flex;
-            flex-direction: column;
-            gap: 0.2rem;
-            min-width: 0;
-            flex-grow: 1;
-        }
-
-        .day-row-date {
-            font-family: var(--font-mono, "JetBrains Mono", monospace);
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .day-row-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-main);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .day-card.locked .day-row-title {
-            color: var(--text-muted);
-            font-family: var(--font-mono, "JetBrains Mono", monospace);
-            font-weight: 400;
-        }
-
-        .day-row-mobile > :global(svg) {
+        .day-top {
+            align-items: center;
             flex-shrink: 0;
+            gap: 0.85rem;
+        }
+
+        .day-date {
+            min-width: 35px;
+        }
+
+        .day-number {
+            font-size: 1.65rem;
+        }
+
+        .day-label {
+            font-size: 0.52rem;
+        }
+
+        .day-body {
+            gap: 0.3rem;
+        }
+
+        .day-title, .locked .day-title, .no-link .day-title {
+            font-size: 0.78rem;
+        }
+
+        .day-meta {
+            border-top: 0;
+            padding-top: 0;
+            font-size: 0.55rem;
+        }
+
+        .day-thumbnail {
+            flex-shrink: 0;
+            width: 80px;
+        }
+
+        .special {
+            padding: 0.9rem;
+            gap: 1rem;
+        }
+
+        .special .day-top {
+            min-width: 0;
+            gap: 0.8rem;
+        }
+
+        .special .day-body {
+            flex-direction: column;
+            align-items: start;
+            gap: 0.3rem;
+        }
+
+        .special .day-meta {
+            margin-left: 0;
+        }
+
+        .special .day-title {
+            font-size: 0.72rem;
+        }
+    }
+
+    @media (max-width: 380px) {
+        .day-card:not(.special) {
+            gap: 0.65rem;
+        }
+
+        .day-top {
+            gap: 0.5rem;
+        }
+
+        .day-thumbnail {
+            width: 60px;
+        }
+
+        .special .day-thumbnail {
+            width: 50px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .day-card, .accent-sweep, .day-thumbnail :global(img) {
+            transition: none;
+        }
+
+        .clickable:hover, .clickable:hover .day-thumbnail :global(img) {
+            transform: none;
         }
     }
 </style>

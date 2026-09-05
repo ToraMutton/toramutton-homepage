@@ -1,14 +1,20 @@
 // src/data/advent2026.ts
 // アドベントカレンダー2026の記事管理データ。
 
+export const adventCalendar: { year: number; adventarUrl?: string } = {
+  year: 2026,
+  // Adventarでカレンダーを作成したら、ここにURLを設定する。
+  // adventarUrl: "https://adventar.org/calendars/…",
+};
+
 export type AdventSource = "local" | "zenn" | "note" | "qiita";
 
 export interface AdventEntry {
-  /** 12/1〜12/25。BEGIN・FINISHは advent2026.astro 側で別管理するためここには含めない */
+  /** 本編は12/1〜12/25。番外編のBEGINは0、FINISHは26 */
   day: number;
   /** "locked" のままなら title/note を含め一切画面に出ない */
   status: "locked" | "open";
-  /** 記事の掲載先。status: "open" のとき必須 */
+  /** 記事の掲載先。リンクを公開するときに設定する */
   source?: AdventSource;
   /** source: "local" のとき、src/content/blog/ 配下のフォルダ名(id) */
   slug?: string;

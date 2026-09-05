@@ -18,7 +18,8 @@ import pcDesktopImg from "../assets/desktop/fastfetch.jpeg";
 import pcCaseImg from "../assets/desktop/trapezium-8.png";
 // note / Zenn / Qiita の取得は src/utils/feeds.ts に集約している
 import { getExternalPosts } from "../utils/feeds";
-import { adventDays } from "../data/advent2026";
+import { adventCalendar, adventDays } from "../data/advent2026";
+import { resolveAdventEntry } from "../utils/advent";
 import {
     Twitter,
     Github,
@@ -100,11 +101,14 @@ const missionData = missions.map((m) => {
 
 // === Advent 2026 カウントダウン ===
 // 開催開始日(12/1)までの日数と、公開済みの日数を出しておく
-const ADVENT_START = new Date("2026-12-01T00:00:00+09:00");
+const ADVENT_START = new Date(`${adventCalendar.year}-12-01T00:00:00+09:00`);
 const adventDaysLeft = Math.ceil(
     (ADVENT_START.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
 );
-const adventOpenCount = adventDays.filter((d) => d.status === "open").length;
+const resolvedAdventDays = adventDays
+    .map((entry) => resolveAdventEntry(entry, localPostsRaw))
+    .sort((a, b) => a.day - b.day);
+const adventOpenCount = resolvedAdventDays.filter((entry) => entry.url).length;
 
 // 円形グラフ: 25日分を円周上のセグメントにする(12時の位置から時計回り)
 const RING_R = 40;
@@ -115,12 +119,12 @@ const ringPolar = (deg: number) => {
     return [RING_C + RING_R * Math.cos(rad), RING_C + RING_R * Math.sin(rad)];
 };
 const ringStep = 360 / adventDays.length;
-const ringSegments = adventDays.map((d, i) => {
+const ringSegments = resolvedAdventDays.map((d, i) => {
     const [x0, y0] = ringPolar(i * ringStep + RING_GAP_DEG / 2);
     const [x1, y1] = ringPolar((i + 1) * ringStep - RING_GAP_DEG / 2);
     return {
         day: d.day,
-        status: d.status,
+        status: d.url ? "open" : "locked",
         d: `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${RING_R} ${RING_R} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`,
     };
 });
