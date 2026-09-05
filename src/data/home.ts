@@ -143,6 +143,13 @@ export const terminalCommands: TerminalCommand[] = [
   { cmd: "ls projects", out: "too many" },
   { cmd: "man life", out: "No manual entry for life" },
   { cmd: "cat girlfriend", out: "404 Not Found" },
+  { cmd: "cat regrets", out: "3DS" },
+  { cmd: "git diff lunch", out: "no changes. still udon." },
+  { cmd: "locate meme", out: "found before you finished asking" },
+  { cmd: "which interest", out: "ask me again next month" },
+  { cmd: "gcc exam.c", out: "Please use a pencil." },
+  { cmd: "sudo reboot", out: "please come back" },
+  { cmd: "cat day.conf", out: "hours = 27 # powered by Gemini" },
 ];
 
 // =====================================================
