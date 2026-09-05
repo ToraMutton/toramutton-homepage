@@ -12,12 +12,14 @@ import type { ImageMetadata } from "astro";
 import archdotImage from "../assets/works/arch.webp";
 import artoramImage from "../assets/works/artoram.webp";
 import fxtwitterImage from "../assets/works/fxtwitter-bot.webp";
+import guideBookImage from "../assets/works/homepage-guide.webp";
 import homepageImage from "../assets/works/toramutton.webp";
 import nexusImage from "../assets/works/nexus.webp";
 import vextraImage from "../assets/works/vextra.webp";
 import windotImage from "../assets/works/windotfiles.webp";
 
 import {
+  BookOpen,
   Chrome,
   Code2,
   Cpu,
@@ -67,6 +69,17 @@ export const works: Work[] = [
     github: "https://github.com/ToraMutton/dotfiles/tree/main/arch",
     status: "completed",
     image: archdotImage,
+  },
+  {
+    name: "はじめてのホームページ制作ガイド",
+    description:
+      "Zennで公開している無料の本。Astro + Vercelでゼロから自分のホームページを公開するまでを、環境構築からデプロイまで一冊で辿れるようにまとめました。これを読んで作ってくれたサイトがLinksにも並んでいます。",
+    url: "https://zenn.dev/toramutton/books/homepage-guide",
+    tags: ["Astro", "Vercel", "Zenn"],
+    icon: BookOpen,
+    year: "2026",
+    status: "completed",
+    image: guideBookImage,
   },
   {
     name: "ArToram",
