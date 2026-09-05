@@ -1011,29 +1011,41 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
 
                         // --- 掴んで動かす ---
                         // setPointerCapture を使うので window にリスナーを
-                        // 足さずに済む(ページ遷移でリークしない)
+                        // 足さずに済む(ページ遷移でリークしない)。
+                        // ただし pointerdown 時点で即 capture すると、
+                        // ただのクリックまで click イベントの標的が
+                        // mqOuter に付け替わってしまい、カードのリンクに
+                        // 飛べなくなる(Chromium の挙動)。なので実際に
+                        // 動かした(しきい値を超えた)ときだけ capture する
+                        const DRAG_THRESHOLD = 4;
                         let startX = 0;
                         let startScroll = 0;
                         let moved = 0;
+                        let pressPointerId: number | null = null;
                         mqOuter.addEventListener("pointerdown", (e) => {
                             // タッチはネイティブのスワイプに任せる
                             // (自前で scrollLeft を動かすと二重に効く)
                             if (e.pointerType !== "mouse") return;
                             if (e.button !== 0) return;
-                            dragging = true;
+                            pressPointerId = e.pointerId;
                             moved = 0;
                             startX = e.clientX;
                             startScroll = mqOuter.scrollLeft;
-                            mqOuter.setPointerCapture(e.pointerId);
-                            mqOuter.classList.add("is-dragging");
                         });
                         mqOuter.addEventListener("pointermove", (e) => {
-                            if (!dragging) return;
+                            if (pressPointerId !== e.pointerId) return;
                             const dx = e.clientX - startX;
                             moved = Math.max(moved, Math.abs(dx));
+                            if (!dragging) {
+                                if (moved <= DRAG_THRESHOLD) return;
+                                dragging = true;
+                                mqOuter.setPointerCapture(e.pointerId);
+                                mqOuter.classList.add("is-dragging");
+                            }
                             mqOuter.scrollLeft = startScroll - dx;
                         });
                         const endDrag = () => {
+                            pressPointerId = null;
                             if (!dragging) return;
                             dragging = false;
                             mqOuter.classList.remove("is-dragging");
