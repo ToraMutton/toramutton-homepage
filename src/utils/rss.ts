@@ -17,9 +17,14 @@ export async function fetchOgpImage(url: string): Promise<string | undefined> {
         }
 
         const html = await response.text();
-        const match = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i);
+        // note の data-* 属性や属性順の違いを許容する。
+        const meta = html.match(/<meta\b[^>]*>/gi)?.find((tag) =>
+            /\sproperty\s*=\s*(["'])og:image\1/i.test(tag),
+        );
+        const match = meta?.match(/\scontent\s*=\s*(["'])(.*?)\1/i);
 
-        return match ? match[1] : undefined;
+        // Qiita などがクエリ区切りを &amp; として出力するため、URLに戻す。
+        return match ? match[2].replace(/&amp;/g, '&') : undefined;
     } catch (e) {
         console.error(`OGP image fetch failed for ${url}:`, e);
         return undefined;

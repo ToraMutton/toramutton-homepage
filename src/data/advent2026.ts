@@ -43,26 +43,31 @@ export const adventFinale: AdventEntry = {
 };
 
 // 12/1 〜 12/25 本編。
+// 1〜3日は外部記事の表示確認用。元の予定は各日の note に残している。
 export const adventDays: AdventEntry[] = [
   {
     day: 1,
-    status: "locked",
-    source: "local",
-    slug: "what-is-arch",
+    status: "open",
+    source: "zenn",
+    url: "https://zenn.dev/toramutton/articles/garbled-omikuji",
+    title: "技育祭で引いた文字化けおみくじを解読してみた",
+    // 本来の予定: source: "local", slug: "what-is-arch"
     note: "Arch Linuxって何？ おいしいの？",
   },
   {
     day: 2,
-    status: "locked",
-    // source: "local", slug: "",
-    // source: "zenn" | "note" | "qiita", url: "", title: "",
+    status: "open",
+    source: "note",
+    url: "https://note.com/toramutton/n/n338320294cf6",
+    title: "トラマトの自己紹介",
     note: "RustでDiscord動画保存Botを作った話",
   },
   {
     day: 3,
-    status: "locked",
-    // source: "local", slug: "",
-    // source: "zenn" | "note" | "qiita", url: "", title: "",
+    status: "open",
+    source: "qiita",
+    url: "https://qiita.com/ToraMutton/items/17de74f095b3523745dd",
+    title: "ひよっこプログラマーのデスクツアー",
     note: "Windows 11とArch Linuxをデュアルブートする生活とは",
   },
   {
