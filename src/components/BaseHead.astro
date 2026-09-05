@@ -9,13 +9,24 @@ interface Props {
   title: string;
   description: string;
   image?: ImageMetadata;
+  /**
+   * Xカードの種類。
+   *   summary             … 小さい正方形サムネ（サイト共通画像を使うページ向け）
+   *   summary_large_image … 大きい横長サムネ（16:9のヒーロー画像がある記事向け）
+   */
+  cardType?: "summary" | "summary_large_image";
 }
 
 const canonicalURL = Astro.site
   ? new URL(Astro.url.pathname, Astro.site)
   : Astro.url;
 
-const { title, description, image = FallbackImage } = Astro.props;
+const {
+  title,
+  description,
+  image = FallbackImage,
+  cardType = "summary",
+} = Astro.props;
 ---
 
 <!-- 基本設定 -->
@@ -67,7 +78,7 @@ const { title, description, image = FallbackImage } = Astro.props;
 <meta property="og:description" content={description} />
 <meta property="og:image" content={new URL(image.src, Astro.url)} />
 
-<meta property="twitter:card" content="summary" />
+<meta property="twitter:card" content={cardType} />
 <meta property="twitter:url" content={Astro.url} />
 <meta property="twitter:title" content={title} />
 <meta property="twitter:description" content={description} />

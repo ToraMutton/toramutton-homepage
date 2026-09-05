@@ -100,6 +100,13 @@ const relatedPosts = allPosts
     )
     .slice(0, 3);
 
+// --- Xカードの出し分け ---
+// summary_large_image は X 側で 2:1 に中央クロップされる。
+// このサイトのヒーロー画像は横長とは限らない(縦長のパーツ写真などもある)ので、
+// 十分に横長のときだけ大きいカードにして、それ以外は今まで通り小さい正方形にする。
+const heroRatio = heroImage ? heroImage.width / heroImage.height : 0;
+const cardType = heroRatio >= 1.4 ? "summary_large_image" : "summary";
+
 const snsLinks = [
     { href: TW_DAILY_URL, brand: "twitter", label: "Twitter (Daily)" },
     { href: TW_TECH_URL, brand: "tech", label: "Twitter (Tech)" },
@@ -114,6 +121,7 @@ const snsLinks = [
     title={title}
     description={description}
     image={heroImage}
+    {cardType}
     width="full"
 >
     <div class="blog-container">

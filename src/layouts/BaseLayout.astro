@@ -13,6 +13,11 @@ interface Props {
     /** OGP画像。省略するとサイト共通の画像になる */
     image?: ImageMetadata;
     /**
+     * Xカードの種類。省略すると小さい正方形サムネ(summary)。
+     * 16:9のヒーロー画像があるページは summary_large_image を渡す。
+     */
+    cardType?: "summary" | "summary_large_image";
+    /**
      * 本文エリアの横幅。
      *   default … サイト標準（トップページ・Aboutなど）
      *   narrow  … 読み物向けの900px（Blog一覧 / Works / Advent）
@@ -21,12 +26,12 @@ interface Props {
     width?: "default" | "narrow" | "full";
 }
 
-const { title, description, image, width = "default" } = Astro.props;
+const { title, description, image, cardType, width = "default" } = Astro.props;
 ---
 
 <html lang="ja">
     <head>
-        <BaseHead {title} {description} {image} />
+        <BaseHead {title} {description} {image} {cardType} />
         <slot name="head" />
     </head>
     <body>
