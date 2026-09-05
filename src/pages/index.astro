@@ -1586,7 +1586,9 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
     .ff-row :global(svg) {
         color: var(--text-muted);
         flex-shrink: 0;
-        align-self: center;
+        /* 値が折り返されても、アイコンはラベルと同じ1行目に揃える。 */
+        align-self: flex-start;
+        margin-top: calc((1lh - 14px) / 2);
     }
     .ff-key {
         color: var(--accent-blue);
