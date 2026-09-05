@@ -4,40 +4,100 @@
 // アイコンは https://lucide.dev で名前を探して、下の import に足してから使う。
 
 import {
+  Activity,
   Cake,
+  Clock,
+  Fingerprint,
+  GraduationCap,
+  Layers,
   Milestone,
   Music,
   Rocket,
   ShieldCheck,
   ThermometerSun,
+  User,
 } from "lucide-astro";
+import {
+  GITHUB_URL,
+  NOTE_URL,
+  QIITA_URL,
+  TW_DAILY_URL,
+  ZENN_URL,
+} from "../consts";
 
 /** lucide-astro のアイコン。どれも同じ形なので Cake を代表にして型を借りている */
 type Icon = typeof Cake;
 
 // =====================================================
-// ヒーロー左側のターミナル: whoami の下に出るコメント行
+// ヒーロー(fastfetch 風)の右側に出る情報
+// 左の ASCII アートは scripts/ascii-avatar.mjs が生成する
 // =====================================================
-export const heroComments: string[] = ["電通大 I 類", "Web / Compilers / LLM"];
 
-// =====================================================
-// ヒーロー右側の "$ cat status.toml" ブロック
-// =====================================================
-export interface HeroSpec {
-  key: string;
-  value: string;
-  /** true にするとアクセント色の点が脈打つ。稼働状態の1行だけを想定 */
-  live?: boolean;
-  /** true にすると値を省略表示し、クリックで全文をクリップボードにコピーする */
-  copy?: boolean;
-}
+/** 1 行目の user@host */
+export const heroUser = { user: "toramutton", host: "toramutton.me" };
+
+// ---- USER セクション ----
+export type HeroSpec =
+  | {
+      key: string;
+      icon: Icon;
+      kind?: "text";
+      value: string;
+      /** true にするとアクセント色の点が脈打つ */
+      live?: boolean;
+      /** true にすると値クリックで全文をクリップボードにコピーする */
+      copy?: boolean;
+    }
+  | {
+      key: string;
+      icon: Icon;
+      /** JST の現在時刻を秒ごとに更新する */
+      kind: "clock";
+    };
 
 export const heroSpecs: HeroSpec[] = [
-  { key: "name", value: "トラマト / 寅松 / toramutton" },
-  { key: "univ", value: "UEC25 Class A" },
-  { key: "uuid", value: "1b45a0db-7238-47e4-b95e-206522388c88", copy: true },
-  { key: "stack", value: "Rust / TS / C" },
-  { key: "status", value: "online", live: true },
+  { key: "Name", icon: User, value: "トラマト / 寅松 / toramutton" },
+  { key: "Univ", icon: GraduationCap, value: "UEC25 Class A" },
+  { key: "Stack", icon: Layers, value: "Rust / TS / C" },
+  {
+    key: "UUID",
+    icon: Fingerprint,
+    value: "1b45a0db-7238-47e4-b95e-206522388c88",
+    copy: true,
+  },
+  // 今やっていること。気が向いたら書き換える
+  { key: "Now", icon: Activity, value: "コンパイラ自作中", live: true },
+  { key: "Time", icon: Clock, kind: "clock" },
+];
+
+// ---- SOCIAL セクション ----
+// アイコンは components/BrandIcon.astro で名前から引く。
+// 表示する ID は URL の末尾から自動で作る(@ToraMutton など)
+export interface Social {
+  name: string;
+  url: string;
+  icon: "github" | "zenn" | "note" | "qiita" | "twitter";
+}
+
+export const socials: Social[] = [
+  { name: "GitHub", url: GITHUB_URL, icon: "github" },
+  { name: "Zenn", url: ZENN_URL, icon: "zenn" },
+  { name: "note", url: NOTE_URL, icon: "note" },
+  { name: "Qiita", url: QIITA_URL, icon: "qiita" },
+  { name: "Twitter", url: TW_DAILY_URL, icon: "twitter" },
+];
+
+// ---- PALETTE セクション ----
+// サイトの CSS 変数名。ライト/ダークで自動的に切り替わる
+export const heroPalette: string[] = [
+  "--accent-blue",
+  "--accent-secondary",
+  "--brand-zenn",
+  "--brand-note",
+  "--brand-qiita",
+  "--text-main",
+  "--text-muted",
+  "--border-color",
 ];
 
 // =====================================================

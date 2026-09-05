@@ -3,16 +3,8 @@ export const prerender = true;
 import { getCollection } from "astro:content";
 import Layout from "../layouts/BaseLayout.astro";
 import SectionHeading from "../components/SectionHeading.astro";
-import {
-    SITE_TITLE,
-    SITE_DESCRIPTION,
-    TW_DAILY_URL,
-    TW_TECH_URL,
-    GITHUB_URL,
-    NOTE_URL,
-    ZENN_URL,
-    QIITA_URL,
-} from "../consts";
+import { SITE_TITLE, SITE_DESCRIPTION } from "../consts";
+import BrandIcon from "../components/BrandIcon.astro";
 import { Image } from "astro:assets";
 import heroImage from "../assets/toramutton.jpg";
 import pcDesktopImg from "../assets/desktop/fastfetch.jpeg";
@@ -22,28 +14,35 @@ import { getExternalPosts } from "../utils/feeds";
 import { adventCalendar, adventDays } from "../data/advent2026";
 import { resolveAdventEntry } from "../utils/advent";
 import {
-    Twitter,
-    Github,
     Sparkles,
     Target,
     Cpu,
     Music,
     Timer,
     GitGraph,
+    User,
+    Link,
+    Palette,
 } from "lucide-astro";
 // 表示する中身は src/data/home.ts にまとめてある
 import {
-    heroComments,
+    heroUser,
     heroSpecs,
+    socials,
+    heroPalette,
     terminalCommands,
     missions,
     uptimes,
 } from "../data/home";
+import { asciiAvatar } from "../data/asciiAvatar";
 import { songs } from "../data/songs";
 
-// uuid のような長い値は先頭と末尾だけ見せる(全文はクリックでコピー)
-const shorten = (v: string) =>
-    v.length > 20 ? `${v.slice(0, 8)}…${v.slice(-4)}` : v;
+// fastfetch の 2 行目のアンダーライン(user@host と同じ長さ)
+const heroTitle = `${heroUser.user}@${heroUser.host}`;
+const heroRule = "-".repeat(heroTitle.length);
+// SOCIAL の値は URL の末尾を @ID にする
+const handle = (url: string) =>
+    `@${new URL(url).pathname.split("/").filter(Boolean).pop()}`;
 
 // === 記事一覧 ===
 const isDev = import.meta.env.DEV;
@@ -139,216 +138,146 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
 ---
 
 <Layout title={SITE_TITLE} description={SITE_DESCRIPTION}>
+            <!-- hero: fastfetch 風。`$ fastfetch` を打つと、左の ASCII アートと
+                 右の情報が上から同時に流れる(JS: playHero)。
+                 user@host をクリックすると最初から打ち直す -->
             <section class="hero" data-hero>
-                <div class="hero-grid">
-                    <!-- 左カラム: terminal -->
-                    <div class="terminal">
-                        <div class="terminal-header">
-                            <span class="terminal-dots">
-                                <i
-                                    data-dot="red"
-                                    role="button"
-                                    tabindex="0"
-                                    aria-label="exit"></i>
-                                <i
-                                    data-dot="yellow"
-                                    role="button"
-                                    tabindex="0"
-                                    aria-label="minimize"></i>
-                                <i
-                                    data-dot="green"
-                                    role="button"
-                                    tabindex="0"
-                                    aria-label="maximize"></i>
-                            </span>
-                            <span class="terminal-path">~/toramutton.me</span>
-                        </div>
-                        <div class="terminal-body">
-                            <div class="terminal-avatar">
-                                <Image
-                                    src={heroImage}
-                                    alt="toramutton"
-                                    class="terminal-avatar-img"
-                                />
-                            </div>
-                            <!-- 行は JS(playHero)が上から順に打つ。
-                                 [data-type] を持つ span は1文字ずつタイプされ、
-                                 それ以外の行は前の行が終わった後にフェードで出る -->
-                            <p class="line">
-                                <span class="prompt">$</span>
-                                <span class="cmd" data-type>whoami</span>
+                <div class="session" data-session>
+                    <p class="line">
+                        <span class="prompt">$</span>
+                        <span class="cmd" data-type>fastfetch</span>
+                    </p>
+
+                    <div class="ff" data-ff>
+                        <!-- 左: アバターの ASCII アート(scripts/ascii-avatar.mjs) -->
+                        <pre class="ff-logo" aria-hidden="true" data-ff-logo>{
+                            asciiAvatar.map((row) => (
+                                <span class="line ff-logo-row">{row}</span>
+                            ))
+                        }</pre>
+
+                        <!-- 右: 情報 -->
+                        <div class="ff-info" data-ff-info>
+                            <p class="line ff-head">
+                                <button
+                                    type="button"
+                                    class="ff-user"
+                                    data-replay
+                                    title="もう一度打つ"
+                                >
+                                    <Image
+                                        src={heroImage}
+                                        alt=""
+                                        class="ff-avatar"
+                                        width={80}
+                                        height={80}
+                                    />
+                                    <span class="ff-user-name">{heroUser.user}</span
+                                    ><span class="ff-user-at">@</span><span
+                                        class="ff-user-name">{heroUser.host}</span
+                                    >
+                                </button>
                             </p>
-                            <p class="line">
-                                <span class="output">ToraMutton</span>
+                            <p class="line ff-rule" aria-hidden="true">
+                                {heroRule}
                             </p>
-                            <p class="line line-blank"></p>
+
+                            <p class="line ff-section">
+                                <User size={14} />
+                                <span class="ff-section-name">USER</span>
+                                <span class="ff-section-dots" aria-hidden="true"
+                                ></span>
+                            </p>
                             {
-                                heroComments.map((c) => (
-                                    <p class="line line-comment">
-                                        <span class="comment"># {c}</span>
+                                heroSpecs.map((spec) => (
+                                    <p class="line ff-row">
+                                        <spec.icon size={14} />
+                                        <span class="ff-key">{spec.key}</span>
+                                        {spec.kind === "clock" ? (
+                                            <span
+                                                class="ff-val"
+                                                data-clock
+                                                set:text="--:--:--"
+                                            />
+                                        ) : spec.copy ? (
+                                            <button
+                                                type="button"
+                                                class="ff-val ff-copy"
+                                                data-copy={spec.value}
+                                                aria-label={`${spec.key} をコピー`}
+                                            >
+                                                <span set:text={spec.value} />
+                                                <span
+                                                    class="ff-copied"
+                                                    aria-hidden="true"
+                                                    set:text="copied"
+                                                />
+                                            </button>
+                                        ) : (
+                                            <span class="ff-val">
+                                                {spec.live && (
+                                                    <span class="dot-live" />
+                                                )}
+                                                <span set:text={spec.value} />
+                                            </span>
+                                        )}
                                     </p>
                                 ))
                             }
-                            <p class="line line-blank"></p>
-                            <p class="line">
-                                <span class="prompt">$</span>
-                                <span class="cmd" data-type>ls ./social</span>
+
+                            <p class="line ff-section">
+                                <Link size={14} />
+                                <span class="ff-section-name">SOCIAL</span>
+                                <span class="ff-section-dots" aria-hidden="true"
+                                ></span>
                             </p>
-                            <div class="line social-links">
-                                <a
-                                    href={GITHUB_URL}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="social-btn"
-                                    aria-label="GitHub"
-                                >
-                                    <Github size={14} /><span>github</span>
-                                </a>
-                                <a
-                                    href={ZENN_URL}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="social-btn"
-                                    aria-label="Zenn"
-                                >
-                                    <svg
-                                        role="img"
-                                        viewBox="0 0 24 24"
-                                        width="14"
-                                        height="14"
-                                        fill="currentColor"
-                                        aria-hidden="true"
-                                    >
-                                        <path
-                                            d="M.264 23.771h4.984c.264 0 .498-.147.645-.352L19.614.874c.176-.293-.029-.645-.381-.645h-4.72c-.235 0-.44.117-.557.323L.03 23.361c-.088.176.029.41.234.41zM17.445 23.419l6.479-10.408c.205-.323-.029-.733-.41-.733h-4.691c-.176 0-.352.088-.44.235l-6.655 10.643c-.176.264.029.616.352.616h4.779c.234-.001.468-.118.586-.353z"
-                                        ></path>
-                                    </svg>
-                                    <span>zenn</span>
-                                </a>
-                                <a
-                                    href={NOTE_URL}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="social-btn"
-                                    aria-label="Note"
-                                >
-                                    <svg
-                                        role="img"
-                                        viewBox="0 0 24 24"
-                                        width="14"
-                                        height="14"
-                                        fill="currentColor"
-                                        aria-hidden="true"
-                                    >
-                                        <path
-                                            d="M0 .279c4.623 0 10.953-.235 15.498-.117 6.099.156 8.39 2.813 8.468 9.374.077 3.71 0 14.335 0 14.335h-6.598c0-9.296.04-10.83 0-13.759-.078-2.578-.814-3.807-2.795-4.041-2.097-.235-7.975-.04-7.975-.04v17.84H0Z"
-                                        ></path>
-                                    </svg>
-                                    <span>note</span>
-                                </a>
-                                <a
-                                    href={QIITA_URL}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="social-btn"
-                                    aria-label="Qiita"
-                                >
-                                    <svg
-                                        role="img"
-                                        viewBox="0 0 24 24"
-                                        width="14"
-                                        height="14"
-                                        fill="currentColor"
-                                        aria-hidden="true"
-                                    >
-                                        <path
-                                            d="M12 0C5.3726 0 0 5.3726 0 12s5.3726 12 12 12c3.3984 0 6.4665-1.413 8.6498-3.6832-.383-.0574-.7746-.2062-1.1466-.4542-.7145-.4763-1.3486-.9263-1.6817-1.674-1.2945 1.3807-3.0532 1.835-5.1822 2.0503-4.311.4359-8.0456-1.4893-8.4979-6.2996-.1922-2.045.2628-3.989 1.1804-5.582l-.5342-2.1009c-.0862-.3652.2498-.7126.6057-.6262l1.8456.448c1.0974-.9012 2.4249-1.49 3.8892-1.638 1.2526-.1267 2.467.0834 3.571.5624l1.7348-1.0494c.3265-.1974.7399.0257.7711.4164l.1 2.4747v.0002c1.334 1.4084 2.2424 3.3319 2.4478 5.516.116 1.2339-.012 2.1776-.339 3.078-.1531.4215-.1992.7778.0776 1.1305.2674.3408.6915 1.0026 1.1644.8917.7107-.1666 1.4718-.1223 1.9422.1715C23.4925 15.9525 24 14.0358 24 12c0-6.6274-5.3726-12-12-12Zm-.0727 5.727a5.2731 5.2731 0 0 0-.6146.0273c-2.2084.2233-3.9572 1.8135-4.4937 3.8484l-1.3176-.1996-.014.2589 1.2972.1407c-.0352.1497-.0643.2384-.086.3923l-1.1319.0902.0103.2025 1.1032-.088c-.0194.1713-.031.2814-.0332.4565l-1.0078.412.0495.2499.9598-.4492c.002.1339.008.2053.0207.3407.2667 2.8371 2.6364 3.3981 5.4677 3.1118 2.8312-.2863 5.0517-1.3114 4.785-4.1486-.013-.1361-.0324-.2068-.0553-.3392l1.0397.2257.0242-.229-1.0906-.207c-.0342-.1687-.0765-.271-.1264-.4327l1.1208-.1374-.0158-.2019-1.1499.1409a5.1093 5.1093 0 0 0-.1665-.4259l1.2665-.4042-.0397-.2536-1.3471.4667c-.819-1.7168-2.5002-2.8224-4.4546-2.8482Z"
-                                        ></path>
-                                    </svg>
-                                    <span>qiita</span>
-                                </a>
-                                <a
-                                    href={TW_DAILY_URL}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="social-btn"
-                                    aria-label="Twitter Daily"
-                                >
-                                    <Twitter size={14} /><span>Twitter</span>
-                                </a>
-                                <!-- <a
-                                    href={TW_TECH_URL}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="social-btn"
-                                    aria-label="Twitter Tech"
-                                >
-                                    <Twitter size={14} /><span>tech</span>
-                                </a> -->
-                            </div>
-                            <p class="line line-blank"></p>
-                            <p class="line">
-                                <span class="prompt">$</span>
-                                <a href="/about" class="cmd cmd-link">
-                                    <span data-type>cd ./about</span><span
-                                        class="cursor-arrow">→</span
-                                    >
-                                </a>
+                            {
+                                socials.map((s) => (
+                                    <p class="line ff-row">
+                                        <BrandIcon name={s.icon} size={14} />
+                                        <span class="ff-key">{s.name}</span>
+                                        <a
+                                            href={s.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="ff-val ff-link"
+                                            set:text={handle(s.url)}
+                                        />
+                                    </p>
+                                ))
+                            }
+
+                            <p class="line ff-section">
+                                <Palette size={14} />
+                                <span class="ff-section-name">PALETTE</span>
+                                <span class="ff-section-dots" aria-hidden="true"
+                                ></span>
+                            </p>
+                            <p class="line ff-palette" aria-hidden="true">
+                                {
+                                    heroPalette.map((v) => (
+                                        <span
+                                            class="ff-swatch"
+                                            style={`color: var(${v})`}
+                                            title={v}
+                                        >
+                                            ██
+                                        </span>
+                                    ))
+                                }
                             </p>
                         </div>
                     </div>
 
-                    <!-- 右カラム: status。左のターミナルが打ち終わった後に
-                         `$ cat status.toml` を打ち、行を順に出す(JS: playHero) -->
-                    <aside class="spec-block" data-status>
-                        <p class="line spec-block-title">
-                            <span class="prompt">$</span>
-                            <span class="cmd" data-type>cat status.toml</span>
-                        </p>
-                        <ul class="spec-list">
-                            {
-                                heroSpecs.map((spec) => (
-                                    <li class="line">
-                                        <span class="spec-key">{spec.key}</span>
-                                        <span class="spec-eq">=</span>
-                                        {spec.copy ? (
-                                            <button
-                                                type="button"
-                                                class="spec-val spec-val-copy"
-                                                data-copy={spec.value}
-                                                title={spec.value}
-                                                aria-label={`${spec.key} をコピー`}
-                                            >
-                                                <span
-                                                    class="spec-str"
-                                                    set:text={shorten(spec.value)}
-                                                />
-                                                <span
-                                                    class="spec-copied"
-                                                    set:text="copied!"
-                                                />
-                                            </button>
-                                        ) : (
-                                            <span
-                                                class:list={[
-                                                    "spec-val",
-                                                    spec.live && "spec-val-live",
-                                                ]}
-                                            >
-                                                {spec.live && (
-                                                    <span class="dot-live" />
-                                                )}
-                                                <span
-                                                    class="spec-str"
-                                                    set:text={spec.value}
-                                                />
-                                            </span>
-                                        )}
-                                    </li>
-                                ))
-                            }
-                        </ul>
-                    </aside>
+                    <p class="line line-blank"></p>
+                    <p class="line">
+                        <span class="prompt">$</span>
+                        <a href="/about" class="cmd cmd-link">
+                            <span data-type>cd ./about</span><span
+                                class="cursor-arrow">→</span
+                            >
+                        </a>
+                    </p>
                 </div>
             </section>
 
@@ -797,18 +726,13 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                     const musicTimers = createTimers();
 
                     // ====================================
-                    // Hero: whoami ターミナル + status
+                    // Hero: 1 本のターミナルセッション
                     // ====================================
-                    // 左のターミナルの行を上から順に「打つ / 出す」。
-                    // 終わったら右の status ブロックを同じ要領で流す。
+                    // .line を上から順に「打つ / 出す」
                     const hero =
                         document.querySelector<HTMLElement>("[data-hero]");
-                    const terminal =
-                        hero?.querySelector<HTMLElement>(".terminal");
-                    const termBody =
-                        terminal?.querySelector<HTMLElement>(".terminal-body");
-                    const statusBlock =
-                        hero?.querySelector<HTMLElement>("[data-status]");
+                    const session =
+                        hero?.querySelector<HTMLElement>("[data-session]");
 
                     // data-type を持つ span は元の文字列を data-text に退避して
                     // 空にしておく(打つときに戻す)
@@ -843,26 +767,51 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                         }
                     }
 
+                    // 行を順に出す。fastfetch の出力([data-ff])だけは
+                    // 左のロゴと右の情報を同時に上から流す
+                    const playLines = async (
+                        lines: Iterable<HTMLElement>,
+                        gapMs: number,
+                    ) => {
+                        for (const line of lines) await playLine(line, gapMs);
+                    };
+
+                    let heroPlaying = false;
                     async function playHero() {
-                        if (!hero || !termBody) return;
+                        if (!hero || !session) return;
                         heroTimers.clear();
-                        hero.querySelectorAll<HTMLElement>(
-                            ".line",
-                        ).forEach((l) => l.classList.remove("is-shown", "is-typed"));
+                        heroPlaying = true;
+                        session
+                            .querySelectorAll<HTMLElement>(".line")
+                            .forEach((l) =>
+                                l.classList.remove("is-shown", "is-typed"),
+                            );
 
                         // 少し待ってから開始(reveal と被らないように)
                         await wait(heroTimers, reduceMotion() ? 0 : 350);
-                        for (const line of termBody.querySelectorAll<HTMLElement>(
-                            ":scope > .line",
-                        )) {
-                            await playLine(line, 160);
+                        for (const child of Array.from(
+                            session.children,
+                        ) as HTMLElement[]) {
+                            if (child.matches("[data-ff]")) {
+                                await Promise.all([
+                                    playLines(
+                                        child.querySelectorAll<HTMLElement>(
+                                            "[data-ff-logo] .line",
+                                        ),
+                                        45,
+                                    ),
+                                    playLines(
+                                        child.querySelectorAll<HTMLElement>(
+                                            "[data-ff-info] .line",
+                                        ),
+                                        55,
+                                    ),
+                                ]);
+                            } else if (child.classList.contains("line")) {
+                                await playLine(child, 160);
+                            }
                         }
-                        if (!statusBlock) return;
-                        for (const line of statusBlock.querySelectorAll<HTMLElement>(
-                            ".line",
-                        )) {
-                            await playLine(line, 70);
-                        }
+                        heroPlaying = false;
                     }
 
                     if (hero) {
@@ -876,88 +825,16 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                             : start();
                     }
 
-                    // ---- Terminal dots easter egg ----
-                    // 赤: exit → 再起動して最初から打ち直す
-                    // 黄: 縮んで消えて戻る
-                    // 緑: 何も起きない(コメントだけ出す)
-                    const heroLine = (text: string, kind: "cmd" | "comment") => {
-                        const p = document.createElement("p");
-                        p.className = "line is-shown";
-                        p.innerHTML =
-                            kind === "cmd"
-                                ? `<span class="prompt">$</span><span class="cmd">${text}</span>`
-                                : `<span class="comment"># ${text}</span>`;
-                        termBody?.appendChild(p);
-                        return p;
-                    };
-
-                    terminal
-                        ?.querySelectorAll<HTMLElement>("i[data-dot]")
-                        .forEach((dot) => {
-                            dot.addEventListener("click", () => {
-                                if (!termBody) return;
-                                if (terminal.classList.contains("is-busy"))
-                                    return;
-                                const kind = dot.dataset.dot;
-                                if (kind === "red") {
-                                    terminal.classList.add("is-busy");
-                                    heroTimers.clear();
-                                    heroLine("exit 0", "cmd");
-                                    setTimeout(() => {
-                                        termBody.style.cssText =
-                                            "opacity:0; transition:opacity 0.3s ease";
-                                        setTimeout(() => {
-                                            // 元の行は隠すだけにして、再起動メッセージを重ねる
-                                            const originals = Array.from(
-                                                termBody.children,
-                                            ) as HTMLElement[];
-                                            originals.forEach((el) =>
-                                                el.classList.remove("is-shown"),
-                                            );
-                                            termBody.lastElementChild?.remove(); // exit 行
-                                            const msgs = [
-                                                heroLine("Connection closed.", "comment"),
-                                                heroLine("Rebooting...", "comment"),
-                                            ];
-                                            termBody.style.cssText =
-                                                "opacity:1; transition:opacity 0.3s ease";
-                                            setTimeout(() => {
-                                                termBody.style.cssText =
-                                                    "opacity:0; transition:opacity 0.3s ease";
-                                                setTimeout(() => {
-                                                    msgs.forEach((m) => m.remove());
-                                                    termBody.style.cssText = "";
-                                                    terminal.classList.remove("is-busy");
-                                                    playHero();
-                                                }, 320);
-                                            }, 1200);
-                                        }, 350);
-                                    }, 600);
-                                } else if (kind === "yellow") {
-                                    terminal.classList.add("is-minimizing", "is-busy");
-                                    setTimeout(() => {
-                                        terminal.classList.remove("is-minimizing");
-                                        setTimeout(
-                                            () => terminal.classList.remove("is-busy"),
-                                            350,
-                                        );
-                                    }, 580);
-                                } else {
-                                    const msg = heroLine(
-                                        "nothing to maximize here :)",
-                                        "comment",
-                                    );
-                                    setTimeout(() => {
-                                        msg.style.cssText =
-                                            "opacity:0; transition:opacity 0.3s ease";
-                                        setTimeout(() => msg.remove(), 320);
-                                    }, 1500);
-                                }
-                            });
+                    // ---- `ToraMutton` クリックで打ち直し ----
+                    session
+                        ?.querySelector<HTMLElement>("[data-replay]")
+                        ?.addEventListener("click", () => {
+                            if (heroPlaying) return;
+                            playHero();
                         });
 
                     // ---- status: 値クリックでコピー ----
-                    statusBlock
+                    session
                         ?.querySelectorAll<HTMLElement>("[data-copy]")
                         .forEach((btn) => {
                             btn.addEventListener("click", async () => {
@@ -1501,14 +1378,18 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                                 );
                                 numEl.textContent = days.toLocaleString("ja-JP");
                             });
+                        // Uptime カードの時計と hero の `time = ` を同じ値で更新
+                        const clock = now.toLocaleString("ja-JP", {
+                            timeZone: "Asia/Tokyo",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
+                        });
                         const clockEl = document.getElementById("uptime-clock");
-                        if (clockEl)
-                            clockEl.textContent = now.toLocaleString("ja-JP", {
-                                timeZone: "Asia/Tokyo",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                second: "2-digit",
-                            });
+                        if (clockEl) clockEl.textContent = clock;
+                        document
+                            .querySelectorAll<HTMLElement>("[data-clock]")
+                            .forEach((el) => (el.textContent = clock));
                     }
                     updateUptime();
                     uptimeTimer = setInterval(updateUptime, 1000);
@@ -1573,111 +1454,240 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
         margin: 0 auto;
     }
 
-    .hero-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-        gap: 2rem;
-        align-items: start;
-    }
-
-    /* ---- Terminal block ---- */
-    .terminal {
-        background: var(--surface);
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
-        overflow: hidden;
-        transform-origin: top center;
-        transition:
-            transform 0.3s cubic-bezier(0, 0, 0.2, 1.4),
-            opacity 0.3s ease;
+    /* 枠なし。1 本のセッションとして背景に直に打つ */
+    .session {
         font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 0.95rem;
+        line-height: 1.7;
+        color: var(--text-main);
+        min-width: 0;
     }
 
-    .terminal.is-minimizing {
-        transform: scaleY(0.04);
-        opacity: 0;
-        pointer-events: none;
+    /* ---- fastfetch の出力: 左ロゴ / 右情報 ---- */
+    .ff {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 0 3rem;
+        align-items: start;
+        padding: 0.4rem 0 0.2rem 1.2rem;
     }
 
-    .terminal-avatar {
-        position: absolute;
-        top: 1.4rem;
-        right: 1.2rem;
-        z-index: 1;
-        opacity: 0;
-        transform: scale(0.92);
-    }
-    .hero[data-loaded] .terminal-avatar {
-        opacity: 1;
-        transform: scale(1);
-        transition:
-            opacity 0.45s ease,
-            transform 0.45s ease;
-        transition-delay: 0.4s;
-    }
-
-    .terminal-avatar :global(img) {
-        width: 72px;
-        height: 72px;
-        border-radius: 50%;
+    /* ASCII アート。行ごとに .line で順に出る。
+       global.css のコードブロック用 pre 装飾(背景・余白・枠)は打ち消す */
+    .ff-logo {
+        margin: 0;
+        padding: 0;
+        background: none;
+        border: 0;
+        border-radius: 0;
         box-shadow: none;
+        overflow: visible;
+        font: inherit;
+        font-size: 0.8rem;
+        line-height: 1.15;
+        color: var(--accent-blue);
+        user-select: none;
+    }
+    /* (.line の flex / min-height を打ち消すため親付きで指定) */
+    .ff-logo .ff-logo-row {
+        display: block;
+        white-space: pre;
+        min-height: 0;
+    }
+
+    .ff-info {
+        min-width: 0;
+    }
+
+    /* 1 行目: user@host。クリックで打ち直す(ボタンだが見た目は文字) */
+    .ff-user {
+        appearance: none;
+        background: none;
+        border: 0;
+        padding: 0;
+        margin: 0;
+        font: inherit;
+        font-weight: 700;
+        color: var(--text-main);
+        display: inline-flex;
+        align-items: center;
+        cursor: pointer;
+    }
+    .ff-user-name {
+        color: var(--accent-blue);
+        transition: color 0.18s ease;
+    }
+    .ff-user-at {
+        color: var(--text-muted);
+    }
+    @media (hover: hover) {
+        .ff-user:hover .ff-user-name {
+            color: var(--text-main);
+        }
+    }
+    .ff-user:focus-visible {
+        outline: 2px solid var(--accent-blue);
+        outline-offset: 4px;
+    }
+    .ff-user :global(.ff-avatar) {
+        width: 40px;
+        height: 40px;
+        margin-right: 0.6rem;
+        border-radius: 50%;
         object-fit: cover;
         display: block;
         border: 1px solid var(--border-color);
     }
-
-    .terminal-header {
-        display: flex;
-        position: relative;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.6rem 1rem;
-        background: var(--elevated, rgba(0, 0, 0, 0.06));
-        border-bottom: 1px solid var(--border-color);
+    .ff-info .ff-head {
+        min-height: 40px;
     }
-
-    :global(html.dark) .terminal-header {
-        background: rgba(255, 255, 255, 0.04);
-    }
-
-    .terminal-dots {
-        display: inline-flex;
-        gap: 6px;
-    }
-    .terminal-dots i {
-        display: inline-block;
-        width: 11px;
-        height: 11px;
-        border-radius: 50%;
-        background: var(--border-color);
-        cursor: pointer;
-        transition: background 0.15s ease;
-    }
-
-    @media (hover: hover) {
-        .terminal-dots:hover i[data-dot="red"] {
-            background: #ff5f57;
-        }
-        .terminal-dots:hover i[data-dot="yellow"] {
-            background: #ffbd2e;
-        }
-        .terminal-dots:hover i[data-dot="green"] {
-            background: #28c840;
-        }
-    }
-
-    .terminal-path {
-        font-size: 0.75rem;
+    .ff-info .ff-rule {
         color: var(--text-muted);
         letter-spacing: 0.02em;
+        min-height: 1.2em;
     }
 
-    .terminal-body {
-        position: relative;
-        padding: 1.5rem 1.2rem 1.8rem;
-        font-size: 0.95rem;
-        line-height: 1.7;
+    /* セクション見出し: アイコン + 名前 + ┈ の埋め
+       (.line の gap / flex-wrap より優先させるため親付きで指定) */
+    .ff-info .ff-section {
+        margin-top: 0.35rem;
+        color: var(--accent-blue);
+        gap: 0.5rem;
+        flex-wrap: nowrap;
+    }
+    .ff-section :global(svg) {
+        flex-shrink: 0;
+    }
+    .ff-section-name {
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        flex-shrink: 0;
+    }
+    .ff-section-dots {
+        flex: 0 1 12ch;
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        color: var(--text-muted);
+        opacity: 0.7;
+    }
+    .ff-section-dots::before {
+        content: "┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈";
+    }
+
+    /* 情報行: アイコン  キー  値 */
+    .ff-info .ff-row {
+        gap: 0.5rem;
+        flex-wrap: nowrap;
+        align-items: baseline;
+    }
+    .ff-row :global(svg) {
+        color: var(--text-muted);
+        flex-shrink: 0;
+        align-self: center;
+    }
+    .ff-key {
+        color: var(--accent-blue);
+        min-width: 7ch; /* 一番長い "Twitter" に合わせる */
+        flex-shrink: 0;
+    }
+    .ff-val {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.4rem;
         color: var(--text-main);
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+    .ff-val .dot-live {
+        align-self: center;
+    }
+    /* uuid: クリックでコピー */
+    .ff-copy {
+        appearance: none;
+        background: none;
+        border: 0;
+        padding: 0;
+        margin: 0;
+        font: inherit;
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+        text-decoration: underline dotted var(--text-muted);
+        text-underline-offset: 3px;
+        transition: color 0.18s ease;
+    }
+    .ff-copy:focus-visible {
+        outline: 2px solid var(--accent-blue);
+        outline-offset: 2px;
+    }
+    .ff-copied {
+        color: var(--accent-blue);
+        font-size: 0.8em;
+        text-decoration: none;
+        white-space: nowrap;
+        opacity: 0;
+        transform: translateX(-4px);
+        transition:
+            opacity 0.18s ease,
+            transform 0.18s ease;
+    }
+    .ff-copy.is-copied .ff-copied {
+        opacity: 1;
+        transform: none;
+    }
+    /* SNS: 値がリンク。hover で下線が伸びる */
+    .ff-link {
+        position: relative;
+        text-decoration: none;
+        flex: 0 1 auto;
+        transition: color 0.18s ease;
+    }
+    .ff-link::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -2px;
+        height: 1px;
+        background: var(--accent-blue);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.25s var(--ease-out);
+    }
+    @media (hover: hover) {
+        .ff-copy:hover {
+            color: var(--accent-blue);
+            text-decoration-color: var(--accent-blue);
+        }
+        .ff-link:hover {
+            color: var(--accent-blue);
+        }
+        .ff-link:hover::after {
+            transform: scaleX(1);
+        }
+    }
+    .ff-link:focus-visible {
+        outline: 2px solid var(--accent-blue);
+        outline-offset: 2px;
+    }
+
+    /* パレット: ██ を色ごとに並べる */
+    .ff-info .ff-palette {
+        gap: 0;
+        margin-top: 0.2rem;
+        letter-spacing: -0.05em;
+        line-height: 1;
+        padding: 0.3rem 0 0.1rem 1.2rem;
+    }
+    .ff-swatch {
+        transition: transform 0.18s ease;
+    }
+    @media (hover: hover) {
+        .ff-swatch:hover {
+            transform: translateY(-2px);
+        }
     }
 
     .line {
@@ -1702,55 +1712,9 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
         color: var(--text-main);
     }
 
-    .output {
-        color: var(--text-main);
-        font-weight: 700;
-        font-size: 1.15rem;
-        padding-left: 1.2rem;
-        position: relative;
-    }
-    .output::before {
-        content: ">";
-        position: absolute;
-        left: 0;
-        color: var(--text-muted);
-        font-weight: 400;
-    }
-
     .comment {
         color: var(--text-muted);
         font-size: 0.9rem;
-    }
-
-    /* ---- Social links ---- */
-    .social-links {
-        gap: 0.5rem;
-        padding-left: 1.2rem;
-        margin-top: 0.2rem;
-    }
-
-    .social-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        padding: 0.3rem 0.7rem;
-        font-family: "JetBrains Mono", ui-monospace, monospace;
-        font-size: 0.8rem;
-        color: var(--text-muted);
-        background: transparent;
-        border: 1px solid var(--border-color);
-        border-radius: 0;
-        text-decoration: none;
-        transition:
-            color 0.18s ease,
-            border-color 0.18s ease;
-    }
-
-    @media (hover: hover) {
-        .social-btn:hover {
-            color: var(--accent-blue);
-            border-color: var(--accent-blue);
-        }
     }
 
     /* ---- CTA (cd ./about) ---- */
@@ -1775,104 +1739,6 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
         }
     }
 
-    /* ---- Spec block (右カラム): `$ cat status.toml` の出力風 ----
-       左のターミナルと同じ行スタイル(.line / .prompt / .cmd)を使い、
-       枠だけ dashed にして「もう1枚の窓」に見せる */
-    .spec-block {
-        font-family: "JetBrains Mono", ui-monospace, monospace;
-        border: 1px dashed var(--border-color);
-        padding: 1rem 1.2rem 1.1rem;
-        font-size: 0.9rem;
-        line-height: 1.7;
-        transition: border-color 0.35s ease;
-    }
-    @media (hover: hover) {
-        .spec-block:hover {
-            border-color: var(--accent-blue);
-        }
-    }
-    .spec-block-title {
-        margin: 0 0 0.5rem;
-    }
-    .spec-list {
-        list-style: none;
-        padding: 0 0 0 1.2rem;
-        margin: 0;
-    }
-    .spec-list li {
-        gap: 0.5rem;
-        padding: 0.2rem 0;
-        min-height: 1.6em;
-    }
-    .spec-key {
-        color: var(--accent-blue);
-        min-width: 5ch;
-        flex-shrink: 0;
-    }
-    .spec-eq {
-        color: var(--text-muted);
-    }
-    .spec-val {
-        color: var(--text-main);
-        min-width: 0;
-    }
-    /* toml の文字列リテラル風に引用符を付ける */
-    .spec-str::before,
-    .spec-str::after {
-        content: '"';
-        color: var(--text-muted);
-    }
-    .spec-val-live {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-    }
-    /* クリックでコピーする値(uuid) */
-    .spec-val-copy {
-        position: relative;
-        appearance: none;
-        background: none;
-        border: 0;
-        padding: 0;
-        margin: 0;
-        font: inherit;
-        color: inherit;
-        cursor: pointer;
-        text-decoration: underline dotted var(--text-muted);
-        text-underline-offset: 3px;
-        transition: color 0.18s ease;
-    }
-    @media (hover: hover) {
-        .spec-val-copy:hover {
-            color: var(--accent-blue);
-            text-decoration-color: var(--accent-blue);
-        }
-    }
-    .spec-val-copy:focus-visible {
-        outline: 2px solid var(--accent-blue);
-        outline-offset: 2px;
-    }
-    .spec-copied {
-        position: absolute;
-        left: 0;
-        bottom: calc(100% + 2px);
-        padding: 0.1rem 0.4rem;
-        font-size: 0.65rem;
-        line-height: 1.4;
-        color: var(--background);
-        background: var(--accent-blue);
-        white-space: nowrap;
-        pointer-events: none;
-        opacity: 0;
-        transform: translateY(3px);
-        transition:
-            opacity 0.18s ease,
-            transform 0.18s ease;
-    }
-    .spec-val-copy.is-copied .spec-copied {
-        opacity: 1;
-        transform: none;
-    }
     .dot-live {
         width: 7px;
         height: 7px;
@@ -1946,9 +1812,9 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
         .dot-live {
             animation: none;
         }
-        .terminal-avatar {
-            opacity: 1;
-            transform: none;
+        .ff-link::after,
+        .ff-swatch,
+        .ff-copied {
             transition: none;
         }
     }
@@ -1960,26 +1826,20 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
         .hero {
             padding: 4rem 0 3rem;
         }
-        .hero-grid {
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-        }
-        .terminal-body {
-            padding: 1.2rem 1rem 1.4rem;
+        .session {
             font-size: 0.88rem;
         }
-        .output {
-            font-size: 1.05rem;
+        /* ロゴを上、情報を下に縦積み。ロゴは小さくして幅に収める */
+        .ff {
+            grid-template-columns: 1fr;
+            gap: 1rem 0;
+            padding-left: 0.6rem;
         }
-        .social-links {
-            padding-left: 0;
-            flex-wrap: wrap;
+        .ff-logo {
+            font-size: 0.5rem;
+            line-height: 1.1;
         }
-        .spec-block {
-            padding: 0.9rem 1rem 1rem;
-            font-size: 0.85rem;
-        }
-        .spec-list {
+        .ff-palette {
             padding-left: 0.6rem;
         }
     }
