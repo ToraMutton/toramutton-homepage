@@ -53,9 +53,21 @@ body {
     --badge-bg: #eaeef2;
     --badge-text: #656d76;
 
+    /* 外部サービスのブランドカラー(バッジ・フィルター・SNSアイコン共通) */
+    --brand-zenn: #3ea8ff;
+    --brand-note: #41c9b4;
+    --brand-qiita: #55c500;
+
     /* 共通定数 */
     --radius: 4px;
-    --max-width: 1800px;
+    /* default … トップページ。ヘッダー/フッターと同じ幅に揃える */
+    --max-width: 1100px;
+    /* narrow  … 読み物向け(Blog / Works / Links / About / Advent) */
+    --max-width-narrow: 900px;
+    /* 出現・ホバーで共通して使うイージング */
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    /* ぼかさないオフセット影(カードの hover 語彙) */
+    --shadow-offset: 5px 5px 0 var(--accent-blue);
 
     /* --- 互換用（段階的に廃止予定） --- */
     --glass-bg: #ffffff;
@@ -153,29 +165,11 @@ h1 {
     display: inline-block;
 }
 
+/* セクション見出し(h2)の見た目は components/SectionHeading.astro に集約。
+   記事本文(BlogPost)だけは「青い線が伸びる」下線を使う */
 h2 {
-    position: relative;
-    display: block;
-    width: 100%;
     margin-top: 4rem;
     margin-bottom: 1.5rem;
-    border: none !important;
-    padding-bottom: 5px;
-}
-
-h2::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    height: 1px;
-    width: 0%;
-    background-color: var(--accent-blue);
-    transition: width 0.8s ease-out;
-}
-
-h2.visible::after {
-    width: 100%;
 }
 
 .prose-content h3 {
@@ -215,12 +209,11 @@ a:hover {
     color: var(--accent-secondary);
 }
 
-/* 画像 */
+/* 画像。影はサイト方針(ぼかさない)に合わせて付けない */
 img {
     max-width: 100%;
     height: auto;
     border-radius: var(--radius);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 /* =========================================
@@ -307,6 +300,84 @@ html:not(.dark) .mission-title {
     background: var(--badge-bg);
     color: var(--badge-text);
     border: 1px solid var(--border-color);
+}
+
+/* =========================================
+   5.1 カード共通 (薄い背景 + 1px 枠 + 4px 角丸)
+   .ui-card       … 静止したカード
+   .ui-card-hover … クリックはできないが hover で枠がシアンになるカード
+   .ui-card-link  … クリックできるカード。hover で枠がシアン + オフセット影
+   ========================================= */
+.ui-card {
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+}
+
+.ui-card-hover,
+.ui-card-link {
+    transition:
+        border-color 0.18s ease,
+        box-shadow 0.35s var(--ease-out);
+}
+
+@media (hover: hover) {
+    .ui-card-hover:hover,
+    .ui-card-link:hover {
+        border-color: var(--accent-blue);
+    }
+
+    .ui-card-link:hover {
+        box-shadow: var(--shadow-offset);
+    }
+}
+
+.ui-card-link:focus-visible {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 3px;
+    border-color: var(--accent-blue);
+}
+
+/* =========================================
+   5.2 出現アニメーション (全ページ共通)
+   [data-reveal] を付けた要素は画面に入ったとき一度だけ下からフェードイン。
+   style="--i: n" で n × 40ms ずつ遅らせられる。
+   .is-visible は layouts/BaseLayout.astro のスクリプトが付ける。
+   ========================================= */
+[data-reveal] {
+    opacity: 0;
+}
+
+[data-reveal].is-visible {
+    opacity: 1;
+    animation: reveal-in 0.55s var(--ease-out) backwards;
+    animation-delay: calc(var(--i, 0) * 40ms);
+}
+
+@keyframes reveal-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    [data-reveal] {
+        opacity: 1;
+    }
+
+    [data-reveal].is-visible {
+        animation: none;
+    }
+
+    .ui-card-link {
+        transition: none;
+    }
 }
 
 /* =========================================

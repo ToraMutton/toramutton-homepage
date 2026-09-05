@@ -1,6 +1,8 @@
 ---
 export const prerender = true;
 import Layout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import SectionHeading from '../components/SectionHeading.astro';
 import { SITE_TITLE } from '../consts';
 import { Image } from 'astro:assets';
 import { ExternalLink, Github, CheckCircle2, Hammer, Lightbulb } from 'lucide-astro';
@@ -18,24 +20,22 @@ const plannedWorks = works.filter((w) => w.status === 'planned');
     width="narrow"
 >
             <section class="works-section">
-                <h1 class="works-title">Works</h1>
-                <p class="works-desc">
-                    制作した・現在進行中・予定のプロジェクト
-                </p>
+                <PageHeader
+                    command="ls ./works"
+                    title="Works"
+                    description="制作した・現在進行中・予定のプロジェクト"
+                />
 
                 {
                     completedWorks.length > 0 && (
                         <>
-                            <h2 class="section-heading">
-                                <CheckCircle2
-                                    size={20}
-                                    class="section-icon completed-icon"
-                                />
+                            <SectionHeading>
+                                <CheckCircle2 size={20} class="completed-icon" />
                                 Completed
-                            </h2>
+                            </SectionHeading>
                             <ul class="works-list">
                                 {completedWorks.map((work) => (
-                                    <li class="work-row">
+                                    <li class:list={["work-row", { "has-link": Boolean(work.url || work.github) }]}>
                                         {work.image && (
                                             <div class="work-image-layer">
                                                 <Image
@@ -50,7 +50,17 @@ const plannedWorks = works.filter((w) => w.status === 'planned');
                                         </span>
                                         <div class="work-main">
                                             <span class="work-name">
-                                                {work.name}
+                                                {(work.url || work.github) ? (
+                                                    <a
+                                                        href={work.url || work.github}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                    >
+                                                        {work.name}
+                                                    </a>
+                                                ) : (
+                                                    work.name
+                                                )}
                                             </span>
                                             <div class="work-tags">
                                                 {work.tags.map((tag) => (
@@ -104,22 +114,29 @@ const plannedWorks = works.filter((w) => w.status === 'planned');
                 {
                     inProgressWorks.length > 0 && (
                         <>
-                            <h2 class="section-heading">
-                                <Hammer
-                                    size={20}
-                                    class="section-icon progress-icon"
-                                />
+                            <SectionHeading>
+                                <Hammer size={20} class="progress-icon" />
                                 In Progress
-                            </h2>
+                            </SectionHeading>
                             <ul class="works-list">
                                 {inProgressWorks.map((work) => (
-                                    <li class="work-row in-progress">
+                                    <li class:list={["work-row", "in-progress", { "has-link": Boolean(work.github) }]}>
                                         <span class="work-icon-cell">
                                             <work.icon size={20} />
                                         </span>
                                         <div class="work-main">
                                             <span class="work-name">
-                                                {work.name}
+                                                {(work.url || work.github) ? (
+                                                    <a
+                                                        href={work.url || work.github}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                    >
+                                                        {work.name}
+                                                    </a>
+                                                ) : (
+                                                    work.name
+                                                )}
                                             </span>
                                             <div class="work-tags">
                                                 {work.tags.map((tag) => (
@@ -160,13 +177,10 @@ const plannedWorks = works.filter((w) => w.status === 'planned');
                 {
                     plannedWorks.length > 0 && (
                         <>
-                            <h2 class="section-heading">
-                                <Lightbulb
-                                    size={20}
-                                    class="section-icon planned-icon"
-                                />
+                            <SectionHeading>
+                                <Lightbulb size={20} class="planned-icon" />
                                 Planned
-                            </h2>
+                            </SectionHeading>
                             <ul class="works-list">
                                 {plannedWorks.map((work) => (
                                     <li class="work-row planned">
@@ -204,58 +218,8 @@ const plannedWorks = works.filter((w) => w.status === 'planned');
 
 <style>
 
-    /* =========================================
-       1. ヘッダ部
-       ========================================= */
-    .works-title {
-        font-size: 2rem;
-        margin: 0 0 0.5rem;
-        color: var(--text-main);
-        font-family: var(--font-mono, "JetBrains Mono", monospace);
-        letter-spacing: -0.02em;
-    }
-
-    .works-desc {
-        color: var(--text-muted);
-        font-size: 0.95rem;
-        margin-bottom: 2.5rem;
-    }
-
-    /* =========================================
-       2. セクション見出し
-       ========================================= */
-    .section-heading {
-        font-size: 1.1rem;
-        margin: 2.5rem 0 0.5rem;
-        color: var(--text-main);
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        font-family: var(--font-mono, "JetBrains Mono", monospace);
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        border: none !important;
-        padding-bottom: 0 !important;
-    }
-
-    /* global.cssのh2::afterを上書き */
-    .section-heading::after {
-        content: "";
-        flex: 1;
-        height: 1px;
-        background: var(--border-color);
-        margin-left: 0.5rem;
-        position: static;
-        width: auto;
-        bottom: auto;
-        left: auto;
-        transition: none;
-    }
-
-    .section-icon {
-        flex-shrink: 0;
-    }
-
+    /* ヘッダ部は components/PageHeader.astro、
+       セクション見出しは components/SectionHeading.astro */
     .completed-icon {
         color: #22c55e;
     }
@@ -294,10 +258,11 @@ const plannedWorks = works.filter((w) => w.status === 'planned');
             border-bottom-color 0.2s ease;
     }
 
-    /* hover対応デバイスのみ */
+    /* hover対応デバイスのみ。行の強調はリンクのある行だけ
+       (Blog 一覧と同じ見た目だが、クリックできるのは作品名のリンク) */
     @media (hover: hover) {
-        .work-row:hover {
-            background-color: rgba(34, 211, 238, 0.04);
+        .work-row.has-link:hover {
+            background-color: color-mix(in srgb, var(--accent-blue) 4%, transparent);
             border-bottom-color: var(--accent-blue);
         }
     }
@@ -347,12 +312,17 @@ const plannedWorks = works.filter((w) => w.status === 'planned');
         font-family: var(--font-mono, "JetBrains Mono", monospace);
     }
 
+    .work-name a {
+        color: inherit;
+        text-decoration: none;
+    }
+
     @media (hover: hover) {
-        .work-row:hover .work-name {
+        .work-row.has-link:hover .work-name {
             padding-left: 1rem;
             color: var(--accent-blue);
         }
-        .work-row:hover .work-name::before {
+        .work-row.has-link:hover .work-name::before {
             opacity: 1;
             transform: translate(0, -50%);
         }
@@ -473,7 +443,7 @@ const plannedWorks = works.filter((w) => w.status === 'planned');
     }
 
     @media (hover: hover) {
-        .work-row:hover .work-image-layer::after {
+        .work-row.has-link:hover .work-image-layer::after {
             opacity: 0.5; /* ホバー時に暗いオーバーレイが乗る */
         }
     }

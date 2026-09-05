@@ -1,0 +1,66 @@
+---
+// セクション見出し(h2)。Works の「mono + 右に伸びる横線」を全ページの標準にする。
+// アイコンを付けたいときは中身(default slot)に一緒に入れる。
+// 線の右端に置きたい小物(リンク・凡例など)は slot="aside" に入れる。
+interface Props {
+    id?: string;
+}
+
+const { id } = Astro.props;
+---
+
+<div class="section-heading-row">
+    <h2 class="section-heading" {id}>
+        <slot />
+    </h2>
+    <slot name="aside" />
+</div>
+
+<style>
+    .section-heading-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin: 2.5rem 0 1rem;
+    }
+
+    .section-heading {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin: 0;
+        padding: 0;
+        color: var(--text-main);
+        font-family: var(--font-mono), var(--font-sans);
+        font-size: 1.1rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        line-height: 1.3;
+    }
+
+    /* 見出しの右に伸びる横線 */
+    .section-heading::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        margin-left: 0.5rem;
+        background: var(--border-color);
+    }
+
+    .section-heading :global(svg) {
+        flex-shrink: 0;
+    }
+
+    /* 狭い画面では見出しを1行丸ごと使い、右側の小物は次の行に落とす */
+    @media (max-width: 480px) {
+        .section-heading-row {
+            flex-wrap: wrap;
+            gap: 0.6rem 1rem;
+        }
+
+        .section-heading {
+            flex-basis: 100%;
+        }
+    }
+</style>

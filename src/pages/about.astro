@@ -1,6 +1,9 @@
 ---
 export const prerender = true;
 import Layout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import { Wrench, Heart, Monitor, GitGraph } from 'lucide-astro';
 // 表示する中身は src/data/about.ts にまとめてある
 import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../data/about';
 ---
@@ -8,17 +11,18 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
 <Layout
     title="自己紹介 / About Me"
     description="トラマトのプロフィール、経歴、技術、環境など"
+    width="narrow"
 >
     <div class="about-content">
-        {/* 1. bio */}
-        <section class="bio" data-reveal>
-            <div class="bio-prompt">
-                <span class="env-dollar">$</span><span class="bio-typed"
-                    >cat ./README.md</span
-                >
-            </div>
+        <PageHeader
+            command="cat ./README.md"
+            title="About"
+            description="トラマトのプロフィール、経歴、技術、環境など"
+        />
 
-            <div class="bio-body reveal-item">
+        {/* 1. bio */}
+        <section class="bio">
+            <div class="bio-body" data-reveal>
                 <p>
                     電気通信大学 情報理工学域 I 類の
                     <strong>ToraMutton / トラマト</strong>です。 寅松
@@ -30,10 +34,12 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
             </div>
 
             <a
-                class="bio-cta env-cmd reveal-item"
+                class="bio-cta env-cmd"
                 href="https://note.com/toramutton/n/n338320294cf6"
                 target="_blank"
                 rel="noopener noreferrer"
+                data-reveal
+                style="--i: 1"
             >
                 <span class="env-dollar">$</span>
                 <span class="env-cmd-text">cat ~/profile/intro.md</span>
@@ -44,8 +50,11 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
             </a>
         </section>
 
-        {/* 4. Skills & Tools */}
-        <h2>Skills & Tools</h2>
+        {/* 2. Skills & Tools */}
+        <SectionHeading>
+            <Wrench size={20} class="heading-icon" />
+            Skills & Tools
+        </SectionHeading>
 
         <section class="skill-section">
             <p class="skill-intro"># 使用している言語とかツールとか</p>
@@ -69,11 +78,12 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
                             <span class="skill-cmd-text">{group.cmd}</span>
                             <span class="env-comment">// {group.note}</span>
                         </div>
-                        <div class="skill-grid" data-reveal>
-                            {group.items.map((skill) => (
+                        <div class="skill-grid">
+                            {group.items.map((skill, i) => (
                                 <div
-                                    class="skill-card reveal-item"
-                                    tabindex="0"
+                                    class="skill-card ui-card ui-card-hover"
+                                    data-reveal
+                                    style={`--i: ${i}`}
                                 >
                                     <span
                                         class={`icon-wrapper ${skill.darkInvert ? "dark-invert" : ""}`}
@@ -96,13 +106,13 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
                                             role="img"
                                             aria-label={`熟練度 ${skill.level} / 5`}
                                         >
-                                            {[1, 2, 3, 4, 5].map((i) => (
+                                            {[1, 2, 3, 4, 5].map((n) => (
                                                 <span
                                                     class:list={[
                                                         "lv-seg",
                                                         {
                                                             "is-on":
-                                                                i <=
+                                                                n <=
                                                                 skill.level,
                                                         },
                                                     ]}
@@ -118,11 +128,18 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
             }
         </section>
 
-        {/* 2. Interests & Hobbies */}
-        <h2>Interests & Hobbies</h2>
+        {/* 3. Interests & Hobbies */}
+        <SectionHeading>
+            <Heart size={20} class="heading-icon" />
+            Interests & Hobbies
+        </SectionHeading>
 
         <div class="environments">
-            <div class="env-terminal" aria-label="interests config">
+            <div
+                class="env-terminal ui-card"
+                aria-label="interests config"
+                data-reveal
+            >
                 <div class="env-line env-promptline">
                     <span class="env-dollar">$</span>
                     <span class="env-typed">cat ~/.config/interests</span>
@@ -147,11 +164,18 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
             </div>
         </div>
 
-        {/* 3. Environments */}
-        <h2 id="trapezium">Environments</h2>
+        {/* 4. Environments */}
+        <SectionHeading id="trapezium">
+            <Monitor size={20} class="heading-icon" />
+            Environments
+        </SectionHeading>
 
         <div class="environments">
-            <div class="env-terminal" aria-label="environments config">
+            <div
+                class="env-terminal ui-card"
+                aria-label="environments config"
+                data-reveal
+            >
                 {/* prompt */}
                 <div class="env-line env-promptline">
                     <span class="env-dollar">$</span>
@@ -201,15 +225,18 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
         </div>
 
         {/* 5. Timeline (git log style) */}
-        <h2>Timeline</h2>
+        <SectionHeading>
+            <GitGraph size={20} class="heading-icon" />
+            Timeline
+        </SectionHeading>
         <div class="timeline" data-reveal>
             <div class="timeline-line" aria-hidden="true"></div>
             <div class="git-line" aria-hidden="true">
                 <span class="git-dollar">$</span> git log --oneline --graph
             </div>
             {
-                TIMELINE.map((item) => (
-                    <div class="git-row reveal-item">
+                TIMELINE.map((item, i) => (
+                    <div class="git-row" style={`--i: ${i}`}>
                         <span class="git-date">{item.date}</span>
                         <span class="git-msg">{item.desc}</span>
                     </div>
@@ -218,132 +245,15 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
         </div>
     </div>
 
-    <script>
-        // === h2 下線 reveal ===
-        const h2Observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add("visible");
-                    }
-                });
-            },
-            { threshold: 0.5 },
-        );
-        document.querySelectorAll(".about-content h2").forEach((h2) => {
-            h2Observer.observe(h2);
-        });
-
-        const reduceMotion = window.matchMedia(
-            "(prefers-reduced-motion: reduce)",
-        ).matches;
-
-        if (!reduceMotion) {
-            // === 汎用 stagger reveal（[data-reveal] 内の .reveal-item）===
-            const revealObserver = new IntersectionObserver(
-                (entries, obs) => {
-                    entries.forEach((entry) => {
-                        if (entry.isIntersecting) {
-                            entry.target.classList.add("is-revealed");
-                            obs.unobserve(entry.target);
-                        }
-                    });
-                },
-                { threshold: 0.12 },
-            );
-            document
-                .querySelectorAll<HTMLElement>("[data-reveal]")
-                .forEach((container) => {
-                    const items = Array.from(
-                        container.querySelectorAll<HTMLElement>(".reveal-item"),
-                    );
-                    items.forEach((el, i) => {
-                        el.style.transitionDelay = `${i * 50}ms`;
-                    });
-                    container.classList.add("reveal-ready");
-                    revealObserver.observe(container);
-                });
-
-            // === Timeline: 線の描画とダイヤモンドマーカーを同期 ===
-            document
-                .querySelectorAll<HTMLElement>(".timeline")
-                .forEach((timeline) => {
-                    const rows = Array.from(
-                        timeline.querySelectorAll<HTMLElement>(".git-row"),
-                    );
-                    const lineDuration = rows.length * 130 + 300; // ms
-                    timeline.style.setProperty(
-                        "--line-duration",
-                        `${lineDuration}ms`,
-                    );
-                    rows.forEach((row, i) => {
-                        const delay = (i / rows.length) * lineDuration;
-                        row.style.setProperty("--delay", `${delay}ms`);
-                    });
-                });
-
-            // === ターミナルブロック（env / interests）の行 stagger reveal ===
-            const termObserver = new IntersectionObserver(
-                (entries, obs) => {
-                    entries.forEach((entry) => {
-                        if (entry.isIntersecting) {
-                            entry.target.classList.add("is-revealed");
-                            obs.unobserve(entry.target);
-                        }
-                    });
-                },
-                { threshold: 0.15 },
-            );
-            document
-                .querySelectorAll<HTMLElement>(".env-terminal")
-                .forEach((term) => {
-                    const lines = Array.from(
-                        term.querySelectorAll<HTMLElement>(".env-line"),
-                    );
-                    lines.forEach((el, i) => {
-                        el.style.transitionDelay = `${i * 40}ms`;
-                    });
-                    term.classList.add("reveal-ready");
-                    termObserver.observe(term);
-                });
-        }
-    </script>
-
     <style>
-        /* === 1. 基本設定・リセット === */
-        :global(.last-updated-on),
-        :global(time) {
-            display: none;
-        }
-
+        /* === 1. 基本設定 === */
         .about-content {
             line-height: 1.8;
             color: var(--text-main);
-            padding-top: 2.5rem;
         }
 
-        /* === h2のカスタム設定 === */
-        .about-content h2 {
-            position: relative;
-            display: block;
-            width: 100%;
-            margin-top: 4rem;
-            margin-bottom: 1.5rem;
-            border: none !important;
-            padding-bottom: 5px;
-        }
-        .about-content h2::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            bottom: 0;
-            height: 1px;
-            width: 0%;
-            background-color: var(--accent-blue);
-            transition: width 0.8s ease-out;
-        }
-        .about-content h2.visible::after {
-            width: 100%;
+        .heading-icon {
+            color: var(--accent-blue);
         }
 
         /* === ライトモード視認性調整 === */
@@ -353,61 +263,9 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
             }
         }
 
-        /* === 汎用 stagger reveal === */
-        [data-reveal] .reveal-item {
-            transition:
-                opacity 0.5s ease,
-                transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        [data-reveal].reveal-ready:not(.is-revealed) .reveal-item {
-            opacity: 0;
-            transform: translateY(12px);
-        }
-        @media (prefers-reduced-motion: reduce) {
-            [data-reveal] .reveal-item {
-                opacity: 1 !important;
-                transform: none !important;
-                transition: none !important;
-            }
-        }
-
-        /* === bio（散文 + ターミナル風プロンプト）=== */
+        /* === bio === */
         .bio {
             margin-bottom: 1rem;
-        }
-        .bio-prompt {
-            font-family: var(--font-mono);
-            color: var(--text-main);
-            margin-bottom: 0.9rem;
-        }
-        .bio-typed {
-            display: inline-block;
-            overflow: hidden;
-            white-space: nowrap;
-            vertical-align: bottom;
-            max-width: 0;
-            /* Hero と統一: 2px の縦棒カーソル */
-            border-right: 2px solid var(--accent-blue);
-            animation:
-                bio-typing 1s steps(15, end) 0.15s forwards,
-                bio-caret 0.7s step-end 3 1.2s;
-        }
-        @keyframes bio-typing {
-            to {
-                max-width: 16ch;
-            }
-        }
-        @keyframes bio-caret {
-            50% {
-                border-color: transparent;
-            }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .bio-typed {
-                animation: none;
-                border-right: none;
-                max-width: none;
-            }
         }
 
         .bio-body {
@@ -426,7 +284,7 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
 
         /* === Skills === */
         .skill-section {
-            margin: 2rem 0;
+            margin: 1rem 0 2rem;
         }
         .skill-intro {
             margin: 0 0 0.35rem;
@@ -473,39 +331,17 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
             gap: 0.8rem;
         }
 
-        /* --- card: 脱グラス border-card / 名前は常時表示 --- */
+        /* --- card: 枠・背景・hover は global.css の .ui-card 系 --- */
         .skill-card {
-            position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             gap: 0.6rem;
             padding: 1rem 0.4rem;
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            cursor: pointer;
-            overflow: hidden;
-            outline: none;
-            -webkit-tap-highlight-color: transparent;
-            transition: border-color 0.3s ease;
-        }
-
-        /* 斜め accent sweep（hover で左から走る = yui540 系）*/
-        .skill-card::before {
-            content: "";
-            position: absolute;
-            inset: -2px -45%;
-            background: color-mix(in srgb, var(--accent-blue) 18%, transparent);
-            transform: translateX(-135%) skewX(-14deg);
-            transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-            z-index: 0;
         }
 
         .icon-wrapper {
-            position: relative;
-            z-index: 1;
             width: 44px;
             height: 44px;
             display: flex;
@@ -523,8 +359,6 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
 
         /* 名前 + 熟練度メーターは1かたまり（card の gap とは別の詰め具合にする）*/
         .skill-meta {
-            position: relative;
-            z-index: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -557,25 +391,7 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
             opacity: 0.6;
         }
 
-        .skill-card:focus-visible {
-            border-color: var(--accent-blue);
-        }
-        .skill-card:focus-visible::before {
-            transform: translateX(0) skewX(-14deg);
-        }
-        .skill-card:focus-visible .skill-name {
-            color: var(--accent-blue);
-        }
-        .skill-card:focus-visible .lv-seg.is-on {
-            opacity: 1;
-        }
         @media (hover: hover) {
-            .skill-card:hover {
-                border-color: var(--accent-blue);
-            }
-            .skill-card:hover::before {
-                transform: translateX(0) skewX(-14deg);
-            }
             .skill-card:hover .skill-name {
                 color: var(--accent-blue);
             }
@@ -619,11 +435,11 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
 
         /* === Timeline (git log --graph 風) === */
         .timeline {
-            margin: 2rem 0 3rem;
+            margin: 1rem 0 3rem 0.35rem;
             font-family: var(--font-mono);
-            margin-left: 0.35rem;
             position: relative;
         }
+        /* 縦線は出現後に上から下へ描かれ、各行のマーカーがそれを追いかける */
         .timeline-line {
             position: absolute;
             left: 0;
@@ -633,7 +449,10 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
             background: var(--border-color);
             transform: scaleY(0);
             transform-origin: top;
-            transition: transform var(--line-duration, 1.2s) ease-out;
+            transition: transform 1.2s ease-out;
+        }
+        .timeline.is-visible .timeline-line {
+            transform: scaleY(1);
         }
         .git-line {
             color: var(--text-muted);
@@ -666,11 +485,11 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
             transform: translateX(-50%) rotate(45deg) scale(0);
             opacity: 0;
             transition:
-                transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.35s var(--ease-out),
                 opacity 0.35s ease;
-            transition-delay: var(--delay, 0s);
+            transition-delay: calc(var(--i, 0) * 130ms);
         }
-        [data-reveal].is-revealed .git-row::before {
+        .timeline.is-visible .git-row::before {
             transform: translateX(-50%) rotate(45deg) scale(1);
             opacity: 1;
         }
@@ -693,18 +512,29 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
             .git-row:hover::before {
                 transform: translateX(-50%) rotate(45deg) scale(1.3);
                 background: var(--accent-blue);
+                transition-delay: 0s;
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .timeline-line,
+            .git-row::before {
+                transition: none;
+            }
+            .timeline-line {
+                transform: scaleY(1);
+            }
+            .git-row::before {
+                transform: translateX(-50%) rotate(45deg) scale(1);
+                opacity: 1;
             }
         }
 
         /* === Environments / Interests 共通ターミナル === */
         .environments {
-            margin: 2rem 0 3rem;
+            margin: 1rem 0 3rem;
             --env-key-w: 8rem;
         }
         .env-terminal {
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
             padding: 1.25rem 1.25rem 1.4rem;
             font-family: var(--font-mono);
             font-size: 0.92rem;
@@ -774,6 +604,7 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
             padding: 0.25rem 0.5rem;
             margin: 0 -0.5rem;
             border-radius: 4px;
+            font-family: var(--font-mono);
             transition:
                 background-color 0.15s ease,
                 color 0.15s ease;
@@ -820,24 +651,6 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
             }
         }
 
-        /* ターミナル行 reveal（一度だけ）*/
-        .env-terminal .env-line {
-            transition:
-                opacity 0.4s ease,
-                transform 0.4s ease;
-        }
-        .env-terminal.reveal-ready:not(.is-revealed) .env-line {
-            opacity: 0;
-            transform: translateX(-8px);
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .env-terminal .env-line {
-                opacity: 1 !important;
-                transform: none !important;
-                transition: none !important;
-            }
-        }
-
         /* === レスポンシブ === */
         @media (max-width: 900px) {
             .skill-grid {
@@ -845,9 +658,6 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
             }
         }
         @media (max-width: 768px) {
-            .about-content {
-                padding-top: 3.5rem;
-            }
             .environments {
                 --env-key-w: 6.5rem;
             }

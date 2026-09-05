@@ -2,6 +2,7 @@
 export const prerender = true;
 import { getCollection } from "astro:content";
 import Layout from "../layouts/BaseLayout.astro";
+import SectionHeading from "../components/SectionHeading.astro";
 import {
     SITE_TITLE,
     SITE_DESCRIPTION,
@@ -320,10 +321,12 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
             </section>
 
             <section class="recent-posts" data-reveal>
-                <div class="section-header">
-                    <h2>最新の記事</h2>
-                    <a href="/blog" class="view-all">すべての記事を見る →</a>
-                </div>
+                <SectionHeading>
+                    最新の記事
+                    <a href="/blog" class="view-all" slot="aside"
+                        >すべての記事を見る →</a
+                    >
+                </SectionHeading>
                 <!-- marquee outer: 実スクロールコンテナ。自動送りは JS が
                      scrollLeft を進めるだけなので、掴んで動かすことも
                      ホイール/トラックパッド/スワイプで動かすこともできる -->
@@ -333,7 +336,7 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                             latestPosts.map((post, i) => (
                                 <a
                                     href={post.url}
-                                    class="post-card-mini"
+                                    class="post-card-mini ui-card ui-card-link"
                                     style={`--i:${i}`}
                                     target={
                                         post.source !== "local"
@@ -409,8 +412,9 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
             <div class="grid-container">
                 <!-- Mini Terminal -->
                 <div
-                    class="widget-card mini-terminal-card"
+                    class="widget-card ui-card ui-card-hover mini-terminal-card"
                     data-reveal
+                    style="--i: 0"
                     data-mini-terminal
                 >
                     <div class="card-header">
@@ -461,7 +465,7 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                 </div>
 
                 <!-- GitHub Contributions -->
-                <div class="widget-card gh-card" data-reveal>
+                <div class="widget-card ui-card ui-card-hover gh-card" data-reveal style="--i: 1">
                     <div class="card-header">
                         <GitGraph class="icon-blue" size={16} />
                         <h3>GitHub Contributions</h3>
@@ -502,7 +506,7 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                 </div>
 
                 <!-- My Desktop PC -->
-                <div class="widget-card project-card" data-reveal>
+                <div class="widget-card ui-card ui-card-hover project-card" data-reveal style="--i: 2">
                     <div class="card-header">
                         <Cpu class="icon-blue" size={16} />
                         <h3>My Desktop PC</h3>
@@ -537,7 +541,7 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                 </div>
 
                 <!-- Countdown -->
-                <div class="widget-card mission-card" data-reveal>
+                <div class="widget-card ui-card ui-card-hover mission-card" data-reveal style="--i: 3">
                     <div class="card-header">
                         <Target class="icon-blue" size={16} />
                         <h3>Countdown</h3>
@@ -585,7 +589,7 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                 </div>
 
                 <!-- Uptime -->
-                <div class="widget-card uptime-card" data-reveal>
+                <div class="widget-card ui-card ui-card-hover uptime-card" data-reveal style="--i: 4">
                     <div class="card-header">
                         <Timer class="icon-blue" size={16} />
                         <h3>Uptime</h3>
@@ -623,7 +627,7 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                 </div>
 
                 <!-- Advent 2026 -->
-                <div class="widget-card advent-card" data-reveal>
+                <div class="widget-card ui-card ui-card-hover advent-card" data-reveal style="--i: 5">
                     <div class="card-header">
                         <Sparkles class="icon-blue" size={16} />
                         <h3>Advent 2026</h3>
@@ -685,7 +689,7 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
             </div>
 
             <!-- Today's Music -->
-            <div class="widget-card recommendation-card" data-reveal>
+            <div class="widget-card ui-card ui-card-hover recommendation-card" data-reveal>
                 <div class="card-header">
                     <Music class="icon-secondary" size={16} />
                     <h3>Today's Music</h3>
@@ -1089,38 +1093,6 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                         }
                     }
 
-                    // ---- widget-card stagger reveal (top → bottom) ----
-                    const revealObserver = new IntersectionObserver(
-                        (entries) => {
-                            entries
-                                .filter((e) => e.isIntersecting)
-                                .sort(
-                                    (a, b) =>
-                                        a.boundingClientRect.top -
-                                            b.boundingClientRect.top ||
-                                        a.boundingClientRect.left -
-                                            b.boundingClientRect.left,
-                                )
-                                .forEach((entry, i) => {
-                                    const el = entry.target as HTMLElement;
-                                    el.style.transitionDelay = `${i * 90}ms`;
-                                    el.classList.add("is-visible");
-                                    revealObserver.unobserve(el);
-                                    // reveal 用の delay がホバー時の border-color
-                                    // 遷移にまで残ってしまい、追従が遅く感じる
-                                    // ため、reveal 完了後に消しておく
-                                    el.addEventListener(
-                                        "transitionend",
-                                        () => {
-                                            el.style.transitionDelay = "";
-                                        },
-                                        { once: true },
-                                    );
-                                });
-                        },
-                        { threshold: 0.12, rootMargin: "0px 0px -8% 0px" },
-                    );
-
                     // ====================================
                     // Mini Terminal
                     // ====================================
@@ -1326,10 +1298,6 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                         );
                         mtObserver.observe(miniTermCard);
                     }
-
-                    document
-                        .querySelectorAll<HTMLElement>("[data-reveal]")
-                        .forEach((el) => revealObserver.observe(el));
 
                     // --- 要素取得を id ベースに切り替え ---
                     const cmdTextEl = document.getElementById("song-cmd-text");
@@ -1900,11 +1868,6 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
             transform: none;
             transition: none;
         }
-        .widget-card {
-            opacity: 1 !important;
-            transform: none !important;
-            transition: none !important;
-        }
     }
 
     /* ====================================
@@ -1938,39 +1901,9 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
     /* ====================================
        3. 最新の記事 — marquee
        ==================================== */
-    /* セクションごと reveal(下のカード群と同じ [data-reveal] の仕組み) */
+    /* 出現は全ページ共通の [data-reveal](global.css) */
     .recent-posts {
         margin: 4rem 0;
-        opacity: 0;
-        transform: translateY(16px);
-        transition:
-            opacity 0.45s ease,
-            transform 0.45s ease;
-    }
-
-    .recent-posts.is-visible {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        .recent-posts {
-            opacity: 1;
-            transform: none;
-            transition: none;
-        }
-    }
-
-    .section-header {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        margin-bottom: 1.5rem;
-    }
-
-    .section-header h2 {
-        margin: 0;
-        font-size: 1.5rem;
     }
 
     /* view-all: glass 廃止 → flat border リンク */
@@ -2057,22 +1990,16 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
     }
 
     /* ---- post-card-mini: de-glass ---- */
+    /* 枠・背景・hover(枠がシアン + オフセット影)は global.css の .ui-card 系 */
     .post-card-mini {
         display: flex;
         flex-direction: column;
         flex-shrink: 0;
         width: 280px;
-        background: var(--surface);
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
         overflow: hidden;
         text-decoration: none;
         color: var(--text-main);
         position: relative;
-        /* widget-card と同じホバー語彙(border accent + ぼかさない影) */
-        transition:
-            border-color 0.18s ease,
-            box-shadow 0.35s cubic-bezier(0.2, 0, 0.2, 1);
     }
 
     /* カード下端のアクセントバー。Countdown の mission-bar と同じく
@@ -2091,26 +2018,16 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
         z-index: 3;
     }
 
-    /* reveal: セクションが出たあと、カードが1枚ずつ持ち上がる */
+    /* reveal: セクションが出たあと、カードが1枚ずつ持ち上がる
+       (global.css の reveal-in を、セクションの .is-visible をきっかけに使う) */
     .recent-posts .post-card-mini {
         opacity: 0;
     }
 
     .recent-posts.is-visible .post-card-mini {
         opacity: 1;
-        animation: post-pop 0.5s cubic-bezier(0.2, 0, 0.2, 1) backwards;
-        animation-delay: calc(var(--i, 0) * 70ms);
-    }
-
-    @keyframes post-pop {
-        from {
-            opacity: 0;
-            transform: translateY(14px);
-        }
-        to {
-            opacity: 1;
-            transform: none;
-        }
+        animation: reveal-in 0.55s var(--ease-out) backwards;
+        animation-delay: calc(var(--i, 0) * 40ms);
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -2120,7 +2037,6 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
         .recent-posts.is-visible .post-card-mini {
             animation: none;
         }
-        .post-card-mini,
         .post-card-mini::after {
             transition: none;
         }
@@ -2152,12 +2068,6 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
         /* タイトル accent */
         .post-card-mini:hover .post-title {
             color: var(--accent-blue);
-        }
-
-        /* widget-card と揃えた border + オフセット影 */
-        .post-card-mini:hover {
-            border-color: var(--accent-blue);
-            box-shadow: 5px 5px 0 var(--accent-blue);
         }
 
         .post-card-mini:hover::after {
@@ -2207,17 +2117,19 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
         z-index: 2;
     }
 
+    /* Blog 一覧のバッジと同じ色(local はサイトのアクセント色) */
     .badge-local {
-        background: #2563eb;
+        background: var(--accent-blue);
+        color: var(--background);
     }
     .badge-note {
-        background: #2dbb9f;
+        background: var(--brand-note);
     }
     .badge-zenn {
-        background: #3ea8ff;
+        background: var(--brand-zenn);
     }
     .badge-qiita {
-        background: #55c500;
+        background: var(--brand-qiita);
     }
 
     .post-info {
@@ -2282,35 +2194,14 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
         grid-column: span 4;
     }
 
-    /* stagger reveal: JS で .is-visible を付与 */
+    /* 枠・背景は global.css の .ui-card、出現は [data-reveal]。
+       ホバーでカード自体は動かさない(座標がズレてカーソル下の対象が
+       変わってしまうため)。枠がシアンになるだけ(.ui-card-hover)。 */
     .widget-card {
         display: flex;
         flex-direction: column;
-        background: var(--surface);
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
         overflow: hidden; /* header の border-bottom が角から溢れないよう */
         position: relative;
-
-        opacity: 0;
-        transform: translateY(16px);
-        transition:
-            opacity 0.45s ease,
-            transform 0.45s ease,
-            border-color 0.18s ease;
-    }
-
-    .widget-card.is-visible {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-    /* ホバーでカード自体は動かさない(座標がズレてカーソル下の対象が
-       変わってしまうため)。動かすのは中身側だけにする。 */
-    @media (hover: hover) {
-        .widget-card:hover {
-            border-color: var(--accent-blue);
-        }
     }
 
     /* ====================================
@@ -3348,10 +3239,6 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
     }
 
     @media (max-width: 720px) {
-        .section-header h2 {
-            font-size: 1.2rem;
-        }
-
         .grid-container {
             grid-template-columns: 1fr;
             gap: 1rem;

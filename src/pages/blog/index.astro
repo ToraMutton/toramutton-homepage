@@ -2,6 +2,7 @@
 export const prerender = true;
 import { Image } from "astro:assets";
 import Layout from '../../layouts/BaseLayout.astro';
+import PageHeader from "../../components/PageHeader.astro";
 import { SITE_DESCRIPTION, SITE_TITLE } from "../../consts";
 import { getVisiblePosts } from "../../utils/post";
 // note / Zenn / Qiita の取得は src/utils/feeds.ts に集約している
@@ -35,10 +36,11 @@ const IMAGE_SOURCES = new Set(["local", "note"]);
     width="narrow"
 >
             <section class="blog-section">
-                <h1 class="blog-title">Blog</h1>
-                <p class="blog-desc">
-                    ローカル記事 + Note / Zenn / Qiita の集約フィード
-                </p>
+                <PageHeader
+                    command="ls ./blog"
+                    title="Blog"
+                    description="ローカル記事 + Note / Zenn / Qiita の集約フィード"
+                />
 
                 <!-- ツールバー: 検索 + ソート -->
                 <div class="blog-toolbar">
@@ -398,22 +400,7 @@ const IMAGE_SOURCES = new Set(["local", "note"]);
 
 <style>
 
-    /* =========================================
-       1. ヘッダ部
-       ========================================= */
-    .blog-title {
-        font-size: 2rem;
-        margin: 0 0 0.5rem;
-        color: var(--text-main);
-        font-family: var(--font-mono, "JetBrains Mono", monospace);
-        letter-spacing: -0.02em;
-    }
-
-    .blog-desc {
-        color: var(--text-muted);
-        font-size: 0.95rem;
-        margin-bottom: 2rem;
-    }
+    /* ヘッダ部は components/PageHeader.astro */
 
     /* =========================================
        2. ツールバー (検索 + ソート)
@@ -538,16 +525,16 @@ const IMAGE_SOURCES = new Set(["local", "note"]);
             border-color: var(--accent-blue);
         }
         .source-btn[data-source="zenn"]:hover {
-            color: #3ea8ff;
-            border-color: #3ea8ff;
+            color: var(--brand-zenn);
+            border-color: var(--brand-zenn);
         }
         .source-btn[data-source="note"]:hover {
-            color: #41c9b4;
-            border-color: #41c9b4;
+            color: var(--brand-note);
+            border-color: var(--brand-note);
         }
         .source-btn[data-source="qiita"]:hover {
-            color: #55c74f;
-            border-color: #55c74f;
+            color: var(--brand-qiita);
+            border-color: var(--brand-qiita);
         }
     }
 
@@ -560,16 +547,16 @@ const IMAGE_SOURCES = new Set(["local", "note"]);
         border-color: var(--accent-blue);
     }
     .source-btn.active[data-source="zenn"] {
-        color: #3ea8ff;
-        border-color: #3ea8ff;
+        color: var(--brand-zenn);
+        border-color: var(--brand-zenn);
     }
     .source-btn.active[data-source="note"] {
-        color: #41c9b4;
-        border-color: #41c9b4;
+        color: var(--brand-note);
+        border-color: var(--brand-note);
     }
     .source-btn.active[data-source="qiita"] {
-        color: #55c74f;
-        border-color: #55c74f;
+        color: var(--brand-qiita);
+        border-color: var(--brand-qiita);
     }
 
     /* =========================================
@@ -678,31 +665,22 @@ const IMAGE_SOURCES = new Set(["local", "note"]);
         border-color: var(--accent-blue);
     }
     .badge-zenn {
-        color: #3ea8ff;
-        border-color: #3ea8ff;
+        color: var(--brand-zenn);
+        border-color: var(--brand-zenn);
     }
     .badge-note {
-        color: #41c9b4;
-        border-color: #41c9b4;
+        color: var(--brand-note);
+        border-color: var(--brand-note);
     }
     .badge-qiita {
-        color: #55c74f;
-        border-color: #55c74f;
+        color: var(--brand-qiita);
+        border-color: var(--brand-qiita);
     }
 
-    /* hover 時バッジ背景がほんのり */
+    /* hover 時バッジ背景がほんのり(各ソース色の 10%) */
     @media (hover: hover) {
-        .post-link:hover .badge-local {
-            background: rgba(34, 211, 238, 0.1);
-        }
-        .post-link:hover .badge-zenn {
-            background: rgba(62, 168, 255, 0.1);
-        }
-        .post-link:hover .badge-note {
-            background: rgba(65, 201, 180, 0.1);
-        }
-        .post-link:hover .badge-qiita {
-            background: rgba(85, 199, 79, 0.1);
+        .post-link:hover .post-source-badge {
+            background: color-mix(in srgb, currentColor 10%, var(--background));
         }
     }
 
@@ -863,8 +841,8 @@ const IMAGE_SOURCES = new Set(["local", "note"]);
     .pattern-zenn {
         background-image: repeating-linear-gradient(
             135deg,
-            #3ea8ff 0,
-            #3ea8ff 2px,
+            var(--brand-zenn) 0,
+            var(--brand-zenn) 2px,
             transparent 2px,
             transparent 8px
         );
@@ -874,7 +852,7 @@ const IMAGE_SOURCES = new Set(["local", "note"]);
     .pattern-qiita {
         background-image: radial-gradient(
             circle,
-            #55c74f 1.5px,
+            var(--brand-qiita) 1.5px,
             transparent 2px
         );
         background-size: 8px 8px;
@@ -884,8 +862,8 @@ const IMAGE_SOURCES = new Set(["local", "note"]);
     .pattern-note {
         background-image: repeating-linear-gradient(
             0deg,
-            #41c9b4 0,
-            #41c9b4 1px,
+            var(--brand-note) 0,
+            var(--brand-note) 1px,
             transparent 1px,
             transparent 8px
         );
@@ -913,11 +891,6 @@ const IMAGE_SOURCES = new Set(["local", "note"]);
        10. モバイル (max-width: 720px)
        ========================================= */
     @media (max-width: 720px) {
-
-        .blog-title {
-            font-size: 1.6rem;
-        }
-
         .blog-toolbar {
             flex-direction: column;
             gap: 0.5rem;

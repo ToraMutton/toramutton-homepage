@@ -1,0 +1,98 @@
+---
+// ページ先頭の見出し。全ページで同じ形にする:
+//   $ コマンド行(mono, muted)
+//   h1(mono, 2rem)
+//   説明文(muted)
+// 右側に置きたい小さな情報(件数など)は slot="aside"、
+// タイトルの下に置きたい行(日付・タグなど)は slot="meta" に入れる。
+interface Props {
+    /** `$` の後ろに出すコマンド。例: "ls ./blog" */
+    command: string;
+    title: string;
+    description?: string;
+}
+
+const { command, title, description } = Astro.props;
+---
+
+<header class="page-header" data-reveal>
+    <p class="page-command">
+        <span class="prompt">$</span>
+        {command}
+    </p>
+    <div class="page-title-row">
+        <div class="page-title-main">
+            <h1>{title}</h1>
+            {description && <p class="page-description">{description}</p>}
+            <slot name="meta" />
+        </div>
+        <slot name="aside" />
+    </div>
+</header>
+
+<style>
+    .page-header {
+        margin: 0 0 2.5rem;
+        padding: 0 0 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .page-command {
+        margin: 0 0 0.6rem;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        font-size: 0.82rem;
+    }
+
+    .prompt {
+        color: var(--accent-blue);
+        font-weight: 700;
+    }
+
+    .page-title-row {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1.5rem;
+    }
+
+    .page-title-main {
+        min-width: 0;
+    }
+
+    h1 {
+        display: block;
+        margin: 0 0 0.35rem;
+        color: var(--text-main);
+        /* 日本語タイトルは mono が持たない字形を sans で補う */
+        font-family: var(--font-mono), var(--font-sans);
+        font-size: 2rem;
+        line-height: 1.3;
+        letter-spacing: -0.02em;
+        overflow-wrap: anywhere;
+    }
+
+    .page-description {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+    }
+
+    @media (max-width: 720px) {
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .page-title-row {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+    }
+</style>

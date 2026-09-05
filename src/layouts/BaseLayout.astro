@@ -38,10 +38,46 @@ const { title, description, image, width = "default" } = Astro.props;
     </body>
 </html>
 
+<script>
+    // 全ページ共通の出現アニメーション。
+    // [data-reveal] が画面に入ったら .is-visible を付ける(見た目は global.css)。
+    // ClientRouter で遷移しても効くよう astro:page-load ごとに張り直す。
+    function initReveal() {
+        const targets = document.querySelectorAll<HTMLElement>(
+            "[data-reveal]:not(.is-visible)",
+        );
+        if (targets.length === 0) return;
+
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            targets.forEach((el) => el.classList.add("is-visible"));
+            return;
+        }
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    if (!entry.isIntersecting) continue;
+                    entry.target.classList.add("is-visible");
+                    observer.unobserve(entry.target);
+                }
+            },
+            { threshold: 0.08, rootMargin: "0px 0px -6% 0px" },
+        );
+        targets.forEach((el) => observer.observe(el));
+        document.addEventListener(
+            "astro:before-swap",
+            () => observer.disconnect(),
+            { once: true },
+        );
+    }
+    document.addEventListener("astro:page-load", initReveal);
+    initReveal();
+</script>
+
 <style>
     /* 読み物向け。固定ヘッダーに隠れないよう上に余白を取る */
     main.narrow {
-        max-width: 900px;
+        max-width: var(--max-width-narrow);
         margin: 0 auto;
         padding: 6rem 1.5rem 3rem;
     }

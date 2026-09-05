@@ -52,7 +52,8 @@ const dateLabel =
     href={clickable ? url : undefined}
     class:list={[
         "day-card",
-        clickable ? "open" : "locked",
+        "ui-card",
+        clickable ? "open ui-card-link" : "locked",
         { special, clickable },
     ]}
     target={isExternal ? "_blank" : undefined}
@@ -133,10 +134,10 @@ const dateLabel =
             }
         </span>
     </div>
-    <span class="accent-sweep" aria-hidden="true"></span>
 </Tag>
 
 <style>
+    /* 枠・背景・hover(枠がシアン + オフセット影)は global.css の .ui-card 系 */
     .day-card {
         position: relative;
         display: flex;
@@ -145,22 +146,8 @@ const dateLabel =
         height: 100%;
         min-height: 158px;
         padding: 0.8rem;
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius);
-        background: var(--surface);
         color: var(--text-main);
         text-decoration: none;
-        overflow: hidden;
-        isolation: isolate;
-        transition:
-            border-color 0.25s ease,
-            background 0.25s ease,
-            transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    .day-card > :not(.accent-sweep) {
-        position: relative;
-        z-index: 1;
     }
 
     .day-card.locked {
@@ -182,7 +169,7 @@ const dateLabel =
     }
 
     .day-label {
-        font-size: 0.55rem;
+        font-size: 0.7rem;
         letter-spacing: 0.1em;
         color: var(--text-muted);
     }
@@ -226,7 +213,7 @@ const dateLabel =
     }
 
     .locked .day-title {
-        font-size: 0.65rem;
+        font-size: 0.72rem;
         color: var(--text-muted);
     }
 
@@ -239,7 +226,7 @@ const dateLabel =
         padding-top: 0.45rem;
         border-top: 1px solid var(--border-color);
         font-family: var(--font-mono);
-        font-size: 0.55rem;
+        font-size: 0.7rem;
         letter-spacing: 0.035em;
         color: var(--text-muted);
     }
@@ -265,33 +252,7 @@ const dateLabel =
         height: 100%;
         object-fit: cover;
         border-radius: 0;
-        box-shadow: none;
-        transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    .accent-sweep {
-        position: absolute;
-        inset: 0;
-        z-index: 0;
-        pointer-events: none;
-        background: linear-gradient(
-            110deg,
-            transparent 20%,
-            color-mix(in srgb, var(--accent-blue) 8%, transparent) 50%,
-            transparent 80%
-        );
-        transform: translateX(-110%);
-        transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    .clickable:focus-visible {
-        outline: 2px solid var(--accent-blue);
-        outline-offset: 3px;
-        border-color: var(--accent-blue);
-    }
-
-    .clickable:focus-visible .accent-sweep {
-        transform: translateX(0);
+        transition: transform 0.4s var(--ease-out);
     }
 
     .special {
@@ -334,7 +295,7 @@ const dateLabel =
         border-top: 0;
         padding-top: 0;
         gap: 0.6rem;
-        font-size: 0.56rem;
+        font-size: 0.7rem;
     }
 
     .special .day-thumbnail {
@@ -343,21 +304,14 @@ const dateLabel =
     }
 
     @media (hover: hover) {
-        .clickable:hover {
-            transform: translateY(-3px);
-            border-color: var(--accent-blue);
-        }
-
-        .clickable:hover .accent-sweep {
-            transform: translateX(0);
-        }
-
         .clickable:hover .day-thumbnail :global(img) {
             transform: scale(1.06);
         }
     }
 
     @media (max-width: 720px) {
+        /* 1列表示では Blog 一覧と同じ「罫線で区切った行」になる。
+           影は行には合わないので外し、hover は下線の色だけ変える */
         .day-card:not(.special) {
             flex-direction: row;
             align-items: center;
@@ -368,6 +322,10 @@ const dateLabel =
             border-bottom: 1px solid var(--border-color);
             border-radius: 0;
             background: transparent;
+        }
+
+        .day-card:not(.special):hover {
+            box-shadow: none;
         }
 
         .day-top {
@@ -385,7 +343,7 @@ const dateLabel =
         }
 
         .day-label {
-            font-size: 0.52rem;
+            font-size: 0.7rem;
         }
 
         .day-body {
@@ -400,7 +358,7 @@ const dateLabel =
         .day-meta {
             border-top: 0;
             padding-top: 0;
-            font-size: 0.55rem;
+            font-size: 0.7rem;
         }
 
         .day-thumbnail {
@@ -452,13 +410,10 @@ const dateLabel =
     }
 
     @media (prefers-reduced-motion: reduce) {
-        .day-card,
-        .accent-sweep,
         .day-thumbnail :global(img) {
             transition: none;
         }
 
-        .clickable:hover,
         .clickable:hover .day-thumbnail :global(img) {
             transform: none;
         }
