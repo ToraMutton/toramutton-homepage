@@ -16,19 +16,26 @@ import {
 type Icon = typeof Cake;
 
 // =====================================================
-// ヒーロー右側の "// status" ブロック
+// ヒーロー左側のターミナル: whoami の下に出るコメント行
+// =====================================================
+export const heroComments: string[] = ["電通大 I 類", "Web / Compilers / LLM"];
+
+// =====================================================
+// ヒーロー右側の "$ cat status.toml" ブロック
 // =====================================================
 export interface HeroSpec {
   key: string;
   value: string;
-  /** true にすると緑の点が付く。稼働状態の1行だけを想定 */
+  /** true にするとアクセント色の点が脈打つ。稼働状態の1行だけを想定 */
   live?: boolean;
+  /** true にすると値を省略表示し、クリックで全文をクリップボードにコピーする */
+  copy?: boolean;
 }
 
 export const heroSpecs: HeroSpec[] = [
   { key: "name", value: "トラマト / 寅松 / toramutton" },
   { key: "univ", value: "UEC25 Class A" },
-  { key: "UUID", value: "1b45a0db-7238-47e4-b95e-206522388c88" },
+  { key: "uuid", value: "1b45a0db-7238-47e4-b95e-206522388c88", copy: true },
   { key: "stack", value: "Rust / TS / C" },
   { key: "status", value: "online", live: true },
 ];

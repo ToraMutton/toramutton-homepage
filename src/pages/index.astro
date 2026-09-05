@@ -33,11 +33,17 @@ import {
 } from "lucide-astro";
 // 表示する中身は src/data/home.ts にまとめてある
 import {
+    heroComments,
     heroSpecs,
     terminalCommands,
     missions,
     uptimes,
 } from "../data/home";
+import { songs } from "../data/songs";
+
+// uuid のような長い値は先頭と末尾だけ見せる(全文はクリックでコピー)
+const shorten = (v: string) =>
+    v.length > 20 ? `${v.slice(0, 8)}…${v.slice(-4)}` : v;
 
 // === 記事一覧 ===
 const isDev = import.meta.env.DEV;
@@ -165,31 +171,30 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                                     class="terminal-avatar-img"
                                 />
                             </div>
-                            <p class="line" style="--i: 0">
+                            <!-- 行は JS(playHero)が上から順に打つ。
+                                 [data-type] を持つ span は1文字ずつタイプされ、
+                                 それ以外の行は前の行が終わった後にフェードで出る -->
+                            <p class="line">
                                 <span class="prompt">$</span>
-                                <span class="cmd"
-                                    ><span class="typewriter">whoami</span
-                                    ></span
-                                >
+                                <span class="cmd" data-type>whoami</span>
                             </p>
-                            <p class="line" style="--i: 1">
+                            <p class="line">
                                 <span class="output">ToraMutton</span>
                             </p>
-                            <p class="line line-blank" style="--i: 2"></p>
-                            <p class="line line-comment" style="--i: 3">
-                                <span class="comment"># 電通大 I 類</span>
-                            </p>
-                            <p class="line line-comment" style="--i: 4">
-                                <span class="comment"
-                                    ># Web / Compilers / LLM</span
-                                >
-                            </p>
-                            <p class="line line-blank" style="--i: 5"></p>
-                            <p class="line" style="--i: 6">
+                            <p class="line line-blank"></p>
+                            {
+                                heroComments.map((c) => (
+                                    <p class="line line-comment">
+                                        <span class="comment"># {c}</span>
+                                    </p>
+                                ))
+                            }
+                            <p class="line line-blank"></p>
+                            <p class="line">
                                 <span class="prompt">$</span>
-                                <span class="cmd">ls ./social</span>
+                                <span class="cmd" data-type>ls ./social</span>
                             </p>
-                            <div class="line social-links" style="--i: 7">
+                            <div class="line social-links">
                                 <a
                                     href={GITHUB_URL}
                                     target="_blank"
@@ -281,37 +286,64 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                                     <Twitter size={14} /><span>tech</span>
                                 </a> -->
                             </div>
-                            <p class="line line-blank" style="--i: 8"></p>
-                            <p class="line" style="--i: 9">
+                            <p class="line line-blank"></p>
+                            <p class="line">
                                 <span class="prompt">$</span>
                                 <a href="/about" class="cmd cmd-link">
-                                    cd ./about<span class="cursor-arrow">
-                                        →</span
+                                    <span data-type>cd ./about</span><span
+                                        class="cursor-arrow">→</span
                                     >
                                 </a>
                             </p>
                         </div>
                     </div>
 
-                    <!-- 右カラム: spec-list -->
-                    <aside class="spec-block" style="--i: 2">
-                        <p class="spec-block-title">// status</p>
+                    <!-- 右カラム: status。左のターミナルが打ち終わった後に
+                         `$ cat status.toml` を打ち、行を順に出す(JS: playHero) -->
+                    <aside class="spec-block" data-status>
+                        <p class="line spec-block-title">
+                            <span class="prompt">$</span>
+                            <span class="cmd" data-type>cat status.toml</span>
+                        </p>
                         <ul class="spec-list">
                             {
                                 heroSpecs.map((spec) => (
-                                    <li>
+                                    <li class="line">
                                         <span class="spec-key">{spec.key}</span>
-                                        <span
-                                            class:list={[
-                                                "spec-val",
-                                                spec.live && "spec-val-live",
-                                            ]}
-                                        >
-                                            {spec.live && (
-                                                <span class="dot-live" />
-                                            )}
-                                            {spec.value}
-                                        </span>
+                                        <span class="spec-eq">=</span>
+                                        {spec.copy ? (
+                                            <button
+                                                type="button"
+                                                class="spec-val spec-val-copy"
+                                                data-copy={spec.value}
+                                                title={spec.value}
+                                                aria-label={`${spec.key} をコピー`}
+                                            >
+                                                <span
+                                                    class="spec-str"
+                                                    set:text={shorten(spec.value)}
+                                                />
+                                                <span
+                                                    class="spec-copied"
+                                                    set:text="copied!"
+                                                />
+                                            </button>
+                                        ) : (
+                                            <span
+                                                class:list={[
+                                                    "spec-val",
+                                                    spec.live && "spec-val-live",
+                                                ]}
+                                            >
+                                                {spec.live && (
+                                                    <span class="dot-live" />
+                                                )}
+                                                <span
+                                                    class="spec-str"
+                                                    set:text={spec.value}
+                                                />
+                                            </span>
+                                        )}
                                     </li>
                                 ))
                             }
@@ -412,33 +444,33 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
             <div class="grid-container">
                 <!-- Mini Terminal -->
                 <div
-                    class="widget-card ui-card ui-card-hover mini-terminal-card"
+                    class="widget-card ui-card ui-card-hover term-card mini-terminal-card"
                     data-reveal
                     style="--i: 0"
                     data-mini-terminal
                 >
                     <div class="card-header">
-                        <span class="mini-terminal-dots" id="mt-dots">
+                        <span class="term-dots" data-dots>
                             <i
-                                data-mt-dot="red"
+                                data-dot="red"
                                 role="button"
                                 tabindex="0"
                                 aria-label="reroll"></i>
                             <i
-                                data-mt-dot="yellow"
+                                data-dot="yellow"
                                 role="button"
                                 tabindex="0"
                                 aria-label="reroll"></i>
                             <i
-                                data-mt-dot="green"
+                                data-dot="green"
                                 role="button"
                                 tabindex="0"
                                 aria-label="reroll"></i>
                         </span>
-                        <span class="mini-terminal-title">~/toramutton</span>
+                        <span class="term-title">~/toramutton</span>
                     </div>
                     <div
-                        class="card-body mini-terminal-body"
+                        class="card-body term-body mini-terminal-body"
                         id="mini-terminal-body"
                     >
                         {
@@ -688,159 +720,260 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
 
             </div>
 
-            <!-- Today's Music -->
-            <div class="widget-card ui-card ui-card-hover recommendation-card" data-reveal>
+            <!-- Today's Music: `$ play --random` を打って曲名をグリッチ表示し、
+                 下の再生バーが伸び切ったら次の曲へ(画面内にあるときだけ)。
+                 ヘッダーのドットは Mini Terminal と同じ演出で再抽選 -->
+            <div
+                class="widget-card ui-card ui-card-hover term-card music-card"
+                data-reveal
+                data-music
+            >
                 <div class="card-header">
-                    <Music class="icon-secondary" size={16} />
+                    <span class="term-dots" data-dots>
+                        <i
+                            data-dot="red"
+                            role="button"
+                            tabindex="0"
+                            aria-label="next song"></i>
+                        <i
+                            data-dot="yellow"
+                            role="button"
+                            tabindex="0"
+                            aria-label="next song"></i>
+                        <i
+                            data-dot="green"
+                            role="button"
+                            tabindex="0"
+                            aria-label="next song"></i>
+                    </span>
+                    <Music class="icon-blue" size={16} />
                     <h3>Today's Music</h3>
+                    <span class="music-count">{songs.length} tracks</span>
                 </div>
-                <div id="song-display" class="song-container">
-                    <p class="song-cmd-line" id="song-cmd-line">
-                        <span class="song-cmd-prompt">$</span><span
-                            id="song-cmd-text"></span>
+                <div class="card-body term-body music-body" id="music-body">
+                    <p class="mt-line">
+                        <span class="mt-prompt">$</span>
+                        <span class="mt-cmd" id="music-cmd"></span>
                     </p>
-                    <p class="song-title" id="song-title">
-                        <span id="song-title-text"></span><span
-                            class="song-cursor"
-                            id="song-cursor"></span>
-                    </p>
-                    <p class="song-year-wrapper" id="song-year-wrapper">
-                        released in <span id="song-year" class="song-year"
-                            >----</span
-                        >
-                    </p>
+                    <div class="music-now" id="music-now">
+                        <span class="music-note" aria-hidden="true">♪</span>
+                        <div class="music-text">
+                            <p class="music-title">
+                                <span id="music-title"></span><span
+                                    class="music-cursor"
+                                    id="music-cursor"></span>
+                            </p>
+                            <p class="music-meta" id="music-meta">
+                                <span id="music-artist"></span>
+                                <span class="music-sep">·</span>
+                                <span id="music-year"></span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="music-bar" aria-hidden="true">
+                        <div class="music-bar-fill" id="music-bar-fill"></div>
+                    </div>
                 </div>
-                <button id="next-song-btn" class="secondary-btn">
-                    reload →
-                </button>
             </div>
 
             <!-- Uptime counter script -->
             <script>
                 import { songs } from "../data/songs";
+                import {
+                    createTimers,
+                    typeText,
+                    glitchType,
+                    wait,
+                    bindDots,
+                    reduceMotion,
+                } from "../utils/typewriter";
 
                 let uptimeTimer: ReturnType<typeof setInterval> | null = null;
 
                 document.addEventListener("astro:page-load", () => {
-                    // ★ タイマー管理を一番上に移動
-                    let mtTimers: ReturnType<typeof setTimeout>[] = [];
-                    const addMtTimer = (fn: () => void, ms: number) => {
-                        mtTimers.push(setTimeout(fn, ms));
-                    };
-                    const clearMtTimers = () => {
-                        mtTimers.forEach(clearTimeout);
-                        mtTimers = [];
-                    };
+                    // 各ウィジェットのタイマー。再抽選時に一括キャンセルする
+                    const heroTimers = createTimers();
+                    const mtTimers = createTimers();
+                    const musicTimers = createTimers();
 
-                    let musicTimers: ReturnType<typeof setTimeout>[] = [];
-                    const addMusicTimer = (fn: () => void, ms: number) => {
-                        musicTimers.push(setTimeout(fn, ms));
-                    };
-                    const clearMusicTimers = () => {
-                        musicTimers.forEach(clearTimeout);
-                        musicTimers = [];
-                    };
-
+                    // ====================================
+                    // Hero: whoami ターミナル + status
+                    // ====================================
+                    // 左のターミナルの行を上から順に「打つ / 出す」。
+                    // 終わったら右の status ブロックを同じ要領で流す。
                     const hero =
                         document.querySelector<HTMLElement>("[data-hero]");
-                    if (hero) {
-                        const trigger = () =>
-                            requestAnimationFrame(() =>
-                                hero.setAttribute("data-loaded", ""),
+                    const terminal =
+                        hero?.querySelector<HTMLElement>(".terminal");
+                    const termBody =
+                        terminal?.querySelector<HTMLElement>(".terminal-body");
+                    const statusBlock =
+                        hero?.querySelector<HTMLElement>("[data-status]");
+
+                    // data-type を持つ span は元の文字列を data-text に退避して
+                    // 空にしておく(打つときに戻す)
+                    hero?.querySelectorAll<HTMLElement>("[data-type]").forEach(
+                        (el) => {
+                            if (el.dataset.text === undefined) {
+                                el.dataset.text = el.textContent?.trim() ?? "";
+                            }
+                            el.textContent = "";
+                        },
+                    );
+
+                    // 1行を「見せる」。打つ文字があればそこで待つ
+                    async function playLine(
+                        line: HTMLElement,
+                        gapMs: number,
+                        timers = heroTimers,
+                    ) {
+                        line.classList.add("is-shown");
+                        const target =
+                            line.querySelector<HTMLElement>("[data-type]");
+                        if (target) {
+                            await typeText(
+                                target,
+                                target.dataset.text ?? "",
+                                timers,
                             );
+                            line.classList.add("is-typed");
+                            await wait(timers, 220);
+                        } else if (!line.classList.contains("line-blank")) {
+                            await wait(timers, gapMs);
+                        }
+                    }
+
+                    async function playHero() {
+                        if (!hero || !termBody) return;
+                        heroTimers.clear();
+                        hero.querySelectorAll<HTMLElement>(
+                            ".line",
+                        ).forEach((l) => l.classList.remove("is-shown", "is-typed"));
+
+                        // 少し待ってから開始(reveal と被らないように)
+                        await wait(heroTimers, reduceMotion() ? 0 : 350);
+                        for (const line of termBody.querySelectorAll<HTMLElement>(
+                            ":scope > .line",
+                        )) {
+                            await playLine(line, 160);
+                        }
+                        if (!statusBlock) return;
+                        for (const line of statusBlock.querySelectorAll<HTMLElement>(
+                            ".line",
+                        )) {
+                            await playLine(line, 70);
+                        }
+                    }
+
+                    if (hero) {
+                        const start = () =>
+                            requestAnimationFrame(() => {
+                                hero.setAttribute("data-loaded", "");
+                                playHero();
+                            });
                         document.fonts?.ready
-                            ? document.fonts.ready.then(trigger)
-                            : trigger();
+                            ? document.fonts.ready.then(start)
+                            : start();
                     }
 
                     // ---- Terminal dots easter egg ----
-                    const terminal =
-                        document.querySelector<HTMLElement>(".terminal");
-                    const termBody =
-                        terminal?.querySelector<HTMLElement>(".terminal-body");
+                    // 赤: exit → 再起動して最初から打ち直す
+                    // 黄: 縮んで消えて戻る
+                    // 緑: 何も起きない(コメントだけ出す)
+                    const heroLine = (text: string, kind: "cmd" | "comment") => {
+                        const p = document.createElement("p");
+                        p.className = "line is-shown";
+                        p.innerHTML =
+                            kind === "cmd"
+                                ? `<span class="prompt">$</span><span class="cmd">${text}</span>`
+                                : `<span class="comment"># ${text}</span>`;
+                        termBody?.appendChild(p);
+                        return p;
+                    };
 
                     terminal
                         ?.querySelectorAll<HTMLElement>("i[data-dot]")
                         .forEach((dot) => {
                             dot.addEventListener("click", () => {
+                                if (!termBody) return;
                                 if (terminal.classList.contains("is-busy"))
                                     return;
                                 const kind = dot.dataset.dot;
-                                if (kind === "red")
-                                    exitDot(terminal, termBody!);
-                                if (kind === "yellow") minimizeDot(terminal);
-                                if (kind === "green") maxDot(termBody!);
+                                if (kind === "red") {
+                                    terminal.classList.add("is-busy");
+                                    heroTimers.clear();
+                                    heroLine("exit 0", "cmd");
+                                    setTimeout(() => {
+                                        termBody.style.cssText =
+                                            "opacity:0; transition:opacity 0.3s ease";
+                                        setTimeout(() => {
+                                            // 元の行は隠すだけにして、再起動メッセージを重ねる
+                                            const originals = Array.from(
+                                                termBody.children,
+                                            ) as HTMLElement[];
+                                            originals.forEach((el) =>
+                                                el.classList.remove("is-shown"),
+                                            );
+                                            termBody.lastElementChild?.remove(); // exit 行
+                                            const msgs = [
+                                                heroLine("Connection closed.", "comment"),
+                                                heroLine("Rebooting...", "comment"),
+                                            ];
+                                            termBody.style.cssText =
+                                                "opacity:1; transition:opacity 0.3s ease";
+                                            setTimeout(() => {
+                                                termBody.style.cssText =
+                                                    "opacity:0; transition:opacity 0.3s ease";
+                                                setTimeout(() => {
+                                                    msgs.forEach((m) => m.remove());
+                                                    termBody.style.cssText = "";
+                                                    terminal.classList.remove("is-busy");
+                                                    playHero();
+                                                }, 320);
+                                            }, 1200);
+                                        }, 350);
+                                    }, 600);
+                                } else if (kind === "yellow") {
+                                    terminal.classList.add("is-minimizing", "is-busy");
+                                    setTimeout(() => {
+                                        terminal.classList.remove("is-minimizing");
+                                        setTimeout(
+                                            () => terminal.classList.remove("is-busy"),
+                                            350,
+                                        );
+                                    }, 580);
+                                } else {
+                                    const msg = heroLine(
+                                        "nothing to maximize here :)",
+                                        "comment",
+                                    );
+                                    setTimeout(() => {
+                                        msg.style.cssText =
+                                            "opacity:0; transition:opacity 0.3s ease";
+                                        setTimeout(() => msg.remove(), 320);
+                                    }, 1500);
+                                }
                             });
                         });
 
-                    function exitDot(
-                        terminal: HTMLElement,
-                        termBody: HTMLElement,
-                    ) {
-                        terminal.classList.add("is-busy");
-                        const saved = termBody.innerHTML;
-
-                        const exitLine = document.createElement("p");
-                        exitLine.className = "line";
-                        exitLine.innerHTML = `<span class="prompt">$</span><span class="cmd"> exit 0</span>`;
-                        termBody.appendChild(exitLine);
-
-                        setTimeout(() => {
-                            termBody.style.cssText =
-                                "opacity:0; transition:opacity 0.3s ease";
-                            setTimeout(() => {
-                                termBody.innerHTML = `
-                        <p class="line"><span class="comment"># Connection closed.</span></p>
-                        <p class="line"><span class="comment"># Rebooting...</span></p>
-                    `;
-                                termBody.style.cssText =
-                                    "opacity:1; transition:opacity 0.3s ease";
-                                setTimeout(() => {
-                                    termBody.style.cssText =
-                                        "opacity:0; transition:opacity 0.3s ease";
-                                    setTimeout(() => {
-                                        termBody.innerHTML = saved;
-                                        termBody.style.cssText = "";
-                                        terminal.classList.remove("is-busy");
-                                        const hero =
-                                            document.querySelector(
-                                                "[data-hero]",
-                                            );
-                                        hero?.removeAttribute("data-loaded");
-                                        requestAnimationFrame(() =>
-                                            hero?.setAttribute(
-                                                "data-loaded",
-                                                "",
-                                            ),
-                                        );
-                                    }, 320);
-                                }, 1200);
-                            }, 350);
-                        }, 600);
-                    }
-
-                    function minimizeDot(terminal: HTMLElement) {
-                        terminal.classList.add("is-minimizing", "is-busy");
-                        setTimeout(() => {
-                            terminal.classList.remove("is-minimizing");
-                            setTimeout(
-                                () => terminal.classList.remove("is-busy"),
-                                350,
-                            );
-                        }, 580);
-                    }
-
-                    function maxDot(termBody: HTMLElement) {
-                        const msg = document.createElement("p");
-                        msg.className = "line line-comment";
-                        msg.innerHTML = `<span class="comment"># nothing to maximize here :)</span>`;
-                        termBody.appendChild(msg);
-                        setTimeout(() => {
-                            msg.style.cssText =
-                                "opacity:0; transition:opacity 0.3s ease";
-                            setTimeout(() => msg.remove(), 320);
-                        }, 1500);
-                    }
+                    // ---- status: 値クリックでコピー ----
+                    statusBlock
+                        ?.querySelectorAll<HTMLElement>("[data-copy]")
+                        .forEach((btn) => {
+                            btn.addEventListener("click", async () => {
+                                const v = btn.dataset.copy ?? "";
+                                try {
+                                    await navigator.clipboard.writeText(v);
+                                    btn.classList.add("is-copied");
+                                    setTimeout(
+                                        () => btn.classList.remove("is-copied"),
+                                        1200,
+                                    );
+                                } catch {
+                                    /* clipboard が使えない環境では何もしない */
+                                }
+                            });
+                        });
 
                     // カウントダウン処理
                     const missionItems =
@@ -911,10 +1044,6 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                             { passive: true },
                         );
                     }
-
-                    const titleEl = document.getElementById("song-title");
-                    const yearEl = document.getElementById("song-year");
-                    const btn = document.getElementById("next-song-btn");
 
                     // ---- marquee: 実スクロール + rAF による自動送り ----
                     // scrollLeft を進めるだけなので、ユーザーはいつでも
@@ -1152,53 +1281,28 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                 </p>`;
                     }
 
-                    function typeMiniTerminal() {
+                    async function typeMiniTerminal() {
                         if (!mtBody) return;
+                        mtTimers.clear();
                         const blocks =
                             mtBody.querySelectorAll<HTMLElement>(".mt-block");
                         const cursor =
                             mtBody.querySelector<HTMLElement>("#mt-cursor");
-                        let blockDelay = 0;
 
-                        blocks.forEach((block, idx) => {
+                        for (const [idx, block] of blocks.entries()) {
                             const { cmd, out } = currentCommands[idx];
                             const cmdEl =
                                 block.querySelector<HTMLElement>(".mt-cmd");
                             const outEl =
                                 block.querySelector<HTMLElement>(".mt-out");
-                            if (!cmdEl || !outEl) return;
-
-                            const startDelay = blockDelay;
-                            // ★ 全て addMtTimer に修正済み
-                            addMtTimer(() => {
-                                let charIndex = 0;
-                                const typeChar = () => {
-                                    if (charIndex < cmd.length) {
-                                        cmdEl.textContent = cmd.slice(
-                                            0,
-                                            ++charIndex,
-                                        );
-                                        addMtTimer(typeChar, 38);
-                                    } else {
-                                        outEl.textContent = out;
-                                        addMtTimer(
-                                            () =>
-                                                outEl.classList.add(
-                                                    "is-visible",
-                                                ),
-                                            80,
-                                        );
-                                    }
-                                };
-                                typeChar();
-                            }, startDelay);
-
-                            blockDelay += cmd.length * 38 + 80 + 300;
-                        });
-
-                        addMtTimer(() => {
-                            if (cursor) cursor.style.opacity = "1";
-                        }, blockDelay);
+                            if (!cmdEl || !outEl) continue;
+                            await typeText(cmdEl, cmd, mtTimers);
+                            await wait(mtTimers, 80);
+                            outEl.textContent = out;
+                            outEl.classList.add("is-visible");
+                            await wait(mtTimers, 300);
+                        }
+                        if (cursor) cursor.style.opacity = "1";
                     }
 
                     function pickNewCommands() {
@@ -1218,90 +1322,36 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                         typeMiniTerminal();
                     }
 
-                    // ---- ドットクリック演出 ----
-                    const mtDotsEl = document.getElementById("mt-dots");
-                    const mtCard = document.querySelector<HTMLElement>(
-                        ".mini-terminal-card",
-                    );
+                    // カード内に行を足す(ドット演出用)。Today's Music と共通の見た目
+                    const termLine =
+                        (body: HTMLElement) =>
+                        (text: string, kind: "cmd" | "comment") => {
+                            const p = document.createElement("p");
+                            p.className = "mt-line";
+                            p.innerHTML =
+                                kind === "cmd"
+                                    ? `<span class="mt-prompt">$</span><span class="mt-cmd">${text}</span>`
+                                    : `<span class="mt-prompt mt-prompt-muted">#</span><span class="mt-cmd">${text}</span>`;
+                            body.appendChild(p);
+                            return p;
+                        };
 
-                    mtDotsEl
-                        ?.querySelectorAll<HTMLElement>("i[data-mt-dot]")
-                        .forEach((dot) => {
-                            dot.addEventListener("click", () => {
-                                if (mtCard?.classList.contains("mt-busy"))
-                                    return;
-                                if (!mtBody) return;
-                                mtCard?.classList.add("mt-busy");
-                                const kind = dot.dataset.mtDot;
-
-                                if (kind === "red") {
-                                    const exitLine =
-                                        document.createElement("p");
-                                    exitLine.className = "mt-line";
-                                    exitLine.innerHTML = `<span class="mt-prompt">$</span><span class="mt-cmd"> exit 0</span>`;
-                                    mtBody.appendChild(exitLine);
-
-                                    setTimeout(() => {
-                                        mtBody.style.cssText =
-                                            "opacity:0; transition:opacity 0.3s ease";
-                                        setTimeout(() => {
-                                            mtBody.innerHTML = `
-                                <p class="mt-line"><span class="mt-prompt" style="color:var(--text-muted)">#</span><span class="mt-cmd"> Connection closed.</span></p>
-                                <p class="mt-line"><span class="mt-prompt" style="color:var(--text-muted)">#</span><span class="mt-cmd"> Rebooting...</span></p>`;
-                                            mtBody.style.cssText =
-                                                "opacity:1; transition:opacity 0.3s ease";
-                                            setTimeout(() => {
-                                                mtBody.style.cssText =
-                                                    "opacity:0; transition:opacity 0.3s ease";
-                                                setTimeout(() => {
-                                                    mtBody.style.cssText = "";
-                                                    rerollMiniTerminal();
-                                                    mtCard?.classList.remove(
-                                                        "mt-busy",
-                                                    );
-                                                }, 320);
-                                            }, 1000);
-                                        }, 350);
-                                    }, 500);
-                                } else if (kind === "yellow") {
-                                    mtCard?.classList.add("is-squishing");
-                                    setTimeout(() => {
-                                        rerollMiniTerminal();
-                                        mtCard?.classList.remove(
-                                            "is-squishing",
-                                        );
-                                        setTimeout(
-                                            () =>
-                                                mtCard?.classList.remove(
-                                                    "mt-busy",
-                                                ),
-                                            350,
-                                        );
-                                    }, 500);
-                                } else if (kind === "green") {
-                                    const msg = document.createElement("p");
-                                    msg.className = "mt-line";
-                                    msg.innerHTML = `<span class="mt-prompt" style="color:var(--text-muted)">#</span><span class="mt-cmd"> re-rolling...</span>`;
-                                    mtBody.appendChild(msg);
-
-                                    setTimeout(() => {
-                                        msg.style.cssText =
-                                            "opacity:0; transition:opacity 0.3s ease";
-                                        setTimeout(() => {
-                                            rerollMiniTerminal();
-                                            mtCard?.classList.remove("mt-busy");
-                                        }, 320);
-                                    }, 800);
-                                }
-                            });
+                    if (miniTermCard && mtBody) {
+                        bindDots({
+                            card: miniTermCard,
+                            body: mtBody,
+                            dots: miniTermCard.querySelectorAll<HTMLElement>(
+                                "[data-dots] i[data-dot]",
+                            ),
+                            appendLine: termLine(mtBody),
+                            reroll: rerollMiniTerminal,
                         });
 
-                    if (miniTermCard) {
                         const mtObserver = new IntersectionObserver(
                             (entries) => {
                                 entries.forEach((entry) => {
                                     if (entry.isIntersecting) {
-                                        addMtTimer(typeMiniTerminal, 300);
+                                        mtTimers.add(typeMiniTerminal, 300);
                                         mtObserver.unobserve(entry.target);
                                     }
                                 });
@@ -1311,139 +1361,123 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                         mtObserver.observe(miniTermCard);
                     }
 
-                    // --- 要素取得を id ベースに切り替え ---
-                    const cmdTextEl = document.getElementById("song-cmd-text");
-                    const titleTextEl =
-                        document.getElementById("song-title-text");
-                    const cursorEl = document.getElementById("song-cursor");
-                    const yearWrapEl =
-                        document.getElementById("song-year-wrapper");
+                    // ====================================
+                    // Today's Music
+                    // ====================================
+                    // `$ play --random` を打つ → 曲名をグリッチタイプ →
+                    // アーティスト/年をフェード → 再生バーが伸びる。
+                    // バーが伸び切ったら、カードが画面内にあるときだけ次の曲へ
+                    const musicCard =
+                        document.querySelector<HTMLElement>("[data-music]");
+                    const musicBody = document.getElementById("music-body");
+                    const musicCmd = document.getElementById("music-cmd");
+                    const musicNow = document.getElementById("music-now");
+                    const musicTitle = document.getElementById("music-title");
+                    const musicCursor = document.getElementById("music-cursor");
+                    const musicMeta = document.getElementById("music-meta");
+                    const musicArtist = document.getElementById("music-artist");
+                    const musicYear = document.getElementById("music-year");
+                    const musicBar = document.getElementById("music-bar-fill");
 
-                    const GLITCH_CHARS =
-                        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*<>/\\|";
-                    const randChar = () =>
-                        GLITCH_CHARS[
-                            Math.floor(Math.random() * GLITCH_CHARS.length)
-                        ];
+                    let currentSong = -1;
+                    let musicVisible = false;
+                    let musicEnded = false;
 
-                    // タイプライター（コマンド行）
-                    function typeCmd(text: string, onDone: () => void) {
-                        if (!cmdTextEl) return;
-                        cmdTextEl.textContent = "";
-                        let i = 0;
-                        const tick = () => {
-                            if (i >= text.length) {
-                                onDone();
-                                return;
-                            }
-                            cmdTextEl.textContent += text[i++];
-                            // ★ 全て addMusicTimer に修正済み
-                            addMusicTimer(tick, 32);
-                        };
-                        tick();
+                    function pickSong() {
+                        let i = currentSong;
+                        // 直前と同じ曲は引き直す
+                        while (songs.length > 1 && i === currentSong) {
+                            i = Math.floor(Math.random() * songs.length);
+                        }
+                        currentSong = i;
+                        return songs[i];
                     }
 
-                    // グリッチタイプライター（タイトル行）
-                    function glitchType(text: string, onDone: () => void) {
-                        if (!titleTextEl) return;
-                        titleTextEl.textContent = "";
+                    async function playSong() {
+                        if (
+                            !musicCmd ||
+                            !musicNow ||
+                            !musicTitle ||
+                            !musicMeta ||
+                            !musicArtist ||
+                            !musicYear
+                        )
+                            return;
+                        musicTimers.clear();
+                        musicEnded = false;
+                        const song = pickSong();
 
-                        const chars = [...text];
-                        let confirmed = 0;
+                        // リセット
+                        musicNow.classList.remove("is-shown");
+                        musicMeta.classList.remove("is-shown");
+                        musicCursor?.classList.remove("blink");
+                        musicBar?.classList.remove("is-playing");
+                        musicTitle.textContent = "";
 
-                        const nextChar = () => {
-                            if (confirmed >= chars.length) {
-                                onDone();
-                                return;
-                            }
+                        await typeText(musicCmd, "play --random", musicTimers, 32);
+                        await wait(musicTimers, 150);
 
-                            const targetChar = chars[confirmed];
-                            let glitchCount = 0;
-                            const shouldGlitch = /[\p{L}\p{N}]/u.test(
-                                targetChar,
-                            );
-                            const maxGlitch = shouldGlitch ? 3 : 0;
+                        musicNow.classList.add("is-shown");
+                        await glitchType(musicTitle, song.title, musicTimers);
+                        musicCursor?.classList.add("blink");
 
-                            const glitchTick = () => {
-                                if (glitchCount >= maxGlitch) {
-                                    const base = chars
-                                        .slice(0, confirmed)
-                                        .join("");
-                                    titleTextEl.textContent = base + targetChar;
-                                    confirmed++;
-                                    addMusicTimer(nextChar, 45);
-                                } else {
-                                    const base = chars
-                                        .slice(0, confirmed)
-                                        .join("");
-                                    titleTextEl.textContent = base + randChar();
-                                    glitchCount++;
-                                    addMusicTimer(glitchTick, 38);
-                                }
-                            };
-                            glitchTick();
-                        };
-                        nextChar();
+                        musicArtist.textContent = song.artist;
+                        musicYear.textContent = song.year;
+                        musicMeta.classList.add("is-shown");
+
+                        // 再生バー: 次フレームでクラスを付けて transition を走らせる
+                        await wait(musicTimers, 120);
+                        if (musicBar) {
+                            void musicBar.offsetWidth;
+                            musicBar.classList.add("is-playing");
+                        }
                     }
 
-                    // スロット年号
-                    function slotYear(targetYear: string, onDone: () => void) {
-                        if (!yearEl) return;
-                        const target = parseInt(targetYear, 10);
-                        const duration = 900;
-                        const start = performance.now();
+                    // バーが伸び切った → 見えていれば次の曲、見えていなければ
+                    // 見えたときに進める(裏でずっと切り替わらないように)
+                    const advanceIfVisible = () => {
+                        if (!musicEnded || !musicVisible || document.hidden)
+                            return;
+                        if (musicCard?.classList.contains("is-busy")) return;
+                        playSong();
+                    };
+                    musicBar?.addEventListener("transitionend", (e) => {
+                        if (e.propertyName !== "transform") return;
+                        if (!musicBar.classList.contains("is-playing")) return;
+                        musicEnded = true;
+                        advanceIfVisible();
+                    });
+                    document.addEventListener("visibilitychange", advanceIfVisible);
 
-                        const tick = (now: number) => {
-                            const elapsed = now - start;
-                            const progress = Math.min(elapsed / duration, 1);
-                            const eased = 1 - Math.pow(1 - progress, 3);
-
-                            if (progress < 1) {
-                                const display = Math.floor(
-                                    Math.random() * 10000,
-                                )
-                                    .toString()
-                                    .padStart(4, "0");
-                                yearEl.textContent = display;
-                                requestAnimationFrame(tick);
-                            } else {
-                                yearEl.textContent = targetYear;
-                                onDone();
-                            }
-                        };
-                        requestAnimationFrame(tick);
-                    }
-
-                    function updateSong() {
-                        const randomSong =
-                            songs[Math.floor(Math.random() * songs.length)];
-
-                        // ★ clearMusicTimers に修正済み
-                        clearMusicTimers();
-                        if (cmdTextEl) cmdTextEl.textContent = "";
-                        if (titleTextEl) titleTextEl.textContent = "";
-                        if (cursorEl) cursorEl.classList.remove("blink");
-                        if (yearEl) yearEl.textContent = "----";
-                        if (yearWrapEl) yearWrapEl.style.opacity = "0";
-
-                        typeCmd("play --random", () => {
-                            addMusicTimer(() => {
-                                if (yearWrapEl) {
-                                    yearWrapEl.style.transition =
-                                        "opacity 0.3s ease";
-                                    yearWrapEl.style.opacity = "0.8";
-                                }
-                                slotYear(randomSong.year, () => {});
-                                glitchType(randomSong.title, () => {
-                                    if (cursorEl)
-                                        cursorEl.classList.add("blink");
-                                });
-                            }, 150);
+                    if (musicCard && musicBody) {
+                        bindDots({
+                            card: musicCard,
+                            body: musicBody,
+                            dots: musicCard.querySelectorAll<HTMLElement>(
+                                "[data-dots] i[data-dot]",
+                            ),
+                            appendLine: termLine(musicBody),
+                            reroll: playSong,
                         });
-                    }
 
-                    btn?.addEventListener("click", updateSong);
-                    updateSong();
+                        // 初回は画面に入ったときに始める。
+                        // 以降は「見えているか」だけを追いかける
+                        let started = false;
+                        const musicObserver = new IntersectionObserver(
+                            (entries) => {
+                                entries.forEach((entry) => {
+                                    musicVisible = entry.isIntersecting;
+                                    if (entry.isIntersecting && !started) {
+                                        started = true;
+                                        musicTimers.add(playSong, 200);
+                                    }
+                                    advanceIfVisible();
+                                });
+                            },
+                            { threshold: 0.3 },
+                        );
+                        musicObserver.observe(musicCard);
+                    }
 
                     // ---- Uptime counter ----
                     if (uptimeTimer !== null) clearInterval(uptimeTimer);
@@ -1741,47 +1775,103 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
         }
     }
 
-    /* ---- Spec block (右カラム) ---- */
+    /* ---- Spec block (右カラム): `$ cat status.toml` の出力風 ----
+       左のターミナルと同じ行スタイル(.line / .prompt / .cmd)を使い、
+       枠だけ dashed にして「もう1枚の窓」に見せる */
     .spec-block {
         font-family: "JetBrains Mono", ui-monospace, monospace;
-        padding-top: 0.6rem;
+        border: 1px dashed var(--border-color);
+        padding: 1rem 1.2rem 1.1rem;
+        font-size: 0.9rem;
+        line-height: 1.7;
+        transition: border-color 0.35s ease;
+    }
+    @media (hover: hover) {
+        .spec-block:hover {
+            border-color: var(--accent-blue);
+        }
     }
     .spec-block-title {
-        font-size: 0.75rem;
-        color: var(--text-muted);
-        margin: 0 0 1rem;
-        letter-spacing: 0.05em;
+        margin: 0 0 0.5rem;
     }
     .spec-list {
         list-style: none;
-        padding: 0;
+        padding: 0 0 0 1.2rem;
         margin: 0;
     }
     .spec-list li {
-        display: grid;
-        grid-template-columns: 70px 1fr;
-        gap: 1rem;
-        padding: 0.55rem 0;
-        border-bottom: 1px dashed var(--border-color);
-        align-items: baseline;
-    }
-    .spec-list li:last-child {
-        border-bottom: none;
+        gap: 0.5rem;
+        padding: 0.2rem 0;
+        min-height: 1.6em;
     }
     .spec-key {
-        font-size: 0.72rem;
         color: var(--accent-blue);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
+        min-width: 5ch;
+        flex-shrink: 0;
+    }
+    .spec-eq {
+        color: var(--text-muted);
     }
     .spec-val {
-        font-size: 0.9rem;
         color: var(--text-main);
+        min-width: 0;
+    }
+    /* toml の文字列リテラル風に引用符を付ける */
+    .spec-str::before,
+    .spec-str::after {
+        content: '"';
+        color: var(--text-muted);
     }
     .spec-val-live {
         display: inline-flex;
         align-items: center;
         gap: 0.4rem;
+    }
+    /* クリックでコピーする値(uuid) */
+    .spec-val-copy {
+        position: relative;
+        appearance: none;
+        background: none;
+        border: 0;
+        padding: 0;
+        margin: 0;
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+        text-decoration: underline dotted var(--text-muted);
+        text-underline-offset: 3px;
+        transition: color 0.18s ease;
+    }
+    @media (hover: hover) {
+        .spec-val-copy:hover {
+            color: var(--accent-blue);
+            text-decoration-color: var(--accent-blue);
+        }
+    }
+    .spec-val-copy:focus-visible {
+        outline: 2px solid var(--accent-blue);
+        outline-offset: 2px;
+    }
+    .spec-copied {
+        position: absolute;
+        left: 0;
+        bottom: calc(100% + 2px);
+        padding: 0.1rem 0.4rem;
+        font-size: 0.65rem;
+        line-height: 1.4;
+        color: var(--background);
+        background: var(--accent-blue);
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(3px);
+        transition:
+            opacity 0.18s ease,
+            transform 0.18s ease;
+    }
+    .spec-val-copy.is-copied .spec-copied {
+        opacity: 1;
+        transform: none;
     }
     .dot-live {
         width: 7px;
@@ -1803,53 +1893,40 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
 
     /* ====================================
    Load animations
-   ==================================== */
-    .line,
-    .spec-block {
+   ====================================
+   行の出現は JS(playHero)が上から順に .is-shown を付けて進める。
+   [data-type] の span は打っている間だけ右にキャレットが付き、
+   打ち終わると(.is-typed)消える */
+    .line {
         opacity: 0;
-        transform: translateY(8px);
+        transform: translateY(6px);
     }
-
-    .hero[data-loaded] .line,
-    .hero[data-loaded] .spec-block {
+    .line.is-shown {
         opacity: 1;
-        transform: translateY(0);
+        transform: none;
         transition:
-            opacity 0.45s ease,
-            transform 0.45s ease;
-        transition-delay: calc(0.6s + var(--i, 0) * 90ms);
+            opacity 0.35s ease,
+            transform 0.35s ease;
     }
-
-    /* whoami 行は即表示（タイプライターが担当） */
-    .hero[data-loaded] .line[style*="--i: 0"] {
-        opacity: 1;
-        transform: translateY(0);
-        transition-delay: 0s;
-    }
-
-    /* タイプライター */
-    .typewriter {
-        display: inline-block;
-        overflow: hidden;
-        white-space: nowrap;
-        vertical-align: bottom;
-        max-width: 0;
+    .line.is-shown:not(.is-typed) [data-type] {
         border-right: 2px solid var(--accent-blue);
-    }
-    .hero[data-loaded] .typewriter {
-        animation:
-            typing 0.6s steps(6, end) 0.15s forwards,
-            caret 0.7s step-end 3 0.75s;
-    }
-    @keyframes typing {
-        to {
-            max-width: 7ch;
-        }
+        padding-right: 1px;
+        animation: caret 0.7s step-end infinite;
     }
     @keyframes caret {
         50% {
             border-color: transparent;
         }
+    }
+    /* cd ./about の矢印は打ち終わってから */
+    .cursor-arrow {
+        opacity: 0;
+        transition:
+            opacity 0.25s ease,
+            transform 0.18s ease;
+    }
+    .line.is-typed .cursor-arrow {
+        opacity: 1;
     }
 
     /* ====================================
@@ -1857,20 +1934,14 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
    ==================================== */
     @media (prefers-reduced-motion: reduce) {
         .line,
-        .spec-block {
-            opacity: 1;
-            transform: none;
+        .line.is-shown {
             transition: none;
         }
-        .hero[data-loaded] .line,
-        .hero[data-loaded] .spec-block {
-            transition: none;
-            transition-delay: 0s;
-        }
-        .typewriter {
-            max-width: none;
-            border-right: none;
+        .line.is-shown:not(.is-typed) [data-type] {
             animation: none;
+        }
+        .cursor-arrow {
+            transition: none;
         }
         .dot-live {
             animation: none;
@@ -1904,9 +1975,12 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
             padding-left: 0;
             flex-wrap: wrap;
         }
-        .spec-list li {
-            grid-template-columns: 60px 1fr;
-            gap: 0.6rem;
+        .spec-block {
+            padding: 0.9rem 1rem 1rem;
+            font-size: 0.85rem;
+        }
+        .spec-list {
+            padding-left: 0.6rem;
         }
     }
 
@@ -2289,9 +2363,6 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
     .icon-blue {
         color: var(--accent-blue);
     }
-    .icon-secondary {
-        color: var(--accent-blue);
-    }
 
     /* ====================================
        4.3 My Desktop PC — ビジュアル
@@ -2367,9 +2438,11 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
     }
 
     /* ====================================
-       4.5 Mini Terminal カード
-       ==================================== */
-    .mini-terminal-card {
+       4.5 ターミナル系カード共通(Mini Terminal / Today's Music)
+       ====================================
+       ヘッダーのドット、黄ドットの squish、行(.mt-*)の見た目を共有する。
+       .mt-* は JS が innerHTML で作る行にも当たるよう :global にしている */
+    .term-card {
         font-family: var(--font-mono);
         transform-origin: top center;
         transition:
@@ -2378,11 +2451,11 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
             border-color 0.18s ease;
     }
 
-    .mini-terminal-dots {
+    .term-dots {
         display: inline-flex;
         gap: 5px;
     }
-    .mini-terminal-dots i {
+    .term-dots i {
         display: inline-block;
         width: 9px;
         height: 9px;
@@ -2393,30 +2466,55 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
     }
 
     @media (hover: hover) {
-        .mini-terminal-dots:hover i[data-mt-dot="red"] {
+        .term-dots:hover i[data-dot="red"] {
             background: #ff5f57;
         }
-        .mini-terminal-dots:hover i[data-mt-dot="yellow"] {
+        .term-dots:hover i[data-dot="yellow"] {
             background: #ffbd2e;
         }
-        .mini-terminal-dots:hover i[data-mt-dot="green"] {
+        .term-dots:hover i[data-dot="green"] {
             background: #28c840;
         }
     }
 
     /* squish アニメ（黄） */
-    .mini-terminal-card.is-squishing {
+    .term-card.is-squishing {
         transform: scaleY(0.04);
         opacity: 0;
         pointer-events: none;
     }
 
-    .mini-terminal-title {
+    .term-title {
         font-size: 0.72rem;
         color: var(--text-muted);
         letter-spacing: 0.02em;
     }
 
+    .term-body :global(.mt-line) {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+        min-height: 1.5em;
+        font-size: 0.88rem;
+    }
+
+    .term-body :global(.mt-prompt) {
+        color: var(--accent-blue);
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .term-body :global(.mt-prompt-muted) {
+        color: var(--text-muted);
+    }
+
+    .term-body :global(.mt-cmd) {
+        color: var(--text-main);
+        font-size: 0.88rem;
+    }
+
+    /* ---- Mini Terminal ---- */
     .mini-terminal-body {
         gap: 0;
         padding: 1rem 1.25rem 1.25rem;
@@ -2430,28 +2528,8 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
         margin-bottom: 0.4rem;
     }
 
-    .mini-terminal-body :global(.mt-line) {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin: 0;
-        min-height: 1.5em;
-        font-size: 0.88rem;
-    }
-
     .mini-terminal-body :global(.mt-cursor-line) {
         margin-top: 0.2rem;
-    }
-
-    .mini-terminal-body :global(.mt-prompt) {
-        color: var(--accent-blue);
-        font-weight: 600;
-        flex-shrink: 0;
-    }
-
-    .mini-terminal-body :global(.mt-cmd) {
-        color: var(--text-main);
-        font-size: 0.88rem;
     }
 
     .mini-terminal-body :global(.mt-out) {
@@ -3098,53 +3176,68 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
 
     /* ====================================
        10. Today's Music カード
-       ==================================== */
-    .recommendation-card {
+       ====================================
+       Mini Terminal と同じ「$ コマンド → 出力」の並び。
+       出力は ♪ + 曲名(グリッチタイプ) + アーティスト · 年。
+       下の再生バーは Countdown の mission-bar と同じ語彙(細い枠 +
+       アクセント色の fill、hover で太くなる) */
+    .music-card {
         margin-top: 1.5rem;
     }
 
-    .song-container {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        padding: 1.5rem 1rem 1.25rem;
-        gap: 0.6rem;
-        min-height: 140px;
-    }
-
-    /* $ play --random の実行行 */
-    .song-cmd-line {
-        font-family: var(--font-mono);
+    .music-count {
+        margin-left: auto;
         font-size: 0.75rem;
         color: var(--text-muted);
-        align-self: flex-start;
-        padding-left: 0.25rem;
-        min-height: 1.2em;
-        letter-spacing: 0.02em;
+        font-family: var(--font-mono);
     }
 
-    .song-cmd-line .song-cmd-prompt {
+    .music-body {
+        padding: 1rem 1.25rem 1.25rem;
+        gap: 0.5rem;
+    }
+
+    .music-now {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.7rem;
+        padding-left: 1.2rem;
+        min-height: 3.4em;
+        opacity: 0;
+        transform: translateY(4px);
+        transition:
+            opacity 0.25s ease,
+            transform 0.25s ease;
+    }
+    .music-now.is-shown {
+        opacity: 1;
+        transform: none;
+    }
+
+    .music-note {
         color: var(--accent-blue);
-        margin-right: 0.4em;
+        font-size: 1.2rem;
+        line-height: 1.5;
+        flex-shrink: 0;
     }
 
-    /* タイトル：グリッチタイプライター */
-    .song-title {
+    .music-text {
+        min-width: 0;
+    }
+
+    /* 曲名: グリッチタイプライター */
+    .music-title {
         font-size: 1.35rem;
         font-weight: 800;
-        font-family: var(--font-mono);
         color: var(--accent-blue);
         margin: 0;
         line-height: 1.3;
-        text-align: center;
-        min-height: 1.6em;
+        min-height: 1.3em;
         word-break: break-all;
     }
 
-    /* カーソル点滅（確定後） */
-    .song-cursor {
+    /* カーソル点滅(確定後) */
+    .music-cursor {
         display: inline-block;
         width: 2px;
         height: 1.1em;
@@ -3153,11 +3246,9 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
         vertical-align: middle;
         opacity: 0;
     }
-
-    .song-cursor.blink {
+    .music-cursor.blink {
         animation: cursor-blink 0.8s step-end infinite;
     }
-
     @keyframes cursor-blink {
         0%,
         100% {
@@ -3168,44 +3259,66 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
         }
     }
 
-    /* 年号ラッパー */
-    .song-year-wrapper {
-        font-size: 0.82rem;
+    .music-meta {
+        margin: 0.15rem 0 0;
+        font-size: 0.8rem;
         color: var(--text-muted);
-        font-family: var(--font-mono);
         min-height: 1.2em;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .music-meta.is-shown {
+        opacity: 1;
+    }
+    .music-sep {
+        margin: 0 0.4em;
     }
 
-    /* スロット中の年号 */
-    .song-year {
-        font-weight: 700;
-        color: var(--text-main);
-        display: inline-block;
-        min-width: 2.5em;
-        text-align: center;
-    }
-    .secondary-btn {
-        margin: 0 1.25rem 1.25rem;
-        padding: 0.55rem 1rem;
-        background: transparent;
+    /* 再生バー */
+    .music-bar {
+        position: relative;
+        height: 4px;
+        margin-top: 0.4rem;
         border: 1px solid var(--border-color);
-        border-radius: 0;
-        color: var(--text-muted);
-        cursor: pointer;
-        font-size: 0.78rem;
-        font-family: var(--font-mono);
-        font-weight: 600;
-        letter-spacing: 0.05em;
+        transition: height 0.2s ease;
+    }
+    .music-bar-fill {
+        position: absolute;
+        inset: 0;
+        background: var(--accent-blue);
+        opacity: 0.55;
+        transform-origin: left;
+        transform: scaleX(0);
+        transition: opacity 0.2s ease;
+    }
+    /* 曲の長さ(仮)。伸び切ると JS が次の曲へ進める */
+    .music-bar-fill.is-playing {
+        transform: scaleX(1);
         transition:
-            border-color 0.18s ease,
-            color 0.18s ease;
-        align-self: flex-end;
+            transform 24s linear,
+            opacity 0.2s ease;
     }
 
     @media (hover: hover) {
-        .secondary-btn:hover {
-            border-color: var(--accent-blue);
-            color: var(--accent-blue);
+        .music-card:hover .music-bar {
+            height: 8px;
+        }
+        .music-card:hover .music-bar-fill {
+            opacity: 1;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .music-now,
+        .music-meta,
+        .music-bar,
+        .music-bar-fill,
+        .music-bar-fill.is-playing {
+            transition: none;
+        }
+        .music-cursor.blink {
+            animation: none;
+            opacity: 1;
         }
     }
 
