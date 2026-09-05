@@ -1,4 +1,8 @@
 ---
+// ローカル記事のレイアウト。
+//   左  … プロフィール(小) + SNS + この記事のメタ情報 + 関連記事   (≥1280px)
+//   中  … 本文。幅 720px、$ 行 + mono タイトル + リード文、末尾に前後記事
+//   右  … 目次(h2 / h3)。読み進みに応じて通過済み / 現在地を色分け     (≥1024px)
 import { Image } from "astro:assets";
 import type { CollectionEntry } from "astro:content";
 import type { MarkdownHeading } from "astro";
@@ -7,12 +11,14 @@ import {
     Github,
     MessageCircle,
     Share2,
-    ExternalLink,
-    List,
+    ArrowLeft,
+    ArrowRight,
+    ArrowUp,
 } from "lucide-astro";
 
 import Layout from "./BaseLayout.astro";
 import FormattedDate from "../components/FormattedDate.astro";
+import { getVisiblePosts } from "../utils/post";
 
 import {
     TW_DAILY_URL,
@@ -24,10 +30,16 @@ import {
 } from "../consts";
 
 type Props = CollectionEntry<"blog">["data"] & {
+    /** 記事の id(フォルダ名)。前後記事・関連記事の判定に使う */
+    id: string;
+    /** Markdown 本文。文字数と読了目安の算出に使う */
+    body?: string;
     headings?: MarkdownHeading[];
 };
 
 const {
+    id,
+    body = "",
     title,
     description,
     pubDate,
@@ -42,6 +54,58 @@ const shareUrl = Astro.url.href;
 const postPath = Astro.url.pathname.replace(/\/$/, "").replace(/^\//, "");
 const shareText = `${title} | トラマト`;
 const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+
+// --- 文字数と読了目安 ---
+// Markdown の記法・コード・画像・import 行を落として本文の文字だけ数える
+const plainText = body
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/^import\s.*$/gm, "")
+    .replace(/<[^>]+>/g, "")
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/^https?:\/\/\S+$/gm, "")
+    .replace(/[#>*|`_~-]/g, "")
+    .replace(/\s/g, "");
+const charCount = plainText.length;
+// 日本語の読書速度はおおよそ 500 字/分
+const readMinutes = Math.max(1, Math.round(charCount / 500));
+
+// --- 目次は h2 / h3 まで(h4 は本文内の小見出しに留める) ---
+const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
+
+// --- 前後の記事と関連記事 ---
+const allPosts = (await getVisiblePosts()).sort(
+    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+const currentIndex = allPosts.findIndex((post) => post.id === id);
+const newerPost = currentIndex > 0 ? allPosts[currentIndex - 1] : undefined;
+const olderPost =
+    currentIndex >= 0 && currentIndex < allPosts.length - 1
+        ? allPosts[currentIndex + 1]
+        : undefined;
+
+// 同じタグが多い順、同点なら新しい順。無ければ最新記事で埋める
+const relatedPosts = allPosts
+    .filter((post) => post.id !== id)
+    .map((post) => ({
+        post,
+        score: post.data.tags.filter((tag) => tags.includes(tag)).length,
+    }))
+    .sort(
+        (a, b) =>
+            b.score - a.score ||
+            b.post.data.pubDate.valueOf() - a.post.data.pubDate.valueOf(),
+    )
+    .slice(0, 3);
+
+const snsLinks = [
+    { href: TW_DAILY_URL, brand: "twitter", label: "Twitter (Daily)" },
+    { href: TW_TECH_URL, brand: "tech", label: "Twitter (Tech)" },
+    { href: GITHUB_URL, brand: "github", label: "GitHub" },
+    { href: NOTE_URL, brand: "note", label: "note" },
+    { href: ZENN_URL, brand: "zenn", label: "Zenn" },
+    { href: QIITA_URL, brand: "qiita", label: "Qiita" },
+] as const;
 ---
 
 <Layout
@@ -50,1009 +114,1292 @@ const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURICompon
     image={heroImage}
     width="full"
 >
-            <div class="blog-container">
-                {/* 左サイドバー - プロフィール & SNS */}
-                <aside class="blog-sidebar-left">
-                    <div class="sidebar-card ui-card">
-                        <img
-                            src="/toramutton.jpg"
-                            alt="トラマト"
-                            class="sidebar-avatar"
-                            width="80"
-                            height="80"
-                        />
+    <div class="blog-container">
+        {/* ===== 左サイドバー ===== */}
+        <aside class="blog-sidebar-left">
+            <div class="sidebar-card ui-card">
+                <div class="sidebar-profile">
+                    <img
+                        src="/toramutton.jpg"
+                        alt="トラマト"
+                        class="sidebar-avatar"
+                        width="48"
+                        height="48"
+                    />
+                    <div class="sidebar-profile-text">
                         <p class="sidebar-name">トラマト</p>
-                        <p class="sidebar-bio">勉強中</p>
-
-                        <div class="sidebar-divider"></div>
-
-                        <p class="sidebar-section-title">SNS</p>
-                        <nav class="sidebar-sns-list">
-                            <a
-                                href={TW_DAILY_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="sidebar-sns-link"
-                                data-brand="twitter"
-                            >
-                                <span class="sns-icon"
-                                    ><MessageCircle size={16} /></span
-                                >
-                                <span class="sns-label">Daily</span>
-                            </a>
-                            <a
-                                href={TW_TECH_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="sidebar-sns-link"
-                                data-brand="tech"
-                            >
-                                <span class="sns-icon"
-                                    ><Twitter size={16} /></span
-                                >
-                                <span class="sns-label">Tech</span>
-                            </a>
-                            <a
-                                href={GITHUB_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="sidebar-sns-link"
-                                data-brand="github"
-                            >
-                                <span class="sns-icon"
-                                    ><Github size={16} /></span
-                                >
-                                <span class="sns-label">GitHub</span>
-                            </a>
-                            <a
-                                href={NOTE_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="sidebar-sns-link"
-                                data-brand="note"
-                            >
-                                <span class="sns-icon">
-                                    <svg
-                                        role="img"
-                                        viewBox="0 0 24 24"
-                                        width="14"
-                                        height="14"
-                                        fill="currentColor"
-                                    >
-                                        <path
-                                            d="M0 .279c4.623 0 10.953-.235 15.498-.117 6.099.156 8.39 2.813 8.468 9.374.077 3.71 0 14.335 0 14.335h-6.598c0-9.296.04-10.83 0-13.759-.078-2.578-.814-3.807-2.795-4.041-2.097-.235-7.975-.04-7.975-.04v17.84H0Z"
-                                        ></path>
-                                    </svg>
-                                </span>
-                                <span class="sns-label">note</span>
-                            </a>
-                            <a
-                                href={ZENN_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="sidebar-sns-link"
-                                data-brand="zenn"
-                            >
-                                <span class="sns-icon">
-                                    <svg
-                                        role="img"
-                                        viewBox="0 0 24 24"
-                                        width="16"
-                                        height="16"
-                                        fill="currentColor"
-                                    >
-                                        <path
-                                            d="M.264 23.771h4.984c.264 0 .498-.147.645-.352L19.614.874c.176-.293-.029-.645-.381-.645h-4.72c-.235 0-.44.117-.557.323L.03 23.361c-.088.176.029.41.234.41zM17.445 23.419l6.479-10.408c.205-.323-.029-.733-.41-.733h-4.691c-.176 0-.352.088-.44.235l-6.655 10.643c-.176.264.029.616.352.616h4.779c.234-.001.468-.118.586-.353z"
-                                        ></path>
-                                    </svg>
-                                </span>
-                                <span class="sns-label">Zenn</span>
-                            </a>
-                            <a
-                                href={QIITA_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="sidebar-sns-link"
-                                data-brand="qiita"
-                            >
-                                <span class="sns-icon">
-                                    <svg
-                                        role="img"
-                                        viewBox="0 0 24 24"
-                                        width="16"
-                                        height="16"
-                                        fill="currentColor"
-                                    >
-                                        <path
-                                            d="M12 0C5.3726 0 0 5.3726 0 12s5.3726 12 12 12c3.3984 0 6.4665-1.413 8.6498-3.6832-.383-.0574-.7746-.2062-1.1466-.4542-.7145-.4763-1.3486-.9263-1.6817-1.674-1.2945 1.3807-3.0532 1.835-5.1822 2.0503-4.311.4359-8.0456-1.4893-8.4979-6.2996-.1922-2.045.2628-3.989 1.1804-5.582l-.5342-2.1009c-.0862-.3652.2498-.7126.6057-.6262l1.8456.448c1.0974-.9012 2.4249-1.49 3.8892-1.638 1.2526-.1267 2.467.0834 3.571.5624l1.7348-1.0494c.3265-.1974.7399.0257.7711.4164l.1 2.4747v.0002c1.334 1.4084 2.2424 3.3319 2.4478 5.516.116 1.2339-.012 2.1776-.339 3.078-.1531.4215-.1992.7778.0776 1.1305.2674.3408.6915 1.0026 1.1644.8917.7107-.1666 1.4718-.1223 1.9422.1715C23.4925 15.9525 24 14.0358 24 12c0-6.6274-5.3726-12-12-12Zm-.0727 5.727a5.2731 5.2731 0 0 0-.6146.0273c-2.2084.2233-3.9572 1.8135-4.4937 3.8484l-1.3176-.1996-.014.2589 1.2972.1407c-.0352.1497-.0643.2384-.086.3923l-1.1319.0902.0103.2025 1.1032-.088c-.0194.1713-.031.2814-.0332.4565l-1.0078.412.0495.2499.9598-.4492c.002.1339.008.2053.0207.3407.2667 2.8371 2.6364 3.3981 5.4677 3.1118 2.8312-.2863 5.0517-1.3114 4.785-4.1486-.013-.1361-.0324-.2068-.0553-.3392l1.0397.2257.0242-.229-1.0906-.207c-.0342-.1687-.0765-.271-.1264-.4327l1.1208-.1374-.0158-.2019-1.1499.1409a5.1093 5.1093 0 0 0-.1665-.4259l1.2665-.4042-.0397-.2536-1.3471.4667c-.819-1.7168-2.5002-2.8224-4.4546-2.8482Z"
-                                        ></path>
-                                    </svg>
-                                </span>
-                                <span class="sns-label">Qiita</span>
-                            </a>
-                        </nav>
-
-                        <div class="sidebar-divider"></div>
-
-                        <p class="sidebar-section-title">Share</p>
-                        <a
-                            href={twitterShareUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="sidebar-share-link"
-                        >
-                            <Share2 size={14} />
-                            Twitterでシェア
-                        </a>
+                        <p class="sidebar-bio">電通大 I 類 / 勉強中</p>
                     </div>
-                </aside>
+                </div>
 
-                <article>
+                <nav class="sidebar-sns" aria-label="SNS">
                     {
-                        heroImage && (
-                            <div class="hero-image">
-                                <Image
-                                    width={1020}
-                                    height={510}
-                                    src={heroImage}
-                                    alt={title}
-                                />
-                            </div>
+                        snsLinks.map((sns) => (
+                            <a
+                                href={sns.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="sidebar-sns-link"
+                                data-brand={sns.brand}
+                                aria-label={sns.label}
+                                title={sns.label}
+                            >
+                                {sns.brand === "twitter" && (
+                                    <MessageCircle size={15} />
+                                )}
+                                {sns.brand === "tech" && <Twitter size={15} />}
+                                {sns.brand === "github" && <Github size={15} />}
+                                {sns.brand === "note" && (
+                                    <svg
+                                        role="img"
+                                        viewBox="0 0 24 24"
+                                        width="13"
+                                        height="13"
+                                        fill="currentColor"
+                                    >
+                                        <path d="M0 .279c4.623 0 10.953-.235 15.498-.117 6.099.156 8.39 2.813 8.468 9.374.077 3.71 0 14.335 0 14.335h-6.598c0-9.296.04-10.83 0-13.759-.078-2.578-.814-3.807-2.795-4.041-2.097-.235-7.975-.04-7.975-.04v17.84H0Z" />
+                                    </svg>
+                                )}
+                                {sns.brand === "zenn" && (
+                                    <svg
+                                        role="img"
+                                        viewBox="0 0 24 24"
+                                        width="15"
+                                        height="15"
+                                        fill="currentColor"
+                                    >
+                                        <path d="M.264 23.771h4.984c.264 0 .498-.147.645-.352L19.614.874c.176-.293-.029-.645-.381-.645h-4.72c-.235 0-.44.117-.557.323L.03 23.361c-.088.176.029.41.234.41zM17.445 23.419l6.479-10.408c.205-.323-.029-.733-.41-.733h-4.691c-.176 0-.352.088-.44.235l-6.655 10.643c-.176.264.029.616.352.616h4.779c.234-.001.468-.118.586-.353z" />
+                                    </svg>
+                                )}
+                                {sns.brand === "qiita" && (
+                                    <svg
+                                        role="img"
+                                        viewBox="0 0 24 24"
+                                        width="15"
+                                        height="15"
+                                        fill="currentColor"
+                                    >
+                                        <path d="M12 0C5.3726 0 0 5.3726 0 12s5.3726 12 12 12c3.3984 0 6.4665-1.413 8.6498-3.6832-.383-.0574-.7746-.2062-1.1466-.4542-.7145-.4763-1.3486-.9263-1.6817-1.674-1.2945 1.3807-3.0532 1.835-5.1822 2.0503-4.311.4359-8.0456-1.4893-8.4979-6.2996-.1922-2.045.2628-3.989 1.1804-5.582l-.5342-2.1009c-.0862-.3652.2498-.7126.6057-.6262l1.8456.448c1.0974-.9012 2.4249-1.49 3.8892-1.638 1.2526-.1267 2.467.0834 3.571.5624l1.7348-1.0494c.3265-.1974.7399.0257.7711.4164l.1 2.4747v.0002c1.334 1.4084 2.2424 3.3319 2.4478 5.516.116 1.2339-.012 2.1776-.339 3.078-.1531.4215-.1992.7778.0776 1.1305.2674.3408.6915 1.0026 1.1644.8917.7107-.1666 1.4718-.1223 1.9422.1715C23.4925 15.9525 24 14.0358 24 12c0-6.6274-5.3726-12-12-12Zm-.0727 5.727a5.2731 5.2731 0 0 0-.6146.0273c-2.2084.2233-3.9572 1.8135-4.4937 3.8484l-1.3176-.1996-.014.2589 1.2972.1407c-.0352.1497-.0643.2384-.086.3923l-1.1319.0902.0103.2025 1.1032-.088c-.0194.1713-.031.2814-.0332.4565l-1.0078.412.0495.2499.9598-.4492c.002.1339.008.2053.0207.3407.2667 2.8371 2.6364 3.3981 5.4677 3.1118 2.8312-.2863 5.0517-1.3114 4.785-4.1486-.013-.1361-.0324-.2068-.0553-.3392l1.0397.2257.0242-.229-1.0906-.207c-.0342-.1687-.0765-.271-.1264-.4327l1.1208-.1374-.0158-.2019-1.1499.1409a5.1093 5.1093 0 0 0-.1665-.4259l1.2665-.4042-.0397-.2536-1.3471.4667c-.819-1.7168-2.5002-2.8224-4.4546-2.8482Z" />
+                                    </svg>
+                                )}
+                            </a>
+                        ))
+                    }
+                </nav>
+
+                <div class="sidebar-divider"></div>
+
+                <p class="sidebar-section-title">// meta</p>
+                <dl class="meta-list">
+                    <dt>date</dt>
+                    <dd><FormattedDate date={pubDate} /></dd>
+                    <dt>tags</dt>
+                    <dd>
+                        {
+                            tags.length > 0 ? (
+                                <span class="meta-tags">
+                                    {tags.map((tag) => (
+                                        <span class="post-tag">{tag}</span>
+                                    ))}
+                                </span>
+                            ) : (
+                                "-"
+                            )
+                        }
+                    </dd>
+                    <dt>length</dt>
+                    <dd>{charCount.toLocaleString("ja-JP")} 字</dd>
+                    <dt>read</dt>
+                    <dd>約 {readMinutes} 分</dd>
+                </dl>
+
+                {
+                    relatedPosts.length > 0 && (
+                        <>
+                            <div class="sidebar-divider" />
+                            <p class="sidebar-section-title">// related</p>
+                            <ul class="related-list">
+                                {relatedPosts.map(({ post }) => (
+                                    <li>
+                                        <a
+                                            href={`/blog/${post.id}/`}
+                                            class="related-link"
+                                        >
+                                            <span class="related-title">
+                                                {post.data.title}
+                                            </span>
+                                            <span class="related-date">
+                                                <FormattedDate
+                                                    date={post.data.pubDate}
+                                                />
+                                            </span>
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
+                        </>
+                    )
+                }
+
+                <div class="sidebar-divider"></div>
+
+                <a
+                    href={twitterShareUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="share-btn"
+                >
+                    <Share2 size={14} />
+                    Twitterでシェア
+                </a>
+            </div>
+        </aside>
+
+        {/* ===== 本文 ===== */}
+        <article>
+            {
+                heroImage && (
+                    <div class="hero-image">
+                        <Image
+                            width={1020}
+                            height={510}
+                            src={heroImage}
+                            alt={title}
+                        />
+                    </div>
+                )
+            }
+            <div class="prose">
+                <header class="post-header">
+                    <p class="post-command">
+                        <span class="prompt">$</span>
+                        cat ./{postPath}.md
+                    </p>
+                    <h1>{title}</h1>
+                    {description && <p class="post-lead">{description}</p>}
+                    <p class="post-meta">
+                        <FormattedDate date={pubDate} />
+                        {
+                            updatedDate && (
+                                <span class="last-updated-on">
+                                    (updated{" "}
+                                    <FormattedDate date={updatedDate} />)
+                                </span>
+                            )
+                        }
+                        <span class="post-meta-read"
+                            >{charCount.toLocaleString("ja-JP")} 字 · 約 {
+                                readMinutes
+                            } 分</span
+                        >
+                    </p>
+                </header>
+
+                <slot />
+
+                <footer class="post-footer">
+                    {
+                        tags.length > 0 && (
+                            <p class="footer-tags">
+                                <span class="footer-label">tags:</span>
+                                {tags.map((tag) => (
+                                    <span class="post-tag">{tag}</span>
+                                ))}
+                            </p>
                         )
                     }
-                    <div class="prose">
-                        <header class="post-header">
-                            <p class="post-command">
-                                <span class="prompt">$</span>
-                                cat ./{postPath}.md
-                            </p>
-                            <h1>{title}</h1>
-                            <p class="post-meta">
-                                <FormattedDate date={pubDate} />
-                                {
-                                    updatedDate && (
-                                        <span class="last-updated-on">
-                                            (updated{" "}
-                                            <FormattedDate date={updatedDate} />
-                                            )
-                                        </span>
-                                    )
-                                }
-                                {
-                                    tags.length > 0 && (
-                                        <span class="post-tags">
-                                            {tags.map((tag) => (
-                                                <span class="post-tag">{tag}</span>
-                                            ))}
-                                        </span>
-                                    )
-                                }
-                            </p>
-                        </header>
-                        <slot />
 
-                        {/* モバイル用シェアボタン (PCでは非表示) */}
-                        <div class="mobile-share-container">
-                            <a
-                                href={twitterShareUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="mobile-share-btn"
-                            >
-                                <Share2 size={16} />
-                                Twitterでシェア
+                    <a
+                        href={twitterShareUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="share-btn"
+                    >
+                        <Share2 size={15} />
+                        Twitterでシェア
+                    </a>
+
+                    <nav class="post-nav" aria-label="前後の記事">
+                        {
+                            newerPost ? (
+                                <a
+                                    href={`/blog/${newerPost.id}/`}
+                                    class="post-nav-link ui-card ui-card-link newer"
+                                >
+                                    <span class="post-nav-label">
+                                        <ArrowLeft size={13} /> 新しい記事
+                                    </span>
+                                    <span class="post-nav-title">
+                                        {newerPost.data.title}
+                                    </span>
+                                </a>
+                            ) : (
+                                <span class="post-nav-empty" />
+                            )
+                        }
+                        {
+                            olderPost ? (
+                                <a
+                                    href={`/blog/${olderPost.id}/`}
+                                    class="post-nav-link ui-card ui-card-link older"
+                                >
+                                    <span class="post-nav-label">
+                                        古い記事 <ArrowRight size={13} />
+                                    </span>
+                                    <span class="post-nav-title">
+                                        {olderPost.data.title}
+                                    </span>
+                                </a>
+                            ) : (
+                                <span class="post-nav-empty" />
+                            )
+                        }
+                    </nav>
+
+                    <a href="/blog/" class="back-link">
+                        <span class="prompt">$</span> cd ../blog
+                        <span class="back-comment"># 記事一覧へ戻る</span>
+                    </a>
+                </footer>
+            </div>
+        </article>
+
+        {/* ===== 右: 目次 ===== */}
+        {
+            tocHeadings.length > 0 && (
+                <aside class="blog-toc">
+                    <div class="toc-card">
+                        <div class="toc-progress" id="toc-progress" />
+                        <p class="toc-title">
+                            <span class="prompt">$</span> grep '^#' {id}.md
+                        </p>
+                        <ul>
+                            {tocHeadings.map((heading) => (
+                                <li class={`toc-level-${heading.depth}`}>
+                                    <a
+                                        href={`#${heading.slug}`}
+                                        data-toc-slug={heading.slug}
+                                    >
+                                        {heading.text}
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                        <div class="toc-footer">
+                            <span class="toc-percent">
+                                <span id="toc-percent">0</span>% read
+                            </span>
+                            <a href="#" class="toc-top" id="toc-top">
+                                <ArrowUp size={12} /> top
                             </a>
                         </div>
                     </div>
-                </article>
-
-                {/* 右サイド - 目次 */}
-                {
-                    headings.length > 0 && (
-                        <aside class="blog-toc">
-                            <div class="toc-card">
-                                <div class="toc-progress" id="toc-progress" />
-                                <div class="toc-title">
-                                    <span class="toc-title-icon">
-                                        <List size={16} />
-                                    </span>
-                                    目次
-                                </div>
-                                <ul>
-                                    {headings.map((heading) => (
-                                        <li
-                                            class={`toc-level-${heading.depth}`}
-                                        >
-                                            <a href={`#${heading.slug}`}>
-                                                {heading.text}
-                                            </a>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </aside>
-                    )
-                }
-            </div>
-
-<style>
-    :global(html) {
-        scroll-behavior: smooth;
-    }
-
-    /* === ヒーロー画像 === */
-    .hero-image {
-        width: 100%;
-        margin: 0;
-        padding: 0;
-    }
-    .hero-image:empty {
-        display: none;
-    }
-    .hero-image img {
-        display: block;
-        width: 100%;
-        height: auto;
-        border-radius: var(--radius);
-        object-fit: cover;
-    }
-    @media (min-width: 1280px) {
-        .hero-image {
-            width: calc(100% + 3rem);
-            margin: -1.5rem -1.5rem 2rem;
+                </aside>
+            )
         }
-        .hero-image img {
-            border-bottom-left-radius: 0;
-            border-bottom-right-radius: 0;
+    </div>
+
+    <style>
+        :global(html) {
+            scroll-behavior: smooth;
         }
-    }
 
-    /* === 本文 === */
-    .prose {
-        width: 100%;
-        max-width: 860px;
-        padding: 1rem 0;
-        color: var(--text-main);
-        line-height: 1.8;
-    }
-
-    /* === 記事ヘッダー(他ページの PageHeader と同じ形: $ 行 + mono 2rem) === */
-    .post-header {
-        margin: 0 0 2.5rem;
-        padding: 0 0 1.5rem;
-        border-bottom: 1px solid var(--border-color);
-    }
-    .post-command {
-        margin: 0 0 0.6rem;
-        color: var(--text-muted);
-        font-family: var(--font-mono);
-        font-size: 0.82rem;
-        overflow-wrap: anywhere;
-    }
-    .prompt {
-        color: var(--accent-blue);
-        font-weight: 700;
-    }
-    .post-header h1 {
-        display: block;
-        margin: 0 0 0.6rem;
-        color: var(--text-main);
-        font-family: var(--font-mono), var(--font-sans);
-        font-size: 2rem;
-        line-height: 1.3;
-        letter-spacing: -0.02em;
-        overflow-wrap: anywhere;
-    }
-    .post-meta {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.4rem 0.8rem;
-        margin: 0;
-        color: var(--text-muted);
-        font-family: var(--font-mono);
-        font-size: 0.8rem;
-    }
-    .last-updated-on {
-        opacity: 0.8;
-    }
-    .post-tags {
-        display: inline-flex;
-        flex-wrap: wrap;
-        gap: 0.3rem;
-    }
-    .post-tag {
-        padding: 0.1em 0.4em;
-        border: 1px solid var(--border-color);
-        border-radius: 0;
-        background: var(--background);
-        font-size: 0.7rem;
-        font-weight: 500;
-        white-space: nowrap;
-    }
-
-    /* === 本文内タグ === */
-    /* 本文の h2 だけは「青い線が左から伸びる」下線を使う
-       (.visible はこの下のスクリプトが画面に入ったときに付ける) */
-    .prose :global(h2) {
-        position: relative;
-        font-size: 1.8rem;
-        margin: 3rem 0 1.5rem;
-        padding-bottom: 0.5rem;
-        color: var(--text-main);
-    }
-    .prose :global(h2)::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        bottom: 0;
-        height: 1px;
-        width: 0%;
-        background-color: var(--accent-blue);
-        transition: width 0.8s ease-out;
-    }
-    .prose :global(h2.visible)::after {
-        width: 100%;
-    }
-    @media (prefers-reduced-motion: reduce) {
-        .prose :global(h2)::after {
-            width: 100%;
-            transition: none;
+        .prompt {
+            color: var(--accent-blue);
+            font-weight: 700;
         }
-    }
-    /* 本文中の画像は影ではなく 1px の枠で区切る */
-    .prose :global(.prose-content img) {
-        border: 1px solid var(--border-color);
-    }
-    .prose :global(p) {
-        margin-bottom: 1.5rem;
-    }
 
-    /* 引用ブロック（角丸・影撤去 → 左ボーダーのみ） */
-    .prose :global(blockquote) {
-        margin: 2rem 0;
-        padding: 1.5rem 2rem;
-        background: var(--surface);
-        border-left: 3px solid var(--accent-blue);
-        border-radius: 0;
-        font-style: italic;
-        color: var(--text-muted);
-    }
-
-    /* コードブロック（影撤去・4px・border 化） */
-    .prose :global(pre) {
-        padding: 1.5rem;
-        border-radius: var(--radius);
-        border: 1px solid var(--border-color);
-        margin: 2rem 0;
-        font-family: var(--font-mono);
-        font-size: 0.95rem;
-        overflow-x: auto;
-    }
-
-    @media (max-width: 720px) {
-        .prose {
-            padding: 1rem;
-        }
-        .post-header h1 {
-            font-size: 1.6rem;
-        }
-        .blog-toc {
-            width: min(300px, 42vw);
-        }
-    }
-
-    /* === モバイル用シェアボタン（ターミナル化）=== */
-    .mobile-share-container {
-        display: flex;
-        justify-content: center;
-        margin-top: 3rem;
-        padding-top: 2rem;
-        border-top: 1px dashed var(--border-color);
-    }
-    .mobile-share-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        width: 100%;
-        max-width: 280px;
-        padding: 0.8rem;
-        border-radius: var(--radius);
-        background: color-mix(
-            in srgb,
-            var(--accent-blue) 8%,
-            transparent
-        );
-        border: 1px solid
-            color-mix(in srgb, var(--accent-blue) 25%, transparent);
-        color: var(--accent-blue);
-        text-decoration: none;
-        font-size: 0.9rem;
-        font-weight: 600;
-        transition:
-            background 0.2s,
-            color 0.2s,
-            border-color 0.2s;
-    }
-    .mobile-share-btn:hover {
-        background: var(--accent-blue);
-        color: var(--background);
-        border-color: var(--accent-blue);
-    }
-    @media (min-width: 1280px) {
-        .mobile-share-container {
-            display: none;
-        }
-    }
-
-    /* === テーブル === */
-    .prose :global(table) {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 2rem 0;
-        font-size: 0.9rem;
-    }
-    .prose :global(th),
-    .prose :global(td) {
-        border: 1px solid var(--border-color);
-        padding: 0.8rem;
-        text-align: center;
-    }
-    .prose :global(th) {
-        background: var(--elevated);
-        font-weight: bold;
-        color: var(--text-main);
-    }
-    .prose :global(tr:nth-child(even)) {
-        background: color-mix(
-            in srgb,
-            var(--text-main) 3%,
-            transparent
-        );
-    }
-
-    /* ======================================================
-       3カラム レイアウト
-       ====================================================== */
-    .blog-container {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 2rem;
-        width: 100%;
-        max-width: 860px;
-        margin: 0 auto;
-        padding: 0;
-        align-items: flex-start;
-    }
-
-    article {
-        width: 100%;
-        min-width: 0;
-        margin: 0;
-    }
-    @media (min-width: 1280px) {
-        article {
-            background: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            padding: 1.5rem 1.5rem 1rem;
-        }
-    }
-
-    .blog-main-content {
-        width: 100%;
-    }
-
-    /* ① 左サイドバーはPCのみ（モバイル・タブレットでは非表示）*/
-    .blog-sidebar-left {
-        display: none;
-    }
-    .blog-toc {
-        display: none;
-    }
-
-    @media (min-width: 1280px) {
+        /* ======================================================
+           1. レイアウト
+              〜1023px  … 本文のみ(目次はヘッダーのボタンからドロワー)
+              1024px〜  … 本文 + 目次
+              1280px〜  … 左サイドバー + 本文 + 目次
+           ====================================================== */
         .blog-container {
-            max-width: 1360px;
-            grid-template-columns: 260px minmax(0, 860px) 240px;
-            justify-content: center;
-            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 2rem;
+            width: 100%;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 0;
+            align-items: flex-start;
         }
-        .blog-sidebar-left,
-        .blog-toc {
-            display: block;
-            position: sticky;
-            top: 6rem;
-            max-height: calc(100vh - 8rem);
-            overflow-y: auto;
+
+        article {
+            width: 100%;
+            min-width: 0;
             margin: 0;
         }
-    }
 
-    /* ======================================================
-       左サイドバー - プロフィール & SNS（border-card 化）
-       ====================================================== */
-    .sidebar-card {
-        padding: 1.5rem 1.2rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1.2rem;
-    }
-
-    .sidebar-avatar {
-        width: 80px;
-        height: 80px;
-        border-radius: var(--radius); /* 50% → 4px */
-        object-fit: cover;
-        border: 1px solid var(--border-color);
-    }
-
-    .sidebar-name {
-        font-size: 1.1rem;
-        font-weight: 800;
-        color: var(--text-main);
-        margin: 0;
-    }
-    .sidebar-bio {
-        font-size: 0.8rem;
-        color: var(--text-muted);
-        text-align: center;
-        line-height: 1.5;
-        margin: 0;
-    }
-    .sidebar-divider {
-        width: 100%;
-        height: 1px;
-        background: var(--border-color);
-        margin: 0.2rem 0;
-    }
-
-    .sidebar-section-title {
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        align-self: flex-start;
-        margin: 0;
-        font-family: var(--font-mono);
-    }
-
-    .sidebar-sns-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.15rem;
-        width: 100%;
-    }
-    .sidebar-sns-link {
-        display: flex;
-        align-items: center;
-        gap: 0.7rem;
-        padding: 0.45rem 0.6rem;
-        border-radius: var(--radius);
-        color: var(--text-muted);
-        text-decoration: none;
-        font-size: 0.82rem;
-        font-weight: 500;
-        transition:
-            background 0.2s,
-            color 0.2s,
-            transform 0.2s;
-    }
-    .sidebar-sns-link:hover {
-        background: color-mix(
-            in srgb,
-            var(--text-main) 6%,
-            transparent
-        );
-        color: var(--text-main);
-        transform: translateX(2px);
-    }
-
-    .sidebar-sns-link .sns-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 28px;
-        height: 28px;
-        border-radius: var(--radius); /* 8px → 4px */
-        flex-shrink: 0;
-        transition:
-            background 0.2s,
-            color 0.2s;
-    }
-
-    /* ブランドカラー ホバー（per-source アクセントは維持）*/
-    .sidebar-sns-link[data-brand="twitter"]:hover .sns-icon {
-        background: #1da1f2;
-        color: white;
-    }
-    .sidebar-sns-link[data-brand="tech"]:hover .sns-icon {
-        background: #f59518;
-        color: white;
-    }
-    .sidebar-sns-link[data-brand="github"]:hover .sns-icon {
-        background: #333;
-        color: white;
-    }
-    :global(html.dark)
-        .sidebar-sns-link[data-brand="github"]:hover
-        .sns-icon {
-        background: #f0f0f0;
-        color: #333;
-    }
-    .sidebar-sns-link[data-brand="note"]:hover .sns-icon {
-        background: var(--brand-note);
-        color: white;
-    }
-    .sidebar-sns-link[data-brand="zenn"]:hover .sns-icon {
-        background: var(--brand-zenn);
-        color: white;
-    }
-    .sidebar-sns-link[data-brand="qiita"]:hover .sns-icon {
-        background: var(--brand-qiita);
-        color: white;
-    }
-
-    .sns-label {
-        flex: 1;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    /* シェアボタン（ターミナル化）*/
-    .sidebar-share-link {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        width: 100%;
-        padding: 0.6rem;
-        border-radius: var(--radius);
-        background: color-mix(
-            in srgb,
-            var(--accent-blue) 8%,
-            transparent
-        );
-        border: 1px solid
-            color-mix(in srgb, var(--accent-blue) 25%, transparent);
-        color: var(--accent-blue);
-        text-decoration: none;
-        font-size: 0.82rem;
-        font-weight: 600;
-        transition:
-            background 0.2s,
-            color 0.2s,
-            border-color 0.2s;
-    }
-    .sidebar-share-link:hover {
-        background: var(--accent-blue);
-        color: var(--background);
-        border-color: var(--accent-blue);
-    }
-
-    /* ======================================================
-       右サイドバー - 目次（② カード撤去 → 余白一重）
-       ====================================================== */
-    .toc-card {
-        position: relative;
-        padding-top: 0.5rem; /* progress バー分の余白のみ */
-    }
-
-    /* 読了プログレスバー（gradient → solid / 角丸撤去 / 2px）*/
-    .toc-progress {
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 2px;
-        width: 0%;
-        background: var(--accent-blue);
-        transition: width 0.15s ease-out;
-        z-index: 1;
-    }
-
-    .toc-title {
-        font-weight: 800;
-        font-size: 0.95rem;
-        margin-bottom: 0.8rem;
-        color: var(--text-main);
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: 0.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-    }
-    .toc-title-icon {
-        display: flex;
-        align-items: center;
-        color: var(--accent-blue);
-    }
-
-    .toc-card ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-    .toc-card li {
-        margin-bottom: 0.15rem;
-        line-height: 1.3;
-    }
-    .toc-card a {
-        text-decoration: none;
-        color: var(--text-muted);
-        font-size: 0.82rem;
-        display: block;
-        padding: 0.3rem 0.5rem;
-        border-radius: 0; /* 角丸撤去 */
-        transition:
-            background 0.2s,
-            color 0.2s;
-        border-left: 2px solid transparent;
-    }
-    .toc-card a:hover {
-        color: var(--accent-blue);
-        background: color-mix(
-            in srgb,
-            var(--accent-blue) 6%,
-            transparent
-        );
-    }
-    .toc-card a.active {
-        color: var(--accent-blue);
-        font-weight: 700;
-        border-left-color: var(--accent-blue);
-        background: color-mix(
-            in srgb,
-            var(--accent-blue) 8%,
-            transparent
-        );
-    }
-
-    /* === h3 ツリーライン === */
-    .toc-level-3 {
-        padding-left: 0;
-        position: relative;
-    }
-    /* 縦線：各 li が自分の高さ分だけ引く → 積み上がって1本に見える */
-    .toc-level-3::before {
-        content: "";
-        position: absolute;
-        left: 0.55rem;
-        top: 0;
-        bottom: 0;
-        width: 1px;
-        background: var(--border-color);
-    }
-    /* グループ末尾だけ縦線を上半分に切る（└── 表現）*/
-    .toc-level-3:last-child::before,
-    .toc-level-3:has(+ .toc-level-2)::before {
-        bottom: 50%;
-    }
-    /* 横ブランチ */
-    .toc-level-3 > a {
-        font-size: 0.8rem;
-        border-left: none; /* 縦線と競合するため削除 */
-        padding-left: 1.6rem;
-        position: relative;
-    }
-    .toc-level-3 > a::before {
-        content: "";
-        position: absolute;
-        left: 0.55rem;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 0.65rem;
-        height: 1px;
-        background: var(--border-color);
-        transition: background 0.2s;
-    }
-    /* アクティブ時：横ブランチも accent に */
-    .toc-level-3 > a.active {
-        border-left: none;
-    }
-    .toc-level-3 > a.active::before {
-        background: var(--accent-blue);
-    }
-
-    /* === h4 ツリーライン（h3 より右に入れ子）=== */
-    .toc-level-4 {
-        padding-left: 0.8rem;
-        position: relative;
-    }
-    .toc-level-4::before {
-        content: "";
-        position: absolute;
-        left: 0.55rem;
-        top: 0;
-        bottom: 0;
-        width: 1px;
-        background: var(--border-color);
-    }
-    /* h4 グループ末尾（次が h4 以外、またはリスト最後）で縦線カット */
-    .toc-level-4:last-child::before,
-    .toc-level-4:has(+ :not(.toc-level-4))::before {
-        bottom: 50%;
-    }
-    .toc-level-4 > a {
-        font-size: 0.78rem;
-        border-left: none;
-        padding-left: 1.6rem;
-        position: relative;
-        opacity: 0.85;
-    }
-    .toc-level-4 > a::before {
-        content: "";
-        position: absolute;
-        left: 0.55rem;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 0.65rem;
-        height: 1px;
-        background: var(--border-color);
-        transition: background 0.2s;
-    }
-    .toc-level-4 > a.active {
-        border-left: none;
-        opacity: 1;
-    }
-    .toc-level-4 > a.active::before {
-        background: var(--accent-blue);
-    }
-
-    /* --- TOC: Zenn 風サイドドロワー（≤1279px / 右側維持）--- */
-    @media (max-width: 1279px) {
+        .blog-sidebar-left,
         .blog-toc {
-            display: block;
-            position: fixed;
-            top: var(--header-height, 64px);
-            right: 0;
-            width: min(300px, 42vw);
-            height: calc(100dvh - var(--header-height, 64px));
-            overflow-y: auto;
-            z-index: 1000;
-
-            background: var(--surface);
-            border-left: 1px solid var(--border-color);
-            padding: 1.5rem 1.25rem;
-
-            opacity: 0;
-            transform: translateX(16px);
-            pointer-events: none;
-            visibility: hidden;
-
-            transition:
-                opacity 0.18s ease-out,
-                transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-                visibility 0s linear 0.22s;
+            display: none;
         }
-        .blog-toc.mobile-open {
-            opacity: 1;
-            transform: translateX(0);
-            pointer-events: auto;
-            visibility: visible;
-            transition:
-                opacity 0.18s ease-out,
-                transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
-                visibility 0s linear 0s;
+
+        @media (min-width: 1024px) {
+            .blog-container {
+                max-width: 1000px;
+                grid-template-columns: minmax(0, 720px) 220px;
+                justify-content: center;
+                padding: 0 1.5rem;
+            }
+            article {
+                background: var(--surface);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius);
+                padding: 1.5rem 1.5rem 1rem;
+            }
+            .blog-toc {
+                display: block;
+                position: sticky;
+                top: 6rem;
+                max-height: calc(100vh - 8rem);
+                overflow-y: auto;
+                margin: 0;
+            }
+        }
+
+        @media (min-width: 1280px) {
+            .blog-container {
+                max-width: 1280px;
+                grid-template-columns: 240px minmax(0, 720px) 220px;
+                padding: 0 2rem;
+            }
+            .blog-sidebar-left {
+                display: block;
+                position: sticky;
+                top: 6rem;
+                max-height: calc(100vh - 8rem);
+                overflow-y: auto;
+                margin: 0;
+            }
+        }
+
+        /* === ヒーロー画像 === */
+        .hero-image {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        /* 縦長の画像でも本文を押し下げないよう、横長(2:1)に切り抜く */
+        .hero-image img {
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 2 / 1;
+            border-radius: var(--radius);
+            object-fit: cover;
+        }
+        @media (min-width: 1024px) {
+            .hero-image {
+                width: calc(100% + 3rem);
+                margin: -1.5rem -1.5rem 2rem;
+            }
+            .hero-image img {
+                border-bottom-left-radius: 0;
+                border-bottom-right-radius: 0;
+            }
+        }
+
+        /* ======================================================
+           2. 記事ヘッダー(他ページの PageHeader と同じ形)
+           ====================================================== */
+        .prose {
+            width: 100%;
+            padding: 1rem 0;
+            color: var(--text-main);
+            line-height: 1.9;
+        }
+
+        .post-header {
+            margin: 0 0 2.5rem;
+            padding: 0 0 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .post-command {
+            margin: 0 0 0.6rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            overflow-wrap: anywhere;
+        }
+        .post-header h1 {
+            display: block;
+            margin: 0 0 0.6rem;
+            color: var(--text-main);
+            font-family: var(--font-mono), var(--font-sans);
+            font-size: 2rem;
+            line-height: 1.3;
+            letter-spacing: -0.02em;
+            overflow-wrap: anywhere;
+        }
+        .post-lead {
+            margin: 0 0 0.9rem;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+        .post-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.4rem 0.8rem;
+            margin: 0;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+        }
+        .last-updated-on {
+            opacity: 0.8;
+        }
+        .post-meta-read::before {
+            content: "·";
+            margin-right: 0.8rem;
+        }
+
+        .post-tag {
+            display: inline-block;
+            padding: 0.1em 0.4em;
+            border: 1px solid var(--border-color);
+            border-radius: 0;
+            background: var(--background);
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            font-weight: 500;
+            line-height: 1.5;
+            white-space: nowrap;
+        }
+
+        /* ======================================================
+           3. 本文
+           ====================================================== */
+        .prose :global(p) {
+            margin-bottom: 1.5rem;
+        }
+
+        /* 見出しの強さ: h2 > h3 > h4 になるように
+           h2 … 「青い線が左から伸びる」下線(.visible は下のスクリプトが付ける) */
+        .prose :global(h2) {
+            position: relative;
+            font-size: 1.6rem;
+            margin: 3.5rem 0 1.5rem;
+            padding-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+        .prose :global(h2)::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            height: 1px;
+            width: 0%;
+            background-color: var(--accent-blue);
+            transition: width 0.8s ease-out;
+        }
+        .prose :global(h2.visible)::after {
+            width: 100%;
         }
         @media (prefers-reduced-motion: reduce) {
-            .blog-toc,
-            .blog-toc.mobile-open {
+            .prose :global(h2)::after {
+                width: 100%;
                 transition: none;
             }
         }
-    }
-</style>
 
-<Fragment slot="body-end">
-<script>
-    // === h2 アニメーション ===
-    const observer = new IntersectionObserver(
-        (entries) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add("visible");
-                }
-            });
-        },
-        { threshold: 0.5 },
-    );
+        /* h3 … 細い左バーだけ */
+        .prose :global(h3) {
+            font-size: 1.25rem;
+            margin: 2.5rem 0 1rem;
+            padding: 0.15rem 0 0.15rem 0.75rem;
+            border-left: 3px solid var(--accent-blue);
+            color: var(--text-main);
+        }
 
-    document.querySelectorAll("article h2").forEach((h2) => {
-        observer.observe(h2);
-    });
+        /* h4 … mono の小見出し */
+        .prose :global(h4) {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: var(--font-mono), var(--font-sans);
+            font-size: 1rem;
+            margin: 2rem 0 0.8rem;
+            color: var(--text-main);
+        }
+        .prose :global(h4)::before {
+            content: "▸";
+            color: var(--accent-blue);
+        }
 
-    // === モバイル用目次のリンククリック時に閉じる ===
-    const tocSidebarMobile = document.querySelector(".blog-toc");
-    const tocToggleBtn = document.getElementById("toc-toggle");
-    document.querySelectorAll(".blog-toc a").forEach((link) => {
-        link.addEventListener("click", () => {
-            if (
-                window.innerWidth < 1280 &&
-                tocSidebarMobile &&
-                tocSidebarMobile.classList.contains("mobile-open")
-            ) {
-                tocSidebarMobile.classList.remove("mobile-open");
-                if (tocToggleBtn) tocToggleBtn.classList.remove("active");
-                const backdrop = document.getElementById("toc-backdrop");
-                if (backdrop) backdrop.classList.remove("visible");
+        /* 引用 */
+        .prose :global(blockquote) {
+            margin: 2rem 0;
+            padding: 1.2rem 1.5rem;
+            background: var(--background);
+            border-left: 3px solid var(--accent-blue);
+            border-radius: 0;
+            color: var(--text-muted);
+        }
+        .prose :global(blockquote p:last-child) {
+            margin-bottom: 0;
+        }
+
+        /* コードブロック */
+        .prose :global(pre) {
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            margin: 2rem 0;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+
+        /* 画像は影ではなく 1px の枠で区切る */
+        .prose :global(.prose-content img) {
+            border: 1px solid var(--border-color);
+        }
+
+        /* テーブル: 左寄せ、ヘッダーは mono、狭い画面では横スクロール */
+        .prose :global(table) {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        .prose :global(th),
+        .prose :global(td) {
+            border: 1px solid var(--border-color);
+            padding: 0.6rem 0.8rem;
+            text-align: left;
+            vertical-align: top;
+        }
+        .prose :global(th) {
+            background: var(--elevated);
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+        }
+        .prose :global(tr:nth-child(even) td) {
+            background: color-mix(in srgb, var(--text-main) 3%, transparent);
+        }
+        @media (max-width: 720px) {
+            .prose :global(table) {
+                display: block;
+                overflow-x: auto;
             }
-        });
-    });
+        }
 
-    // === 目次アクティブ追従 ===
-    const tocLinks = document.querySelectorAll(".blog-toc a");
-    const headings = document.querySelectorAll(
-        ".prose h2, .prose h3, .prose h4",
-    );
+        /* リンクカード(remark-link-card の出力)を ui-card に揃える */
+        .prose :global(.rlc-container) {
+            display: flex;
+            align-items: stretch;
+            margin: 1.5rem 0;
+            overflow: hidden;
+            background: var(--background);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-main);
+            text-decoration: none;
+            transition:
+                border-color 0.18s ease,
+                box-shadow 0.35s var(--ease-out);
+        }
+        .prose :global(.rlc-info) {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+            justify-content: center;
+            gap: 0.35rem;
+            min-width: 0;
+            padding: 0.9rem 1.1rem;
+        }
+        .prose :global(.rlc-title) {
+            font-size: 0.95rem;
+            font-weight: 700;
+            line-height: 1.5;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            transition: color 0.18s ease;
+        }
+        .prose :global(.rlc-description) {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            line-height: 1.5;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        .prose :global(.rlc-url-container) {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            min-width: 0;
+        }
+        .prose :global(.rlc-favicon) {
+            width: 14px;
+            height: 14px;
+            border: none;
+            border-radius: 0;
+            flex-shrink: 0;
+        }
+        .prose :global(.rlc-url) {
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .prose :global(.rlc-image-container) {
+            flex-shrink: 0;
+            width: 200px;
+        }
+        .prose :global(.rlc-image) {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border: none;
+            border-radius: 0;
+        }
+        @media (hover: hover) {
+            .prose :global(.rlc-container:hover) {
+                border-color: var(--accent-blue);
+                box-shadow: var(--shadow-offset);
+            }
+            .prose :global(.rlc-container:hover .rlc-title) {
+                color: var(--accent-blue);
+            }
+        }
+        @media (max-width: 640px) {
+            .prose :global(.rlc-image-container) {
+                width: 110px;
+            }
+        }
 
-    if (tocLinks.length > 0 && headings.length > 0) {
-        const tocObserver = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        const id = entry.target.id;
-                        if (!id) return;
+        /* ======================================================
+           4. 記事末尾
+           ====================================================== */
+        .post-footer {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-top: 3.5rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+        .footer-tags {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.4rem;
+            margin: 0;
+        }
+        .footer-label {
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            margin-right: 0.2rem;
+        }
 
-                        tocLinks.forEach((link) =>
-                            link.classList.remove("active"),
-                        );
+        .share-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            align-self: flex-start;
+            padding: 0.55rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            text-decoration: none;
+            transition:
+                color 0.18s ease,
+                border-color 0.18s ease;
+        }
+        @media (hover: hover) {
+            .share-btn:hover {
+                color: var(--accent-blue);
+                border-color: var(--accent-blue);
+            }
+        }
 
-                        const activeLink = Array.from(tocLinks).find((link) => {
-                            const href = link.getAttribute("href");
-                            return (
-                                href === `#${id}` ||
-                                href === `#${encodeURIComponent(id)}` ||
-                                href === `#${decodeURIComponent(id)}`
-                            );
+        .post-nav {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+        .post-nav-link {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            padding: 0.9rem 1rem;
+            color: var(--text-main);
+            text-decoration: none;
+            background: var(--background);
+        }
+        .post-nav-link.older {
+            text-align: right;
+            align-items: flex-end;
+        }
+        .post-nav-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+        }
+        .post-nav-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            line-height: 1.5;
+            transition: color 0.18s ease;
+        }
+        @media (hover: hover) {
+            .post-nav-link:hover .post-nav-title {
+                color: var(--accent-blue);
+            }
+        }
+        @media (max-width: 640px) {
+            .post-nav {
+                grid-template-columns: 1fr;
+            }
+            .post-nav-link.older {
+                text-align: left;
+                align-items: flex-start;
+            }
+            .post-nav-empty {
+                display: none;
+            }
+        }
+
+        .back-link {
+            display: inline-flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 0.5rem;
+            align-self: flex-start;
+            color: var(--text-main);
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: color 0.18s ease;
+        }
+        .back-comment {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+        @media (hover: hover) {
+            .back-link:hover {
+                color: var(--accent-blue);
+            }
+        }
+
+        /* ======================================================
+           5. 左サイドバー
+           ====================================================== */
+        .sidebar-card {
+            display: flex;
+            flex-direction: column;
+            gap: 0.9rem;
+            padding: 1.2rem 1.1rem;
+        }
+
+        .sidebar-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .sidebar-avatar {
+            width: 48px;
+            height: 48px;
+            flex-shrink: 0;
+            border-radius: var(--radius);
+            object-fit: cover;
+            border: 1px solid var(--border-color);
+        }
+        .sidebar-profile-text {
+            min-width: 0;
+        }
+        .sidebar-name {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+        .sidebar-bio {
+            margin: 0.1rem 0 0;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        .sidebar-sns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+        .sidebar-sns-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            color: var(--text-muted);
+            transition:
+                background 0.2s,
+                color 0.2s,
+                border-color 0.2s;
+        }
+        /* ブランドカラー ホバー */
+        @media (hover: hover) {
+            .sidebar-sns-link:hover {
+                color: #fff;
+                border-color: transparent;
+            }
+            .sidebar-sns-link[data-brand="twitter"]:hover {
+                background: #1da1f2;
+            }
+            .sidebar-sns-link[data-brand="tech"]:hover {
+                background: #f59518;
+            }
+            .sidebar-sns-link[data-brand="github"]:hover {
+                background: #333;
+            }
+            :global(html.dark) .sidebar-sns-link[data-brand="github"]:hover {
+                background: #f0f0f0;
+                color: #333;
+            }
+            .sidebar-sns-link[data-brand="note"]:hover {
+                background: var(--brand-note);
+            }
+            .sidebar-sns-link[data-brand="zenn"]:hover {
+                background: var(--brand-zenn);
+            }
+            .sidebar-sns-link[data-brand="qiita"]:hover {
+                background: var(--brand-qiita);
+            }
+        }
+
+        .sidebar-divider {
+            width: 100%;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .sidebar-section-title {
+            margin: 0;
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        /* meta: key / value */
+        .meta-list {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 0.45rem 0.8rem;
+            align-items: baseline;
+            margin: 0;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+        }
+        .meta-list dt {
+            color: var(--accent-blue);
+            font-size: 0.68rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+        .meta-list dd {
+            margin: 0;
+            min-width: 0;
+            color: var(--text-main);
+        }
+        .meta-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        /* related */
+        .related-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+        .related-link {
+            display: block;
+            padding: 0.4rem 0.5rem 0.4rem 0.9rem;
+            border-left: 2px solid var(--border-color);
+            color: var(--text-main);
+            text-decoration: none;
+            transition:
+                border-color 0.18s ease,
+                background 0.18s ease;
+        }
+        .related-title {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            font-size: 0.8rem;
+            font-weight: 600;
+            line-height: 1.5;
+            transition: color 0.18s ease;
+        }
+        .related-date {
+            display: block;
+            margin-top: 0.15rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+        }
+        @media (hover: hover) {
+            .related-link:hover {
+                border-left-color: var(--accent-blue);
+                background: color-mix(in srgb, var(--accent-blue) 6%, transparent);
+            }
+            .related-link:hover .related-title {
+                color: var(--accent-blue);
+            }
+        }
+
+        .sidebar-card .share-btn {
+            align-self: stretch;
+        }
+
+        /* ======================================================
+           6. 右: 目次(ファイルツリー風)
+              通過した項目は薄く、現在地はアクセント、未読は通常
+           ====================================================== */
+        .toc-card {
+            position: relative;
+            padding-top: 0.5rem; /* progress バー分の余白 */
+        }
+
+        /* 読了プログレスバー */
+        .toc-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 2px;
+            width: 0%;
+            background: var(--accent-blue);
+            transition: width 0.15s ease-out;
+            z-index: 1;
+        }
+
+        .toc-title {
+            margin: 0 0 0.8rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .toc-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .toc-card li {
+            margin-bottom: 0.15rem;
+            line-height: 1.3;
+        }
+        .toc-card a {
+            display: block;
+            padding: 0.3rem 0.5rem;
+            border-left: 2px solid transparent;
+            border-radius: 0;
+            color: var(--text-main);
+            font-size: 0.82rem;
+            text-decoration: none;
+            transition:
+                background 0.2s,
+                color 0.2s,
+                opacity 0.2s,
+                border-color 0.2s;
+        }
+        @media (hover: hover) {
+            .toc-card a:hover {
+                color: var(--accent-blue);
+                background: color-mix(in srgb, var(--accent-blue) 6%, transparent);
+                opacity: 1;
+            }
+        }
+        /* 通過済み */
+        .toc-card a.is-passed {
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
+        /* 現在地 */
+        .toc-card a.active {
+            color: var(--accent-blue);
+            font-weight: 700;
+            border-left-color: var(--accent-blue);
+            background: color-mix(in srgb, var(--accent-blue) 8%, transparent);
+            opacity: 1;
+        }
+
+        /* === h3 ツリーライン(├── / └──) === */
+        .toc-level-3 {
+            position: relative;
+        }
+        .toc-level-3::before {
+            content: "";
+            position: absolute;
+            left: 0.55rem;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: var(--border-color);
+        }
+        /* グループ末尾だけ縦線を上半分に切る */
+        .toc-level-3:last-child::before,
+        .toc-level-3:has(+ .toc-level-2)::before {
+            bottom: 50%;
+        }
+        .toc-level-3 > a {
+            position: relative;
+            padding-left: 1.6rem;
+            border-left: none;
+            font-size: 0.78rem;
+        }
+        .toc-level-3 > a::before {
+            content: "";
+            position: absolute;
+            left: 0.55rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0.65rem;
+            height: 1px;
+            background: var(--border-color);
+            transition: background 0.2s;
+        }
+        .toc-level-3 > a.active::before,
+        .toc-level-3 > a.is-passed::before {
+            background: var(--accent-blue);
+        }
+        .toc-level-3 > a.is-passed::before {
+            opacity: 0.5;
+        }
+
+        .toc-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin-top: 0.8rem;
+            padding-top: 0.6rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+        }
+        .toc-percent {
+            font-variant-numeric: tabular-nums;
+        }
+        .toc-top {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.18s ease;
+        }
+        @media (hover: hover) {
+            .toc-top:hover {
+                color: var(--accent-blue);
+            }
+        }
+
+        /* --- TOC: サイドドロワー(≤1023px / 右側) --- */
+        @media (max-width: 1023px) {
+            .blog-toc {
+                display: block;
+                position: fixed;
+                top: var(--header-height, 64px);
+                right: 0;
+                width: min(300px, 80vw);
+                height: calc(100dvh - var(--header-height, 64px));
+                overflow-y: auto;
+                z-index: 1000;
+
+                background: var(--surface);
+                border-left: 1px solid var(--border-color);
+                padding: 1.5rem 1.25rem;
+
+                opacity: 0;
+                transform: translateX(16px);
+                pointer-events: none;
+                visibility: hidden;
+
+                transition:
+                    opacity 0.18s ease-out,
+                    transform 0.22s var(--ease-out),
+                    visibility 0s linear 0.22s;
+            }
+            .blog-toc.mobile-open {
+                opacity: 1;
+                transform: translateX(0);
+                pointer-events: auto;
+                visibility: visible;
+                transition:
+                    opacity 0.18s ease-out,
+                    transform 0.22s var(--ease-out),
+                    visibility 0s linear 0s;
+            }
+            @media (prefers-reduced-motion: reduce) {
+                .blog-toc,
+                .blog-toc.mobile-open {
+                    transition: none;
+                }
+            }
+        }
+
+        @media (max-width: 720px) {
+            .prose {
+                padding: 1rem;
+            }
+            .post-header h1 {
+                font-size: 1.6rem;
+            }
+        }
+    </style>
+
+    <Fragment slot="body-end">
+        <script>
+            // ClientRouter での遷移でも動くよう、astro:page-load ごとに初期化する
+            function initBlogPost() {
+                const article = document.querySelector<HTMLElement>(
+                    ".blog-container article",
+                );
+                if (!article || article.dataset.initialized) return;
+                article.dataset.initialized = "true";
+
+                // === h2: 青い下線を画面に入ったときに伸ばす ===
+                const h2Observer = new IntersectionObserver(
+                    (entries) => {
+                        entries.forEach((entry) => {
+                            if (entry.isIntersecting) {
+                                entry.target.classList.add("visible");
+                                h2Observer.unobserve(entry.target);
+                            }
                         });
+                    },
+                    { threshold: 0.5 },
+                );
+                article
+                    .querySelectorAll("h2")
+                    .forEach((h2) => h2Observer.observe(h2));
 
-                        if (activeLink) {
-                            activeLink.classList.add("active");
-                        }
-                    }
-                });
-            },
-            {
-                rootMargin: "-100px 0px -70% 0px",
-            },
-        );
-
-        headings.forEach((h) => tocObserver.observe(h));
-    }
-
-    // === 読了プログレスバー ===
-    const progressBar = document.getElementById("toc-progress");
-    if (progressBar) {
-        window.addEventListener(
-            "scroll",
-            () => {
-                const article = document.querySelector("article");
-                if (!article) return;
-
-                const articleTop = article.offsetTop;
-                const articleHeight = article.scrollHeight;
-                const windowHeight = window.innerHeight;
-                const scrollTop = window.scrollY;
-
-                const progress = Math.min(
-                    100,
-                    Math.max(
-                        0,
-                        ((scrollTop - articleTop + windowHeight * 0.3) /
-                            articleHeight) *
-                            100,
+                // === 目次 ===
+                const toc = document.querySelector<HTMLElement>(".blog-toc");
+                const tocLinks = Array.from(
+                    document.querySelectorAll<HTMLAnchorElement>(
+                        ".blog-toc a[data-toc-slug]",
                     ),
                 );
+                const headingEls = tocLinks.map((link) =>
+                    document.getElementById(link.dataset.tocSlug ?? ""),
+                );
+                const progressBar = document.getElementById("toc-progress");
+                const percentEl = document.getElementById("toc-percent");
+                const topLink = document.getElementById("toc-top");
 
-                progressBar.style.width = `${progress}%`;
-            },
-            { passive: true },
-        );
-    }
-</script>
-</Fragment>
+                // ドロワーで開いているとき、項目を押したら閉じる
+                const closeDrawer = () => {
+                    if (!toc || window.innerWidth >= 1024) return;
+                    if (!toc.classList.contains("mobile-open")) return;
+                    toc.classList.remove("mobile-open");
+                    document
+                        .getElementById("toc-toggle")
+                        ?.classList.remove("active");
+                    document
+                        .getElementById("toc-backdrop")
+                        ?.classList.remove("visible");
+                };
+                tocLinks.forEach((link) =>
+                    link.addEventListener("click", closeDrawer),
+                );
+                topLink?.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                    closeDrawer();
+                });
+
+                // 読み進みの判定は「見出しが画面上端から 120px を越えたか」。
+                // 越えた最後の見出しが現在地、それより前は通過済み。
+                let ticking = false;
+                const update = () => {
+                    ticking = false;
+                    const line = window.scrollY + 120;
+                    let activeIndex = -1;
+                    headingEls.forEach((el, i) => {
+                        if (!el) return;
+                        const top =
+                            el.getBoundingClientRect().top + window.scrollY;
+                        if (top <= line) activeIndex = i;
+                    });
+                    tocLinks.forEach((link, i) => {
+                        link.classList.toggle("is-passed", i < activeIndex);
+                        link.classList.toggle("active", i === activeIndex);
+                    });
+
+                    // 読了 %(記事の下端が画面下に来たら 100%)
+                    const rect = article.getBoundingClientRect();
+                    const total = rect.height - window.innerHeight;
+                    const read = Math.min(
+                        100,
+                        Math.max(
+                            0,
+                            total > 0 ? (-rect.top / total) * 100 : 100,
+                        ),
+                    );
+                    if (progressBar) progressBar.style.width = `${read}%`;
+                    if (percentEl) percentEl.textContent = String(Math.round(read));
+                };
+                const onScroll = () => {
+                    if (ticking) return;
+                    ticking = true;
+                    requestAnimationFrame(update);
+                };
+                window.addEventListener("scroll", onScroll, { passive: true });
+                window.addEventListener("resize", onScroll, { passive: true });
+                document.addEventListener(
+                    "astro:before-swap",
+                    () => {
+                        window.removeEventListener("scroll", onScroll);
+                        window.removeEventListener("resize", onScroll);
+                        h2Observer.disconnect();
+                    },
+                    { once: true },
+                );
+                update();
+            }
+            document.addEventListener("astro:page-load", initBlogPost);
+            initBlogPost();
+        </script>
+    </Fragment>
 </Layout>

@@ -333,7 +333,8 @@ import { Menu, X, Sun, Moon, BookOpenText } from "lucide-astro";
         color: var(--accent-blue);
         background: color-mix(in srgb, var(--accent-blue) 12%, transparent);
     }
-    @media (max-width: 1279px) {
+    /* 記事ページの目次は 1024px 以上で常時表示。それ未満はこのボタンでドロワー */
+    @media (max-width: 1023px) {
         .toc-toggle.has-toc {
             display: flex;
         }

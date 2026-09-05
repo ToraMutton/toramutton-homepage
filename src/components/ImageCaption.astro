@@ -20,15 +20,17 @@ const { src, alt, caption } = Astro.props;
     margin: 2rem 0;
     text-align: center;
   }
+  /* 本文の画像と同じ: 影なし・1px 枠・4px 角丸 */
   img {
     max-width: 100%;
     height: auto;
-    border-radius: 8px;
-    border: 1px solid #444;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-color);
   }
   figcaption {
-    margin-top: 0.8rem;
-    font-size: 0.85em;
-    color: #a0a0a0;
+    margin-top: 0.6rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
   }
 </style>

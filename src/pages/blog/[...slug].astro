@@ -20,7 +20,7 @@ const post = Astro.props;
 const { Content, headings } = await render(post);
 ---
 
-<BlogPost {...post.data} headings={headings}>
+<BlogPost {...post.data} id={post.id} body={post.body ?? ""} headings={headings}>
     <div class="prose-content">
         <Content />
     </div>
