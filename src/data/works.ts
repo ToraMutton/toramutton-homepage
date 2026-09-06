@@ -125,7 +125,7 @@ export const works: Work[] = [
     icon: FileVideo,
     year: "2026",
     url: "",
-    github: "",
+    github: "https://github.com/ToraMutton/fxtwitter-bot",
     status: "completed",
     image: fxtwitterImage,
   },
