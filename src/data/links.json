@@ -130,5 +130,11 @@
         "url": "https://my-pages-3kvr.vercel.app/",
         "description": "いつかvaloやりましょう",
         "icon": "/favicons/miri.webp"
+    },
+    {
+        "name": "Jüw",
+        "url": "https://juw.pages.dev/",
+        "description": "言語系がつよつよ、デザインもモダンでシャレオツです",
+        "icon": null
     }
 ]
