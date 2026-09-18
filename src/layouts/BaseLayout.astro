@@ -36,9 +36,11 @@ const { title, description, image, cardType, width = "default" } = Astro.props;
     </head>
     <body>
         <Header />
-        <main class={width}><slot /></main>
+        <main class={width}>
+            <slot />
+        </main>
         <Footer />
-        {/* ページ固有の <script> をここに置くためのスロット */}
+        {/* ページ固有のスクリプトをここに置くためのスロット */}
         <slot name="body-end" />
     </body>
 </html>
