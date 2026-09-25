@@ -57,7 +57,7 @@ export type HeroSpec =
 
 export const heroSpecs: HeroSpec[] = [
   { key: "Name", icon: User, value: "トラマト / 寅松 / toramutton" },
-  { key: "Univ", icon: GraduationCap, value: "UEC25 Class A" },
+  { key: "Univ", icon: GraduationCap, value: "UEC25 / I類 / CS Program" },
   { key: "Stack", icon: Layers, value: "Rust / TS / C" },
   {
     key: "UUID",

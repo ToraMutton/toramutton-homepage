@@ -212,13 +212,17 @@ export interface TimelineEntry {
 }
 
 export const TIMELINE: TimelineEntry[] = [
+  { date: "2026.09.25", desc: "コンピュータサイエンスプログラム 配属" },
+  { date: "2026.09.12", desc: "ノートPCにArch Linuxを導入(デュアルブート)" },
   { date: "2026.08.14", desc: "デスクトップシェルをCaelestia Shellへ移行" },
   { date: "2026.05.30", desc: "ホームページをターミナル風デザインに大改造" },
-  { date: "2026.04.24", desc: "UEC Career Boot Festa 2026のNOCに参加" },
+  { date: "2026.04.24", desc: "UEC Career Boot Festa 2026 のNOCに参加" },
   { date: "2026.03.10", desc: "基本情報技術者試験 合格" },
-  { date: "2026.01.02", desc: "Astroでホームページを作成" },
-  { date: "2025.04.14", desc: "MMA 入部" },
-  { date: "2025.04.04", desc: "電気通信大学Ⅰ類 入学" },
+  { date: "2026.02.25", desc: "自作PCにArch Linuxを導入(デュアルブート)" },
+  { date: "2026.02.13", desc: "自作PCをビルド" },
+  { date: "2026.01.02", desc: "Astroでこのホームページを開設" },
+  { date: "2025.04.14", desc: "電気通信大学 MMA 入部" },
+  { date: "2025.04.04", desc: "電気通信大学 I類 入学" },
   { date: "2022.04.07", desc: "都立三田高校 入学" },
   { date: "2006.06.20", desc: "誕生" },
 ];
