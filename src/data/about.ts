@@ -77,11 +77,7 @@ export const AI_SKILLS: Skill[] = [
 
 // --- 5. Tools & Creative ---
 export const TOOL_SKILLS: Skill[] = [
-  {
-    name: "Zed",
-    src: "https://zed.dev/_next/static/media/logo-new-white.0gnyg5qr0_x6r.png",
-    level: 5,
-  },
+  { name: "Zed", src: "/icons/zed.svg", level: 5, darkInvert: true },
   { name: "Neovim", src: devicon("neovim"), level: 3 },
   { name: "VS Code", src: devicon("vscode"), level: 3 },
   { name: "IntelliJ", src: devicon("intellij"), level: 2 },
