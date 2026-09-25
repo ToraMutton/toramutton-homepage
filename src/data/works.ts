@@ -11,6 +11,8 @@ import type { ImageMetadata } from "astro";
 
 import archdotImage from "../assets/works/arch.webp";
 import artoramImage from "../assets/works/artoram.webp";
+import baBgRubyImage from "../assets/works/ba-bg-ruby.webp";
+import caelestiaAiUsageImage from "../assets/works/caelestia-ai-usage.webp";
 import fxtwitterImage from "../assets/works/fxtwitter-bot.webp";
 import guideBookImage from "../assets/works/homepage-guide.webp";
 import homepageImage from "../assets/works/toramutton.webp";
@@ -25,9 +27,11 @@ import {
   Cpu,
   FileVideo,
   Gamepad2,
+  Gauge,
   Grid3X3,
   LayoutGrid,
   Shapes,
+  Sparkles,
   Terminal,
 } from "lucide-astro";
 
@@ -66,9 +70,21 @@ export const works: Work[] = [
     icon: Terminal,
     year: "2026",
     url: "",
-    github: "https://github.com/ToraMutton/dotfiles/tree/main/arch",
+    github: "https://github.com/ToraMutton/dotfiles",
     status: "completed",
     image: archdotImage,
+  },
+  {
+    name: "caelestia-ai-usage",
+    description:
+      "ClaudeとOpenAI（Codex）のサブスクリプション利用枠をCaelestia Shellのバーに表示するウィジェット。各CLIの公式な経路から取得するので、プロンプトを送らず利用枠も消費しません。",
+    tags: ["Python", "QML", "Caelestia"],
+    icon: Gauge,
+    year: "2026",
+    url: "",
+    github: "https://github.com/ToraMutton/caelestia-ai-usage",
+    status: "completed",
+    image: caelestiaAiUsageImage,
   },
   {
     name: "はじめてのホームページ制作ガイド",
@@ -106,14 +122,26 @@ export const works: Work[] = [
     image: vextraImage,
   },
   {
+    name: "ba-bg-ruby",
+    description:
+      "ブルーアーカイブ風の背景をRubyだけで描くジェネレーター。gemを一切使わず、多角形・楕円・グラデーションを自前で計算してPPM画像を直接出力します。星と雲の配置は実行するたびにランダムに変わります。",
+    tags: ["Ruby", "Generative Art", "Blue Archive"],
+    icon: Sparkles,
+    year: "2026",
+    url: "",
+    github: "https://github.com/ToraMutton/ba-bg-ruby",
+    status: "completed",
+    image: baBgRubyImage,
+  },
+  {
     name: "Windows11 Dotfiles",
     description:
       "GlazeWMとzebarを用いた、タイル型ウィンドウマネージャ環境のWindows11用設定ファイル。Reactを用いたバーカスタマイズが可能です。",
-    tags: ["GlazeWM", "zebar", "React"],
+    tags: ["GlazeWM", "Zebar", "React"],
     icon: LayoutGrid,
     year: "2026",
     url: "",
-    github: "https://github.com/ToraMutton/dotfiles/tree/main/windows",
+    github: "https://github.com/ToraMutton/windows-dotfiles",
     status: "completed",
     image: windotImage,
   },
@@ -145,7 +173,7 @@ export const works: Work[] = [
     name: "Classroom-PDF-Saver",
     description:
       "Google ClassroomのPDF保存を時短させるChrome拡張機能です。わざわざ新しいタブで開く必要なし！",
-    tags: ["Javascript", "拡張機能"],
+    tags: ["JavaScript", "拡張機能"],
     icon: Chrome,
     year: "2026",
     url: "",
