@@ -1,11 +1,17 @@
 ---
 export const prerender = true;
-import Layout from '../layouts/BaseLayout.astro';
-import PageHeader from '../components/PageHeader.astro';
-import SectionHeading from '../components/SectionHeading.astro';
-import { Wrench, Heart, Monitor, GitGraph } from 'lucide-astro';
+import Layout from "../layouts/BaseLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+import SectionHeading from "../components/SectionHeading.astro";
+import { Wrench, Heart, Monitor, GitGraph } from "lucide-astro";
 // 表示する中身は src/data/about.ts にまとめてある
-import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../data/about';
+import {
+    SKILL_GROUPS,
+    SKILL_LEVELS,
+    INTERESTS,
+    ENV_BLOCKS,
+    TIMELINE,
+} from "../data/about";
 ---
 
 <Layout
@@ -24,12 +30,15 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
         <section class="bio">
             <div class="bio-body" data-reveal>
                 <p>
-                    電気通信大学 情報理工学域 I 類 コンピュータサイエンスプログラムの
+                    電気通信大学 情報理工学域 I 類
+                    コンピュータサイエンスプログラムの
                     <strong>ToraMutton / トラマト</strong>です。 寅松
-                    真人(とらまつ まさと)はGrok君が考えてくれた偽名です。<br />
-                    MMAというサークルに所属していて、 Twitterに生息しています。<br
-                    />
-                    Web・コンパイラ・LLMあたりに興味があり、 最近はArch LinuxとWindows11の両方でRicingを楽しんでます。
+                    真人(とらまつ まさと)はGrok君が考えてくれた偽名です。
+                    <br />
+                    MMAというサークルに所属していて、 Twitterに生息しています。
+                    <br />
+                    Web・コンパイラ・LLMあたりに興味があり、
+                    最近はノートPCにArch Linuxを入れて楽しんでます。
                 </p>
             </div>
 
@@ -43,9 +52,9 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
             >
                 <span class="env-dollar">$</span>
                 <span class="env-cmd-text">cat ~/profile/intro.md</span>
-                <span class="env-comment env-tag"
-                    ># より詳しい自己紹介はこちら</span
-                >
+                <span class="env-comment env-tag">
+                    # より詳しい自己紹介はこちら
+                </span>
                 <span class="env-arrow">↗</span>
             </a>
         </section>
@@ -60,72 +69,65 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
             <p class="skill-intro"># 使用している言語とかツールとか</p>
             <p class="skill-intro skill-legend">
                 <span># 熟練度:</span>
-                {
-                    SKILL_LEVELS.map((lv) => (
-                        <span class="legend-item">
-                            <span class="legend-n">{lv.level}</span>
-                            {lv.label}
-                        </span>
-                    ))
-                }
+                {SKILL_LEVELS.map((lv) => (
+                    <span class="legend-item">
+                        <span class="legend-n">{lv.level}</span>
+                        {lv.label}
+                    </span>
+                ))}
             </p>
 
-            {
-                SKILL_GROUPS.map((group) => (
-                    <div class="skill-category">
-                        <div class="skill-cmd">
-                            <span class="env-dollar">$</span>
-                            <span class="skill-cmd-text">{group.cmd}</span>
-                            <span class="env-comment">// {group.note}</span>
-                        </div>
-                        <div class="skill-grid">
-                            {group.items.map((skill, i) => (
-                                <div
-                                    class="skill-card ui-card ui-card-hover"
-                                    data-reveal
-                                    style={`--i: ${i}`}
-                                >
-                                    <span
-                                        class={`icon-wrapper ${skill.darkInvert ? "dark-invert" : ""}`}
-                                    >
-                                        <img
-                                            src={skill.src}
-                                            alt={skill.name}
-                                            class="skill-img"
-                                            width="48"
-                                            height="48"
-                                            loading="lazy"
-                                        />
-                                    </span>
-                                    <span class="skill-meta">
-                                        <span class="skill-name">
-                                            {skill.name}
-                                        </span>
-                                        <span
-                                            class="skill-level"
-                                            role="img"
-                                            aria-label={`熟練度 ${skill.level} / 5`}
-                                        >
-                                            {[1, 2, 3, 4, 5].map((n) => (
-                                                <span
-                                                    class:list={[
-                                                        "lv-seg",
-                                                        {
-                                                            "is-on":
-                                                                n <=
-                                                                skill.level,
-                                                        },
-                                                    ]}
-                                                />
-                                            ))}
-                                        </span>
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
+            {SKILL_GROUPS.map((group) => (
+                <div class="skill-category">
+                    <div class="skill-cmd">
+                        <span class="env-dollar">$</span>
+                        <span class="skill-cmd-text">{group.cmd}</span>
+                        <span class="env-comment">// {group.note}</span>
                     </div>
-                ))
-            }
+                    <div class="skill-grid">
+                        {group.items.map((skill, i) => (
+                            <div
+                                class="skill-card ui-card ui-card-hover"
+                                data-reveal
+                                style={`--i: ${i}`}
+                            >
+                                <span
+                                    class={`icon-wrapper ${skill.darkInvert ? "dark-invert" : ""}`}
+                                >
+                                    <img
+                                        src={skill.src}
+                                        alt={skill.name}
+                                        class="skill-img"
+                                        width="48"
+                                        height="48"
+                                        loading="lazy"
+                                    />
+                                </span>
+                                <span class="skill-meta">
+                                    <span class="skill-name">{skill.name}</span>
+                                    <span
+                                        class="skill-level"
+                                        role="img"
+                                        aria-label={`熟練度 ${skill.level} / 5`}
+                                    >
+                                        {[1, 2, 3, 4, 5].map((n) => (
+                                            <span
+                                                class:list={[
+                                                    "lv-seg",
+                                                    {
+                                                        "is-on":
+                                                            n <= skill.level,
+                                                    },
+                                                ]}
+                                            />
+                                        ))}
+                                    </span>
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ))}
         </section>
 
         {/* 3. Interests & Hobbies */}
@@ -145,22 +147,20 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
                     <span class="env-typed">cat ~/.config/interests</span>
                 </div>
 
-                {
-                    INTERESTS.map((block) => (
-                        <div class="env-block">
-                            <div class="env-line env-section-head">
-                                <span class="env-bracket">[</span>
-                                <span class="env-section">{block.section}</span>
-                                <span class="env-bracket">]</span>
-                            </div>
-                            <div class="env-line int-row">
-                                {block.items.map((item) => (
-                                    <span class="int-tag">{item}</span>
-                                ))}
-                            </div>
+                {INTERESTS.map((block) => (
+                    <div class="env-block">
+                        <div class="env-line env-section-head">
+                            <span class="env-bracket">[</span>
+                            <span class="env-section">{block.section}</span>
+                            <span class="env-bracket">]</span>
                         </div>
-                    ))
-                }
+                        <div class="env-line int-row">
+                            {block.items.map((item) => (
+                                <span class="int-tag">{item}</span>
+                            ))}
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
 
@@ -183,44 +183,40 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
                 </div>
 
                 {/* output: ini blocks */}
-                {
-                    ENV_BLOCKS.map((block) => (
-                        <div class="env-block">
-                            <div class="env-line env-section-head">
-                                <span class="env-bracket">[</span>
-                                <span class="env-section">{block.section}</span>
-                                <span class="env-bracket">]</span>
-                                {block.meta && (
-                                    <span class="env-comment">
-                                        # {block.meta}
-                                    </span>
-                                )}
-                            </div>
-                            {block.rows.map((row) => (
-                                <div class="env-line env-row">
-                                    <span class="env-k">{row.k}</span>
-                                    <span class="env-eq">=</span>
-                                    <span class="env-v">{row.v}</span>
-                                </div>
-                            ))}
-                            {block.link && (
-                                <a
-                                    class="env-line env-cmd env-cmd--inline"
-                                    href={block.link.href}
-                                >
-                                    <span class="env-dollar">$</span>
-                                    <span class="env-cmd-text">
-                                        {block.link.cmd}
-                                    </span>
-                                    <span class="env-comment env-tag">
-                                        # {block.link.tag}
-                                    </span>
-                                    <span class="env-arrow">→</span>
-                                </a>
+                {ENV_BLOCKS.map((block) => (
+                    <div class="env-block">
+                        <div class="env-line env-section-head">
+                            <span class="env-bracket">[</span>
+                            <span class="env-section">{block.section}</span>
+                            <span class="env-bracket">]</span>
+                            {block.meta && (
+                                <span class="env-comment"># {block.meta}</span>
                             )}
                         </div>
-                    ))
-                }
+                        {block.rows.map((row) => (
+                            <div class="env-line env-row">
+                                <span class="env-k">{row.k}</span>
+                                <span class="env-eq">=</span>
+                                <span class="env-v">{row.v}</span>
+                            </div>
+                        ))}
+                        {block.link && (
+                            <a
+                                class="env-line env-cmd env-cmd--inline"
+                                href={block.link.href}
+                            >
+                                <span class="env-dollar">$</span>
+                                <span class="env-cmd-text">
+                                    {block.link.cmd}
+                                </span>
+                                <span class="env-comment env-tag">
+                                    # {block.link.tag}
+                                </span>
+                                <span class="env-arrow">→</span>
+                            </a>
+                        )}
+                    </div>
+                ))}
             </div>
         </div>
 
@@ -234,14 +230,12 @@ import { SKILL_GROUPS, SKILL_LEVELS, INTERESTS, ENV_BLOCKS, TIMELINE } from '../
             <div class="git-line" aria-hidden="true">
                 <span class="git-dollar">$</span> git log --oneline --graph
             </div>
-            {
-                TIMELINE.map((item, i) => (
-                    <div class="git-row" style={`--i: ${i}`}>
-                        <span class="git-date">{item.date}</span>
-                        <span class="git-msg">{item.desc}</span>
-                    </div>
-                ))
-            }
+            {TIMELINE.map((item, i) => (
+                <div class="git-row" style={`--i: ${i}`}>
+                    <span class="git-date">{item.date}</span>
+                    <span class="git-msg">{item.desc}</span>
+                </div>
+            ))}
         </div>
     </div>
 
