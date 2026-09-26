@@ -307,7 +307,7 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
             <!-- 分野カード: 「何をやってる人か」を分野ごとに見せる。
                  上に代表作の画像、下にその分野の completed 作品を全部並べる。
                  カード自体はリンクにせず(<a> の入れ子になるため)、作品の行がリンク -->
-            <section class="what-i-build">
+            <section class="what-i-build" data-reveal>
                 <SectionHeading>
                     つくっているもの
                     <a href="/works" class="view-all" slot="aside"
@@ -319,7 +319,6 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                         categoryCards.map((cat, i) => (
                             <div
                                 class="build-card ui-card ui-card-hover"
-                                data-reveal
                                 style={`--i: ${i}`}
                             >
                                 <div class="build-cover">
@@ -1961,9 +1960,20 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
     /* ====================================
        2.5 つくっているもの — 分野カード
        ==================================== */
-    /* 枠・背景・hover は global.css の .ui-card 系、出現は [data-reveal] */
+    /* 枠・背景・hover は global.css の .ui-card 系。
+       出現はセクションの [data-reveal] をきっかけに、カードが1枚ずつ持ち上がる
+       (最新の記事と同じ。スマホの横スクロールで画面外のカードも出しておくため) */
     .what-i-build {
         margin: 4rem 0;
+    }
+
+    .what-i-build .build-card {
+        opacity: 0;
+    }
+    .what-i-build.is-visible .build-card {
+        opacity: 1;
+        animation: reveal-in 0.55s var(--ease-out) backwards;
+        animation-delay: calc(var(--i, 0) * 40ms);
     }
 
     .build-grid {
@@ -2102,6 +2112,12 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
     }
 
     @media (prefers-reduced-motion: reduce) {
+        .what-i-build .build-card {
+            opacity: 1;
+        }
+        .what-i-build.is-visible .build-card {
+            animation: none;
+        }
         .build-cover img,
         .build-item,
         .build-thumb {
@@ -3498,9 +3514,25 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
             gap: 1rem;
         }
 
+        /* スマホは縦に4枚積むと長すぎるので、記事と同じ横スワイプの1行にする。
+           自動送りはせず、1枚ずつピタッと止まる(scroll-snap)だけ。
+           上下の padding は記事の marquee と同じく hover 影を切らないための逃げ */
         .build-grid {
-            grid-template-columns: 1fr;
+            display: flex;
             gap: 1rem;
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            padding: 8px 0;
+            margin: -8px 0;
+        }
+        .build-grid::-webkit-scrollbar {
+            display: none;
+        }
+        .build-card {
+            flex: 0 0 min(260px, 72vw);
+            scroll-snap-align: start;
         }
 
         /* 1列表示では span・並び替えを全部解除して DOM順に素直に積む */
