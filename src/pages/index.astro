@@ -33,7 +33,9 @@ import {
     terminalCommands,
     missions,
     uptimes,
+    workCategories,
 } from "../data/home";
+import { works } from "../data/works";
 import { asciiAvatar } from "../data/asciiAvatar";
 import { songs } from "../data/songs";
 
@@ -72,6 +74,19 @@ const latestPosts = [...localPosts, ...externalPosts]
 // marquee のサムネは 280px 枠(2x で 560px)。元画像がそれより小さいときは
 // 拡大すると逆に重くなるので、上限としてだけ使う
 const THUMB_W = 560;
+
+// === 分野カード ===
+// completed の作品を category ごとに振り分け、カード上部に出す1枚(cover)を決める
+const completedWorks = works.filter((w) => w.status === "completed");
+const categoryCards = workCategories
+    .map((cat) => {
+        const items = completedWorks.filter((w) => w.category === cat.key);
+        const cover =
+            items.find((w) => w.name === cat.cover && w.image) ??
+            items.find((w) => w.image);
+        return { ...cat, items, cover };
+    })
+    .filter((cat) => cat.items.length > 0);
 
 // === GitHub Contributions取得 ===
 type ContributionDay = { date: string; count: number; level: number };
@@ -278,6 +293,103 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                             >
                         </a>
                     </p>
+                    <p class="line">
+                        <span class="prompt">$</span>
+                        <a href="/works" class="cmd cmd-link">
+                            <span data-type>cd ./works</span><span
+                                class="cursor-arrow">→</span
+                            >
+                        </a>
+                    </p>
+                </div>
+            </section>
+
+            <!-- 分野カード: 「何をやってる人か」を分野ごとに見せる。
+                 上に代表作の画像、下にその分野の completed 作品を全部並べる。
+                 カード自体はリンクにせず(<a> の入れ子になるため)、作品の行がリンク -->
+            <section class="what-i-build">
+                <SectionHeading>
+                    つくっているもの
+                    <a href="/works" class="view-all" slot="aside"
+                        >すべての作品を見る →</a
+                    >
+                </SectionHeading>
+                <div class="build-grid">
+                    {
+                        categoryCards.map((cat, i) => (
+                            <div
+                                class="build-card ui-card ui-card-hover"
+                                data-reveal
+                                style={`--i: ${i}`}
+                            >
+                                <div class="build-cover">
+                                    {cat.cover?.image ? (
+                                        <Image
+                                            src={cat.cover.image}
+                                            alt=""
+                                            width={Math.min(
+                                                THUMB_W,
+                                                cat.cover.image.width,
+                                            )}
+                                        />
+                                    ) : (
+                                        <div class="no-image-placeholder">
+                                            <cat.icon size={28} />
+                                        </div>
+                                    )}
+                                </div>
+                                <div class="build-body">
+                                    <p class="build-path">~/works/{cat.key}</p>
+                                    <h3 class="build-title">
+                                        <cat.icon size={16} class="icon-blue" />
+                                        {cat.title}
+                                    </h3>
+                                    <p class="build-desc">{cat.desc}</p>
+                                    <ul class="build-items">
+                                        {cat.items.map((w) => {
+                                            const href = w.url || w.github;
+                                            const Tag = href ? "a" : "span";
+                                            return (
+                                                <li>
+                                                    <Tag
+                                                        class="build-item"
+                                                        href={href}
+                                                        target={
+                                                            href
+                                                                ? "_blank"
+                                                                : undefined
+                                                        }
+                                                        rel={
+                                                            href
+                                                                ? "noopener noreferrer"
+                                                                : undefined
+                                                        }
+                                                    >
+                                                        <span class="build-thumb">
+                                                            {w.image ? (
+                                                                <Image
+                                                                    src={w.image}
+                                                                    alt=""
+                                                                    width={128}
+                                                                />
+                                                            ) : (
+                                                                <w.icon
+                                                                    size={14}
+                                                                />
+                                                            )}
+                                                        </span>
+                                                        <span class="build-name">
+                                                            {w.name}
+                                                        </span>
+                                                    </Tag>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                </div>
+                            </div>
+                        ))
+                    }
                 </div>
             </section>
 
@@ -1847,6 +1959,157 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
     }
 
     /* ====================================
+       2.5 つくっているもの — 分野カード
+       ==================================== */
+    /* 枠・背景・hover は global.css の .ui-card 系、出現は [data-reveal] */
+    .what-i-build {
+        margin: 4rem 0;
+    }
+
+    .build-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1.25rem;
+    }
+
+    .build-card {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    /* 代表作の画像。縦横比がバラバラなので 16:9 に切り抜いて揃える */
+    .build-cover {
+        aspect-ratio: 16 / 9;
+        background: var(--elevated);
+        overflow: hidden;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .build-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.42s ease;
+    }
+
+    .build-body {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        padding: 0.9rem 1rem 1rem;
+    }
+
+    .build-path {
+        margin: 0 0 0.2rem;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+    }
+
+    .build-title {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin: 0 0 0.4rem;
+        font-family: var(--font-mono);
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .build-desc {
+        margin: 0 0 0.9rem;
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        line-height: 1.6;
+    }
+
+    /* その分野の作品一覧。ミニサムネ + 作品名の行 */
+    .build-items {
+        list-style: none;
+        margin: auto 0 0;
+        padding: 0.7rem 0 0;
+        border-top: 1px dashed var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .build-item {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.2rem 0.4rem;
+        margin: 0 -0.4rem;
+        border-radius: 4px;
+        color: var(--text-main);
+        text-decoration: none;
+        transition:
+            background-color 0.15s ease,
+            color 0.15s ease;
+    }
+
+    .build-thumb {
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background: var(--elevated);
+        border: 1px solid var(--border-color);
+        border-radius: 3px;
+        color: var(--text-muted);
+        transition: border-color 0.15s ease;
+    }
+    .build-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .build-name {
+        min-width: 0;
+        font-family: var(--font-mono), var(--font-sans);
+        font-size: 0.8rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    @media (hover: hover) {
+        .build-card:hover .build-cover img {
+            transform: scale(1.05);
+        }
+        a.build-item:hover {
+            background-color: color-mix(
+                in srgb,
+                var(--accent-blue) 10%,
+                transparent
+            );
+            color: var(--accent-blue);
+        }
+        a.build-item:hover .build-thumb {
+            border-color: var(--accent-blue);
+        }
+    }
+
+    a.build-item:focus-visible {
+        outline: 2px solid var(--accent-blue);
+        outline-offset: 1px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .build-cover img,
+        .build-item,
+        .build-thumb {
+            transition: none;
+        }
+    }
+
+    /* ====================================
        3. 最新の記事 — marquee
        ==================================== */
     /* 出現は全ページ共通の [data-reveal](global.css) */
@@ -3201,6 +3464,10 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
             flex-shrink: 0; /* スクロール時に縮まないよう明示 */
         }
 
+        .build-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
         /* 12列 → 2列に単純化。GitHub Contributions は内容量的に
            全幅のほうが収まりが良いので先頭に回して全幅表示、
            Advent 2026 も全幅、残りは2枚1組でペアにして隙間なく並べる。 */
@@ -3227,6 +3494,11 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
 
     @media (max-width: 720px) {
         .grid-container {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .build-grid {
             grid-template-columns: 1fr;
             gap: 1rem;
         }

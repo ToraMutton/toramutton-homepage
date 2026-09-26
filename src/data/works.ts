@@ -2,6 +2,7 @@
 //
 // 作品を足すときは、下の works 配列に1つオブジェクトを足すだけでいい。
 // status によって「完成」「制作中」「構想中」のどのセクションに出るかが決まる。
+// category は、トップページの分野カードのどれに並ぶかを決める（completed だけが出る）。
 //
 // スクリーンショットを付けるなら src/assets/works/ に画像を置き、
 // このファイルの先頭で import してから image に渡す（Astro が自動で圧縮してくれる）。
@@ -35,6 +36,9 @@ import {
   Terminal,
 } from "lucide-astro";
 
+/** 分野。トップページの分野カード（src/data/home.ts の workCategories）に振り分けられる */
+export type WorkCategory = "web" | "desktop" | "art" | "tools";
+
 export interface Work {
   name: string;
   description: string;
@@ -46,6 +50,7 @@ export interface Work {
   icon: typeof Code2;
   year: string;
   status: "completed" | "in-progress" | "planned";
+  category: WorkCategory;
   image?: ImageMetadata;
 }
 
@@ -60,6 +65,7 @@ export const works: Work[] = [
     icon: Code2,
     year: "2026",
     status: "completed",
+    category: "web",
     image: homepageImage,
   },
   {
@@ -72,6 +78,7 @@ export const works: Work[] = [
     url: "",
     github: "https://github.com/ToraMutton/dotfiles",
     status: "completed",
+    category: "desktop",
     image: archdotImage,
   },
   {
@@ -84,6 +91,7 @@ export const works: Work[] = [
     url: "",
     github: "https://github.com/ToraMutton/caelestia-ai-usage",
     status: "completed",
+    category: "desktop",
     image: caelestiaAiUsageImage,
   },
   {
@@ -95,6 +103,7 @@ export const works: Work[] = [
     icon: BookOpen,
     year: "2026",
     status: "completed",
+    category: "web",
     image: guideBookImage,
   },
   {
@@ -107,6 +116,7 @@ export const works: Work[] = [
     url: "https://artoram.toramutton.me",
     github: "https://github.com/ToraMutton/artoram",
     status: "completed",
+    category: "art",
     image: artoramImage,
   },
   {
@@ -119,6 +129,7 @@ export const works: Work[] = [
     url: "https://vextra.toramutton.me/",
     github: "https://github.com/ToraMutton/minecraft-skin-editor",
     status: "completed",
+    category: "web",
     image: vextraImage,
   },
   {
@@ -131,6 +142,7 @@ export const works: Work[] = [
     url: "",
     github: "https://github.com/ToraMutton/ba-bg-ruby",
     status: "completed",
+    category: "art",
     image: baBgRubyImage,
   },
   {
@@ -143,6 +155,7 @@ export const works: Work[] = [
     url: "",
     github: "https://github.com/ToraMutton/windows-dotfiles",
     status: "completed",
+    category: "desktop",
     image: windotImage,
   },
   {
@@ -155,6 +168,7 @@ export const works: Work[] = [
     url: "",
     github: "https://github.com/ToraMutton/fxtwitter-bot",
     status: "completed",
+    category: "tools",
     image: fxtwitterImage,
   },
   {
@@ -167,6 +181,7 @@ export const works: Work[] = [
     url: "https://nexusforuec.team-bookmark.com/",
     github: "https://github.com/shiori-02-14/NEXUS-",
     status: "completed",
+    category: "tools",
     image: nexusImage,
   },
   {
@@ -179,6 +194,7 @@ export const works: Work[] = [
     url: "",
     github: "https://github.com/ToraMutton/classroom-pdf-saver",
     status: "completed",
+    category: "tools",
   },
   {
     name: "TORANOI",
@@ -189,6 +205,7 @@ export const works: Work[] = [
     year: "2026",
     github: "https://github.com/ToraMutton/local-ai-rocm",
     status: "in-progress",
+    category: "tools",
   },
   {
     name: "ネタプログラミング言語",
@@ -198,5 +215,6 @@ export const works: Work[] = [
     icon: Terminal,
     year: "2027予定",
     status: "planned",
+    category: "tools",
   },
 ];

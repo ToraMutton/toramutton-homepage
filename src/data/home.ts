@@ -8,14 +8,18 @@ import {
   Cake,
   Clock,
   Fingerprint,
+  Globe,
   GraduationCap,
   Layers,
   Milestone,
+  Monitor,
   Music,
   Rocket,
+  Shapes,
   ShieldCheck,
   ThermometerSun,
   User,
+  Wrench,
 } from "lucide-astro";
 import {
   GITHUB_URL,
@@ -24,6 +28,7 @@ import {
   TW_DAILY_URL,
   ZENN_URL,
 } from "../consts";
+import type { WorkCategory } from "./works";
 
 /** lucide-astro のアイコン。どれも同じ形なので Cake を代表にして型を借りている */
 type Icon = typeof Cake;
@@ -98,6 +103,51 @@ export const heroPalette: string[] = [
   "--text-main",
   "--text-muted",
   "--border-color",
+];
+
+// =====================================================
+// 分野カード（ヒーロー直下の「つくっているもの」）
+// 各カードには、works.ts でその category を持つ completed の作品が全部並ぶ。
+// 並び順はこの配列の順。作品側は works.ts の並び順
+// =====================================================
+export interface WorkCategoryCard {
+  key: WorkCategory;
+  title: string;
+  desc: string;
+  icon: Icon;
+  /** 上に大きく出す作品の name。省略すると画像付きの先頭の作品 */
+  cover?: string;
+}
+
+export const workCategories: WorkCategoryCard[] = [
+  {
+    key: "web",
+    title: "Web Apps",
+    desc: "ブラウザで動くものを作ってます。このサイトもそのひとつ。",
+    icon: Globe,
+    cover: "Vextora",
+  },
+  {
+    key: "desktop",
+    title: "Desktop Ricing",
+    desc: "Linux と Windows の見た目と操作を、自分好みに組み上げてます。",
+    icon: Monitor,
+    cover: "Arch Linux Dotfiles",
+  },
+  {
+    key: "art",
+    title: "Generative Art",
+    desc: "数式とコードで絵を描いてます。",
+    icon: Shapes,
+    cover: "ArToram",
+  },
+  {
+    key: "tools",
+    title: "Tools & Bots",
+    desc: "日常のちょっとした面倒を片付ける道具たち。",
+    icon: Wrench,
+    cover: "fxtwitter-bot",
+  },
 ];
 
 // =====================================================
