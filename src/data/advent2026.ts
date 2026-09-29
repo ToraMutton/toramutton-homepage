@@ -49,11 +49,11 @@ export const advent2026: AdventCalendar = {
 
   prologue: {
     memo: "トラマト一人アドベントカレンダー2026、開始",
-    link: { type: "blog", slug: "sta-ad26" },
+    link: { type: "blog", slug: "advent2026-start" },
   },
   epilogue: {
     memo: "トラマト一人アドベントカレンダー、終了",
-    link: { type: "blog", slug: "fin-ad26" },
+    link: { type: "blog", slug: "advent2026-finish" },
   },
 
   days: [
