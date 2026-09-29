@@ -2,10 +2,10 @@
 import { Image } from "astro:assets";
 import type { ImageMetadata } from "astro";
 import { ArrowUpRight, BookOpen, Lock } from "lucide-astro";
-import { adventCalendar, type AdventSource } from "../data/advent2026";
+import { advent2026, type AdventSource } from "../data/advent2026";
 
 interface Props {
-    status: "locked" | "open";
+    /** 設定されていれば公開済み(クリック可能) */
     url?: string;
     title?: string;
     image?: ImageMetadata | string;
@@ -16,7 +16,6 @@ interface Props {
 }
 
 const {
-    status,
     url,
     title,
     image,
@@ -25,12 +24,12 @@ const {
     label,
     special = false,
 } = Astro.props;
-const clickable = status === "open" && Boolean(url);
+const clickable = Boolean(url);
 const isExternal =
-    clickable && (source ? source !== "local" : /^https?:\/\//.test(url ?? ""));
+    clickable && (source ? source !== "blog" : /^https?:\/\//.test(url ?? ""));
 const Tag = clickable ? "a" : "div";
 const sourceLabels: Record<AdventSource, string> = {
-    local: "Blog",
+    blog: "Blog",
     zenn: "Zenn",
     note: "note",
     qiita: "Qiita",
@@ -68,7 +67,7 @@ const dateLabel =
                 typeof label === "number" ? (
                     <time
                         class="day-number"
-                        datetime={`${adventCalendar.year}-12-${displayLabel}`}
+                        datetime={`${advent2026.year}-12-${displayLabel}`}
                     >
                         {displayLabel}
                     </time>

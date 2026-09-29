@@ -6,31 +6,18 @@ import SectionHeading from "../components/SectionHeading.astro";
 import AdventDayCard from "../components/AdventDayCard.astro";
 import { SITE_TITLE } from "../consts";
 import { getVisiblePosts } from "../utils/post";
-import { fetchOgpImage } from "../utils/rss";
-import { resolveAdventEntry } from "../utils/advent";
-import {
-    adventCalendar,
-    adventDays,
-    adventKickoff,
-    adventFinale,
-} from "../data/advent2026";
+import { resolveAdventCalendar } from "../utils/advent";
+import { advent2026 as adventCalendar } from "../data/advent2026";
 import { ArrowUpRight, CalendarDays, Lock, BookOpen } from "lucide-astro";
 
-const localPosts = await getVisiblePosts();
-const entries = await Promise.all(
-    [...adventDays, adventKickoff, adventFinale].map(async (entry) => {
-        const resolved = resolveAdventEntry(entry, localPosts);
-        if (resolved.url && resolved.source !== "local") {
-            resolved.image = await fetchOgpImage(resolved.url);
-        }
-        return resolved;
-    }),
-);
-const resolvedDays = entries
-    .slice(0, adventDays.length)
-    .sort((a, b) => a.day - b.day);
-const [resolvedKickoff, resolvedFinale] = entries.slice(adventDays.length);
-const openCount = resolvedDays.filter((entry) => entry.url).length;
+const {
+    prologue,
+    epilogue,
+    days: resolvedDays,
+    openCount,
+} = await resolveAdventCalendar(adventCalendar, await getVisiblePosts(), {
+    fetchOgp: true,
+});
 const year = adventCalendar.year;
 const weekdayLabels = ["日", "月", "火", "水", "木", "金", "土"];
 const firstDow = new Date(Date.UTC(year, 11, 1)).getUTCDay();
@@ -120,7 +107,7 @@ const ringSegments = resolvedDays.map((entry, index) => {
 
             <div class="extra-entry" data-reveal>
                 <AdventDayCard
-                    {...resolvedKickoff}
+                    {...prologue}
                     sublabel="PROLOGUE"
                     label="Begin"
                     special
@@ -159,7 +146,7 @@ const ringSegments = resolvedDays.map((entry, index) => {
             </div>
             <div class="extra-entry" data-reveal>
                 <AdventDayCard
-                    {...resolvedFinale}
+                    {...epilogue}
                     sublabel="EPILOGUE"
                     label="Finish"
                     special

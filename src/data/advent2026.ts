@@ -1,226 +1,234 @@
 // src/data/advent2026.ts
 // アドベントカレンダー2026の記事管理データ。
+//
+// 公開ルール(判定は src/utils/advent.ts):
+//    - 本編は「12/N 0:00(JST)を過ぎている」かつ「link が設定済み」になると自動で公開される。
+//      サイトは毎朝の定期リビルドで焼き直されるので、その時点で反映される。
+//    - prologue は link を設定した時点で公開。epilogue は 12/26 から公開。
+//    - memo は下書き・ネタ帳。公開後も画面には一切出ない。
+//    - dev サーバーでは日付を無視して、link 済みの記事をすべて表示する(下書き記事と同じ扱い)。
 
-export const adventCalendar: { year: number; adventarUrl?: string } = {
-  year: 2026,
-  // Adventarでカレンダーを作成したら、ここにURLを設定する。
-  // adventarUrl: "https://adventar.org/calendars/…",
-};
+/**
+ * 記事の掲載先。type によって必須項目が変わる。
+ *    - blog : src/content/blog/ 配下のフォルダ名(id)。タイトル・サムネイルは記事側から自動取得
+ *    - zenn / note / qiita : 記事の直URLと公開用タイトル。サムネイルは OGP から自動取得
+ */
+export type AdventLink =
+  | { type: "blog"; slug: string }
+  | { type: "zenn" | "note" | "qiita"; url: string; title: string };
 
-export type AdventSource = "local" | "zenn" | "note" | "qiita";
+export type AdventSource = AdventLink["type"];
 
 export interface AdventEntry {
-  /** 本編は12/1〜12/25。番外編のBEGINは0、FINISHは26 */
-  day: number;
-  /** "locked" のままなら title/note を含め一切画面に出ない */
-  status: "locked" | "open";
-  /** 記事の掲載先。リンクを公開するときに設定する */
-  source?: AdventSource;
-  /** source: "local" のとき、src/content/blog/ 配下のフォルダ名(id) */
-  slug?: string;
-  /** source: "zenn" | "note" | "qiita" のとき、記事の直URL */
-  url?: string;
-  /** source: "zenn" | "note" | "qiita" のとき、公開用タイトル(localはblog側から自動取得するので不要) */
-  title?: string;
-  /** 下書き・ネタ帳。 */
-  note?: string;
+  /** 下書き・ネタ帳。画面には出ない */
+  memo?: string;
+  /** 掲載先が決まったら設定する。未設定のあいだは「公開待ち」のまま */
+  link?: AdventLink;
 }
 
-// 一人アドベントカレンダー BEGIN
-// open 指定でも、記事リンクを設定するまでは他の未公開カードと同じ表示。
-export const adventKickoff: AdventEntry = {
-  day: 0,
-  status: "open",
-  note: "トラマト一人アドベントカレンダー2026、開始",
-};
+export interface AdventDay extends AdventEntry {
+  /** 12月の日付(1〜25) */
+  day: number;
+}
 
-// 一人アドベントカレンダー END
-// 25日が終わるまでは locked のままにしておく
-export const adventFinale: AdventEntry = {
-  day: 26,
-  status: "locked",
-  note: "トラマト一人アドベントカレンダー、終了",
-};
+export interface AdventCalendar {
+  year: number;
+  /** Adventarでカレンダーを作成したら設定する */
+  adventarUrl?: string;
+  /** 開始前の番外編(BEGIN) */
+  prologue: AdventEntry;
+  /** 12/1〜12/25 本編 */
+  days: AdventDay[];
+  /** 終了後の番外編(FINISH) */
+  epilogue: AdventEntry;
+}
 
-// 12/1 〜 12/25 本編。
-export const adventDays: AdventEntry[] = [
-  {
-    day: 1,
-    status: "locked",
-    source: "local",
-    slug: "what-is-arch",
-    note: "Arch Linuxって何？ おいしいの？",
+export const advent2026: AdventCalendar = {
+  year: 2026,
+  // adventarUrl: "https://adventar.org/calendars/…",
+
+  prologue: {
+    memo: "トラマト一人アドベントカレンダー2026、開始",
+    link: { type: "blog", slug: "sta-ad26" },
   },
-  {
-    day: 2,
-    status: "locked",
-    // source: "local", slug: "",
-    // source: "zenn" | "note" | "qiita", url: "", title: "",
-    note: "RustでDiscord動画保存Botを作った話",
+  epilogue: {
+    memo: "トラマト一人アドベントカレンダー、終了",
+    link: { type: "blog", slug: "fin-ad26" },
   },
-  {
-    day: 3,
-    status: "locked",
-    // source: "local", slug: "",
-    // source: "zenn" | "note" | "qiita", url: "", title: "",
-    note: "Windows 11とArch Linuxをデュアルブートする生活とは",
-  },
-  {
-    day: 4,
-    status: "locked",
-    // source: "local", slug: "",
-    // source: "zenn" | "note" | "qiita", url: "", title: "",
-    note: "私のArch Linuxデスクトップができるまで",
-  },
-  {
-    day: 5,
-    status: "locked",
-    // source: "local", slug: "",
-    // source: "zenn" | "note" | "qiita", url: "", title: "",
-    note: "dotfilesをGitHubで管理すると何がうれしいのか",
-  },
-  {
-    day: 6,
-    status: "locked",
-    // source: "local", slug: "",
-    // source: "zenn" | "note" | "qiita", url: "", title: "",
-    note: "Canvas APIで幾何学アート生成ツール「ArToram」を作った",
-  },
-  {
-    day: 7,
-    status: "locked",
-    // source: "local", slug: "",
-    // source: "zenn" | "note" | "qiita", url: "", title: "",
-    note: "Three.jsでMinecraftスキンエディター「Vextora」を作った",
-  },
-  {
-    day: 8,
-    status: "locked",
-    // source: "local", slug: "",
-    // source: "zenn" | "note" | "qiita", url: "", title: "",
-    note: "Google Classroom向けChrome拡張を作った話",
-  },
-  {
-    day: 9,
-    status: "locked",
-    // source: "local", slug: "",
-    // source: "zenn" | "note" | "qiita", url: "", title: "",
-    note: "個人開発はどこまで作ったら「完成」なのか",
-  },
-  {
-    day: 10,
-    status: "locked",
-    // source: "local", slug: "",
-    // source: "zenn" | "note" | "qiita", url: "", title: "",
-    note: "個人サイト文化が好きだという話",
-  },
-  {
-    day: 11,
-    status: "locked",
-    // source: "local", slug: "",
-    // source: "zenn" | "note" | "qiita", url: "", title: "",
-    note: "初心者を置いていかない技術記事の書き方",
-  },
-  {
-    day: 12,
-    status: "locked",
-    // source: "local", slug: "",
-    // source: "zenn" | "note" | "qiita", url: "", title: "",
-    note: "大学2年生、技術を広く触りすぎ問題",
-  },
-  {
-    day: 13,
-    status: "locked",
-    source: "zenn",
-    url: "",
-    title: "",
-    note: "なぜ自作プログラミング言語を作りたいのか",
-  },
-  {
-    day: 14,
-    status: "locked",
-    // source: "local", slug: "",
-    // source: "zenn" | "note" | "qiita", url: "", title: "",
-    note: "Rustの所有権を結局どう理解したか",
-  },
-  {
-    day: 15,
-    status: "locked",
-    source: "qiita",
-    url: "",
-    title: "",
-    note: "個人サイトを作って1年なので全部紹介する",
-  },
-  {
-    day: 16,
-    status: "locked",
-    // source: "local", slug: "",
-    // source: "zenn" | "note" | "qiita", url: "", title: "",
-    note: "トラマト2026年やらかし大賞",
-  },
-  {
-    day: 17,
-    status: "locked",
-    source: "zenn",
-    url: "",
-    title: "",
-    note: "Radeon＋ROCmでローカルLLM環境「TORANOI」を作る",
-  },
-  {
-    day: 18,
-    status: "locked",
-    // source: "local", slug: "",
-    // source: "zenn" | "note" | "qiita", url: "", title: "",
-    note: "Gitをバックアップ装置だと思っていた頃の私へ",
-  },
-  {
-    day: 19,
-    status: "locked",
-    source: "local",
-    // slug: "",
-    note: "個人開発のアイデアはどこから生まれるのか",
-  },
-  {
-    day: 20,
-    status: "locked",
-    source: "local",
-    slug: "prog-assign",
-    note: "電通大Ⅰ類のプログラム配属を考えた記録",
-  },
-  {
-    day: 21,
-    status: "locked",
-    source: "local",
-    slug: "fe-ap",
-    note: "基本情報技術者試験に合格するまで",
-  },
-  {
-    day: 22,
-    status: "locked",
-    source: "local",
-    slug: "failure-beginner-llm",
-    note: "生成AI時代に技術を学び始めて経験した成功と失敗",
-  },
-  {
-    day: 23,
-    status: "locked",
-    source: "note",
-    url: "",
-    title: "買ってよかったもの2026",
-    note: "2026年に買ってよかったもの",
-  },
-  {
-    day: 24,
-    status: "locked",
-    source: "local",
-    slug: "product-2026",
-    note: "2026年に作ったもの全部振り返る",
-  },
-  {
-    day: 25,
-    status: "locked",
-    // source: "local", slug: "",
-    // source: "zenn" | "note" | "qiita", url: "", title: "",
-    note: "作ることが好きな理由",
-  },
-];
+
+  days: [
+    {
+      day: 1,
+      memo: "Arch Linuxって何？ おいしいの？",
+      link: { type: "blog", slug: "what-is-arch" },
+    },
+    {
+      day: 2,
+      memo: "RustでDiscordのTwitter動画保存Botを作った話",
+      link: {
+        type: "zenn",
+        url: "",
+        title: "RustでDiscordのTwitter動画保存Botを作った話",
+      },
+    },
+    {
+      day: 3,
+      memo: "Canvas APIで幾何学アート生成ツール「ArToram」を作った",
+      link: { type: "blog", slug: "make-artoram" },
+    },
+    {
+      day: 4,
+      memo: "Windows 11とArch Linuxをデュアルブートする生活とは",
+      link: {
+        type: "qiita",
+        url: "",
+        title: "Windows 11とArch Linuxをデュアルブートする生活とは",
+      },
+    },
+    {
+      day: 5,
+      memo: "Rubyだけでブルアカの背景を描いてみた",
+      link: { type: "blog", slug: "ba-bg-ruby" },
+    },
+    {
+      day: 6,
+      memo: "私のArch Linuxデスクトップができるまで",
+      link: { type: "blog", slug: "make-arch" },
+    },
+    {
+      day: 7,
+      memo: "Three.jsでMinecraftスキンエディター「Vextra」を作った",
+      link: { type: "blog", slug: "make-vextra" },
+    },
+    {
+      day: 8,
+      memo: "初心者を置いていかない技術記事の書き方",
+      link: {
+        type: "note",
+        url: "",
+        title: "初心者をおいていかない技術記事の書き方",
+      },
+    },
+    {
+      day: 9,
+      memo: "技術触りたての昔の記事を、今の自分が添削してみる",
+      link: {
+        type: "note",
+        url: "",
+        title: "技術触りたての昔の記事を、今の自分が添削してみる",
+      },
+    },
+    {
+      day: 10,
+      memo: "ClassroomのPDFダウンロードがめんどくさいので拡張機能を作った話",
+      link: {
+        type: "zenn",
+        url: "",
+        title: "ClassroomのPDFダウンロードがめんどくさいので拡張機能を作った話",
+      },
+    },
+    {
+      day: 11,
+      memo: "Caelestia ShellにAI使用量を表示してみた",
+      link: {
+        type: "note",
+        url: "",
+        title: "Caelestia ShellにAI使用量を表示してみた",
+      },
+    },
+    {
+      day: 12,
+      memo: "Gitのコミットメッセージだけで一年を振り返れるのか",
+      link: {
+        type: "qiita",
+        url: "",
+        title: "Gitのコミットメッセージだけで一年を振り返れるのか",
+      },
+    },
+    {
+      day: 13,
+      memo: "技術書を1冊書いて公開してみた話",
+      link: { type: "note", url: "", title: "技術書を1冊書いて公開してみた話" },
+    },
+    {
+      day: 14,
+      memo: "ローカル記事・Zenn・note・Qiitaをどう使い分ける？",
+      link: {
+        type: "note",
+        url: "",
+        title: "ローカル記事・Zenn・note・Qiitaをどう使い分ける？",
+      },
+    },
+    {
+      day: 15,
+      memo: "個人サイトを作ってもうすぐ1年なので全部紹介する",
+      link: {
+        type: "qiita",
+        url: "",
+        title: "個人サイトを作ってもうすぐ1年なので全部紹介する",
+      },
+    },
+    {
+      day: 16,
+      memo: "トラマト2026年やらかし大賞",
+      link: { type: "blog", slug: "yarakashi26" },
+    },
+    {
+      day: 17,
+      memo: "Radeon＋ROCmでローカルLLM環境を作ってみた話",
+      link: {
+        type: "zenn",
+        url: "",
+        title: "Radeon＋ROCmでローカルLLM環境を作ってみた話",
+      },
+    },
+    {
+      day: 18,
+      memo: "2026年で私の開発環境から消えたもの・増えたもの",
+      link: {
+        type: "note",
+        url: "",
+        title: "2026年で私の開発環境から消えたもの・増えたもの",
+      },
+    },
+    {
+      day: 19,
+      memo: "プログラミング未経験者が電通大で1年半過ごしてみて",
+      link: {
+        type: "note",
+        url: "",
+        title: "プログラミング未経験者が電通大で1年半過ごしてみて",
+      },
+    },
+    {
+      day: 20,
+      memo: "電通大Ⅰ類のプログラム配属を考えた記録",
+      link: { type: "blog", slug: "prog-assign" },
+    },
+    {
+      day: 21,
+      memo: "基本情報技術者試験に合格するまで",
+      link: { type: "blog", slug: "fe-ap" },
+    },
+    {
+      day: 22,
+      memo: "生成AI時代に技術を学び始めて経験した成功と失敗",
+      link: { type: "blog", slug: "failure-beginner-llm" },
+    },
+    {
+      day: 23,
+      memo: "2026年に買ってよかったもの",
+      link: { type: "note", url: "", title: "買ってよかったもの2026" },
+    },
+    {
+      day: 24,
+      memo: "2026年に作ったもの全部振り返る",
+      link: { type: "blog", slug: "product-2026" },
+    },
+    {
+      day: 25,
+      memo: "作ることが好きな理由",
+      link: { type: "blog", slug: "why" },
+    },
+  ],
+};
