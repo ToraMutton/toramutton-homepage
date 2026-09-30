@@ -720,6 +720,18 @@ const snsLinks = [
             border: 1px solid var(--border-color);
         }
 
+        /* Markdown の画像直下の _注記_ を ImageCaption と同じ見た目にする */
+        .prose :global(.prose-content p > img:first-child + em:last-child),
+        .prose :global(.prose-content p:has(> img:only-child) + p > em:only-child) {
+            display: block;
+            margin-top: 0.6rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            font-style: normal;
+            text-align: center;
+        }
+
         /* テーブル: 左寄せ、ヘッダーは mono、狭い画面では横スクロール */
         .prose :global(table) {
             width: 100%;
