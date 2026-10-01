@@ -4,6 +4,8 @@
 //   中  … 本文。幅 720px、$ 行 + mono タイトル + リード文、末尾に前後記事
 //   右  … 目次(h2 / h3)。読み進みに応じて通過済み / 現在地を色分け     (≥1024px)
 import { Image } from "astro:assets";
+import avatarImage from "../assets/profile/toramutton.jpg";
+import { ARTICLE_IMAGE_WIDTHS, ARTICLE_IMAGE_SIZES } from "../utils/rehype-responsive-images.mjs";
 import type { CollectionEntry } from "astro:content";
 import type { MarkdownHeading } from "astro";
 import {
@@ -106,6 +108,13 @@ const relatedPosts = allPosts
 // 十分に横長のときだけ大きいカードにして、それ以外は今まで通り小さい正方形にする。
 const heroRatio = heroImage ? heroImage.width / heroImage.height : 0;
 const cardType = heroRatio >= 1.4 ? "summary_large_image" : "summary";
+// 2:1 に切り抜く際も、元画像の縦横どちらも拡大しない。
+const heroMaxWidth = heroImage ? Math.min(heroImage.width, heroImage.height * 2) : 0;
+const heroWidth = Math.min(720, heroMaxWidth);
+const heroWidths = [
+    ...ARTICLE_IMAGE_WIDTHS.filter((width) => width <= heroMaxWidth),
+    Math.min(1440, heroMaxWidth),
+];
 
 const snsLinks = [
     { href: TW_DAILY_URL, brand: "twitter", label: "Twitter (Daily)" },
@@ -129,12 +138,14 @@ const snsLinks = [
         <aside class="blog-sidebar-left">
             <div class="sidebar-card ui-card">
                 <div class="sidebar-profile">
-                    <img
-                        src="/toramutton.jpg"
+                    <Image
+                        src={avatarImage}
                         alt="トラマト"
                         class="sidebar-avatar"
-                        width="48"
-                        height="48"
+                        width={48}
+                        height={48}
+                        layout="fixed"
+                        loading="eager"
                     />
                     <div class="sidebar-profile-text">
                         <p class="sidebar-name">トラマト</p>
@@ -296,8 +307,12 @@ const snsLinks = [
                 heroImage && (
                     <div class="hero-image">
                         <Image
-                            width={1020}
-                            height={510}
+                            width={heroWidth}
+                            height={heroWidth / 2}
+                            widths={heroWidths}
+                            sizes={ARTICLE_IMAGE_SIZES}
+                            fit="cover"
+                            priority
                             src={heroImage}
                             alt={title}
                         />

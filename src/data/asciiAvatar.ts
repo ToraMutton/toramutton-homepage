@@ -1,5 +1,5 @@
 // scripts/ascii-avatar.mjs が生成するファイル。手で編集しない。
-// 元画像: src/assets/toramutton.jpg(64 列 × 32 行)
+// 元画像: src/assets/profile/toramutton.jpg(64 列 × 32 行)
 export const asciiAvatar: string[] = [
   "                       .:::::::::::::::::.",
   "                  ......   ..::::::..   ::::::.",

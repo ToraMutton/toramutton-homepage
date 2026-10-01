@@ -2,7 +2,7 @@
 title: "Canvas APIで幾何学アート生成ツール「ArToram」を作った"
 pubDate: "2026-12-03"
 description: "著作権を気にしなくていい壁紙が欲しくて作った、幾何学アートジェネレーターの開発記"
-heroImage: "./hero.jpg"
+heroImage: "./images/hero.jpg"
 tags:
     - advent2026
     - React
@@ -25,10 +25,10 @@ https://github.com/ToraMutton/artoram
 
 パラメータをいじりながら、動く幾何学模様を作って壁紙として保存できるツールです。
 
-![PCでの見た目](./pc.jpg)
+![PCでの見た目](./images/pc.jpg)
 _PCでの見た目_
 
-![スマホでの見た目](./phone.jpg)
+![スマホでの見た目](./images/phone.jpg)
 _スマホでの見た目_
 
 URLにパラメータが全部入るので、気に入った設定ができたらそのままURLを投げつければ、別端末の画面でも同じ模様が再現されます。
@@ -115,13 +115,13 @@ for (let i = 0; i <= currentParams.points; i++) {
 | Snowflake | `(2/π) × asin(sin x)` | 三角波で、とがった枝になる             |
 | Crystal   | `abs(sin x) − 0.5`    | 角ばった面になる                       |
 
-![wave](./wave.png)
+![wave](./images/wave.png)
 _Wave_
 
-![gear](./gear.png)
+![gear](./images/gear.png)
 _Gear_
 
-![snowflake](./snowflake.png)
+![snowflake](./images/snowflake.png)
 _Snowflake_
 
 Gear と Snowflake は、`sin` を加工して矩形波・三角波を作っています。応用数学でやる信号処理の授業で見る(かもしれない)波形が、そのまま図形の形になるのが楽しいポイントです。
@@ -159,10 +159,10 @@ ctx.fillRect(0, 0, w, h); // キャンバス全体を指定色で塗りつぶす
 
 たとえば残像の濃さが 0.22 なら、前のフレームは 78% だけ残ります。10フレーム後には約8%まで薄くなるので、古い線ほど背景に溶けていくわけです。同じ図形でも残像でこんなに変わります。
 
-![残像が0.01のとき](./z001.png)
+![残像が0.01のとき](./images/z001.webp)
 _残像が0.01のとき_
 
-![残像0.5のとき](./z05.png)
+![残像0.5のとき](./images/z05.png)
 _残像が0.5のとき_
 
 ## 校章を入れたかった：リサジュー図形
@@ -185,7 +185,7 @@ case 'Lissajous': // リサジュー図形
 
 x と y の周波数比が `波の数 : 波の数 + 1` なので、**波の数を 5 にすると 5:6、つまり校章と同じ比率**になります。
 
-![リサジュー](./lissajous.png)
+![リサジュー](./images/lissajous.png)
 _ちゃんと作れる_
 
 で、リサジュー図形を入れたら「他の数学的な曲線も入れたいな〜」となり、バラ曲線、エピサイクロイド、ハート……と増やしていったら、気づくと20種類になっていました。

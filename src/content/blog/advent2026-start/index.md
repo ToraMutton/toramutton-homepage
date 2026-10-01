@@ -2,7 +2,7 @@
 title: "トラマト一人アドベントカレンダー2026、開始"
 pubDate: 2026-11-30
 description: "狂気"
-heroImage: ./dummy.jpeg
+heroImage: ./images/dummy.jpeg
 tags:
     - advent2026
 draft: true
@@ -78,7 +78,7 @@ MMA(サークル)の偉大なる先輩が数年前に一人アドカレを完走
 
 どの媒体の記事も[カレンダーページ](https://toramutton.me/advent2026/)でからまとめて飛べるようにしてあります。
 
-![カレンダーページのスクショ](./calendar.png)
+![カレンダーページのスクショ](./images/calendar.png)
 
 ## おわりに
 

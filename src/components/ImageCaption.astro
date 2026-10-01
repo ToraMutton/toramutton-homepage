@@ -1,17 +1,27 @@
 ---
 import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { ARTICLE_IMAGE_WIDTHS, ARTICLE_IMAGE_SIZES } from '../utils/rehype-responsive-images.mjs';
 
 interface Props {
-  src: any;
+  src: ImageMetadata | Promise<{ default: ImageMetadata }>;
   alt: string;
   caption: string;
 }
 
 const { src, alt, caption } = Astro.props;
+const resolvedSrc = await src;
+const image = 'default' in resolvedSrc ? resolvedSrc.default : resolvedSrc;
 ---
 
 <figure class="image-caption-container">
-  <Image src={src} alt={alt} />
+  <Image
+    src={image}
+    alt={alt}
+    width={Math.min(720, image.width)}
+    widths={ARTICLE_IMAGE_WIDTHS}
+    sizes={ARTICLE_IMAGE_SIZES}
+  />
   <figcaption>{caption}</figcaption>
 </figure>
 

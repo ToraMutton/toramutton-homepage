@@ -7,7 +7,7 @@
 import sharp from "sharp";
 import { writeFile } from "node:fs/promises";
 
-const SRC = "src/assets/toramutton.jpg";
+const SRC = "src/assets/profile/toramutton.jpg";
 const OUT = "src/data/asciiAvatar.ts";
 // 文字の縦横比(約 1:2)を補正し、細い曲線が読める解像度にする。
 const COLS = 64;

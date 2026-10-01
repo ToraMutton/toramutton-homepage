@@ -2,7 +2,7 @@
 title: "Arch Linuxって何？ おいしいの？"
 pubDate: 2026-12-01
 description: "とにかく自由すぎるOS"
-heroImage: ./fastfetch.png
+heroImage: ./images/fastfetch.png
 tags:
     - advent2026
     - Linux
@@ -17,7 +17,7 @@ draft: true
 記念すべき初日のテーマは **Arch Linux**です。
 たまに自分がツイートしてるやつです。ちなみにおいしくはないです。
 
-![Arch Linuxのロゴ](./arch-linux.jpg)
+![Arch Linuxのロゴ](./images/arch-linux.jpg)
 _Arch Linuxのロゴ、かっこいい_
 
 今この記事もArch Linuxで書いていますが、この1年で一番作業環境と生活を変えてくれたのは間違いなくこいつでしたね。
@@ -35,7 +35,7 @@ _Arch Linuxのロゴ、かっこいい_
 
 同じエンジンでも車種が違えば乗り心地は別物になります。Ubuntu、Fedora、Debian、そして今回のArchは、どれも**Linuxエンジンを積んだ別々の車**です（大学のPC室で使うUbuntuもその一つ）。
 
-![Ubuntu](./ubuntu.png)
+![Ubuntu](./images/ubuntu.png)
 _~~コンリテ等の~~電通大の授業で使うUbuntu_
 
 馴染み深いWindowsやiOSは、カーネルそのものが違う感じですね。
@@ -92,7 +92,7 @@ Archを語る上で欠かせないのが [ArchWiki](https://wiki.archlinux.jp/in
 
 さすがにぶっつけ本番は怖かったので、Windowsの仮想環境で手動インストールの素振りをしてから本番へ。
 
-![仮想環境の当時のツイート](./tweet1.png)
+![仮想環境の当時のツイート](./images/tweet1.png)
 _仮想環境の当時のツイート_
 
 また、ChatGPT、Gemini、Claudeといった生成AIに相談しながら進められたのも超大きかったです。**生成AI時代のArch入門は、昔より格段にハードルが下がっている**と実感します。

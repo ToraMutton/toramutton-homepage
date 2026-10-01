@@ -6,9 +6,9 @@ import SectionHeading from "../components/SectionHeading.astro";
 import { SITE_TITLE, SITE_DESCRIPTION } from "../consts";
 import BrandIcon from "../components/BrandIcon.astro";
 import { Image } from "astro:assets";
-import heroImage from "../assets/toramutton.jpg";
+import heroImage from "../assets/profile/toramutton.jpg";
 import pcDesktopImg from "../assets/desktop/fastfetch.jpeg";
-import pcCaseImg from "../assets/desktop/trapezium-8.png";
+import pcCaseImg from "../assets/desktop/trapezium-8.webp";
 // note / Zenn / Qiita の取得は src/utils/feeds.ts に集約している
 import { getExternalPosts } from "../utils/feeds";
 import { advent2026 as adventCalendar } from "../data/advent2026";
@@ -71,9 +71,8 @@ const latestPosts = [...localPosts, ...externalPosts]
     .sort((a, b) => b.date.valueOf() - a.date.valueOf())
     .slice(0, 10); // 最新記事、10選
 
-// marquee のサムネは 280px 枠(2x で 560px)。元画像がそれより小さいときは
-// 拡大すると逆に重くなるので、上限としてだけ使う
-const THUMB_W = 560;
+// 280px のサムネに対して、画面幅・解像度に合う画像を選ばせる。
+const THUMB_W = 280;
 
 // === 分野カード ===
 // completed の作品を category ごとに振り分け、カード上部に出す1枚(cover)を決める
@@ -182,8 +181,10 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                                         src={heroImage}
                                         alt=""
                                         class="ff-avatar"
-                                        width={80}
-                                        height={80}
+                                        width={40}
+                                        height={40}
+                                        layout="fixed"
+                                        loading="eager"
                                     />
                                     <span class="ff-user-name">{heroUser.user}</span
                                     ><span class="ff-user-at">@</span><span
@@ -328,6 +329,8 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                                                 THUMB_W,
                                                 cat.cover.image.width,
                                             )}
+                                            widths={[280, 400, 560, 800]}
+                                            sizes="(min-width: 1025px) 250px, (min-width: 721px) 45vw, (min-width: 362px) 260px, 72vw"
                                         />
                                     ) : (
                                         <div class="no-image-placeholder">
@@ -367,7 +370,10 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                                                                 <Image
                                                                     src={w.image}
                                                                     alt=""
-                                                                    width={128}
+                                                                    width={32}
+                                                                    height={32}
+                                                                    layout="fixed"
+                                                                    fit="cover"
                                                                 />
                                                             ) : (
                                                                 <w.icon
@@ -429,6 +435,8 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                                                     THUMB_W,
                                                     post.image.width,
                                                 )}
+                                                widths={[280, 400, 560]}
+                                                sizes="(max-width: 362px) 72vw, (max-width: 1024px) 260px, 280px"
                                             />
                                         ) : post.image &&
                                           typeof post.image === "string" ? (
@@ -588,6 +596,9 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                                     src={pcDesktopImg}
                                     alt="Hyprland desktop, trapezium-08"
                                     class="pc-visual-img"
+                                    width={480}
+                                    widths={[240, 360, 480, 720, 960]}
+                                    sizes="(min-width: 1025px) 220px, (min-width: 721px) 45vw, 90vw"
                                 />
                             </div>
                             <div class="pc-visual-shadow" aria-hidden="true">
@@ -597,6 +608,9 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                                     src={pcCaseImg}
                                     alt="Ryzen 7 7700 + Radeon RX 9060 XT machine interior"
                                     class="pc-visual-img"
+                                    width={240}
+                                    widths={[120, 180, 240, 360, 480]}
+                                    sizes="(min-width: 1025px) 110px, (min-width: 721px) 22vw, 46vw"
                                 />
                             </div>
                         </div>

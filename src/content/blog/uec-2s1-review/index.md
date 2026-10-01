@@ -2,7 +2,7 @@
 title: "毎週3連休!?電通大2年前期を振り返ってみる"
 pubDate: 2026-09-02
 description: "金曜全休をどう使ったのか？"
-heroImage: ./3d-holiday.jpg
+heroImage: ./images/3d-holiday.jpg
 tags:
     - 大学
     - review

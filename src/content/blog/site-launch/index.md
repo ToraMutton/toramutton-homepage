@@ -2,7 +2,7 @@
 title: 'トラマトのホームページ、爆誕'
 description: 'Astroで作ったポートフォリオサイトがついに完成。'
 pubDate: '2026-01-02'
-heroImage: './site-launch-title.png'
+heroImage: './images/site-launch-title.webp'
 tags: ["Astro", "Homepage"]
 ---
 

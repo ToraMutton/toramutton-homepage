@@ -140,8 +140,11 @@ const IMAGE_SOURCES = new Set(["local", "note"]);
                                                     <Image
                                                         src={post.image}
                                                         alt=""
-                                                        width={400}
-                                                        height={225}
+                                                        width={Math.min(400, post.image.width)}
+                                                        height={Math.min(400, post.image.width) * 9 / 16}
+                                                        widths={[240, 400, 640, 800]}
+                                                        sizes="(max-width: 720px) 50vw, 400px"
+                                                        fit="cover"
                                                         loading="lazy"
                                                     />
                                                 ) : typeof post.image === "string" ? (

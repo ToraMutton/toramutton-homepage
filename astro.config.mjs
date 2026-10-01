@@ -4,6 +4,7 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import vercel from '@astrojs/vercel';
 import { defineConfig } from 'astro/config';
+import responsiveMarkdownImages from './src/utils/rehype-responsive-images.mjs';
 
 // @ts-ignore
 import remarkLinkCard from 'remark-link-card';
@@ -14,7 +15,13 @@ export default defineConfig({
 	output: 'server',
 	adapter: vercel(),
 	integrations: [mdx(), sitemap()],
+	image: {
+		layout: 'constrained',
+		// 既存の CSS が画像の表示・切り抜きを担当する。
+		responsiveStyles: false,
+	},
 	markdown: {
 		remarkPlugins: [remarkLinkCard],
+		rehypePlugins: [responsiveMarkdownImages],
 	},
 });

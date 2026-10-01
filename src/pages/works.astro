@@ -41,6 +41,9 @@ const plannedWorks = works.filter((w) => w.status === 'planned');
                                                 <Image
                                                     src={work.image}
                                                     alt=""
+                                                    width={Math.min(400, work.image.width)}
+                                                    widths={[240, 400, 640, 800]}
+                                                    sizes="(max-width: 720px) 45vw, 400px"
                                                     loading="lazy"
                                                 />
                                             </div>
