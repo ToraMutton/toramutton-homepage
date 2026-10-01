@@ -460,10 +460,6 @@ const snsLinks = [
     </div>
 
     <style>
-        :global(html) {
-            scroll-behavior: smooth;
-        }
-
         .prompt {
             color: var(--accent-blue);
             font-weight: 700;
@@ -1488,7 +1484,30 @@ const snsLinks = [
                         ?.classList.remove("visible");
                 };
                 tocLinks.forEach((link) =>
-                    link.addEventListener("click", closeDrawer),
+                    link.addEventListener("click", (e) => {
+                        if (
+                            e.defaultPrevented ||
+                            e.button !== 0 ||
+                            e.metaKey ||
+                            e.ctrlKey ||
+                            e.shiftKey ||
+                            e.altKey
+                        ) {
+                            return;
+                        }
+
+                        // アンカー移動だけを滑らかにし、更新時の位置復元には効かせない。
+                        // 標準のリンク処理を使うので、URL・履歴もそのまま保つ。
+                        const root = document.documentElement;
+                        root.style.scrollBehavior = "smooth";
+                        // 最初の描画でアンカー移動が始まってから指定を外す。
+                        requestAnimationFrame(() =>
+                            requestAnimationFrame(() =>
+                                root.style.removeProperty("scroll-behavior"),
+                            ),
+                        );
+                        closeDrawer();
+                    }),
                 );
                 topLink?.addEventListener("click", (e) => {
                     e.preventDefault();
