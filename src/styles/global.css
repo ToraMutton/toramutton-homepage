@@ -236,6 +236,35 @@ pre>code {
     border: none;
 }
 
+/* 横スクロールバー: 細く・角丸 4px・hover でシアン(カードの hover 語彙)。
+   コードブロック(Shiki)はテーマに関係なく背景が暗いので色は固定。
+   scrollbar-color … Firefox / Chrome 121+、::-webkit-scrollbar … Safari 向け */
+pre {
+    scrollbar-width: thin;
+    scrollbar-color: #484f58 transparent;
+}
+
+pre:hover {
+    scrollbar-color: #22d3ee transparent;
+}
+
+pre::-webkit-scrollbar {
+    height: 6px;
+}
+
+pre::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+pre::-webkit-scrollbar-thumb {
+    background: #484f58;
+    border-radius: var(--radius);
+}
+
+pre:hover::-webkit-scrollbar-thumb {
+    background: #22d3ee;
+}
+
 blockquote {
     border-left: 4px solid var(--accent-blue);
     background: rgba(14, 165, 233, 0.1);

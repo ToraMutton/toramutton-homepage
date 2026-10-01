@@ -759,6 +759,22 @@ const snsLinks = [
             .prose :global(table) {
                 display: block;
                 overflow-x: auto;
+                /* スクロールバーはコードブロック(global.css)と同じ形。色はテーマに追従 */
+                scrollbar-width: thin;
+                scrollbar-color: var(--border-color) transparent;
+            }
+            .prose :global(table:hover) {
+                scrollbar-color: var(--accent-blue) transparent;
+            }
+            .prose :global(table)::-webkit-scrollbar {
+                height: 6px;
+            }
+            .prose :global(table)::-webkit-scrollbar-thumb {
+                background: var(--border-color);
+                border-radius: var(--radius);
+            }
+            .prose :global(table:hover)::-webkit-scrollbar-thumb {
+                background: var(--accent-blue);
             }
         }
 
