@@ -1,0 +1,13 @@
+diff --git a/node_modules/astro/dist/content/loaders/glob.js b/node_modules/astro/dist/content/loaders/glob.js
+--- a/node_modules/astro/dist/content/loaders/glob.js
++++ b/node_modules/astro/dist/content/loaders/glob.js
+@@ -103,7 +103,8 @@
+             );
+           }
+           let render = renderFunctionByContentType.get(entryType);
+-          if (store.has(id)) {
++          // Updating the same file is not an ID collision.
++          if (store.has(id) && store.get(id)?.filePath !== relativePath2) {
+             logger.warn(
+               `Duplicate id "${id}" found in ${filePath2}. Later items with the same id will overwrite earlier ones.`
+             );
