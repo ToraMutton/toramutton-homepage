@@ -1,0 +1,45 @@
+diff --git a/node_modules/open-graph-scraper/lib/request.js b/node_modules/open-graph-scraper/lib/request.js
+--- a/node_modules/open-graph-scraper/lib/request.js
++++ b/node_modules/open-graph-scraper/lib/request.js
+@@ -1,9 +1,30 @@
+ const chardet = require('chardet');
+ const iconv = require('iconv-lite');
+-const { gotClient } = require('./utils');
+-
+ const charset = require('./charset');
+ const { extractMetaTags } = require('./extract');
++
++// Use Node's fetch so network failures stay within the returned promise.
++// got 11 can emit uncaught stream errors or retry after its promise has settled.
++const fetchPage = async (url, options) => {
++  const response = await fetch(url, {
++    headers: options.headers,
++    signal: AbortSignal.timeout(options.timeout),
++  });
++  const chunks = [];
++  let downloaded = 0;
++  for await (const chunk of response.body) {
++    downloaded += chunk.length;
++    if (downloaded > options.downloadLimit) {
++      throw new Error(`Exceeded the download limit of ${options.downloadLimit} bytes`);
++    }
++    chunks.push(chunk);
++  }
++  return {
++    headers: Object.fromEntries(response.headers),
++    statusCode: response.status,
++    body: Buffer.concat(chunks),
++  };
++};
+ 
+ /*
+  * request and results formatter
+@@ -13,7 +34,7 @@
+   const requestUrl = options.url;
+   delete options.url; // setting options.url messes with got
+ 
+-  return gotClient.get(requestUrl, options)
++  return fetchPage(requestUrl, options)
+     .then((response) => {
+       options.url = requestUrl;
+       let formatBody = response.body;
