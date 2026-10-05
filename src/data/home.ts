@@ -123,14 +123,14 @@ export const workCategories: WorkCategoryCard[] = [
   {
     key: "web",
     title: "Web Apps",
-    desc: "ブラウザで動くものを作ってます。このサイトもそのひとつ。",
+    desc: "ブラウザで動くものたち",
     icon: Globe,
     cover: "Vextora",
   },
   {
     key: "desktop",
     title: "Desktop Ricing",
-    desc: "Linux と Windows の見た目と操作を、自分好みに組み上げてます。",
+    desc: "Linux と Windows の見た目と操作を、自分好みに組み上げてます",
     icon: Monitor,
     cover: "Arch Linux Dotfiles",
   },
@@ -144,7 +144,7 @@ export const workCategories: WorkCategoryCard[] = [
   {
     key: "tools",
     title: "Tools & Bots",
-    desc: "日常のちょっとした面倒を片付ける道具たち。",
+    desc: "日常のちょっとした面倒を解決する道具たち。",
     icon: Wrench,
     cover: "fxtwitter-bot",
   },
@@ -214,7 +214,6 @@ export interface Mission {
 }
 
 export const missions: Mission[] = [
-  { title: "夏休み", date: "2026-09-30", icon: ThermometerSun },
   { title: "2026 TOUR / GHOST", date: "2026-11-12", icon: Music },
   { title: "2026年終了", date: "2026-12-31", icon: Milestone },
   { title: "2年後期", date: "2027-02-13", icon: ShieldCheck },
