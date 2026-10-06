@@ -128,9 +128,9 @@ Arch Linuxの設定公開記事などを書くときなどに、著作権フリ�
 
 ![りさじゅう](./images/artoram.webp)
 
-### 2. Vextora
+### 2. Vextra
 
-[**Vextora**](https://vextra.toramutton.me/)
+[**Vextra**](https://vextra.toramutton.me/)
 
 マイクラのスキンを自作したかったのですが、既存のエディタは使いにくすぎたのでエディタごと自作しました。~~かなり完成ギリギリでした~~
 

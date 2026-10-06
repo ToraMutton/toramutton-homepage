@@ -120,7 +120,7 @@ export const works: Work[] = [
     image: artoramImage,
   },
   {
-    name: "Vextora",
+    name: "Vextra",
     description:
       "ブラウザ上で完結するMinecraftスキンエディター。Three.jsによるリアルタイム3Dプレビューとピクセル単位のペイント機能、オートセーブ機能付き。",
     tags: ["TypeScript", "Three.js", "React"],

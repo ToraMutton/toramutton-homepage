@@ -125,7 +125,7 @@ export const workCategories: WorkCategoryCard[] = [
     title: "Web Apps",
     desc: "ブラウザで動くものたち",
     icon: Globe,
-    cover: "Vextora",
+    cover: "Vextra",
   },
   {
     key: "desktop",
