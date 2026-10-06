@@ -97,7 +97,7 @@ export const advent2026: AdventCalendar = {
     },
     {
       day: 7,
-      memo: "Three.jsでMinecraftスキンエディター「Vextra」を作った",
+      memo: "Three.jsでMinecraftスキンエディタ「Vextra」を作った",
       link: { type: "blog", slug: "make-vextra" },
     },
     {
