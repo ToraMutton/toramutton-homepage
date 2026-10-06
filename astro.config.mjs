@@ -5,6 +5,7 @@ import sitemap from '@astrojs/sitemap';
 import vercel from '@astrojs/vercel';
 import { defineConfig } from 'astro/config';
 import responsiveMarkdownImages from './src/utils/rehype-responsive-images.mjs';
+import youtubeEmbeds from './src/utils/remark-youtube-embed.mjs';
 
 // @ts-ignore
 import remarkLinkCard from 'remark-link-card';
@@ -21,7 +22,7 @@ export default defineConfig({
 		responsiveStyles: false,
 	},
 	markdown: {
-		remarkPlugins: [remarkLinkCard],
+		remarkPlugins: [youtubeEmbeds, remarkLinkCard],
 		rehypePlugins: [responsiveMarkdownImages],
 	},
 });

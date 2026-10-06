@@ -793,6 +793,28 @@ const snsLinks = [
             }
         }
 
+        /* YouTube 埋め込み。狭い画面でもプレイヤーの高さを 200px 以上に保つ。 */
+        .prose :global(.youtube-embed) {
+            margin: 1.5rem 0;
+        }
+        .prose :global(.youtube-embed iframe) {
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 16 / 9;
+            min-height: 200px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            background: #000;
+        }
+        .prose :global(.youtube-embed-link) {
+            display: block;
+            width: fit-content;
+            margin: 0.6rem 0 0 auto;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+        }
+
         /* リンクカード(remark-link-card の出力)を ui-card に揃える */
         .prose :global(.rlc-container) {
             display: flex;

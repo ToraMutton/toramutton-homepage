@@ -1,6 +1,27 @@
 # ToraMutton's Homepage
  トラマトの学習記録や趣味などをまとめる予定のサイトです。/ A site for archiving ToraMutton's study logs and hobbies.
 
+## 記事への YouTube 動画の追加
+
+記事の本文に、空行で区切って YouTube の URL だけを書くと、プレイヤーが表示される。
+Markdown / MDX の両方に対応し、自動再生はせず、プレイヤーは遅延読み込みする。
+
+```md
+作品のデモです。
+
+https://youtu.be/M7lc1UVf-VE
+
+操作方法を説明します。
+```
+
+- 対応 URL は `https://www.youtube.com/watch?v=動画ID`、`https://youtu.be/動画ID`、`https://www.youtube.com/shorts/動画ID`。モバイル用の `m.youtube.com` も使える。
+- `?t=90`、`?t=1m30s`、`?start=90` の開始時刻を引き継ぐ。共有用の `si` や再生リスト指定は引き継がず、単体の動画として表示する。
+- 通常のリンクにしたい場合は `[動画を見る](URL)` と書く。文中・引用・リスト・コード内の URL は埋め込まない。
+- 限定公開動画も、YouTube 側で埋め込みが許可されていれば視聴できる。公開記事に載せた動画は、記事の訪問者も視聴できる。
+- プレイヤーの下に「YouTubeで見る」リンクを表示する。非公開・埋め込み禁止・年齢制限などでサイト内で視聴できない場合も、このリンクから YouTube を開ける。
+
+変換処理は `src/utils/remark-youtube-embed.mjs`。YouTube の情報取得や API キーは不要。
+
 ## 画像の追加・更新
 
 - 共通画像は `src/assets/` の用途別フォルダ（`profile/`、`desktop/`、`works/`）に置く。
