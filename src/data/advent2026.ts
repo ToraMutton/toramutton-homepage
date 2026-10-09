@@ -106,7 +106,7 @@ export const advent2026: AdventCalendar = {
       link: {
         type: "note",
         url: "",
-        title: "初心者をおいていかない技術記事の書き方",
+        title: "初心者を置いていかない技術記事の書き方",
       },
     },
     {
@@ -131,7 +131,7 @@ export const advent2026: AdventCalendar = {
       day: 11,
       memo: "Caelestia ShellにAI使用量を表示してみた",
       link: {
-        type: "note",
+        type: "zenn",
         url: "",
         title: "Caelestia ShellにAI使用量を表示してみた",
       },
