@@ -118,5 +118,10 @@
         "name": "paaru",
         "url": "https://paarulab.github.io/",
         "icon": null
+    },
+    {
+        "name": "みりん星",
+        "url": "https://mirin-homepage.vercel.app/",
+        "icon": "/favicons/mrin.webp"
     }
 ]
