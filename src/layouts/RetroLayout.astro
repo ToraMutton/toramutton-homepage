@@ -1,0 +1,114 @@
+---
+// /retro 用の超軽量レイアウト。BaseLayout / BaseHead / Footer は使わない。
+//
+// Astro のコンポーネントはビルド時に HTML になるだけなので、
+// 共通化しても出力は素の HTML + <table>。JS も外部ファイルも出ない。
+// CSS は <style is:inline> で HTML に直書きして、リクエストを増やさない。
+//
+// /retro 配下は通常ページと内容がかぶるので noindex にしている（sitemap からも除外済み）。
+
+interface Props {
+  title: string;
+  current: "top" | "blog" | "works" | "en";
+  lang?: "ja" | "en";
+}
+
+const { title, current, lang = "ja" } = Astro.props;
+
+// メニューの現在地。Astro のコンパイラが table 内の map した <a> を末尾に複製してしまうので、
+// メニューは map を使わず直書きしている
+const cur = (key: string) => (key === current ? "cur" : undefined);
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>{title}</title>
+    <!-- favicon のリクエスト自体を発生させない -->
+    <link rel="icon" href="data:," />
+    <style is:inline>
+      /* フォント・リンク色・見出しはブラウザ標準のまま。色は左メニューの薄紫だけ */
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      table.layout {
+        width: 100%;
+        height: 100%;
+        border-collapse: collapse;
+      }
+      td.menu {
+        width: 150px;
+        vertical-align: top;
+        background: #f0f0ff;
+        padding: 16px 8px;
+        border-right: 2px groove #ccc;
+      }
+      td.menu table td {
+        padding: 0 4px 1.4em;
+      }
+      td.main {
+        vertical-align: top;
+        padding: 8px 16px;
+      }
+      a.cur {
+        color: #000;
+        font-weight: bold;
+        text-decoration: none;
+      }
+      table.data {
+        border-collapse: collapse;
+      }
+      table.data th,
+      table.data td {
+        border: 1px solid #666;
+        padding: 2px 8px;
+        text-align: left;
+        vertical-align: top;
+      }
+      table.data th {
+        background: #f0f0ff;
+        font-weight: normal;
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <table class="layout">
+      <tr>
+        <td class="menu">
+          <!-- ●の色は元ネタ風のパステル。map を使わず直書き（上のコメント参照） -->
+          <table>
+            <tr>
+              <td><span style="color: #ffcccc">●</span></td>
+              <td><a href="/retro/" class={cur("top")}>トップ</a></td>
+            </tr>
+            <tr>
+              <td><span style="color: #00ff00">●</span></td>
+              <td><a href="/retro/blog/" class={cur("blog")}>記事</a></td>
+            </tr>
+            <tr>
+              <td><span style="color: #33ffff">●</span></td>
+              <td><a href="/retro/works/" class={cur("works")}>制作物</a></td>
+            </tr>
+            <tr>
+              <td><span style="color: #0000ff">●</span></td>
+              <td><a href="/retro/en/" class={cur("en")}>English</a></td>
+            </tr>
+          </table>
+          <small><a href="/">最新版のホームページはこちら</a></small>
+        </td>
+        <td class="main">
+          <slot />
+          <p align="center">
+            <small>&copy; ToraMutton / 遊びで作った昔風ページです</small>
+          </p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

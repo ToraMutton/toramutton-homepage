@@ -15,7 +15,11 @@ export default defineConfig({
 	site: 'https://toramutton.me',
 	output: 'server',
 	adapter: vercel(),
-	integrations: [mdx(), sitemap()],
+	// /retro 配下は通常ページと内容がかぶる遊びのページなので、sitemap には載せない
+	integrations: [
+		mdx(),
+		sitemap({ filter: (page) => !new URL(page).pathname.startsWith('/retro') }),
+	],
 	image: {
 		layout: 'constrained',
 		// 既存の CSS が画像の表示・切り抜きを担当する。

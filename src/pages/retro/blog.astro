@@ -1,0 +1,60 @@
+---
+export const prerender = true;
+import RetroLayout from "../../layouts/RetroLayout.astro";
+import { SITE_TITLE } from "../../consts";
+import { getVisiblePosts } from "../../utils/post";
+// note / Zenn / Qiita の取得は src/utils/feeds.ts に集約している
+import { getExternalPosts } from "../../utils/feeds";
+
+// 本文までレトロにすると重くなるので、一覧だけ。リンク先は通常の記事ページ
+const localPosts = (await getVisiblePosts()).map((post) => ({
+  title: post.data.title,
+  url: `/blog/${post.id}/`,
+  date: post.data.pubDate,
+  source: "このサイト",
+}));
+
+const SOURCE_LABEL = { note: "note", zenn: "Zenn", qiita: "Qiita" } as const;
+const externalPosts = (await getExternalPosts()).map((p) => ({
+  title: p.title,
+  url: p.url,
+  date: p.date,
+  source: SOURCE_LABEL[p.source],
+}));
+
+const posts = [...localPosts, ...externalPosts].sort(
+  (a, b) => b.date.valueOf() - a.date.valueOf(),
+);
+
+const fmt = new Intl.DateTimeFormat("ja-JP", {
+  timeZone: "Asia/Tokyo",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+---
+
+<RetroLayout title={`記事 | ${SITE_TITLE}`} current="blog">
+  <h1 align="center">記事</h1>
+  <p>
+    <small>記事の本文は最新版のページ（または各サイト）で開きます。</small>
+  </p>
+  <table class="data">
+    <tr>
+      <th>日付</th>
+      <th>タイトル</th>
+      <th>場所</th>
+    </tr>
+    {
+      posts.map((p) => (
+        <tr>
+          <td>{fmt.format(p.date)}</td>
+          <td>
+            <a href={p.url}>{p.title}</a>
+          </td>
+          <td style="white-space: nowrap">{p.source}</td>
+        </tr>
+      ))
+    }
+  </table>
+</RetroLayout>

@@ -1,0 +1,52 @@
+---
+export const prerender = true;
+import RetroLayout from "../../layouts/RetroLayout.astro";
+import { SITE_TITLE } from "../../consts";
+import { works } from "../../data/works";
+
+const sections = [
+  { status: "completed", label: "完成" },
+  { status: "in-progress", label: "制作中" },
+  { status: "planned", label: "構想中" },
+] as const;
+---
+
+<RetroLayout title={`制作物 | ${SITE_TITLE}`} current="works">
+  <h1 align="center">制作物</h1>
+  {
+    sections.map((sec) => {
+      const list = works.filter((w) => w.status === sec.status);
+      return (
+        list.length > 0 && (
+          <>
+            <h2>{sec.label}</h2>
+            <table class="data">
+              <tr>
+                <th>名前</th>
+                <th>年</th>
+                <th>説明</th>
+                <th>リンク</th>
+              </tr>
+              {list.map((w) => (
+                <tr>
+                  <td>
+                    <b>{w.name}</b>
+                    <br />
+                    <small>{w.tags.join(" / ")}</small>
+                  </td>
+                  <td>{w.year}</td>
+                  <td>{w.description}</td>
+                  <td style="white-space: nowrap">
+                    {w.url && <a href={w.url}>公開ページ</a>}
+                    {w.url && w.github && <br />}
+                    {w.github && <a href={w.github}>GitHub</a>}
+                  </td>
+                </tr>
+              ))}
+            </table>
+          </>
+        )
+      );
+    })
+  }
+</RetroLayout>

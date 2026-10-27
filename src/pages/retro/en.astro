@@ -1,0 +1,55 @@
+---
+export const prerender = true;
+import RetroLayout from "../../layouts/RetroLayout.astro";
+import { socials } from "../../data/home";
+
+// NOTE: 英文は about.ts の内容をもとにした下書き。言い回しは自由に直してOK
+---
+
+<RetroLayout title="ToraMutton's Homepage (English)" current="en" lang="en">
+  <h1 align="center">Welcome!</h1>
+  <p align="center">
+    <img src="/retro/me.jpg" width="96" height="96" alt="ToraMutton's icon" />
+  </p>
+
+  <h2>About me</h2>
+  <p>
+    Hi, I'm ToraMutton. I'm an undergraduate student at the
+    University of Electro-Communications (UEC) in Tokyo, studying in the
+    Computer Science Program.
+  </p>
+  <p>
+    I like building small things for the web and for my own desktop: web
+    apps, generative art, bots, and dotfiles. These days I'm studying Rust.
+  </p>
+
+  <h2>Stack &amp; environment</h2>
+  <ul>
+    <li>Languages: Rust / TypeScript / C</li>
+    <li>Web: Astro, React</li>
+    <li>OS: Arch Linux (Hyprland) and Windows 11 (GlazeWM)</li>
+    <li>Editor: Zed</li>
+  </ul>
+
+  <h2>Hobbies</h2>
+  <p>Music, games, anime, and sleeping.</p>
+
+  <h2>Links</h2>
+  <ul>
+    {
+      socials.map((s) => (
+        <li>
+          <a href={s.url}>{s.name}</a>
+        </li>
+      ))
+    }
+    <li><a href="/retro/works/">Works</a> (in Japanese)</li>
+  </ul>
+
+  <p>
+    <small>
+      This is a joke page: a tiny table-layout homepage from the good old
+      days. Most of the site is in Japanese.
+    </small>
+  </p>
+</RetroLayout>

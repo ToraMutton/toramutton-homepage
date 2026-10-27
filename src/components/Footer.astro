@@ -117,7 +117,9 @@ const buildTime = new Intl.DateTimeFormat("ja-JP", {
             >
         </p>
 
-        <p class="kaomoji">( ∩՞ټ՞∩) ﾝﾌ～～</p>
+        <p class="kaomoji">
+            <a href="/retro/" data-astro-reload>( ∩՞ټ՞∩) ﾝﾌ～～</a>
+        </p>
     </div>
 </footer>
 
@@ -306,6 +308,12 @@ const buildTime = new Intl.DateTimeFormat("ja-JP", {
         font-size: 0.7rem;
         color: var(--text-muted);
         opacity: 0.65;
+    }
+
+    /* イースターエッグの入口。見た目は普通の顔文字のまま */
+    .kaomoji a {
+        color: inherit;
+        text-decoration: none;
     }
 
     /* === hover (ポインタデバイスのみ) === */

@@ -157,6 +157,8 @@ export const workCategories: WorkCategoryCard[] = [
 export interface TerminalCommand {
   cmd: string;
   out: string;
+  /** 指定すると、出力がこのURLへのリンクになる（イースターエッグ用） */
+  href?: string;
 }
 
 export const terminalCommands: TerminalCommand[] = [
@@ -183,6 +185,8 @@ export const terminalCommands: TerminalCommand[] = [
   { cmd: "git log --oneline", out: "abc1234 fix: everything" },
   { cmd: "cat arch", out: "I use Arch btw" },
   { cmd: "cat bugs", out: "feature" },
+  // イースターエッグ。出力をクリックすると古き良きホームページへ飛べる
+  { cmd: "cd /retro", out: "→ 古き良きホームページへ", href: "/retro/" },
   { cmd: "sudo make me a sandwich", out: "Okay." },
   {
     cmd: "rm -rf laziness",

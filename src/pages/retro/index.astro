@@ -1,0 +1,48 @@
+---
+export const prerender = true;
+import RetroLayout from "../../layouts/RetroLayout.astro";
+import { SITE_TITLE } from "../../consts";
+import { heroSpecs, socials } from "../../data/home";
+
+// 元ネタのトップに倣って、情報は最小限。罫線の表は使わず、文字をそのまま置く。
+// 表示する項目は home.ts の heroSpecs から選ぶ（キー → 日本語の見出し）
+const LABELS: Record<string, string | null> = {
+  Name: null,
+  Univ: "所属",
+  Stack: "使う言語",
+  Now: "最近",
+};
+const lines = heroSpecs.flatMap((s) =>
+  s.kind !== "clock" && s.key in LABELS
+    ? [{ label: LABELS[s.key], value: s.value }]
+    : [],
+);
+---
+
+<RetroLayout title={SITE_TITLE} current="top">
+  <h1 align="center">{SITE_TITLE}</h1>
+  <p align="center">
+    <img src="/retro/me.jpg" width="96" height="96" alt="トラマトのアイコン" />
+  </p>
+  <p align="center">
+    {
+      lines.map((l) => (
+        <>
+          {l.label && `${l.label}: `}
+          {l.value}
+          <br />
+        </>
+      ))
+    }
+  </p>
+  <p align="center">
+    {
+      socials.map((s, i) => (
+        <>
+          {i > 0 && " | "}
+          <a href={s.url}>{s.name}</a>
+        </>
+      ))
+    }
+  </p>
+</RetroLayout>

@@ -525,6 +525,7 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                                     class="mt-block"
                                     data-cmd={c.cmd}
                                     data-out={c.out}
+                                    data-href={c.href}
                                     data-index={i}
                                 >
                                     <p class="mt-line">
@@ -1243,13 +1244,15 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                     const mtBody =
                         document.getElementById("mini-terminal-body");
 
-                    const allCommands: { cmd: string; out: string }[] =
+                    type TermCommand = { cmd: string; out: string; href?: string };
+
+                    const allCommands: TermCommand[] =
                         JSON.parse(
                             document.getElementById("terminal-commands-data")
                                 ?.textContent ?? "[]",
                         );
 
-                    let currentCommands: { cmd: string; out: string }[] =
+                    let currentCommands: TermCommand[] =
                         Array.from(
                             mtBody?.querySelectorAll<HTMLElement>(
                                 ".mt-block",
@@ -1257,6 +1260,7 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                         ).map((b) => ({
                             cmd: b.dataset.cmd ?? "",
                             out: b.dataset.out ?? "",
+                            href: b.dataset.href,
                         }));
 
                     function renderMiniTerminal() {
@@ -1290,7 +1294,7 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                             mtBody.querySelector<HTMLElement>("#mt-cursor");
 
                         for (const [idx, block] of blocks.entries()) {
-                            const { cmd, out } = currentCommands[idx];
+                            const { cmd, out, href } = currentCommands[idx];
                             const cmdEl =
                                 block.querySelector<HTMLElement>(".mt-cmd");
                             const outEl =
@@ -1298,7 +1302,18 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                             if (!cmdEl || !outEl) continue;
                             await typeText(cmdEl, cmd, mtTimers);
                             await wait(mtTimers, 80);
-                            outEl.textContent = out;
+                            if (href) {
+                                // href 付きのコマンドだけ、出力をリンクにする
+                                const a = document.createElement("a");
+                                a.href = href;
+                                a.textContent = out;
+                                a.className = "mt-out-link";
+                                // /retro は専用の素のHTML。ページ遷移の差し替えを通さず普通に読み込む
+                                a.dataset.astroReload = "";
+                                outEl.replaceChildren(a);
+                            } else {
+                                outEl.textContent = out;
+                            }
                             outEl.classList.add("is-visible");
                             await wait(mtTimers, 300);
                         }
@@ -2701,6 +2716,12 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
     .mini-terminal-body :global(.mt-out.is-visible) {
         opacity: 1;
         transform: translateY(0);
+    }
+
+    .mini-terminal-body :global(.mt-out-link) {
+        color: inherit;
+        text-decoration: underline;
+        text-underline-offset: 3px;
     }
 
     .mini-terminal-body :global(.mt-cursor) {
