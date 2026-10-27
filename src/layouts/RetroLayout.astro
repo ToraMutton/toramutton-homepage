@@ -26,15 +26,29 @@ const cur = (key: string) => (key === current ? "cur" : undefined);
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
+    <!-- ダークモードでも常にライト表示。`only` を付けると、ブラウザ側の強制ダーク化（反転）も拒否できる -->
+    <meta name="color-scheme" content="only light" />
     <title>{title}</title>
     <!-- favicon のリクエスト自体を発生させない -->
     <link rel="icon" href="data:," />
     <style is:inline>
-      /* フォント・リンク色・見出しはブラウザ標準のまま。色は左メニューの薄紫だけ */
+      /* フォント・見出しはブラウザ標準のまま。色は左メニューの薄紫だけ。
+         ダークモードで色が反転しないよう、背景・文字・リンク色は全部明示する */
+      :root {
+        color-scheme: only light;
+      }
       html,
       body {
         height: 100%;
         margin: 0;
+        background: #fff;
+        color: #000;
+      }
+      a:link {
+        color: #0000ee;
+      }
+      a:visited {
+        color: #551a8b;
       }
       table.layout {
         width: 100%;
@@ -52,6 +66,7 @@ const cur = (key: string) => (key === current ? "cur" : undefined);
         padding: 0 4px 1.4em;
       }
       td.main {
+        background: #fff;
         vertical-align: top;
         padding: 8px 16px;
       }
