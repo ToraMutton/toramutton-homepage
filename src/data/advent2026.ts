@@ -45,7 +45,7 @@ export interface AdventCalendar {
 
 export const advent2026: AdventCalendar = {
   year: 2026,
-  // adventarUrl: "https://adventar.org/calendars/…",
+  adventarUrl: "https://adventar.org/calendars/12704",
 
   prologue: {
     memo: "トラマト一人アドベントカレンダー2026、開始",

@@ -17,7 +17,6 @@ import caelestiaAiUsageImage from "../assets/works/caelestia-ai-usage.webp";
 import fxtwitterImage from "../assets/works/fxtwitter-bot.webp";
 import guideBookImage from "../assets/works/homepage-guide.webp";
 import homepageImage from "../assets/works/toramutton.webp";
-import nexusImage from "../assets/works/nexus.webp";
 import vextraImage from "../assets/works/vextra.webp";
 import windotImage from "../assets/works/windotfiles.webp";
 
@@ -29,7 +28,6 @@ import {
   FileVideo,
   Gamepad2,
   Gauge,
-  Grid3X3,
   LayoutGrid,
   Shapes,
   Sparkles,
@@ -170,19 +168,6 @@ export const works: Work[] = [
     status: "completed",
     category: "tools",
     image: fxtwitterImage,
-  },
-  {
-    name: "NEXUS for UEC",
-    description:
-      "電通大生向け時間割アプリ。チームbookmarkの一員として頑張っております。電通大生全員インストールして！！！",
-    tags: ["Swift", "Kotlin", "Firebase"],
-    icon: Grid3X3,
-    year: "2026",
-    url: "https://nexusforuec.team-bookmark.com/",
-    github: "https://github.com/shiori-02-14/NEXUS-",
-    status: "completed",
-    category: "tools",
-    image: nexusImage,
   },
   {
     name: "Classroom-PDF-Saver",

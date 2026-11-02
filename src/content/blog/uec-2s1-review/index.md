@@ -358,7 +358,6 @@ CS志望ですが、これならプログラム配属は大丈夫なはずです
 
 ### 技術
 
-- [NEXUS for UEC](https://nexusforuec.team-bookmark.com/)の開発(？)チームとして参加。
 - Google Classroomにて、PDF保存を楽にする拡張機能を作成。まだまだ改善点しかない
 - Rust製Discord Botを作成。これのおかげでネタ動画保存の効率が500倍くらい上がりました。
 - ローカルLLMをRadeon RX 9060 XTで動かしてみた。動かしてみただけ。
