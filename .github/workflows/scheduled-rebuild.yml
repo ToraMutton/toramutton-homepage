@@ -13,12 +13,10 @@ name: Scheduled rebuild
 
 on:
   schedule:
-    # GitHub Actions の時刻指定は UTC なので、JST 07:00 = UTC 22:00（前日）
-    # 混雑時は数十分ずれることがあるが、1日1回の用途なら問題ない
-    - cron: "0 22 * * *"
-    # JST 00:00 = UTC 15:00。ローカル記事の予約公開（draft: false + pubDate が未来）と
-    # advent カレンダーの日替わりを、日付が変わった直後に反映するための回。
-    # 同じく数十分ずれることがあるので、0:00ぴったりではなく「0:00 すぎ」に出る
+    # GitHub Actions の時刻指定は UTC なので、JST 00:00 = UTC 15:00（前日）
+    # ローカル記事の予約公開（draft: false + pubDate が未来）と advent カレンダーの
+    # 日替わりを、日付が変わった直後に反映するための回。
+    # 混雑時は数十分ずれることがあるので、0:00ぴったりではなく「0:00 すぎ」に出る
     - cron: "0 15 * * *"
   # Actions タブから手動でも実行できるようにしておく（動作確認用）
   workflow_dispatch:
