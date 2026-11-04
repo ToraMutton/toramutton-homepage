@@ -67,7 +67,7 @@ export const advent2026: AdventCalendar = {
       memo: "RustでDiscordのTwitter動画保存Botを作った話",
       link: {
         type: "zenn",
-        url: "",
+        url: "https://zenn.dev/toramutton/articles/fxtwitter-bot",
         title: "RustでDiscordのTwitter動画保存Botを作った話",
       },
     },
@@ -123,7 +123,7 @@ export const advent2026: AdventCalendar = {
       memo: "ClassroomのPDFダウンロードがめんどくさいので拡張機能を作った話",
       link: {
         type: "zenn",
-        url: "",
+        url: "https://zenn.dev/toramutton/articles/cr-pdf-saver",
         title: "ClassroomのPDFダウンロードがめんどくさいので拡張機能を作った話",
       },
     },
@@ -132,7 +132,7 @@ export const advent2026: AdventCalendar = {
       memo: "Caelestia ShellにAI使用量を表示してみた",
       link: {
         type: "zenn",
-        url: "",
+        url: "https://zenn.dev/toramutton/articles/caelestia-ai-usage",
         title: "Caelestia ShellにAI使用量を表示してみた",
       },
     },
@@ -178,7 +178,7 @@ export const advent2026: AdventCalendar = {
       memo: "Radeon＋ROCmでローカルLLM環境を作ってみた話",
       link: {
         type: "zenn",
-        url: "",
+        url: "https://zenn.dev/toramutton/articles/radeon-rocm-local-llm",
         title: "Radeon＋ROCmでローカルLLM環境を作ってみた話",
       },
     },
