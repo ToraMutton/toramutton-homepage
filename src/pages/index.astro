@@ -1,6 +1,6 @@
 ---
 export const prerender = true;
-import { getCollection } from "astro:content";
+import { getVisiblePosts } from "../utils/post";
 import Layout from "../layouts/BaseLayout.astro";
 import SectionHeading from "../components/SectionHeading.astro";
 import { SITE_TITLE, SITE_DESCRIPTION } from "../consts";
@@ -47,12 +47,8 @@ const handle = (url: string) =>
     `@${new URL(url).pathname.split("/").filter(Boolean).pop()}`;
 
 // === 記事一覧 ===
-const isDev = import.meta.env.DEV;
-
-// ローカル記事（下書きは dev でだけ見える）
-const localPostsRaw = await getCollection('blog', ({ data }) => {
-    return isDev || data.draft !== true;
-});
+// ローカル記事（下書き・公開日前の記事は dev でだけ見える）
+const localPostsRaw = await getVisiblePosts();
 
 const localPosts = localPostsRaw.map((post) => ({
     title: post.data.title,
