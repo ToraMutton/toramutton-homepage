@@ -218,7 +218,7 @@ export const advent2026: AdventCalendar = {
     {
       day: 23,
       memo: "2026年に買ってよかったもの",
-      link: { type: "note", url: "", title: "買ってよかったもの2026" },
+      link: { type: "note", url: "", title: "2026年に買ってよかったもの" },
     },
     {
       day: 24,

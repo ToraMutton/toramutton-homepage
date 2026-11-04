@@ -155,4 +155,4 @@ Wi-FiやBluetooth、電源管理など初期セットアップはノートの方
 
 **I use Arch, btw.**
 
-> 明日（12/2）はがらっとテーマが変わり、「RustでDiscord Botを作った話」となります！
+> 明日（12/2）はがらっとテーマが変わり、「RustでDiscordのTwitter動画保存Botを作った話」となります！
