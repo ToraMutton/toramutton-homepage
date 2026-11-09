@@ -15,10 +15,15 @@ export default defineConfig({
 	site: 'https://toramutton.me',
 	output: 'server',
 	adapter: vercel(),
-	// /retro 配下は通常ページと内容がかぶる遊びのページなので、sitemap には載せない
+	// /retro 配下は通常ページと内容がかぶる遊びのページ、/lab 配下は試作なので、sitemap には載せない
 	integrations: [
 		mdx(),
-		sitemap({ filter: (page) => !new URL(page).pathname.startsWith('/retro') }),
+		sitemap({
+			filter: (page) => {
+				const { pathname } = new URL(page);
+				return !pathname.startsWith('/retro') && !pathname.startsWith('/lab');
+			},
+		}),
 	],
 	image: {
 		layout: 'constrained',

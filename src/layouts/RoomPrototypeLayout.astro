@@ -1,0 +1,52 @@
+---
+// /lab/room/ 専用の骨組み。共有ヘッダーやフッターは触らず、テーマの仕組みだけ BaseHead から借りる。
+import { Moon, Sun } from "lucide-astro";
+import BaseHead from "../components/BaseHead.astro";
+import "../styles/room-prototype.css";
+import {
+  SECTION_IDS,
+  SECTION_LABELS,
+} from "../data/roomPrototype";
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<html lang="ja">
+  <head>
+    <BaseHead {title} {description} />
+    <meta name="robots" content="noindex,nofollow" />
+  </head>
+  <body class="room-body">
+    <script is:inline>
+      // CSS の切り替えが最初の描画に間に合うよう、JS の有無だけ先に印を付ける
+      document.body.dataset.js = "1";
+    </script>
+    <header class="room-header">
+      <a class="room-logo" href="/">toramutton<span>.me</span></a>
+      <nav class="room-nav" aria-label="部屋の章">
+        {
+          SECTION_IDS.map((id) => (
+            <a href={`#${id}`} data-room-link={id}>
+              {SECTION_LABELS[id]}
+            </a>
+          ))
+        }
+      </nav>
+      <button
+        id="room-theme-toggle"
+        class="room-icon-button"
+        type="button"
+        aria-label="ライトとダークを切り替える"
+      >
+        <span class="room-icon-sun"><Sun size={20} /></span>
+        <span class="room-icon-moon"><Moon size={20} /></span>
+      </button>
+    </header>
+    <slot />
+  </body>
+</html>

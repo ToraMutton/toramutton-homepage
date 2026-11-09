@@ -27,3 +27,6 @@ build.log
 .vscode/
 .vercel
 .cache/
+
+# ローカルの設計資料・参考画像
+/docs/

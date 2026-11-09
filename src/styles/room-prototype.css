@@ -1,0 +1,599 @@
+/* /lab/room/ だけで読み込む。既存の変数を使い、global.css の値は変えない。 */
+
+.room-body {
+  --room-header: 64px;
+  --room-stage-height: calc(100svh - var(--room-header));
+  margin: 0;
+}
+
+/* === ヘッダー === */
+.room-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: var(--room-header);
+  padding: 0 1.5rem;
+  background: var(--background);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.room-logo {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--text-main);
+  text-decoration: none;
+  margin-right: auto;
+}
+
+.room-logo span {
+  color: var(--accent-blue);
+}
+
+.room-nav {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+}
+
+.room-nav a {
+  padding: 0.4rem 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  border-radius: var(--radius);
+  white-space: nowrap;
+}
+
+.room-nav a:hover {
+  color: var(--accent-blue);
+}
+
+.room-nav a[aria-current] {
+  color: var(--text-main);
+  background: var(--elevated);
+}
+
+.room-body a:focus-visible,
+.room-body button:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+.room-icon-button {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.room-icon-button:hover {
+  color: var(--accent-blue);
+  background: var(--elevated);
+}
+
+.room-icon-button span {
+  position: absolute;
+  inset: 10px;
+  line-height: 0;
+}
+
+html.dark .room-icon-sun,
+html:not(.dark) .room-icon-moon {
+  display: none;
+}
+
+/* 細部の選択は本文の中の見出しに近い役割なので、押しボタンより軽く見せる */
+.room-button {
+  display: inline-block;
+  padding: 0.3rem 0.1rem 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  line-height: 1.4;
+  text-align: left;
+  color: var(--text-muted);
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+
+.room-button:hover:not(:disabled) {
+  color: var(--accent-blue);
+}
+
+.room-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.room-button[aria-pressed="true"] {
+  color: var(--text-main);
+  border-bottom-color: var(--accent-blue);
+}
+
+/* === 全体の配置 ===
+   JS なしでも読めるよう、基本は左右分割。JS があるときだけ全景を広げる。
+   overflow: clip はスクロール領域を作らないので sticky を壊さない。 */
+.room-app {
+  display: grid;
+  grid-template-columns: 45% 55%;
+  overflow-x: clip;
+}
+
+.room-stage {
+  position: sticky;
+  top: var(--room-header);
+  z-index: 1;
+  grid-column: 1;
+  align-self: start;
+  width: 100%;
+  height: var(--room-stage-height);
+  overflow: hidden;
+  /* 静止画の余白と同じ色にして、画像の端を目立たせない */
+  background: #2f2d52;
+}
+
+.room-body[data-js] .room-app[data-section="home"] .room-stage {
+  /* 列の幅(45%)を基準に、画面全体へ広げる */
+  width: calc(100% / 0.45);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .room-body[data-js] .room-stage {
+    transition: width 0.4s var(--ease-out);
+  }
+}
+
+.room-still,
+.room-still img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.room-canvas-host {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+}
+
+.room-app[data-stage="ready"] .room-canvas-host {
+  visibility: visible;
+}
+
+.room-app[data-stage="ready"] .room-still {
+  visibility: hidden;
+}
+
+.room-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* 3D の上でも縦スクロールは通常どおり効かせる */
+  touch-action: pan-y;
+}
+
+/* 舞台の上の操作は部屋の邪魔をしないよう、半透明の小さな札にする */
+.room-stage-control {
+  position: absolute;
+  z-index: 2;
+  padding: 0.3rem 0.65rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: #e6edf3;
+  text-decoration: none;
+  background: rgb(13 17 23 / 0.5);
+  border: 1px solid rgb(230 237 243 / 0.16);
+  border-radius: 999px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+
+.room-stage-control:hover {
+  color: #fff;
+  background: rgb(13 17 23 / 0.72);
+  border-color: rgb(34 211 238 / 0.6);
+}
+
+.room-back {
+  top: 0.9rem;
+  left: 0.9rem;
+  display: none;
+}
+
+.room-back::before {
+  content: "← ";
+}
+
+.room-app:not([data-section="home"]) .room-back {
+  display: block;
+}
+
+.room-toggle3d {
+  right: 0.9rem;
+  bottom: 0.9rem;
+  display: none;
+}
+
+/* 全景では右下に本文のカードがあるので左へ逃がす */
+.room-app[data-section="home"] .room-toggle3d {
+  right: auto;
+  left: 0.9rem;
+}
+
+.room-body[data-js] .room-toggle3d {
+  display: block;
+}
+
+.room-status {
+  position: absolute;
+  top: 0.9rem;
+  left: 50%;
+  z-index: 2;
+  max-width: calc(100% - 2rem);
+  padding: 0.3rem 0.75rem;
+  font-size: 0.78rem;
+  color: #e6edf3;
+  white-space: nowrap;
+  background: rgb(13 17 23 / 0.6);
+  border-radius: 999px;
+  transform: translateX(-50%);
+}
+
+/* 伝えることがあるとき（読み込み中・失敗）だけ見せる。読み上げは常に残す */
+.room-body:not([data-js]) .room-status {
+  display: none;
+}
+
+.room-app[data-stage="ready"] .room-status,
+.room-app[data-stage="static"] .room-status {
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.room-selected {
+  position: absolute;
+  bottom: 0.9rem;
+  left: 0.9rem;
+  z-index: 2;
+  max-width: calc(100% - 9rem);
+  margin: 0;
+  padding: 0.3rem 0.7rem 0.3rem 1.3rem;
+  overflow: hidden;
+  font-size: 0.82rem;
+  color: #e6edf3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: rgb(13 17 23 / 0.62);
+  border-radius: 999px;
+}
+
+.room-selected::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0.6rem;
+  width: 0.4rem;
+  height: 0.4rem;
+  background: #22d3ee;
+  border-radius: 50%;
+  transform: translateY(-50%);
+}
+
+.room-app:not([data-stage="ready"]) .room-selected {
+  display: none;
+}
+
+.room-tooltip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.78rem;
+  color: #e6edf3;
+  background: rgb(13 17 23 / 0.8);
+  border-radius: 999px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* === 本文 === */
+.room-content {
+  position: relative;
+  z-index: 2;
+  grid-column: 2;
+  min-width: 0;
+  /* 全景では右半分の部屋も押せるよう、本文の箱自体はクリックを受けない */
+  pointer-events: none;
+}
+
+.room-section:not(.room-home) {
+  pointer-events: auto;
+}
+
+.room-section {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: var(--room-stage-height);
+  padding: 3rem clamp(2rem, 6vw, 6rem);
+  /* global.css の scroll-padding-top(80px) とヘッダーの差を埋める */
+  scroll-margin-top: calc(var(--room-header) - 80px);
+  background: var(--background);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* 本文の幅は読みやすい行長に揃え、余った幅は余白のままにする */
+.room-section > * {
+  width: 100%;
+  max-width: 34rem;
+}
+
+.room-section h2 {
+  margin: 0 0 1.25rem;
+  font-size: clamp(1.9rem, 3vw, 2.5rem);
+  letter-spacing: -0.01em;
+  color: var(--text-main);
+}
+
+.room-section h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+}
+
+.room-section p {
+  margin-top: 0;
+}
+
+.room-prompt {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--accent-blue);
+}
+
+/* 全景の上に重なる最初の章。空いた部分のクリックは下の部屋へ通す */
+.room-home {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  align-items: stretch;
+  padding: 1.5rem;
+  background: transparent;
+  border-bottom: none;
+  pointer-events: none;
+}
+
+.room-card {
+  align-self: flex-end;
+  width: auto;
+  max-width: 26rem;
+  padding: 1.25rem 1.5rem;
+  background: color-mix(in srgb, var(--background) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
+  border-radius: 10px;
+  backdrop-filter: blur(6px);
+  pointer-events: auto;
+}
+
+.room-hint {
+  display: none;
+  margin-bottom: 0.8rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.room-app[data-stage="ready"] .room-hint {
+  display: block;
+}
+
+.room-card h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.35rem;
+  color: var(--text-main);
+}
+
+.room-socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+}
+
+.room-socials a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.room-profile {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.room-profile img {
+  border-radius: var(--radius);
+}
+
+.room-rows {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 1rem;
+  margin: 0 0 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+
+.room-rows dt {
+  color: var(--spec-label);
+}
+
+.room-rows dd {
+  margin: 0;
+}
+
+.room-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.25rem;
+  margin: 0.5rem 0 1.25rem;
+}
+
+.room-detail-panel {
+  padding: 0.1rem 0 0.1rem 1rem;
+  margin-bottom: 1.25rem;
+  border-left: 2px solid var(--accent-blue);
+}
+
+.room-detail-panel p:last-child {
+  margin-bottom: 0;
+}
+
+/* JS があるときだけ、選んだ項目に絞る。JS なしなら全部見える */
+.room-body[data-js] .room-detail-panel:not(.is-active) {
+  display: none;
+}
+
+.room-body:not([data-js]) .room-details {
+  display: none;
+}
+
+.room-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--badge-text);
+}
+
+.room-tags li {
+  padding: 0.1rem 0.45rem;
+  background: var(--badge-bg);
+  border-radius: var(--radius);
+}
+
+.room-links {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0;
+}
+
+.room-note {
+  margin-bottom: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* === 小さい画面は静止画＋縦並び ===
+   959.98px は ROOM_SPLIT_MIN_WIDTH(960) の直前 */
+@media (max-width: 959.98px) {
+  .room-header {
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .room-nav {
+    order: 3;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .room-nav a {
+    padding: 0.35rem 0.4rem;
+    font-size: 0.8rem;
+  }
+
+  .room-app {
+    display: block;
+  }
+
+  .room-stage,
+  .room-body[data-js] .room-app[data-section="home"] .room-stage {
+    position: relative;
+    top: auto;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 2;
+    transition: none;
+  }
+
+  /* 3D を選んだら上部に留める。高さを抑えて本文を覆わない */
+  .room-app[data-stage="ready"] .room-stage,
+  .room-app[data-stage="loading"] .room-stage,
+  .room-body[data-js] .room-app[data-stage="ready"] .room-stage,
+  .room-body[data-js] .room-app[data-stage="loading"] .room-stage {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    aspect-ratio: auto;
+    height: min(38svh, 66vw);
+  }
+
+  .room-section {
+    min-height: 0;
+    padding: 2.25rem 1.25rem;
+    scroll-margin-top: 0;
+  }
+
+  .room-toggle3d,
+  .room-app[data-section="home"] .room-toggle3d {
+    right: 0.75rem;
+    left: auto;
+    bottom: 0.75rem;
+  }
+
+  .room-selected {
+    left: 0.75rem;
+    bottom: 0.75rem;
+  }
+
+  .room-home {
+    display: block;
+    padding: 1.25rem;
+    background: var(--background);
+    border-bottom: 1px solid var(--border-color);
+    pointer-events: auto;
+  }
+
+  .room-card {
+    align-self: auto;
+    max-width: none;
+    padding: 0;
+    background: transparent;
+    border: none;
+    backdrop-filter: none;
+  }
+
+  .room-header {
+    position: static;
+  }
+}

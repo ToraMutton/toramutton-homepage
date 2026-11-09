@@ -1,0 +1,27 @@
+---
+// 左側の舞台。静止画は常に HTML にあり、3D はその上に重なる。
+// だから読み込み前・失敗時・通常表示では何もしなくても静止画が見える。
+import { Picture } from "astro:assets";
+import roomImage from "../../assets/room/room-reference.png";
+---
+
+<section class="room-stage" aria-label="部屋の表示">
+  <Picture
+    pictureAttributes={{ class: "room-still" }}
+    src={roomImage}
+    alt="机に2台のモニター、右に本棚、机の下にPCがあるローポリの部屋"
+    formats={["avif", "webp"]}
+    fallbackFormat="jpeg"
+    widths={[480, 768, 1200]}
+    sizes="100vw"
+    quality={68}
+    loading="eager"
+    fetchpriority="high"
+  />
+  <div class="room-canvas-host" data-room-host></div>
+  <a class="room-stage-control room-back" href="#home" data-room-link="home">全景へ戻る</a>
+  <span class="room-status" data-room-status role="status">静止画を表示中</span>
+  <button class="room-stage-control room-toggle3d" type="button" data-room-toggle3d>3Dで眺める</button>
+  <p class="room-selected" data-room-selected hidden></p>
+  <div class="room-tooltip" data-room-tooltip hidden></div>
+</section>

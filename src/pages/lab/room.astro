@@ -1,0 +1,63 @@
+---
+// ローポリ部屋の試作。誰でも URL で開けるが、検索とサイトマップからは外してある。
+export const prerender = true;
+import { getImage } from "astro:assets";
+import profileImage from "../../assets/profile/toramutton.jpg";
+import RoomContent from "../../components/room/RoomContent.astro";
+import RoomStage from "../../components/room/RoomStage.astro";
+import RoomPrototypeLayout from "../../layouts/RoomPrototypeLayout.astro";
+
+const icon = await getImage({
+  src: profileImage,
+  width: 256,
+  height: 256,
+  format: "webp",
+  layout: "none",
+});
+
+// 机上の時計はビルドした時刻の固定表示。現在時刻と混同しないよう BUILD と添えて出す
+const buildParts = Object.fromEntries(
+  new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Tokyo",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  })
+    .formatToParts(new Date())
+    .map(({ type, value }) => [type, value]),
+);
+const buildLabel = `${buildParts.month}-${buildParts.day} ${buildParts.hour}:${buildParts.minute}`;
+---
+
+<RoomPrototypeLayout
+  title="部屋の試作 | toramutton.me"
+  description="ローポリの部屋を動かして、配置とカメラを確かめるための試作ページです。"
+>
+  <div
+    id="room-app"
+    class="room-app"
+    data-section="home"
+    data-stage="static"
+    data-icon-url={icon.src}
+    data-build-label={buildLabel}
+  >
+    <script is:inline>
+      // #pc などで開いたときに、全景を一瞬も挟まず左右分割で描き始める
+      (function () {
+        var app = document.getElementById("room-app");
+        var id = location.hash.slice(1);
+        if (app && /^(about|works|skills|library|pc)$/.test(id)) {
+          app.dataset.section = id;
+        }
+      })();
+    </script>
+    <RoomStage />
+    <RoomContent />
+  </div>
+</RoomPrototypeLayout>
+
+<script>
+  import "../../scripts/room/bootstrap";
+</script>

@@ -1,0 +1,270 @@
+---
+// 右側の本文。3D がなくても全部読めるよう、情報は必ずこの HTML に置く。
+// 表示する値は既存データから取り出し、ここへ書き写さない。
+import { Image } from "astro:assets";
+import { getImage } from "astro:assets";
+import BrandIcon from "../BrandIcon.astro";
+import profileImage from "../../assets/profile/toramutton.jpg";
+import { SITE_DESCRIPTION } from "../../consts";
+import { ENV_BLOCKS, LANGUAGE_SKILLS, SKILL_LEVELS } from "../../data/about";
+import { heroSpecs, heroUser, socials } from "../../data/home";
+import { works } from "../../data/works";
+import { getVisiblePosts } from "../../utils/post";
+
+const specValue = (key: string) => {
+  const spec = heroSpecs.find((item) => item.key === key);
+  return spec && spec.kind !== "clock" ? spec.value : "";
+};
+const profileRows = ["Name", "Univ", "Stack", "Now"].map((key) => ({
+  key,
+  value: specValue(key),
+}));
+
+// --- Works: 作品名で選ぶ。元データは変更しない ---
+const pickWork = (name: string) => {
+  const work = works.find((item) => item.name === name);
+  if (!work) throw new Error(`works.ts に ${name} がない`);
+  return work;
+};
+const featuredWorks = await Promise.all(
+  [
+    { id: "artoram", work: pickWork("ArToram") },
+    { id: "vextra", work: pickWork("Vextra") },
+  ].map(async ({ id, work }) => ({
+    id,
+    work,
+    // 3D のモニターへ貼る画像。本文の画像とは別の、幅を抑えたもの
+    screen: work.image
+      ? await getImage({ src: work.image, width: 768, format: "webp", layout: "none" })
+      : undefined,
+  })),
+);
+
+// --- Skills: キーに割り当てた 3 言語 ---
+const skillOf = (id: string, name: string) => {
+  const skill = LANGUAGE_SKILLS.find((item) => item.name === name);
+  if (!skill) throw new Error(`about.ts に ${name} がない`);
+  return {
+    id,
+    name,
+    level: skill.level,
+    levelLabel: SKILL_LEVELS.find((item) => item.level === skill.level)?.label,
+  };
+};
+const skills = [
+  skillOf("rust", "Rust"),
+  skillOf("typescript", "TypeScript"),
+  skillOf("c", "C"),
+];
+
+// --- Library: 公開判定を通った記事だけを出す ---
+const guide = pickWork("はじめてのホームページ制作ガイド");
+const posts = await getVisiblePosts();
+const book = (id: string, slug: string) => {
+  const post = posts.find((item) => item.id === slug);
+  return post
+    ? {
+        id,
+        title: post.data.title,
+        description: post.data.description,
+        href: `/blog/${post.id}/`,
+        external: false,
+      }
+    : null;
+};
+const books = [
+  {
+    id: "guide",
+    title: guide.name,
+    description: guide.description,
+    href: guide.url!,
+    external: true,
+  },
+  book("pc-build", "pc-build-2026"),
+  book("uec-review", "uec-1-review"),
+].filter((item) => item !== null);
+
+// --- PC: 実機の値 ---
+const desktop = ENV_BLOCKS.find((block) => block.section === "desktop");
+if (!desktop) throw new Error("about.ts に desktop の環境がない");
+const row = (key: string) => desktop.rows.find((item) => item.k === key)?.v ?? "";
+const pcSummary = ["cpu", "mb", "storage", "case", "psu", "os"].map((key) => ({
+  key,
+  value: row(key),
+}));
+const pcParts = [
+  { id: "gpu", label: "GPU", value: row("gpu"), note: "ケースの中ほどに横向きに刺さっている細長い箱" },
+  { id: "memory", label: "メモリ", value: row("memory"), note: "クーラーの手前に並ぶ板" },
+  { id: "cooler", label: "CPUクーラー", value: row("cooler"), note: "CPU はこの下に隠れている" },
+];
+---
+
+<div class="room-content">
+  <section id="home" class="room-section room-home" aria-labelledby="room-home-title">
+    <div class="room-card">
+      <p class="room-prompt">{heroUser.user}@{heroUser.host}</p>
+      <h1 id="room-home-title">{specValue("Name")}</h1>
+      <p>{SITE_DESCRIPTION}</p>
+      <p class="room-hint">部屋の物を選ぶと、そこへ近づきます。</p>
+      <ul class="room-socials">
+        {
+          socials.map((social) => (
+            <li>
+              <a href={social.url} target="_blank" rel="noopener noreferrer">
+                <BrandIcon name={social.icon} />
+                {social.name}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section id="about" class="room-section" aria-labelledby="room-about-title">
+    <p class="room-prompt">$ cat ./nameplate</p>
+    <h2 id="room-about-title">About</h2>
+    <div class="room-profile">
+      <Image src={profileImage} alt="トラマトのアイコン" width={112} height={112} />
+      <dl class="room-rows">
+        {
+          profileRows.map(({ key, value }) => (
+            <>
+              <dt>{key}</dt>
+              <dd>{value}</dd>
+            </>
+          ))
+        }
+      </dl>
+    </div>
+    <p><a href="/about">プロフィールをすべて見る</a></p>
+  </section>
+
+  <section id="works" class="room-section" aria-labelledby="room-works-title">
+    <p class="room-prompt">$ ls ./works</p>
+    <h2 id="room-works-title">Works</h2>
+    <p>作品を選ぶと、モニターの表示が変わります。</p>
+    <div class="room-details" role="group" aria-label="作品を選ぶ">
+      {
+        featuredWorks.map(({ id, work, screen }) => (
+          <button
+            type="button"
+            class="room-button"
+            data-room-detail={id}
+            data-label={work.name}
+            data-image={screen?.src}
+            aria-pressed="false"
+          >
+            {work.name}
+          </button>
+        ))
+      }
+    </div>
+    {
+      featuredWorks.map(({ id, work }) => (
+        <article class="room-detail-panel" data-room-detail-panel={id}>
+          <h3>{work.name}</h3>
+          <p>{work.description}</p>
+          <ul class="room-tags">
+            {work.tags.map((tag) => <li>{tag}</li>)}
+          </ul>
+          <p class="room-links">
+            {work.url && <a href={work.url} target="_blank" rel="noopener noreferrer">サイトを開く</a>}
+            {work.github && <a href={work.github} target="_blank" rel="noopener noreferrer">GitHub</a>}
+          </p>
+        </article>
+      ))
+    }
+    <p><a href="/works">作品をすべて見る</a></p>
+  </section>
+
+  <section id="skills" class="room-section" aria-labelledby="room-skills-title">
+    <p class="room-prompt">$ ls ./languages</p>
+    <h2 id="room-skills-title">Skills</h2>
+    <p>
+      まずキーボード全体へ寄ってから、色の付いたキーを選びます。R が Rust、T が TypeScript、C が C です。
+    </p>
+    <div class="room-details" role="group" aria-label="言語を選ぶ">
+      {
+        skills.map(({ id, name }) => (
+          <button type="button" class="room-button" data-room-detail={id} data-label={name} aria-pressed="false">
+            {name}
+          </button>
+        ))
+      }
+    </div>
+    {
+      skills.map(({ id, name, level, levelLabel }) => (
+        <article class="room-detail-panel" data-room-detail-panel={id}>
+          <h3>{name}</h3>
+          <p>熟練度 {level} / 5（{levelLabel}）</p>
+        </article>
+      ))
+    }
+    <p><a href="/about">スキルをすべて見る</a></p>
+  </section>
+
+  <section id="library" class="room-section" aria-labelledby="room-library-title">
+    <p class="room-prompt">$ ls ./shelf</p>
+    <h2 id="room-library-title">Library</h2>
+    <p>本棚へ寄ってから、本を選びます。</p>
+    <div class="room-details" role="group" aria-label="本を選ぶ">
+      {
+        books.map(({ id, title }) => (
+          <button type="button" class="room-button" data-room-detail={id} data-label={title} aria-pressed="false">
+            {title}
+          </button>
+        ))
+      }
+    </div>
+    {
+      books.map(({ id, title, description, href, external }) => (
+        <article class="room-detail-panel" data-room-detail-panel={id}>
+          <h3>{title}</h3>
+          <p>{description}</p>
+          <p class="room-links">
+            <a href={href} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
+              読む
+            </a>
+          </p>
+        </article>
+      ))
+    }
+  </section>
+
+  <section id="pc" class="room-section" aria-labelledby="room-pc-title">
+    <p class="room-prompt">$ cat ./desktop</p>
+    <h2 id="room-pc-title">PC</h2>
+    <p>{desktop.meta}</p>
+    <dl class="room-rows">
+      {
+        pcSummary.map(({ key, value }) => (
+          <>
+            <dt>{key}</dt>
+            <dd>{value}</dd>
+          </>
+        ))
+      }
+    </dl>
+    <div class="room-details" role="group" aria-label="部品を選ぶ">
+      {
+        pcParts.map(({ id, label }) => (
+          <button type="button" class="room-button" data-room-detail={id} data-label={label} aria-pressed="false">
+            {label}
+          </button>
+        ))
+      }
+      <button type="button" class="room-button room-panel-toggle" data-room-panel disabled>側板を開く</button>
+    </div>
+    {
+      pcParts.map(({ id, label, value, note }) => (
+        <article class="room-detail-panel" data-room-detail-panel={id}>
+          <h3>{label}</h3>
+          <p>{value}</p>
+          <p class="room-note">{note}</p>
+        </article>
+      ))
+    }
+    {desktop.link && <p><a href={desktop.link.href}>{desktop.link.tag}</a></p>}
+  </section>
+</div>
