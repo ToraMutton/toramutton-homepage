@@ -218,7 +218,6 @@ export interface Mission {
 }
 
 export const missions: Mission[] = [
-  { title: "2026 TOUR / GHOST", date: "2026-11-12", icon: Music },
   { title: "2026年終了", date: "2026-12-31", icon: Milestone },
   { title: "2年後期", date: "2027-02-13", icon: ShieldCheck },
   { title: "21歳の誕生日", date: "2027-06-20", icon: Cake },
