@@ -1,6 +1,5 @@
 ---
 // /lab/room/ 専用の骨組み。共有ヘッダーやフッターは触らず、テーマの仕組みだけ BaseHead から借りる。
-import { Moon, Sun } from "lucide-astro";
 import BaseHead from "../components/BaseHead.astro";
 import "../styles/room-prototype.css";
 import {
@@ -19,6 +18,21 @@ const { title, description } = Astro.props;
 <html lang="ja">
   <head>
     <BaseHead {title} {description} />
+    <script is:inline>
+      // 部屋は夜の照明で作っているので、常にダークで見せる。
+      // 保存済みの好み(localStorage)は書き換えないので、他のページは今までどおり。
+      // BaseHead は画面遷移のたびにテーマを付け直すため、その後にもう一度上書きする
+      (function () {
+        var force = function () {
+          if (document.getElementById("room-app")) document.documentElement.classList.add("dark");
+        };
+        document.documentElement.classList.add("dark");
+        if (!window.__roomForceDark) {
+          window.__roomForceDark = true;
+          document.addEventListener("astro:after-swap", force);
+        }
+      })();
+    </script>
     <meta name="robots" content="noindex,nofollow" />
   </head>
   <body class="room-body">
@@ -37,15 +51,6 @@ const { title, description } = Astro.props;
           ))
         }
       </nav>
-      <button
-        id="room-theme-toggle"
-        class="room-icon-button"
-        type="button"
-        aria-label="ライトとダークを切り替える"
-      >
-        <span class="room-icon-sun"><Sun size={20} /></span>
-        <span class="room-icon-moon"><Moon size={20} /></span>
-      </button>
     </header>
     <slot />
   </body>

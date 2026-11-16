@@ -16,13 +16,11 @@ export const SECTION_IDS = [
 export type SectionId = (typeof SECTION_IDS)[number];
 export type StageStatus = "static" | "loading" | "ready" | "error";
 export type SelectionSource = "scroll" | "nav" | "scene" | "history";
-export type RoomTheme = "light" | "dark";
 
 export interface RoomState {
   activeSection: SectionId;
   selectedDetail: string | null;
   stageStatus: StageStatus;
-  theme: RoomTheme;
   reducedMotion: boolean;
 }
 
@@ -46,9 +44,11 @@ export const ROOM_RENDER = {
   /** 物理解像度をそのまま使うと重いので上限を置く */
   maxPixelRatio: 1.5,
   /** 章の移動にかける秒数 */
-  transitionSeconds: 0.6,
+  transitionSeconds: 0.85,
   /** 机の下へ回り込むときは距離が長いので少し伸ばす */
-  relayTransitionSeconds: 0.95,
+  relayTransitionSeconds: 1.2,
+  /** スクロールに合わせてカメラが上下する量（対象までの距離に対する割合） */
+  scrollLean: 0.05,
 } as const;
 
 // =====================================================
@@ -245,10 +245,26 @@ export const ROOM_MATERIAL_KEYS = [
 
 export type RoomMaterialKey = (typeof ROOM_MATERIAL_KEYS)[number];
 
+/** 色付きの点光源。モニターや間接照明の光が周りを照らす分 */
+export interface RoomLamp {
+  color: string;
+  intensity: number;
+  position: Vec3;
+  /** 光が届く距離 */
+  distance: number;
+}
+
 export interface RoomPalette {
   background: string;
+  /** 環境光の空側と地面側の色。差を付けると面の向きで色が変わり、平坦に見えない */
+  sky: string;
+  ground: string;
   ambient: number;
+  sunColor: string;
   sun: number;
+  /** 明暗の階調を圧縮した後の明るさ */
+  exposure: number;
+  lamps: readonly RoomLamp[];
   /** 影の濃さ(0〜1) */
   shadow: number;
   /** 接地影の濃さの倍率 */
@@ -256,67 +272,56 @@ export interface RoomPalette {
   colors: Record<RoomMaterialKey, string>;
 }
 
-export const ROOM_PALETTES: Record<RoomTheme, RoomPalette> = {
-  light: {
-    background: "#2f2d52",
-    ambient: 1.75,
-    sun: 1.55,
-    shadow: 0.5,
-    contact: 1,
-    colors: {
-      wallBack: "#d8cdcb",
-      wallRight: "#7da5a4",
-      wallRim: "#f5e9e5",
-      floor: "#e4bf9b",
-      carpet: "#6f6d84",
-      desk: "#3b3a40",
-      black: "#2a2a30",
-      charcoal: "#45454d",
-      gray: "#8e8e96",
-      metal: "#bcbfc6",
-      paper: "#efebe3",
-      board: "#274745",
-      leaf: "#5fa03f",
-      pot: "#e3d9c6",
-      keyAccent: "#1f7c8c",
-      bookA: "#e9e6df",
-      bookB: "#b4c0c4",
-      bookC: "#7f9aa1",
-      bookD: "#56707a",
-      floorLine: "#cfa780",
-      leafDark: "#467f30",
-    },
-  },
-  dark: {
-    background: "#1c1b35",
-    ambient: 1.3,
-    sun: 1.25,
-    shadow: 0.42,
-    contact: 0.8,
-    colors: {
-      wallBack: "#938a9d",
-      wallRight: "#527c84",
-      wallRim: "#c4bbc8",
-      floor: "#ae8f75",
-      carpet: "#5c5a76",
-      desk: "#46454f",
-      black: "#35353f",
-      charcoal: "#51515d",
-      gray: "#8a8a96",
-      metal: "#adb0b9",
-      paper: "#cfcbcb",
-      board: "#2f5758",
-      leaf: "#548f3f",
-      pot: "#b8ae9d",
-      keyAccent: "#2b8f9e",
-      bookA: "#ccc9c9",
-      bookB: "#a3afb6",
-      bookC: "#7f99a1",
-      bookD: "#5f7c86",
-      floorLine: "#967a63",
-      leafDark: "#3d7230",
-    },
+/**
+ * 夜の部屋。全体は暗い青灰に落とし、水色の光だけで形を見せる。
+ * 材質の色は「照らされたときに見える色」より明るめに置く（暗い光で掛け算されるため）
+ */
+export const ROOM_PALETTE: RoomPalette = {
+  background: "#0b0f14",
+  // 環境光はほぼ無彩色。水色は光源の近くだけに留め、床側は木の照り返しで少し暖かく
+  sky: "#a4aab0",
+  ground: "#3a2f27",
+  ambient: 1.05,
+  sunColor: "#cdd6dd",
+  sun: 0.5,
+  exposure: 1.15,
+  lamps: [
+    // 壁の上端の間接照明（左と右）と、モニターの光
+    // 壁に近すぎると面に白い光の玉ができるので、部屋の内側へ離しておく
+    { color: "#3fd8ff", intensity: 2.0, position: [-0.9, 1.8, -0.7], distance: 3.6 },
+    { color: "#3fd8ff", intensity: 1.9, position: [1.35, 1.8, -0.2], distance: 3.4 },
+    { color: "#5fdcff", intensity: 1.4, position: [-0.5, 1.12, -0.45], distance: 2.2 },
+  ],
+  shadow: 0.6,
+  contact: 1,
+  colors: {
+    wallBack: "#7d8084",
+    wallRight: "#6f7377",
+    wallRim: "#a7aaad",
+    // 黒に近いダークブラウン。暖かみはわずかに残し、赤やオレンジには寄せない。
+    // 継ぎ目は床との差を小さくして控えめに
+    floor: "#4a3a2e",
+    floorLine: "#382c23",
+    carpet: "#4a4f55",
+    desk: "#54575f",
+    black: "#3b3e46",
+    charcoal: "#50545d",
+    gray: "#858b93",
+    metal: "#aab0b7",
+    paper: "#cdd0cd",
+    board: "#30444b",
+    leaf: "#58a052",
+    leafDark: "#40803c",
+    pot: "#afa596",
+    keyAccent: "#2b8f9e",
+    bookA: "#c0c3c3",
+    bookB: "#93a7ae",
+    bookC: "#718b94",
+    bookD: "#536e78",
   },
 };
 
 export const ROOM_CYAN = "#22d3ee";
+
+/** 間接照明の管の色。光源は水色ひとつに揃える */
+export const ROOM_NEON = "#3fd8ff";

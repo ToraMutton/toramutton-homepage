@@ -6,6 +6,7 @@ import profileImage from "../../assets/profile/toramutton.jpg";
 import RoomContent from "../../components/room/RoomContent.astro";
 import RoomStage from "../../components/room/RoomStage.astro";
 import RoomPrototypeLayout from "../../layouts/RoomPrototypeLayout.astro";
+import { SECTION_IDS, SECTION_LABELS } from "../../data/roomPrototype";
 
 const icon = await getImage({
   src: profileImage,
@@ -55,6 +56,16 @@ const buildLabel = `${buildParts.month}-${buildParts.day} ${buildParts.hour}:${b
     </script>
     <RoomStage />
     <RoomContent />
+    <!-- 今どの章にいるかを示す点。ヘッダーのナビと同じ移動なので、読み上げとTabからは外す -->
+    <div class="room-rail" aria-hidden="true">
+      {
+        SECTION_IDS.map((id) => (
+          <a href={`#${id}`} data-room-link={id} tabindex="-1">
+            <span>{SECTION_LABELS[id]}</span>
+          </a>
+        ))
+      }
+    </div>
   </div>
 </RoomPrototypeLayout>
 

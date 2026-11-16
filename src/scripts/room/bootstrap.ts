@@ -10,7 +10,6 @@ import {
   SECTION_IDS,
   isSectionId,
   type RoomState,
-  type RoomTheme,
   type SectionId,
   type StageStatus,
 } from "../../data/roomPrototype";
@@ -18,9 +17,6 @@ import { createRoomNavigator } from "./navigation";
 import type { RoomScene } from "./scene";
 
 const STATIC_PREFERENCE_KEY = "room-prefer-static";
-
-const readTheme = (): RoomTheme =>
-  document.documentElement.classList.contains("dark") ? "dark" : "light";
 
 const readHashSection = (): SectionId | null => {
   const hash = location.hash.slice(1);
@@ -51,6 +47,9 @@ const prefersDataSaving = () => {
 };
 
 function mount(app: HTMLElement) {
+  // レイアウトのインラインスクリプトも同じ印を付けるが、別ページから戻ったときは
+  // 再実行されない（Astro は実行済みのスクリプトを飛ばす）ので、ここでも付ける
+  document.body.dataset.js = "1";
   const events = new AbortController();
   const { signal } = events;
   const params = new URLSearchParams(location.search);
@@ -72,7 +71,6 @@ function mount(app: HTMLElement) {
     activeSection: hashSection ?? "home",
     selectedDetail: null,
     stageStatus: "static",
-    theme: readTheme(),
     reducedMotion: motionQuery.matches,
   };
 
@@ -91,6 +89,29 @@ function mount(app: HTMLElement) {
       if (link.dataset.roomLink === id) link.setAttribute("aria-current", "true");
       else link.removeAttribute("aria-current");
     }
+    // 読んでいる章だけをはっきり見せる（見た目は CSS）
+    for (const section of sections) section.classList.toggle("is-current", section.id === id);
+    syncLean();
+  }
+
+  // --- スクロール量をカメラの傾きへ ---
+  let leanFrame = 0;
+  function syncLean() {
+    if (!scene) return;
+    const section = document.getElementById(state.activeSection);
+    if (!section) return;
+    const rect = section.getBoundingClientRect();
+    const stageTop = app.querySelector(".room-stage")!.getBoundingClientRect().top;
+    const stageHeight = window.innerHeight - Math.max(stageTop, 0);
+    // 章の頭が舞台の上端に揃っているときが 0。章の高さが中身で伸びても基準は変わらない
+    scene.setScrollLean((rect.top - Math.max(stageTop, 0)) / stageHeight);
+  }
+  function queueLean() {
+    if (leanFrame !== 0 || !scene) return;
+    leanFrame = requestAnimationFrame(() => {
+      leanFrame = 0;
+      syncLean();
+    });
   }
 
   function renderDetailDom(detail: string | null) {
@@ -146,7 +167,6 @@ function mount(app: HTMLElement) {
       const created = createRoomScene({
         host,
         section: state.activeSection,
-        theme: state.theme,
         reducedMotion: state.reducedMotion,
         iconUrl: app.dataset.iconUrl,
         buildLabel: app.dataset.buildLabel ?? "",
@@ -168,6 +188,7 @@ function mount(app: HTMLElement) {
         },
       });
       scene = created;
+      syncLean();
       if (state.selectedDetail) applySceneDetail(state.selectedDetail);
       setStatus("ready");
       if (debug !== null) exposeDebug();
@@ -277,6 +298,7 @@ function mount(app: HTMLElement) {
     "scroll",
     () => {
       if (room.locked) armSettle();
+      queueLean();
     },
     { passive: true, signal },
   );
@@ -345,25 +367,11 @@ function mount(app: HTMLElement) {
         }
         return;
       }
-      if (target.closest("#room-theme-toggle")) {
-        const dark = document.documentElement.classList.toggle("dark");
-        localStorage.setItem("theme", dark ? "dark" : "light");
-      }
     },
     { signal },
   );
 
-  // --- テーマ・動き・画面幅の変化 ---
-  const themeObserver = new MutationObserver(() => {
-    const theme = readTheme();
-    if (theme === state.theme) return;
-    state.theme = theme;
-    scene?.setTheme(theme);
-  });
-  themeObserver.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ["class"],
-  });
+  // --- 動き・画面幅の変化 ---
 
   motionQuery.addEventListener(
     "change",
@@ -386,8 +394,8 @@ function mount(app: HTMLElement) {
   return () => {
     events.abort();
     clearTimeout(settleTimer);
+    if (leanFrame !== 0) cancelAnimationFrame(leanFrame);
     spy.disconnect();
-    themeObserver.disconnect();
     stop3d();
   };
 }

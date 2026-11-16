@@ -32,7 +32,8 @@ function createSurface(mesh: Mesh, width: number, height: number, lit = false): 
   texture.colorSpace = SRGBColorSpace;
   const material = lit
     ? new MeshLambertMaterial({ map: texture })
-    : new MeshBasicMaterial({ map: texture });
+    : // 自分で光る画面は、暗い部屋でも色がくすまないよう階調の圧縮から外す
+      new MeshBasicMaterial({ map: texture, toneMapped: false });
   mesh.material = material;
   mesh.receiveShadow = lit;
   return { context, texture, material };

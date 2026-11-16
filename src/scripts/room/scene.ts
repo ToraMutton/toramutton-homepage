@@ -3,6 +3,7 @@
 // ここが持つのは「カメラが今どこにいるか」まで。どの章を見せるかの判断は
 // navigation.ts にあり、scene は言われた視点へ向かうだけ。
 import {
+  ACESFilmicToneMapping,
   Box3,
   BoxGeometry,
   CatmullRomCurve3,
@@ -16,6 +17,7 @@ import {
   MeshLambertMaterial,
   PCFShadowMap,
   PerspectiveCamera,
+  PointLight,
   Raycaster,
   Scene,
   Vector2,
@@ -24,17 +26,17 @@ import {
 } from "three";
 import {
   DETAIL_TARGETS,
-  ROOM_PALETTES,
+  ROOM_PALETTE,
   ROOM_RENDER,
   SECTION_TARGETS,
   VIEWPOINTS,
   fitFov,
   routeTo,
-  type RoomTheme,
   type SectionId,
   type Vec3,
 } from "../../data/roomPrototype";
 import { buildRoomModel, createRoomMaterials } from "./geometry";
+import { createRoomPost } from "./post";
 import { createRenderScheduler } from "./renderScheduler";
 import { createScreens } from "./screens";
 
@@ -47,7 +49,6 @@ export interface RoomPick {
 export interface RoomSceneOptions {
   host: HTMLElement;
   section: SectionId;
-  theme: RoomTheme;
   reducedMotion: boolean;
   iconUrl?: string;
   buildLabel: string;
@@ -89,7 +90,8 @@ function belongsTo(object: Mesh, group: Group | Mesh) {
  * 組み立ての途中で失敗しても WebGL のコンテキストを残さない。
  */
 export function createRoomScene(options: RoomSceneOptions) {
-  const renderer = new WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+  // 縁の滑らかさは後処理の描画先で取る（post.ts）ので、画面側のアンチエイリアスは要らない
+  const renderer = new WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
   try {
     return assembleRoomScene(options, renderer);
   } catch (error) {
@@ -113,7 +115,7 @@ function assembleRoomScene(options: RoomSceneOptions, renderer: WebGLRenderer) {
 
   const scene = new Scene();
   const camera = new PerspectiveCamera(35, 1, 0.03, 40);
-  const materials = createRoomMaterials(ROOM_PALETTES[options.theme]);
+  const materials = createRoomMaterials(ROOM_PALETTE);
   const model = buildRoomModel(materials);
   scene.add(model.root);
 
@@ -128,19 +130,28 @@ function assembleRoomScene(options: RoomSceneOptions, renderer: WebGLRenderer) {
   sun.shadow.bias = -0.0004;
   sun.shadow.radius = 3;
   scene.add(ambient, sun);
-
-  const background = new Color();
-  function applyTheme(theme: RoomTheme) {
-    const palette = ROOM_PALETTES[theme];
-    materials.applyPalette(palette);
-    background.set(palette.background);
-    scene.background = background;
-    ambient.intensity = palette.ambient;
-    sun.intensity = palette.sun;
-    sun.shadow.intensity = palette.shadow;
-    model.setContactStrength(palette.contact);
+  // 間接照明とモニターの光。影は落とさない（点光源の影は 6 方向ぶん描くので重い）
+  const palette = ROOM_PALETTE;
+  for (const { color, intensity, position, distance } of palette.lamps) {
+    // 減衰を強めにして、光源から離れるほど早く暗くなるようにする
+    const lamp = new PointLight(color, intensity, distance, 2);
+    lamp.position.set(...position);
+    scene.add(lamp);
   }
-  applyTheme(options.theme);
+  scene.background = new Color(palette.background);
+  ambient.color.set(palette.sky);
+  ambient.groundColor.set(palette.ground);
+  ambient.intensity = palette.ambient;
+  sun.color.set(palette.sunColor);
+  sun.intensity = palette.sun;
+  sun.shadow.intensity = palette.shadow;
+  // 階調の圧縮は後処理の OutputPass が、この設定を読んで行う
+  renderer.toneMapping = ACESFilmicToneMapping;
+  renderer.toneMappingExposure = palette.exposure;
+  model.setContactStrength(palette.contact);
+
+  const post = createRoomPost(renderer, scene, camera);
+  renderer.info.autoReset = false;
 
   // --- カメラ ---
   let target: SectionId = options.section;
@@ -161,8 +172,25 @@ function assembleRoomScene(options: RoomSceneOptions, renderer: WebGLRenderer) {
     duration: number;
   } | null = null;
 
+  // スクロール量に合わせたわずかな傾き。視点そのもの(position)は動かさず、
+  // 描く直前に足すだけなので、章の移動や経路の計算には影響しない
+  let lean = 0;
+  let leanGoal = 0;
+  function stepLean(delta: number): boolean {
+    if (reducedMotion) lean = leanGoal = 0;
+    const gap = leanGoal - lean;
+    if (Math.abs(gap) < 0.0015) {
+      lean = leanGoal;
+      return false;
+    }
+    lean += gap * Math.min(delta * 7, 1);
+    return true;
+  }
+
   function applyCamera() {
     camera.position.copy(position);
+    // 対象までの距離に比例させる。全景は大きく、机の下のような近い視点は数センチ
+    camera.position.y += lean * ROOM_RENDER.scrollLean * position.distanceTo(lookAt);
     camera.lookAt(lookAt);
     camera.fov = fov;
     camera.aspect = aspect;
@@ -232,9 +260,12 @@ function assembleRoomScene(options: RoomSceneOptions, renderer: WebGLRenderer) {
   const scheduler = createRenderScheduler((delta) => {
     const moving = stepCamera(delta);
     const pressing = stepMovable(delta);
+    const leaning = stepLean(delta);
     applyCamera();
-    renderer.render(scene, camera);
-    return moving || pressing;
+    // 後処理は 1 フレームに何度も描くので、計測はフレーム単位でまとめて数える
+    renderer.info.reset();
+    post.render();
+    return moving || pressing || leaning;
   });
 
   const screens = createScreens(
@@ -348,7 +379,8 @@ function assembleRoomScene(options: RoomSceneOptions, renderer: WebGLRenderer) {
   const pointer = new Vector2();
   const solids: Mesh[] = [];
   model.root.traverse((object) => {
-    if (object instanceof Mesh) solids.push(object);
+    // 光のにじみは物ではないので、クリックの遮蔽物にしない
+    if (object instanceof Mesh && !object.name.startsWith("neon_")) solids.push(object);
   });
 
   /** 画面上の点にある物。手前の家具に隠れていれば選ばない */
@@ -470,6 +502,7 @@ function assembleRoomScene(options: RoomSceneOptions, renderer: WebGLRenderer) {
     if (width === 0 || height === 0) return;
     aspect = width / height;
     renderer.setSize(width, height, false);
+    post.setSize(width, height);
     if (!tween) fov = fitFov(VIEWPOINTS[target], aspect);
     // 幅のアニメーション中に空の canvas が見えないよう、同じタイミングで描く
     scheduler.renderNow();
@@ -536,16 +569,22 @@ function assembleRoomScene(options: RoomSceneOptions, renderer: WebGLRenderer) {
     get panelOpen() {
       return panelOpen;
     },
-    setTheme(theme: RoomTheme) {
-      applyTheme(theme);
-      paintHighlights();
-    },
     setReducedMotion(value: boolean) {
       reducedMotion = value;
       if (value) {
         snapTo(target);
         scheduler.invalidate();
       }
+    },
+    /**
+     * 読んでいる章が画面の中央からどれだけずれているか（-1〜1）。
+     * 下へ読み進めると負になり、部屋も本文と同じ向きへ少し流れる
+     */
+    setScrollLean(value: number) {
+      const next = reducedMotion ? 0 : Math.max(-1, Math.min(1, value));
+      if (Math.abs(next - leanGoal) < 0.002) return;
+      leanGoal = next;
+      scheduler.invalidate();
     },
     setPixelRatio(ratio: number) {
       renderer.setPixelRatio(Math.min(ratio, ROOM_RENDER.maxPixelRatio));
@@ -561,6 +600,7 @@ function assembleRoomScene(options: RoomSceneOptions, renderer: WebGLRenderer) {
         geometries: renderer.info.memory.geometries,
         textures: renderer.info.memory.textures,
         camera: toVec3(position),
+        lean,
         moving: tween !== null,
       };
     },
@@ -582,6 +622,7 @@ function assembleRoomScene(options: RoomSceneOptions, renderer: WebGLRenderer) {
       events.abort(); // forceContextLoss の前に外す（失敗扱いにしないため）
       if (hoverFrame !== 0) cancelAnimationFrame(hoverFrame);
       scheduler.dispose();
+      post.dispose();
       resizeObserver.disconnect();
       visibilityObserver.disconnect();
       screens.dispose();

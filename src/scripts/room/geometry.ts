@@ -9,12 +9,15 @@
 //   2. 接地影         : ぼかした板を 1 つのジオメトリにまとめて、物の足元に敷く
 //   3. シャドウマップ : 形が変わったときだけ更新する（scene.ts）
 import {
+  AdditiveBlending,
   BoxGeometry,
   BufferAttribute,
   BufferGeometry,
   CanvasTexture,
   CircleGeometry,
+  Color,
   CylinderGeometry,
+  DoubleSide,
   Euler,
   ExtrudeGeometry,
   Group,
@@ -37,6 +40,7 @@ import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import {
   ROOM_CYAN,
   ROOM_LAYOUT,
+  ROOM_NEON,
   ROOM_MATERIAL_KEYS,
   type RoomMaterialKey,
   type RoomPalette,
@@ -47,7 +51,6 @@ export type MaterialKey = RoomMaterialKey | "cyan" | "glass" | "screenGlow";
 
 export interface RoomMaterials {
   get(key: MaterialKey): Material;
-  applyPalette(palette: RoomPalette): void;
   dispose(): void;
 }
 
@@ -63,7 +66,7 @@ export function createRoomMaterials(palette: RoomPalette): RoomMaterials {
     ]),
   );
   // 自分で光る部分は照明の影響を受けない
-  const cyan = new MeshBasicMaterial({ color: ROOM_CYAN });
+  const cyan = new MeshBasicMaterial({ color: ROOM_CYAN, toneMapped: false });
   const screenGlow = new MeshBasicMaterial({ color: "#153540" });
   const glass = new MeshBasicMaterial({
     color: "#9fd8e0",
@@ -77,9 +80,6 @@ export function createRoomMaterials(palette: RoomPalette): RoomMaterials {
       if (key === "screenGlow") return screenGlow;
       if (key === "glass") return glass;
       return lit.get(key)!;
-    },
-    applyPalette(next) {
-      for (const [key, material] of lit) material.color.set(next.colors[key]);
     },
     dispose() {
       lit.forEach((material) => material.dispose());
@@ -327,6 +327,120 @@ class ContactShadows {
     return { mesh, material, texture };
   }
 }
+
+// --- ネオン管と光のにじみ ------------------------------------------------
+// 画像のような「暗い部屋に色の光がにじむ」見た目を、後処理(Bloom)なしで作る。
+// 板の頂点に色を置き、端を黒にして加算合成すると、黒は何も足さないので
+// 光が外へ向かって消えていくグラデーションになる。テクスチャは要らない。
+class Glow {
+  private positions: number[] = [];
+  private colors: number[] = [];
+  private scratch = new Color();
+
+  private vertex(p: Vec3, color: string, strength: number) {
+    this.positions.push(...p);
+    this.scratch.set(color).multiplyScalar(strength);
+    this.colors.push(this.scratch.r, this.scratch.g, this.scratch.b);
+  }
+
+  /** a-b が光る辺、c-d が消える辺の帯（a と d、b と c が向かい合う） */
+  band(a: Vec3, b: Vec3, c: Vec3, d: Vec3, colorA: string, colorB: string, strength: number) {
+    this.vertex(a, colorA, strength);
+    this.vertex(d, colorA, 0);
+    this.vertex(b, colorB, strength);
+    this.vertex(b, colorB, strength);
+    this.vertex(d, colorA, 0);
+    this.vertex(c, colorB, 0);
+    return this;
+  }
+
+  /** 中心が光り、縁へ消える楕円。u と v は面の中の 2 方向（長さが半径） */
+  pool(center: Vec3, u: Vec3, v: Vec3, color: string, strength: number, segments = 18) {
+    const rim = (i: number): Vec3 => {
+      const angle = (i / segments) * Math.PI * 2;
+      const [cu, cv] = [Math.cos(angle), Math.sin(angle)];
+      return [
+        center[0] + u[0] * cu + v[0] * cv,
+        center[1] + u[1] * cu + v[1] * cv,
+        center[2] + u[2] * cu + v[2] * cv,
+      ];
+    };
+    // 中心から直線的に消すと円錐のような縁が見えるので、途中に 1 周はさんで
+    // 「中心は明るく、外側は長く尾を引く」減衰にする
+    const mid = (i: number): Vec3 => {
+      const edge = rim(i);
+      return [
+        (center[0] + edge[0]) / 2,
+        (center[1] + edge[1]) / 2,
+        (center[2] + edge[2]) / 2,
+      ];
+    };
+    const soft = strength * 0.28;
+    for (let i = 0; i < segments; i++) {
+      this.vertex(center, color, strength);
+      this.vertex(mid(i), color, soft);
+      this.vertex(mid(i + 1), color, soft);
+      this.vertex(mid(i), color, soft);
+      this.vertex(rim(i), color, 0);
+      this.vertex(mid(i + 1), color, soft);
+      this.vertex(mid(i + 1), color, soft);
+      this.vertex(rim(i), color, 0);
+      this.vertex(rim(i + 1), color, 0);
+    }
+    return this;
+  }
+
+  build() {
+    const geometry = new BufferGeometry();
+    geometry.setAttribute("position", new BufferAttribute(new Float32Array(this.positions), 3));
+    geometry.setAttribute("color", new BufferAttribute(new Float32Array(this.colors), 3));
+    const material = new MeshBasicMaterial({
+      vertexColors: true,
+      blending: AdditiveBlending,
+      transparent: true,
+      depthWrite: false,
+      toneMapped: false,
+      // 板の裏表を気にせず置けるよう両面にする。加算合成は描く順番に依らないので、
+      // 両面を 2 回に分けて描く既定の動作は不要（描画呼び出しを 1 回に抑える）
+      side: DoubleSide,
+      forceSinglePass: true,
+      polygonOffset: true,
+      polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2,
+    });
+    const mesh = new Mesh(geometry, material);
+    mesh.name = "neon_glow";
+    mesh.renderOrder = 2;
+    return { mesh, geometry, material };
+  }
+}
+
+/** 両端で色が違う細い管。箱の頂点を x(または z) の位置で塗り分ける */
+function neonTube(from: Vec3, to: Vec3, colorFrom: string, colorTo: string) {
+  const along = from[0] !== to[0] ? 0 : 2;
+  const length = Math.abs(to[along] - from[along]);
+  const size: Vec3 = along === 0 ? [length, 0.03, 0.026] : [0.026, 0.03, length];
+  const geometry = new BoxGeometry(...size).toNonIndexed();
+  geometry.translate(
+    (from[0] + to[0]) / 2,
+    (from[1] + to[1]) / 2,
+    (from[2] + to[2]) / 2,
+  );
+  const position = geometry.getAttribute("position");
+  const colors = new Float32Array(position.count * 3);
+  const [a, b, mixed] = [new Color(colorFrom), new Color(colorTo), new Color()];
+  for (let i = 0; i < position.count; i++) {
+    const value = along === 0 ? position.getX(i) : position.getZ(i);
+    mixed.lerpColors(a, b, (value - from[along]) / (to[along] - from[along]));
+    // 管そのものは白に近いほうが「光っている」ように見える
+    mixed.lerp(WHITE, 0.25).toArray(colors, i * 3);
+  }
+  geometry.setAttribute("color", new BufferAttribute(colors, 3));
+  geometry.deleteAttribute("normal");
+  geometry.deleteAttribute("uv");
+  return geometry;
+}
+const WHITE = new Color("#ffffff");
 
 // キーの配列。[id, 幅(キー単位)]。id があるキーだけ単独で選べる
 const KEY_ROWS: [string, number][][] = [
@@ -912,6 +1026,63 @@ export function buildRoomModel(materials: RoomMaterials): RoomModel {
   root.add(shadows.mesh);
   const contactBase = shadows.material.opacity;
 
+  // --- ネオン管（壁の上端を左から右手前へ）と、その光のにじみ ---
+  const neon = ROOM_NEON;
+  const tubeY = wallH - 0.075;
+  const tubeZ = innerBack + 0.02;
+  const tubeX = innerRight - 0.02;
+  const tubeLeft = -2.1;
+  const tubeFront = wallFront - 0.06;
+  const tubes = mergeGeometries([
+    neonTube([tubeLeft, tubeY, tubeZ], [tubeX, tubeY, tubeZ], neon, neon),
+    neonTube([tubeX, tubeY, tubeZ], [tubeX, tubeY, tubeFront], neon, neon),
+  ])!;
+  // Bloom の閾値(0.82)をわずかに超える明るさに留め、管の周りに細いにじみだけを出す。
+  // 強くすると Bloom が壁の上部全体を白い霞で覆う（全体の Bloom 設定は画面やファンと共通）
+  const tubeMaterial = new MeshBasicMaterial({ vertexColors: true, toneMapped: false });
+  tubeMaterial.color.setScalar(1.3);
+  const neonTubes = new Mesh(tubes, tubeMaterial);
+  neonTubes.name = "neon_tubes";
+  root.add(neonTubes);
+
+  const glow = new Glow();
+  const wash = 0.62; // 壁へ落ちる光の長さ
+  glow
+    // 管のすぐ下の壁。上が光り、下へ消える
+    .band(
+      [tubeLeft, tubeY, innerBack + 0.004], [tubeX, tubeY, innerBack + 0.004],
+      [tubeX, tubeY - wash, innerBack + 0.004], [tubeLeft, tubeY - wash, innerBack + 0.004],
+      neon, neon, 0.34,
+    )
+    .band(
+      [innerRight - 0.004, tubeY, tubeZ], [innerRight - 0.004, tubeY, tubeFront],
+      [innerRight - 0.004, tubeY - wash, tubeFront], [innerRight - 0.004, tubeY - wash, tubeZ],
+      neon, neon, 0.34,
+    )
+    // 管の上側は短く
+    .band(
+      [tubeLeft, tubeY, innerBack + 0.004], [tubeX, tubeY, innerBack + 0.004],
+      [tubeX, wallH, innerBack + 0.004], [tubeLeft, wallH, innerBack + 0.004],
+      neon, neon, 0.34,
+    )
+    .band(
+      [innerRight - 0.004, tubeY, tubeZ], [innerRight - 0.004, tubeY, tubeFront],
+      [innerRight - 0.004, wallH, tubeFront], [innerRight - 0.004, wallH, tubeZ],
+      neon, neon, 0.34,
+    )
+    // モニター裏の間接光（壁に映る）
+    .pool([mx, my + 0.02, innerBack + 0.005], [mw * 0.92, 0, 0], [0, mh * 1.05, 0], "#2ab8ff", 0.3)
+    .pool([sx, sy, innerBack + 0.005], [sw * 1.25, 0, 0], [0, sh * 0.78, 0], "#3fd0ff", 0.22)
+    // モニターの光が机に落ちる分
+    .pool([mx, deskY + 0.002, mz + 0.34], [mw * 0.72, 0, 0], [0, 0, 0.42], "#3fd8ff", 0.16)
+    // PC のファンが床を照らす分
+    .pool(
+      [L.pcCase.position[0], 0.014, L.pcCase.position[2] + cd / 2 + 0.2],
+      [0.5, 0, 0], [0, 0, 0.42], ROOM_CYAN, 0.24,
+    );
+  const neonGlow = glow.build();
+  root.add(neonGlow.mesh);
+
   const owned = new Set<BufferGeometry>();
   root.traverse((object) => {
     if (object instanceof Mesh) owned.add(object.geometry);
@@ -940,6 +1111,8 @@ export function buildRoomModel(materials: RoomMaterials): RoomModel {
       keys.dispose();
       shadows.texture.dispose();
       shadows.material.dispose();
+      tubeMaterial.dispose();
+      neonGlow.material.dispose();
     },
   };
 }
