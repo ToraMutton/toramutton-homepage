@@ -14,6 +14,12 @@ import { getExternalPosts } from "../utils/feeds";
 import { advent2026 as adventCalendar } from "../data/advent2026";
 import { resolveAdventCalendar } from "../utils/advent";
 import {
+    todayJST,
+    daysBetween,
+    resolveMissionDate,
+    adventStatus,
+} from "../utils/countdown";
+import {
     Sparkles,
     Target,
     Cpu,
@@ -105,24 +111,42 @@ const shuffled = [...terminalCommands].sort(() => Math.random() - 0.5);
 const selectedCommands = shuffled.slice(0, 3);
 
 const today = new Date();
+const todayStr = todayJST(today);
 // バーグラフは固定365日を100%とした「残量ゲージ」。日が近づくほど縮む
 const MISSION_WINDOW_DAYS = 365;
-const missionData = missions.map((m) => {
-    const target = new Date(m.date);
-    const diff = target.getTime() - today.getTime();
-    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-    const p = Math.min(Math.max(days, 0) / MISSION_WINDOW_DAYS, 1);
-    return { ...m, days, p };
-});
+const missionData = missions
+    .map((m) => {
+        const date = resolveMissionDate(m, todayStr);
+        const days = daysBetween(todayStr, date);
+        const title =
+            typeof m.title === "function"
+                ? m.title(Number(date.slice(0, 4)))
+                : m.title;
+        const p = Math.min(Math.max(days, 0) / MISSION_WINDOW_DAYS, 1);
+        return { ...m, title, date, days, p };
+    })
+    // 過ぎたものは出さない(毎日 0:00 のリビルドで自動的に消える)
+    .filter((m) => m.days >= 0)
+    .sort((a, b) => a.days - b.days);
 
-// === Advent 2026 カウントダウン ===
-// 開催開始日(12/1)までの日数と、公開済みの日数を出しておく
-const ADVENT_START = new Date(`${adventCalendar.year}-12-01T00:00:00+09:00`);
-const adventDaysLeft = Math.ceil(
-    (ADVENT_START.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
-);
+// 期限切れの一回きりイベントはビルドログで知らせる(消し忘れ防止)
+for (const m of missions) {
+    if (m.repeat !== "yearly" && daysBetween(todayStr, m.date) < 0) {
+        console.warn(
+            `[countdown] 期限切れ: ${m.title} (${m.date}) — src/data/home.ts から消してOK`,
+        );
+    }
+}
+
+// === Advent 2026 ===
 const { days: resolvedAdventDays, openCount: adventOpenCount } =
     await resolveAdventCalendar(adventCalendar, localPostsRaw, { now: today });
+// 開催前 / 開催中 / 終了 で表示を切り替える
+const advent = adventStatus(
+    adventCalendar.year,
+    resolvedAdventDays.length,
+    todayStr,
+);
 
 // 円形グラフ: 25日分を円周上のセグメントにする(12時の位置から時計回り)
 const RING_R = 40;
@@ -629,6 +653,9 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                     </div>
                     <div class="card-body">
                         <div class="mission-list">
+                            {missionData.length === 0 && (
+                                <p class="mission-empty">予定なし。のんびりいこう</p>
+                            )}
                             {
                                 missionData.map((m, i) => (
                                     <div
@@ -652,9 +679,11 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                                         </div>
                                         <div class="mission-days">
                                             <span class="days-num js-days-num">
-                                                {m.days}
+                                                {m.days === 0 ? "Today!" : m.days}
                                             </span>
-                                            <span class="days-unit">days</span>
+                                            <span class="days-unit js-days-unit" hidden={m.days === 0}>
+                                                days
+                                            </span>
                                         </div>
                                         <div class="mission-bar">
                                             <div
@@ -718,22 +747,29 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                             一人アドベントカレンダー2026開催予定地
                         </p>
                         <div class="advent-layout">
-                            <!-- 左: 開催までのカウントダウン -->
+                            <!-- 左: 開催前 = 開催まで N days / 開催中 = Day N / 25 / 終了後 = Fin.
+                                 (文言は src/utils/countdown.ts の adventStatus) -->
                             <div
-                                class="mission-item js-mission-item advent-countdown"
-                                data-date="2026-12-01"
+                                class="mission-item advent-countdown js-advent-status"
+                                data-year={adventCalendar.year}
+                                data-total={resolvedAdventDays.length}
+                                data-phase={advent.phase}
                             >
                                 <div class="mission-info">
                                     <span class="mission-icon">
                                         <Sparkles size={16} strokeWidth={2} />
                                     </span>
-                                    <span class="mission-title">開催まで</span>
+                                    <span class="mission-title js-advent-title">
+                                        {advent.title}
+                                    </span>
                                 </div>
                                 <div class="mission-days">
-                                    <span class="days-num js-days-num">
-                                        {adventDaysLeft}
+                                    <span class="days-num js-advent-num">
+                                        {advent.num}
                                     </span>
-                                    <span class="days-unit">days</span>
+                                    <span class="days-unit js-advent-unit">
+                                        {advent.unit}
+                                    </span>
                                 </div>
                             </div>
                             <!-- 右: 公開状況の円形グラフ -->
@@ -836,6 +872,11 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                     bindDots,
                     reduceMotion,
                 } from "../utils/typewriter";
+                import {
+                    todayJST,
+                    daysBetween,
+                    adventStatus,
+                } from "../utils/countdown";
 
                 let uptimeTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -973,28 +1014,33 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                         });
 
                     // カウントダウン処理
+                    // ビルド後に日付をまたいだとき(タブ開きっぱなし・CDN キャッシュ)の保険として、
+                    // ブラウザ側でも JST の今日で数え直す
+                    const todayStr = todayJST();
                     const missionItems =
                         document.querySelectorAll<HTMLElement>(
                             ".js-mission-item",
                         );
-                    const now = new Date();
-                    now.setHours(0, 0, 0, 0);
 
                     missionItems.forEach((item) => {
                         const targetDateStr = item.dataset.date;
                         if (!targetDateStr) return;
 
-                        const target = new Date(targetDateStr);
-                        target.setHours(0, 0, 0, 0);
+                        const days = daysBetween(todayStr, targetDateStr);
 
-                        const diff = target.getTime() - now.getTime();
-                        const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+                        // 過ぎたものは隠す(次のリビルドで HTML からも消える)
+                        item.hidden = days < 0;
+                        if (days < 0) return;
 
                         const numEl =
                             item.querySelector<HTMLElement>(".js-days-num");
                         if (numEl) {
-                            numEl.innerText = days.toString();
+                            numEl.innerText =
+                                days === 0 ? "Today!" : days.toString();
                         }
+                        const unitEl =
+                            item.querySelector<HTMLElement>(".js-days-unit");
+                        if (unitEl) unitEl.hidden = days === 0;
 
                         // バーグラフ(固定365日を100%とした残量)
                         const fillEl =
@@ -1004,6 +1050,26 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
                             fillEl.style.setProperty("--p", p.toString());
                         }
                     });
+
+                    // Advent: フェーズ(開催前/開催中/終了)と数字を今日で決め直す
+                    const adventEl = document.querySelector<HTMLElement>(
+                        ".js-advent-status",
+                    );
+                    if (adventEl) {
+                        const s = adventStatus(
+                            Number(adventEl.dataset.year),
+                            Number(adventEl.dataset.total),
+                            todayStr,
+                        );
+                        adventEl.dataset.phase = s.phase;
+                        const set = (sel: string, text: string) => {
+                            const el = adventEl.querySelector<HTMLElement>(sel);
+                            if (el) el.innerText = text;
+                        };
+                        set(".js-advent-title", s.title);
+                        set(".js-advent-num", s.num);
+                        set(".js-advent-unit", s.unit);
+                    }
 
                     // ---- GitHub Contributions: 日別ツールチップ ----
                     const ghGrid = document.getElementById("gh-grid");
@@ -2771,6 +2837,17 @@ const ringSegments = resolvedAdventDays.map((d, i) => {
 
     .mission-item:last-child {
         border-bottom: none;
+    }
+
+    /* display: grid が UA の [hidden] より強いので明示的に消す */
+    .mission-item[hidden] {
+        display: none;
+    }
+
+    .mission-empty {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        padding: 0.65rem 0;
     }
 
     .mission-info {

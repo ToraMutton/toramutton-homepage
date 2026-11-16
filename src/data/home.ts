@@ -29,6 +29,7 @@ import {
   ZENN_URL,
 } from "../consts";
 import type { WorkCategory } from "./works";
+import type { MissionInput } from "../utils/countdown";
 
 /** lucide-astro のアイコン。どれも同じ形なので Cake を代表にして型を借りている */
 type Icon = typeof Cake;
@@ -208,19 +209,21 @@ export const terminalCommands: TerminalCommand[] = [
 
 // =====================================================
 // Countdown カード
-// 残り日数はブラウザ側で毎秒計算されるので、日付だけ書けばいい
+// 残り日数はビルド時とブラウザ側で計算されるので、日付だけ書けばいい
+//
+// - 一回きり: date は "YYYY-MM-DD"。過ぎたら自動で表示されなくなる
+//   (残しておいても壊れないけど、ビルドログに「期限切れ」と警告が出るので気が向いたら消す)
+// - 毎年: repeat: "yearly" を付けて date は "MM-DD"。過ぎたら自動で翌年を指す
+//   title を関数にすると開催年を受け取れる(年齢を入れたいとき用)
 // =====================================================
-export interface Mission {
-  title: string;
-  /** YYYY-MM-DD */
-  date: string;
+export interface Mission extends MissionInput {
   icon: Icon;
 }
 
 export const missions: Mission[] = [
-  { title: "2026年終了", date: "2026-12-31", icon: Milestone },
+  { title: (y) => `${y}年終了`, date: "12-31", repeat: "yearly", icon: Milestone },
   { title: "2年後期", date: "2027-02-13", icon: ShieldCheck },
-  { title: "21歳の誕生日", date: "2027-06-20", icon: Cake },
+  { title: (y) => `${y - 2006}歳の誕生日`, date: "06-20", repeat: "yearly", icon: Cake },
 ];
 
 // =====================================================
