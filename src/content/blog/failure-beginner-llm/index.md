@@ -1,7 +1,7 @@
 ---
 title: "生成AI時代に技術を学び始めて経験した成功と失敗"
 pubDate: "2026-12-22"
-description: "TODO"
+description: "生成AIとともに技術を学んできた大学生の振り返り"
 # heroImage: "./images/hero.jpg"
 tags:
     - advent2026
