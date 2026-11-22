@@ -1,0 +1,124 @@
+---
+// トップページ左端に固定する「フーリエ級数」の波形レール。
+// ヘッダーのマスコットの真下から伸び、今いるセクションに合わせて波形が変わる。
+// 計算と描画は src/scripts/fourier.ts。
+//
+// 各セクションの見出しと重ならない幅(1240px 以上)でだけ表示する。
+---
+
+<div class="fourier-rail" aria-hidden="true" data-fourier>
+    <canvas class="fourier-canvas" data-fourier-canvas></canvas>
+    <p class="fourier-label" data-fourier-label>
+        <span>f(y) = Σ bₙ sin(ny)</span>
+        <span data-fourier-n>N = 1</span>
+        <span data-fourier-b>b₁ = 1</span>
+    </p>
+</div>
+
+<script>
+    import type { FourierHandle, Wave } from "../../scripts/fourier";
+
+    let handle: FourierHandle | null = null;
+    let io: IntersectionObserver | null = null;
+
+    async function init() {
+        const root = document.querySelector<HTMLElement>("[data-fourier]");
+        const canvas = root?.querySelector<HTMLCanvasElement>("[data-fourier-canvas]");
+        if (!root || !canvas || handle) return;
+        // 非表示の幅では何もしない(描画のコストもかけない)
+        if (getComputedStyle(root).display === "none") return;
+
+        const label = root.querySelector<HTMLElement>("[data-fourier-label]")!;
+        const nEl = root.querySelector<HTMLElement>("[data-fourier-n]")!;
+        const bEl = root.querySelector<HTMLElement>("[data-fourier-b]")!;
+        let labelTimer = 0;
+        // ラベルは一度消してから書き換えて、ふわっと出し直す
+        const onLabel = (w: Wave) => {
+            clearTimeout(labelTimer);
+            label.classList.add("is-changing");
+            labelTimer = window.setTimeout(() => {
+                nEl.textContent = `N = ${w.N}`;
+                bEl.textContent = w.label;
+                label.classList.remove("is-changing");
+            }, 250);
+        };
+
+        const { mountFourier } = await import("../../scripts/fourier");
+        if (!document.contains(canvas)) return;
+        handle = mountFourier(canvas, onLabel);
+
+        // 画面の縦中央をまたいでいるセクションを「今いるセクション」とする
+        io = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    if (!entry.isIntersecting) continue;
+                    const el = entry.target as HTMLElement;
+                    handle?.setWave(el.dataset.heroTrack !== undefined ? "top" : el.id);
+                }
+            },
+            { rootMargin: "-50% 0px -50% 0px" },
+        );
+        document
+            .querySelectorAll("[data-hero-track], [data-home-section]")
+            .forEach((el) => io!.observe(el));
+    }
+
+    document.addEventListener("astro:page-load", init);
+    document.addEventListener("astro:before-swap", () => {
+        handle?.destroy();
+        handle = null;
+        io?.disconnect();
+        io = null;
+    });
+</script>
+
+<style>
+    /* ヘッダーのロゴ(左端から clamp(1rem, 3vw, 2.5rem)、幅 40px)の真下に中心をそろえる */
+    .fourier-rail {
+        position: fixed;
+        top: 64px;
+        bottom: 150px;
+        left: clamp(1rem, 3vw, 2.5rem);
+        z-index: 40;
+        width: 40px;
+        pointer-events: none;
+    }
+
+    .fourier-canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        color: var(--text-muted);
+        /* 上下の端を溶かして、マスコットから生えて消えていくように見せる */
+        mask-image: linear-gradient(to bottom, transparent, black 8%, black 88%, transparent);
+    }
+
+    /* 波の右に縦書きで小さく添える式。気づいた人だけニヤッとする濃さ */
+    .fourier-label {
+        position: absolute;
+        bottom: 0;
+        left: 100%;
+        display: flex;
+        gap: 1.1em;
+        margin: 0 0 0 0.5rem;
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        letter-spacing: 0.08em;
+        white-space: nowrap;
+        color: var(--text-muted);
+        opacity: 0.7;
+        transition: opacity 0.25s ease;
+    }
+
+    .fourier-label.is-changing {
+        opacity: 0;
+    }
+
+    @media (max-width: 1239px) {
+        .fourier-rail {
+            display: none;
+        }
+    }
+</style>

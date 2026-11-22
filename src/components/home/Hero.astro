@@ -8,7 +8,7 @@
 //
 // 重なり順(手前ほど数字が大きい):
 //   30 … タイトル・スクロール誘導・SNS ドック・草グラフ(三角形と一緒には拡大しない)
-//   20 … 左サイド UI(フーリエ波形を後で足す)
+//   (左のフーリエ波形は FourierRail.astro。ページ全体に固定するので Hero の外にある)
 //   15 … 右下の斜め三角形 2 枚(頂点を共有し、斜辺の角度だけ違う。間がスリットになる)
 //   10 … 3D キャンバス(メビウスの帯。src/scripts/mobius.ts を後から読み込む)
 import BrandIcon from "../BrandIcon.astro";
@@ -16,8 +16,9 @@ import { socials } from "../../data/home";
 import { getContributions } from "../../utils/github";
 
 // ---- GitHub の草 ----
-// 細部を見せたいわけではないので、直近 WEEKS 週だけを日曜始まりで切り出す。
-// 縦 7 マス(日〜土)× 横 WEEKS 列。三角形の中に欠けずに収まる幅にしてある
+// ドットは細部を見せたいわけではないので、直近 WEEKS 週だけを日曜始まりで切り出す。
+// 縦 7 マス(日〜土)× 横 WEEKS 列。三角形の中に欠けずに収まる幅にしてある。
+// 数字の方は全体の活動量を見せたいので、直近 1 年の総数を出す
 const WEEKS = 16;
 const contributions = await getContributions();
 const days = contributions.days;
@@ -28,7 +29,6 @@ if (days.length > 0) {
     // 最終週の日曜日から (WEEKS - 1) 週さかのぼった日曜日が先頭
     recent = days.slice(Math.max(0, days.length - (lastWeekday + 1) - (WEEKS - 1) * 7));
 }
-const recentTotal = recent.reduce((sum, d) => sum + d.count, 0);
 ---
 
 <div class="hero-track" data-hero-track>
@@ -37,9 +37,6 @@ const recentTotal = recent.reduce((sum, d) => sum + d.count, 0);
 
         <div class="hero-tri hero-tri-a" aria-hidden="true"></div>
         <div class="hero-tri hero-tri-b" aria-hidden="true"></div>
-
-        <!-- 左サイド UI の置き場所(フーリエ波形はここに足す) -->
-        <div class="hero-side-left"></div>
 
         <!-- 背後の 3D をドラッグできるよう、タイトルはポインター操作を素通しする -->
         <h1 class="hero-title">ToraMutton</h1>
@@ -60,9 +57,9 @@ const recentTotal = recent.reduce((sum, d) => sum + d.count, 0);
                     href="https://github.com/toramutton"
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label={`GitHub: 直近${WEEKS}週で ${recentTotal} contributions`}
+                    aria-label={`GitHub: 直近1年で ${contributions.total} contributions`}
                 >
-                    <span class="grass-total">{recentTotal.toLocaleString("en-US")}</span>
+                    <span class="grass-total">{contributions.total.toLocaleString("en-US")}</span>
                     <span class="grass-grid" aria-hidden="true">
                         {recent.map((day) => (
                             <span class={`grass-cell lv-${day.level}`} />
@@ -295,14 +292,6 @@ const recentTotal = recent.reduce((sum, d) => sum + d.count, 0);
     }
     .lv-4 {
         background: var(--accent);
-    }
-
-    /* ---- 左サイド ---- */
-    .hero-side-left {
-        position: absolute;
-        top: 88px;
-        left: clamp(1rem, 3vw, 2.5rem);
-        z-index: 20;
     }
 
     /* ---- タイトル ---- */

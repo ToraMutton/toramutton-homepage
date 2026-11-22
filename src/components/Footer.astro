@@ -1,8 +1,8 @@
 ---
-// 全ページ共通のフッター。境界線を使わず、暗い地に光だまりと曲線のパネルを重ねた「没入型」。
+// 全ページ共通のフッター。引き算でシンプルに。
 //
-//   背景 … 奥に倒した平面の上を 16 進数の行が左右に流れ、ときどき一部がちらつく
-//   本文 … 4 列(サイトマップ / 最終ビルド / SNS / クレジット)+ Back to top
+//   上端 … 16 進数が左右に流れる 2 行の帯(区切り線の代わり)。ときどき数バイトが光って化ける
+//   本文 … 4 列(Index / Last build / Elsewhere / ToraMutton)
 import { getVisiblePosts } from "../utils/post";
 import { works } from "../data/works";
 import { socials } from "../data/home";
@@ -40,174 +40,148 @@ const buildTime = new Intl.DateTimeFormat("ja-JP", {
     minute: "2-digit",
     second: "2-digit",
 }).format(buildDate);
-
 const year = buildDate.getFullYear();
 
-// ---- 背景の 16 進数 ----
-// バイト列を ROWS 行 × BYTES 個に切り分ける(足りなければ先頭に戻って繰り返す)。
-// 各行は横に流すので、同じ内容を 2 回つなげておき、半分ずれたところで継ぎ目なく戻す
-const ROWS = 16;
-const BYTES = 64;
+// ---- 上端の 16 進数の帯 ----
+// 2 行。それぞれ別の位置からバイト列を切り出す。
+// 横に流すので同じ並びを 2 回つなげ、半分ずれたところで継ぎ目なく先頭に戻す
+const BYTES = 96;
 const bytes = footerHex.replace(/\s+/g, "").match(/.{2}/g) ?? [];
-const hexRows = bytes.length
-    ? Array.from({ length: ROWS }, (_, r) =>
-          Array.from({ length: BYTES }, (_, i) => bytes[(r * BYTES + i) % bytes.length]).join(" "),
-      )
+const tickerRows = bytes.length
+    ? [0, Math.floor(bytes.length / 2)].map((offset) => {
+          const row = Array.from({ length: BYTES }, (_, i) => bytes[(offset + i) % bytes.length]);
+          return [...row, ...row];
+      })
     : [];
 ---
 
 <footer class="site-footer" data-footer>
-    <div class="footer-matrix" aria-hidden="true">
-        <div class="matrix-plane">
-            {
-                hexRows.map((row, i) => (
-                    <div
-                        class="matrix-row"
-                        style={`--dur: ${70 + ((i * 37) % 60)}s; --dir: ${i % 2 === 0 ? "normal" : "reverse"}`}
-                    >
-                        <span class="matrix-text">{`${row} ${row} `}</span>
+    {
+        tickerRows.length > 0 && (
+            <div class="ticker" aria-hidden="true">
+                {tickerRows.map((row, i) => (
+                    <div class:list={["ticker-row", { reverse: i === 1 }]}>
+                        <div class="ticker-track">
+                            {row.map((b) => (
+                                <span>{b}</span>
+                            ))}
+                        </div>
                     </div>
-                ))
-            }
-        </div>
-    </div>
-
-    <!-- 左の曲線パネル。光だまりの当たらない、いちばん暗い面 -->
-    <svg class="footer-curve" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M0 0 H62 C52 26 92 58 80 100 H0 Z"></path>
-    </svg>
+                ))}
+            </div>
+        )
+    }
 
     <div class="footer-inner">
-        <div class="footer-cols">
-            <nav class="col" aria-label="サイトマップ">
-                <p class="col-label">Index</p>
-                <ul class="link-list">
-                    {
-                        mainLinks.map((l) => (
-                            <li>
-                                <a href={l.href}>
-                                    {l.label}
-                                    {l.count !== undefined && <sup>{l.count}</sup>}
-                                </a>
-                            </li>
-                        ))
-                    }
-                </ul>
-                <ul class="link-list sub">
-                    {
-                        otherLinks.map((l) => (
-                            <li>
-                                <a href={l.href} data-astro-reload={l.reload ? true : undefined}>
-                                    {l.label}
-                                </a>
-                            </li>
-                        ))
-                    }
-                </ul>
-            </nav>
+        <nav class="col" aria-label="サイトマップ">
+            <p class="col-label">Index</p>
+            <ul class="link-list">
+                {
+                    mainLinks.map((l) => (
+                        <li>
+                            <a href={l.href}>
+                                {l.label}
+                                {l.count !== undefined && <sup>{l.count}</sup>}
+                            </a>
+                        </li>
+                    ))
+                }
+            </ul>
+            <ul class="link-list sub">
+                {
+                    otherLinks.map((l) => (
+                        <li>
+                            <a href={l.href} data-astro-reload={l.reload ? true : undefined}>
+                                {l.label}
+                            </a>
+                        </li>
+                    ))
+                }
+            </ul>
+        </nav>
 
-            <div class="col">
-                <p class="col-label">Last build</p>
-                <p class="build-day">{buildDay}</p>
-                <p class="build-time">{buildTime} <span>JST</span></p>
-            </div>
-
-            <div class="col">
-                <p class="col-label">Elsewhere</p>
-                <ul class="link-list social-list">
-                    {
-                        socials.map((s) => (
-                            <li>
-                                <a
-                                    href={s.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class={`social-${s.icon}`}
-                                >
-                                    <BrandIcon name={s.icon} size={15} />
-                                    <span>{s.name === "Twitter" ? "X (Twitter)" : s.name}</span>
-                                </a>
-                            </li>
-                        ))
-                    }
-                </ul>
-            </div>
-
-            <div class="col credit">
-                <p class="col-label">&copy; {year}</p>
-                <p class="credit-name">ToraMutton</p>
-                <p class="credit-meta">UEC / I類 CS Program · MMA</p>
-                <p class="credit-meta">
-                    Built with <a href="https://astro.build" target="_blank" rel="noopener noreferrer">Astro</a>
-                </p>
-                <p class="kaomoji">( ∩՞ټ՞∩) ﾝﾌ～～</p>
-            </div>
+        <div class="col">
+            <p class="col-label">Last build</p>
+            <p class="mono strong">{buildDay}</p>
+            <p class="mono muted">{buildTime} JST</p>
         </div>
 
-        <div class="footer-bottom">
-            <a href="#" class="back-to-top" data-back-to-top>
-                <span>Back to top</span>
-                <span class="arrow" aria-hidden="true">↑</span>
-            </a>
+        <div class="col">
+            <p class="col-label">Elsewhere</p>
+            <ul class="link-list social-list">
+                {
+                    socials.map((s) => (
+                        <li>
+                            <a
+                                href={s.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class={`social-${s.icon}`}
+                            >
+                                <BrandIcon name={s.icon} size={14} />
+                                <span>{s.name === "Twitter" ? "X" : s.name}</span>
+                            </a>
+                        </li>
+                    ))
+                }
+            </ul>
+        </div>
+
+        <div class="col">
+            <p class="col-label">ToraMutton</p>
+            <p class="muted">UEC / I類 CS Program · MMA</p>
+            <p class="muted">
+                Built with <a href="https://astro.build" target="_blank" rel="noopener noreferrer">Astro</a>
+            </p>
+            <p class="muted mono small">&copy; {year} ToraMutton</p>
+            <p class="kaomoji">( ∩՞ټ՞∩) ﾝﾌ～～</p>
         </div>
     </div>
 </footer>
 
 <script>
-    // ---- 背景の 16 進数のちらつき ----
-    // 頻度は控えめに。1.6〜3.2 秒に一度、ランダムな行で次のどちらかが起きる
-    //   - 数バイトが一瞬だけ別の値に化ける
-    //   - 行全体がふっと明るくなる
-    // フッターが画面に入っている間だけ動かす(行の横移動の CSS アニメーションも止める)
+    // ---- 16 進数の帯のちらつき ----
+    // 0.5〜1.1 秒ごとに 1〜3 バイトが水色に光り、一瞬だけ別の値に化けてから戻る。
+    // フッターが見えている間だけ動かす(帯の横移動の CSS アニメーションも止める)
     let stop: (() => void) | null = null;
 
     function start(footer: HTMLElement) {
         stop?.();
-        const rows = Array.from(footer.querySelectorAll<HTMLElement>(".matrix-text"));
-        if (rows.length === 0) return;
+        const cells = Array.from(footer.querySelectorAll<HTMLElement>(".ticker-track span"));
+        if (cells.length === 0) return;
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
+        const HEX = "0123456789ABCDEF";
+        const randomByte = () => HEX[(Math.random() * 16) | 0] + HEX[(Math.random() * 16) | 0];
         let timer = 0;
         let active = false;
-        const HEX = "0123456789ABCDEF";
-        const randomByte = () =>
-            HEX[(Math.random() * 16) | 0] + HEX[(Math.random() * 16) | 0];
 
         const glitch = () => {
-            const row = rows[(Math.random() * rows.length) | 0];
-            if (Math.random() < 0.65) {
-                const original = row.textContent ?? "";
-                const chars = original.split("");
-                const half = chars.length / 2;
-                const n = 2 + ((Math.random() * 3) | 0);
-                for (let k = 0; k < n; k++) {
-                    // 1 バイト = "XX " の 3 文字。前半と後半(つなげた 2 回目)の同じ位置を一緒に変える
-                    const pos = ((Math.random() * (half / 3)) | 0) * 3;
-                    const b = randomByte();
-                    for (const offset of [0, half]) {
-                        chars[pos + offset] = b[0];
-                        chars[pos + offset + 1] = b[1];
-                    }
-                }
-                row.textContent = chars.join("");
-                setTimeout(() => (row.textContent = original), 140);
-            } else {
-                row.classList.add("is-flash");
-                setTimeout(() => row.classList.remove("is-flash"), 260);
+            const n = 1 + ((Math.random() * 3) | 0);
+            for (let k = 0; k < n; k++) {
+                const cell = cells[(Math.random() * cells.length) | 0];
+                if (cell.classList.contains("is-hot")) continue;
+                const original = cell.textContent ?? "";
+                cell.textContent = randomByte();
+                cell.classList.add("is-hot");
+                setTimeout(() => {
+                    cell.textContent = original;
+                    cell.classList.remove("is-hot");
+                }, 380 + Math.random() * 300);
             }
         };
 
         const loop = () => {
             if (!active) return;
             glitch();
-            timer = window.setTimeout(loop, 1600 + Math.random() * 1600);
+            timer = window.setTimeout(loop, 500 + Math.random() * 600);
         };
 
         const io = new IntersectionObserver(([entry]) => {
             active = entry.isIntersecting;
             footer.classList.toggle("is-active", active);
             clearTimeout(timer);
-            if (active) timer = window.setTimeout(loop, 800);
+            if (active) loop();
         });
         io.observe(footer);
 
@@ -221,129 +195,91 @@ const hexRows = bytes.length
     document.addEventListener("astro:page-load", () => {
         const footer = document.querySelector<HTMLElement>("[data-footer]");
         if (footer) start(footer);
-
-        const top = document.querySelector<HTMLAnchorElement>("[data-back-to-top]");
-        if (top) {
-            top.onclick = (e) => {
-                e.preventDefault();
-                const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-                window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
-            };
-        }
     });
     document.addEventListener("astro:before-swap", () => stop?.());
 </script>
 
 <style>
     .site-footer {
-        position: relative;
-        overflow: hidden;
         margin-top: auto;
-        min-height: 480px;
-        /* 中央やや右にぼんやりした光だまりを置き、境界線なしで奥行きを出す。
-           上端では完全に透明にして、直前のセクションとの継ぎ目を見せない */
-        background:
-            radial-gradient(
-                ellipse 60% 55% at 62% 55%,
-                color-mix(in srgb, var(--text) 6%, transparent),
-                transparent 70%
-            ),
-            var(--bg-deep);
+        background: var(--bg-deep);
         color: var(--text);
     }
 
-    /* ---- 背景: 奥に倒した平面の上を流れる 16 進数 ---- */
-    .footer-matrix {
-        position: absolute;
-        inset: 0;
-        perspective: 700px;
-        perspective-origin: 50% 0%;
-        pointer-events: none;
+    /* ---- 16 進数の帯 ---- */
+    .ticker {
+        display: grid;
+        gap: 0.35rem;
+        padding: 1.5rem 0;
+        overflow: hidden;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
         user-select: none;
-        /* 奥(上)ほど消える */
-        mask-image: linear-gradient(to bottom, transparent 0%, black 55%, black 100%);
+        /* 左右の端は溶かす */
+        mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
     }
 
-    .matrix-plane {
-        position: absolute;
-        left: -25%;
-        right: -25%;
-        bottom: -12%;
-        height: 150%;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        transform-origin: 50% 100%;
-        transform: rotateX(52deg);
-    }
-
-    .matrix-row {
+    .ticker-row {
         overflow: hidden;
         white-space: nowrap;
-        font-family: var(--font-mono);
-        font-size: 15px;
-        line-height: 1.9;
-        letter-spacing: 0.08em;
-        color: var(--text);
-        opacity: 0.07;
-        transition: opacity 0.25s ease;
+        opacity: 0.6;
     }
 
-    .matrix-text {
-        display: inline-block;
-        animation: matrix-flow var(--dur) linear infinite;
-        animation-direction: var(--dir);
+    .ticker-track {
+        display: inline-flex;
+        gap: 0.9ch;
+        animation: ticker 140s linear infinite;
         animation-play-state: paused;
     }
 
-    .site-footer.is-active .matrix-text {
+    .ticker-row.reverse .ticker-track {
+        animation-direction: reverse;
+        animation-duration: 180s;
+    }
+
+    .site-footer.is-active .ticker-track {
         animation-play-state: running;
     }
 
-    .matrix-row:has(.is-flash) {
-        opacity: 0.22;
-        color: var(--accent);
-    }
-
-    @keyframes matrix-flow {
+    @keyframes ticker {
         to {
             transform: translateX(-50%);
         }
     }
 
-    /* ---- 左の曲線パネル ---- */
-    .footer-curve {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: min(34%, 420px);
-        height: 100%;
-        fill: var(--bg-deep);
-        filter: drop-shadow(12px 0 24px rgb(0 0 0 / 0.25));
-        pointer-events: none;
+    .ticker-track span {
+        transition:
+            color 0.35s ease,
+            text-shadow 0.35s ease;
+    }
+
+    /* 化けているバイト。アクセント色でほのかに光らせる */
+    .ticker-track span.is-hot {
+        color: var(--accent);
+        text-shadow: 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent);
+        transition: none;
     }
 
     /* ---- 本文 ---- */
     .footer-inner {
-        position: relative;
-        z-index: 1;
-        max-width: var(--max-width);
-        margin: 0 auto;
-        padding: 7rem 1.5rem 2.5rem;
-    }
-
-    .footer-cols {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 2.5rem;
+        max-width: var(--max-width);
+        margin: 0 auto;
+        padding: 3.5rem 1.5rem 5rem;
     }
 
     .col p {
-        margin: 0;
+        margin: 0 0 0.4rem;
+        font-size: 0.9rem;
+        line-height: 1.7;
     }
 
-    .col-label {
-        margin-bottom: 1.25rem !important;
+    .col p.col-label {
+        margin-bottom: 1.1rem;
         font-family: var(--font-mono);
         font-size: 0.7rem;
         letter-spacing: 0.25em;
@@ -351,42 +287,61 @@ const hexRows = bytes.length
         color: var(--accent);
     }
 
-    .link-list {
-        display: grid;
-        gap: 0.45rem;
-        margin: 0;
-        padding: 0;
-        list-style: none;
+    .mono {
+        font-family: var(--font-mono);
     }
 
-    .link-list.sub {
-        margin-top: 1.25rem;
+    .col p.strong {
+        font-size: 1.15rem;
+        font-weight: 500;
+        margin-bottom: 0.1rem;
     }
 
-    .link-list a {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.55rem;
+    .muted {
+        color: var(--text-muted);
+    }
+
+    .col p.small {
+        font-size: 0.78rem;
+        margin-top: 1rem;
+    }
+
+    .col a {
         color: var(--text);
-        font-size: 0.95rem;
         text-decoration: none;
         transition: color 0.2s ease;
     }
 
-    .link-list.sub a {
+    .link-list {
+        display: grid;
+        gap: 0.35rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        font-size: 0.95rem;
+    }
+
+    .link-list.sub {
+        margin-top: 1.1rem;
+        font-size: 0.85rem;
+    }
+
+    .link-list.sub a,
+    .social-list a {
         color: var(--text-muted);
-        font-size: 0.88rem;
     }
 
     .link-list sup {
+        margin-left: 0.2rem;
         font-family: var(--font-mono);
         font-size: 0.6rem;
         color: var(--text-muted);
-        margin-left: 0.15rem;
     }
 
     .social-list a {
-        color: var(--text-muted);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
         --brand: var(--text);
     }
     .social-list .social-zenn {
@@ -400,7 +355,7 @@ const hexRows = bytes.length
     }
 
     @media (hover: hover) {
-        .link-list a:hover {
+        .col a:hover {
             color: var(--accent);
         }
         .social-list a:hover {
@@ -408,137 +363,32 @@ const hexRows = bytes.length
         }
     }
 
-    .build-day {
-        font-family: var(--font-mono);
-        font-size: 1.35rem;
-        font-weight: 500;
-        letter-spacing: 0.02em;
-    }
-
-    .build-time {
-        margin-top: 0.35rem !important;
-        font-family: var(--font-mono);
-        font-size: 0.95rem;
-        color: var(--text-muted);
-    }
-
-    .build-time span {
-        margin-left: 0.25rem;
-        font-size: 0.7rem;
-        letter-spacing: 0.15em;
-    }
-
-    .credit-name {
-        font-family: var(--font-mono);
-        font-size: 1.1rem;
-        font-weight: 700;
-        margin-bottom: 0.75rem !important;
-    }
-
-    .credit-meta {
-        font-size: 0.82rem;
-        color: var(--text-muted);
-        line-height: 1.9;
-    }
-
-    .credit-meta a {
-        color: var(--text);
-        text-decoration: none;
-        transition: color 0.2s ease;
-    }
-
-    @media (hover: hover) {
-        .credit-meta a:hover {
-            color: var(--accent);
-        }
-    }
-
-    .kaomoji {
-        margin-top: 1.25rem !important;
+    .col p.kaomoji {
+        margin-top: 0.25rem;
         font-family: var(--font-mono);
         font-size: 0.75rem;
         color: var(--text-muted);
         opacity: 0.7;
     }
 
-    /* ---- Back to top ---- */
-    .footer-bottom {
-        display: flex;
-        justify-content: flex-end;
-        margin-top: 4.5rem;
-    }
-
-    .back-to-top {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.75rem;
-        font-family: var(--font-mono);
-        font-size: 0.78rem;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-        color: var(--text-muted);
-        text-decoration: none;
-        transition: color 0.2s ease;
-    }
-
-    .back-to-top .arrow {
-        display: grid;
-        place-items: center;
-        width: 40px;
-        height: 40px;
-        border: 1px solid var(--border);
-        border-radius: 50%;
-        font-size: 0.95rem;
-        letter-spacing: 0;
-        transition:
-            border-color 0.2s ease,
-            transform 0.35s var(--ease-out);
-    }
-
-    @media (hover: hover) {
-        .back-to-top:hover {
-            color: var(--accent);
-        }
-        .back-to-top:hover .arrow {
-            border-color: var(--accent);
-            transform: translateY(-4px);
-        }
-    }
-
     @media (prefers-reduced-motion: reduce) {
-        .matrix-text {
+        .ticker-track {
             animation: none;
         }
-        .back-to-top .arrow {
-            transition: none;
-        }
     }
 
-    /* ---- タブレット: 2 列 ---- */
+    /* ---- タブレット・スマホ: 2 列 ---- */
     @media (max-width: 900px) {
-        .footer-cols {
+        .footer-inner {
             grid-template-columns: repeat(2, minmax(0, 1fr));
             row-gap: 3rem;
         }
-        .footer-curve {
-            width: 46%;
-        }
     }
 
-    /* ---- スマホ ---- */
     @media (max-width: 520px) {
         .footer-inner {
-            padding: 5rem 1.25rem 2rem;
-        }
-        .footer-cols {
-            gap: 2.25rem 1.5rem;
-        }
-        .footer-bottom {
-            justify-content: center;
-            margin-top: 3.5rem;
-        }
-        .footer-curve {
-            width: 60%;
+            padding: 2.5rem 1.25rem 3.5rem;
+            gap: 2.5rem 1.5rem;
         }
     }
 </style>

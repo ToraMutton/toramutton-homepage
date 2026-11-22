@@ -34,6 +34,7 @@ import {
   Vector3,
   WebGLRenderer,
 } from "three";
+import { THEME_FADE_MS } from "./theme-switch";
 
 export interface MobiusHandle {
   /** true の間は描画ループを止める(三角形がヒーローを覆い切ったときなど) */
@@ -263,30 +264,86 @@ export function mountMobius(container: HTMLElement): MobiusHandle | null {
   }
 
   // ---- 色(テーマに追従) ----
+  // テーマが変わったら、ページの CSS のフェード(THEME_FADE_MS)と同じ長さで色を補間する
   const fog = new Fog(0x000000, 1, 2);
   scene.fog = fog;
-  function applyTheme() {
-    const dark = document.documentElement.classList.contains("dark");
+
+  interface Palette {
+    line: Color;
+    lineAlpha: number;
+    bg: Color;
+    glow: Color;
+  }
+  const readPalette = (): Palette => {
     const line = readColor("--line");
-    const bg = readColor("--bg").color;
-    const glow = readColor("--accent-glow").color;
-
-    bodyMat.color.copy(line.color);
-    bodyMat.opacity = line.alpha;
-    edgeMat.color.copy(line.color);
-    edgeMat.opacity = Math.min(1, line.alpha * 2.4);
-    ringMat.color.copy(line.color);
-    ringMat.opacity = line.alpha * 1.2;
-    dashMat.color.copy(line.color);
-    dashMat.opacity = line.alpha * 0.9;
-
-    pointMat.uniforms.uColor.value.copy(glow);
+    return {
+      line: line.color,
+      lineAlpha: line.alpha,
+      bg: readColor("--bg").color,
+      glow: readColor("--accent-glow").color,
+    };
+  };
+  const setPalette = (p: Palette) => {
+    bodyMat.color.copy(p.line);
+    bodyMat.opacity = p.lineAlpha;
+    edgeMat.color.copy(p.line);
+    edgeMat.opacity = Math.min(1, p.lineAlpha * 2.4);
+    ringMat.color.copy(p.line);
+    ringMat.opacity = p.lineAlpha * 1.2;
+    dashMat.color.copy(p.line);
+    dashMat.opacity = p.lineAlpha * 0.9;
+    pointMat.uniforms.uColor.value.copy(p.glow);
+    // 奥ほど背景色に溶ける霧で、線だけでも奥行きが出るようにする(距離は resize で合わせる)
+    fog.color.copy(p.bg);
+  };
+  const setBlending = (dark: boolean) => {
     // 暗い背景では光を足し算して輝かせる。明るい背景で足し算すると白飛びして消えるので普通に重ねる
     pointMat.blending = dark ? AdditiveBlending : NormalBlending;
     pointMat.needsUpdate = true;
+  };
 
-    // 奥ほど背景色に溶ける霧で、線だけでも奥行きが出るようにする(距離は resize で合わせる)
-    fog.color.copy(bg);
+  let isDark: boolean | null = null;
+  let palette = readPalette();
+  let tweenRaf = 0;
+  function applyTheme() {
+    const dark = document.documentElement.classList.contains("dark");
+    // <html> の class は .theme-fading の付け外しでも変わるので、テーマが変わったときだけ動く
+    if (dark === isDark) return;
+    const first = isDark === null;
+    isDark = dark;
+    const target = readPalette();
+
+    cancelAnimationFrame(tweenRaf);
+    if (first || reduceMotion) {
+      palette = target;
+      setPalette(palette);
+      setBlending(dark);
+      return;
+    }
+
+    const from = palette;
+    const t0 = performance.now();
+    let blendSwitched = false;
+    const step = (now: number) => {
+      const k = Math.min(1, (now - t0) / THEME_FADE_MS);
+      const e = k * k * (3 - 2 * k);
+      palette = {
+        line: from.line.clone().lerp(target.line, e),
+        lineAlpha: from.lineAlpha + (target.lineAlpha - from.lineAlpha) * e,
+        bg: from.bg.clone().lerp(target.bg, e),
+        glow: from.glow.clone().lerp(target.glow, e),
+      };
+      setPalette(palette);
+      // 光の重ね方は、色がちょうど半分混ざったところで切り替える
+      if (!blendSwitched && k >= 0.5) {
+        setBlending(dark);
+        blendSwitched = true;
+      }
+      // 描画ループが止まっている(画面外など)ときも、色の変化は反映しておく
+      if (!running) render(lastTime);
+      if (k < 1) tweenRaf = requestAnimationFrame(step);
+    };
+    tweenRaf = requestAnimationFrame(step);
   }
   applyTheme();
   const themeObserver = new MutationObserver(applyTheme);
@@ -427,6 +484,7 @@ export function mountMobius(container: HTMLElement): MobiusHandle | null {
     },
     destroy() {
       renderer.setAnimationLoop(null);
+      cancelAnimationFrame(tweenRaf);
       io.disconnect();
       resizeObserver.disconnect();
       themeObserver.disconnect();

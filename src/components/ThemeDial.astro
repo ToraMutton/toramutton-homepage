@@ -1,0 +1,280 @@
+---
+// テーマ切り替えの「オービットダイアル」。
+//
+//   中央の惑星のまわりを、水色の恒星が楕円軌道で回っている。
+//     ライト … 恒星が手前(左下)。惑星の見えている面が照らされて ☀
+//     ダーク … 恒星が奥(右上)。見えている面は影になって ☾(三日月)
+//   押すと恒星が軌道を半周して反対側へ移り、テーマが切り替わる。
+//   恒星はいつも同じ向きに回る。奥側を通るときは惑星の後ろ、手前側では前に描く。
+//
+// 軌道は「楕円を傾けたもの」。パラメータ t で
+//   (x, y) = 中心 + 回転(ROT) · (RX·cos t, RY·sin t)
+// sin t > 0 が手前(画面の下側)、sin t < 0 が奥。
+const CX = 36;
+const CY = 22;
+const RX = 31;
+const RY = 9;
+const ROT = (-20 * Math.PI) / 180;
+
+const point = (t: number) => {
+    const x = RX * Math.cos(t);
+    const y = RY * Math.sin(t);
+    return [CX + x * Math.cos(ROT) - y * Math.sin(ROT), CY + x * Math.sin(ROT) + y * Math.cos(ROT)];
+};
+const arc = (from: number, to: number, n = 40) =>
+    Array.from({ length: n + 1 }, (_, i) => point(from + ((to - from) * i) / n))
+        .map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`)
+        .join(" ");
+
+const backPath = arc(Math.PI, 2 * Math.PI); // 奥半分
+const frontPath = arc(0, Math.PI); // 手前半分
+
+// 光線(☀ の 8 本)
+const rays = Array.from({ length: 8 }, (_, i) => {
+    const a = (i * Math.PI) / 4;
+    const r1 = 8.2;
+    const r2 = 10.4;
+    return {
+        x1: CX + r1 * Math.cos(a),
+        y1: CY + r1 * Math.sin(a),
+        x2: CX + r2 * Math.cos(a),
+        y2: CY + r2 * Math.sin(a),
+    };
+});
+
+// 初期位置はダーク(サイトの既定)。実際のテーマに合わせてスクリプトが置き直す
+const [sx, sy] = point(1.75 * Math.PI);
+---
+
+<button
+    class="theme-dial"
+    role="switch"
+    aria-checked="true"
+    aria-label="ダークモード"
+    data-theme-dial
+    data-orbit={JSON.stringify({ CX, CY, RX, RY, ROT })}
+>
+    <svg viewBox="0 0 72 44" aria-hidden="true">
+        <defs>
+            <!-- 惑星の影。黒い円(cutter)で照らされた円盤を削って三日月にする -->
+            <mask id="dial-shade" maskUnits="userSpaceOnUse" x="0" y="0" width="72" height="44">
+                <rect width="72" height="44" fill="#fff"></rect>
+                <circle class="dial-cutter" cx={CX} cy={CY} r="5.6" fill="#000"></circle>
+            </mask>
+        </defs>
+
+        <path class="dial-orbit" d={backPath}></path>
+        <g data-slot="back"></g>
+
+        <circle class="dial-halo" cx={CX} cy={CY} r="13.5"></circle>
+
+        <g class="dial-planet">
+            <g class="dial-rays">
+                {rays.map((r) => <line x1={r.x1} y1={r.y1} x2={r.x2} y2={r.y2} />)}
+            </g>
+            <circle class="dial-disc" cx={CX} cy={CY} r="5.4" mask="url(#dial-shade)"></circle>
+        </g>
+
+        <path class="dial-orbit" d={frontPath}></path>
+        <g data-slot="front">
+            <g class="dial-star" data-star>
+                <circle class="dial-star-glow" cx={sx} cy={sy} r="4.6"></circle>
+                <circle class="dial-star-core" cx={sx} cy={sy} r="2.6"></circle>
+            </g>
+        </g>
+    </svg>
+</button>
+
+<script>
+    import { getTheme, switchTheme, type Theme } from "../scripts/theme-switch";
+
+    // 恒星の定位置(軌道のパラメータ t)
+    const T_LIGHT = 0.75 * Math.PI; // 左下・手前
+    const T_DARK = 1.75 * Math.PI; // 右上・奥
+    const DURATION = 850;
+    const TAU = Math.PI * 2;
+
+    const ease = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+
+    function init(dial: HTMLButtonElement) {
+        const { CX, CY, RX, RY, ROT } = JSON.parse(dial.dataset.orbit ?? "{}");
+        const star = dial.querySelector<SVGGElement>("[data-star]");
+        const back = dial.querySelector<SVGGElement>('[data-slot="back"]');
+        const front = dial.querySelector<SVGGElement>('[data-slot="front"]');
+        if (!star || !back || !front) return;
+        const circles = Array.from(star.querySelectorAll("circle"));
+
+        let t = getTheme() === "dark" ? T_DARK : T_LIGHT;
+        let raf = 0;
+
+        // 恒星を t の位置へ。奥側にいるときは惑星より先に描く層へ移す
+        const place = (value: number) => {
+            const x = RX * Math.cos(value);
+            const y = RY * Math.sin(value);
+            const px = CX + x * Math.cos(ROT) - y * Math.sin(ROT);
+            const py = CY + x * Math.sin(ROT) + y * Math.cos(ROT);
+            for (const c of circles) {
+                c.setAttribute("cx", px.toFixed(2));
+                c.setAttribute("cy", py.toFixed(2));
+            }
+            const layer = Math.sin(value) < 0 ? back : front;
+            if (star.parentNode !== layer) layer.appendChild(star);
+        };
+
+        const syncAria = () => {
+            const dark = getTheme() === "dark";
+            dial.setAttribute("aria-checked", String(dark));
+        };
+
+        place(t);
+        syncAria();
+
+        dial.onclick = () => {
+            const next: Theme = getTheme() === "dark" ? "light" : "dark";
+            const target = next === "dark" ? T_DARK : T_LIGHT;
+            // いつも同じ向き(t が増える向き)に回る。半周ぶん先の定位置へ
+            let delta = (((target - t) % TAU) + TAU) % TAU;
+            if (delta === 0) delta = TAU;
+            const from = t;
+            t = from + delta;
+
+            switchTheme(next);
+            syncAria();
+
+            cancelAnimationFrame(raf);
+            if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+                place(t);
+                return;
+            }
+            const t0 = performance.now();
+            const step = (now: number) => {
+                const k = Math.min(1, (now - t0) / DURATION);
+                place(from + delta * ease(k));
+                if (k < 1) raf = requestAnimationFrame(step);
+            };
+            raf = requestAnimationFrame(step);
+        };
+    }
+
+    document.addEventListener("astro:page-load", () => {
+        const dial = document.querySelector<HTMLButtonElement>("[data-theme-dial]");
+        if (dial) init(dial);
+    });
+</script>
+
+<style>
+    .theme-dial {
+        display: block;
+        width: 72px;
+        height: 44px;
+        padding: 0;
+        border: none;
+        border-radius: 12px;
+        background: none;
+        color: var(--text);
+        cursor: pointer;
+        /* ダイアルはページ全体のフェード(global.css の .theme-fading)の対象外なので、
+           色の移り変わりはここで同じ 0.6 秒に揃える。惑星と光線は currentColor で追従する */
+        transition: color 0.6s ease;
+    }
+
+    .theme-dial:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+    }
+
+    .dial-orbit {
+        fill: none;
+        stroke: var(--text-muted);
+        stroke-width: 1;
+        opacity: 0.8;
+        transition: stroke 0.6s ease;
+    }
+
+    /* 惑星を囲む破線。ホバーでゆっくり回る */
+    .dial-halo {
+        fill: none;
+        stroke: var(--text-muted);
+        stroke-width: 0.9;
+        stroke-dasharray: 2 2.6;
+        opacity: 0.7;
+        transform-box: fill-box;
+        transform-origin: center;
+        transition: stroke 0.6s ease;
+    }
+
+    @media (hover: hover) {
+        .theme-dial:hover .dial-halo {
+            animation: halo-spin 6s linear infinite;
+        }
+        .theme-dial:hover .dial-orbit {
+            stroke: var(--text);
+        }
+    }
+
+    @keyframes halo-spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* ---- 惑星 ---- */
+    .dial-disc {
+        fill: currentColor;
+    }
+
+    .dial-rays {
+        stroke: currentColor;
+        stroke-width: 1.3;
+        stroke-linecap: round;
+        transform-box: view-box;
+        transform-origin: 36px 22px;
+        transition:
+            transform 0.55s var(--ease-out),
+            opacity 0.4s ease;
+    }
+
+    /* 影の円。ライトでは惑星の外(左下)に退いていて、円盤は丸ごと照らされている。
+       ダークでは左下から滑り込んで円盤の大部分を覆い、右上に細い三日月だけが残る */
+    .dial-cutter {
+        transform: translate(-13px, 8px);
+        transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1) 0.12s;
+    }
+
+    :global(html.dark) .dial-cutter {
+        transform: translate(-2.6px, 1.9px);
+    }
+
+    :global(html.dark) .dial-rays {
+        transform: rotate(45deg) scale(0.3);
+        opacity: 0;
+    }
+
+    /* ---- 恒星 ---- */
+    .dial-star-core,
+    .dial-star-glow {
+        fill: var(--accent);
+        transition: fill 0.6s ease;
+    }
+
+    .dial-star-glow {
+        opacity: 0.25;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .dial-rays,
+        .dial-cutter {
+            transition: none;
+        }
+        .theme-dial:hover .dial-halo {
+            animation: none;
+        }
+    }
+</style>

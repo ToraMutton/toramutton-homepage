@@ -1,13 +1,14 @@
 ---
 // 全ページ共通のヘッダー。
 //   左: マスコットのロゴ(押すといつでもトップへ)
-//   右: Home / Works / Blog / About + テーマスイッチ
+//   右: Home / Works / Blog / About + テーマダイアル(ThemeDial.astro)
 //
 // 現在地の下線(.nav-indicator)は、今いるページのリンクの中にだけ描く。
 // transition:name を付けてあるので、ClientRouter でページを移ると
 // 「前のページの下線の位置 → 新しいページの下線の位置」へ自動で滑らかに動く。
-import { Menu, X, Sun, Moon, BookOpenText } from "lucide-astro";
+import { Menu, X, BookOpenText } from "lucide-astro";
 import Mascot from "../assets/profile/toramutton-line.svg";
+import ThemeDial from "./ThemeDial.astro";
 
 const nav = [
     { href: "/", label: "Home" },
@@ -59,18 +60,7 @@ const current = first ? `/${first}` : "/";
                 </div>
             </button>
 
-            <!-- 左右に動くスイッチ。左が☀(ライト)、右が☾(ダーク)。つまみがある側が今のテーマ -->
-            <button
-                id="theme-toggle"
-                class="theme-switch"
-                role="switch"
-                aria-checked="true"
-                aria-label="ダークモード"
-            >
-                <span class="switch-icon switch-sun" aria-hidden="true"><Sun size={13} /></span>
-                <span class="switch-icon switch-moon" aria-hidden="true"><Moon size={13} /></span>
-                <span class="switch-knob" aria-hidden="true"></span>
-            </button>
+            <ThemeDial />
 
             <button
                 id="menu-toggle"
@@ -88,8 +78,6 @@ const current = first ? `/${first}` : "/";
 </header>
 
 <script>
-    import { getTheme, switchTheme } from "../scripts/theme-switch";
-
     // backdrop のヘルパー
     function getOrCreateBackdrop(): HTMLElement {
         let backdrop = document.getElementById("toc-backdrop");
@@ -193,29 +181,13 @@ const current = first ? `/${first}` : "/";
                 }
             };
         }
-
-        // --- 2. テーマスイッチ ---
-        const themeToggle = document.getElementById("theme-toggle");
-        if (themeToggle) {
-            const sync = () =>
-                themeToggle.setAttribute("aria-checked", String(getTheme() === "dark"));
-            sync();
-            themeToggle.onclick = () => {
-                const rect = themeToggle.getBoundingClientRect();
-                switchTheme(getTheme() === "dark" ? "light" : "dark", {
-                    x: rect.left + rect.width / 2,
-                    y: rect.top + rect.height / 2,
-                });
-                sync();
-            };
-        }
     });
 </script>
 
 <style>
     /* === 基本設定 === */
     header {
-        --header-height: 64px;
+        --header-height: 72px;
         position: fixed;
         top: 0;
         left: 0;
@@ -332,68 +304,6 @@ const current = first ? `/${first}` : "/";
     :global(::view-transition-group(nav-indicator)) {
         animation-duration: 0.45s;
         animation-timing-function: var(--ease-out);
-    }
-
-    /* === テーマスイッチ === */
-    .theme-switch {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 54px;
-        height: 28px;
-        padding: 0 7px;
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        background: color-mix(in srgb, var(--elevated) 60%, transparent);
-        color: var(--text-muted);
-        cursor: pointer;
-        transition:
-            border-color 0.2s ease,
-            background-color 0.3s ease;
-    }
-
-    @media (hover: hover) {
-        .theme-switch:hover {
-            border-color: var(--accent);
-        }
-    }
-
-    .theme-switch:focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 2px;
-    }
-
-    .switch-icon {
-        position: relative;
-        z-index: 1;
-        display: grid;
-        place-items: center;
-        transition: color 0.3s ease;
-    }
-
-    /* つまみ。ライトでは左(☀の上)、ダークでは右(☾の上) */
-    .switch-knob {
-        position: absolute;
-        top: 3px;
-        left: 3px;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: var(--text);
-        transition:
-            transform 0.4s var(--ease-out),
-            background-color 0.3s ease;
-    }
-
-    .theme-switch[aria-checked="true"] .switch-knob {
-        transform: translateX(26px);
-    }
-
-    /* つまみが乗っている側のアイコンは、つまみの上で背景色に抜く */
-    .theme-switch[aria-checked="false"] .switch-sun,
-    .theme-switch[aria-checked="true"] .switch-moon {
-        color: var(--bg);
     }
 
     /* === コントロールボタン共通 === */
@@ -589,7 +499,7 @@ const current = first ? `/${first}` : "/";
     === */
     :global(#toc-backdrop) {
         position: fixed;
-        top: 64px; /* ヘッダーは dim しない */
+        top: 72px; /* ヘッダーは dim しない */
         left: 0;
         right: 0;
         bottom: 0;
@@ -607,7 +517,6 @@ const current = first ? `/${first}` : "/";
         :global(#toc-backdrop) {
             transition: none;
         }
-        .switch-knob,
         .logo {
             transition: none;
         }

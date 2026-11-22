@@ -397,3 +397,20 @@ html:not(.dark) .mission-title {
         transition: none;
     }
 }
+
+/* =========================================
+   6. テーマ切り替えのフェード
+   ========================================= */
+/* src/scripts/theme-switch.ts が切り替えの間だけ付ける。
+   すべての要素の色を同じ長さで混ぜる(各部品のトランジションより優先する)。
+   テーマダイアルは自前の動き(影・光線の transform)を持つので対象外にする。
+   ここで transition-property を上書きすると、その動きが消えてしまうため */
+html.theme-fading,
+html.theme-fading :not(.theme-dial, .theme-dial *),
+html.theme-fading :not(.theme-dial, .theme-dial *)::before,
+html.theme-fading :not(.theme-dial, .theme-dial *)::after {
+    transition-property: background-color, color, border-color, fill, stroke, outline-color, text-decoration-color !important;
+    transition-duration: 600ms !important;
+    transition-timing-function: ease !important;
+    transition-delay: 0s !important;
+}
