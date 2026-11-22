@@ -88,8 +88,8 @@ export interface Social {
 export const socials: Social[] = [
   { name: "GitHub", url: GITHUB_URL, icon: "github" },
   { name: "Zenn", url: ZENN_URL, icon: "zenn" },
-  { name: "note", url: NOTE_URL, icon: "note" },
   { name: "Qiita", url: QIITA_URL, icon: "qiita" },
+  { name: "note", url: NOTE_URL, icon: "note" },
   { name: "Twitter", url: TW_DAILY_URL, icon: "twitter" },
 ];
 

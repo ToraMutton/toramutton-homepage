@@ -1,0 +1,17 @@
+---
+// プロフィールの要約。詳細は /about(データは src/data/about.ts)。
+import HomeSection from "./HomeSection.astro";
+---
+
+<HomeSection id="about" index="03" title="About" caption="ToraMutton について">
+    <p class="placeholder">ここにプロフィールの要約が入る(準備中)</p>
+</HomeSection>
+
+<style>
+    .placeholder {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+</style>

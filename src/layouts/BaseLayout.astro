@@ -22,8 +22,9 @@ interface Props {
      *   default … サイト標準（トップページ・Aboutなど）
      *   narrow  … 読み物向けの900px（Blog一覧 / Works / Advent）
      *   full    … 画面いっぱい（記事ページ。ヒーロー画像を端まで出すため）
+     *   bare    … 画面いっぱい・余白なし（トップページ。ヒーローを固定ヘッダーの裏まで敷く）
      */
-    width?: "default" | "narrow" | "full";
+    width?: "default" | "narrow" | "full" | "bare";
 }
 
 const { title, description, image, cardType, width = "default" } = Astro.props;
@@ -95,6 +96,14 @@ const { title, description, image, cardType, width = "default" } = Astro.props;
         max-width: 100%;
         margin: 0 auto;
         padding-top: 80px;
+    }
+
+    /* トップページ。余白は各セクションが自分で持つ */
+    main.bare {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 0;
     }
 
     @media (max-width: 720px) {

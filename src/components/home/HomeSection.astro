@@ -1,0 +1,38 @@
+---
+// トップの下層セクション(Works / Blog / About)の共通の枠。
+// 背景はヒーローの斜め三角形と同じ --bg-deep なので、ヒーローから境目なくつながる。
+// 右の縦バーインジケーターは、この data-home-section を目印に現在地を判定する予定。
+import SectionTitle from "../ui/SectionTitle.astro";
+
+interface Props {
+    /** アンカー(#works など)とインジケーターの両方で使う */
+    id: string;
+    index: string;
+    /** 大きく出す英字の見出し */
+    title: string;
+    /** 小さく添える日本語 */
+    caption: string;
+}
+
+const { id, index, title, caption } = Astro.props;
+---
+
+<section class="home-section" id={id} data-home-section>
+    <div class="inner">
+        <SectionTitle {index} {title} {caption} />
+        <slot />
+    </div>
+</section>
+
+<style>
+    .home-section {
+        background: var(--bg-deep);
+        padding: clamp(5rem, 12vh, 9rem) 0;
+    }
+
+    .inner {
+        max-width: var(--max-width);
+        margin: 0 auto;
+        padding: 0 1.5rem;
+    }
+</style>

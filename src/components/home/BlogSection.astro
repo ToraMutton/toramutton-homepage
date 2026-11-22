@@ -1,0 +1,19 @@
+---
+// 最新記事。ローカル記事と Zenn / Qiita / note の RSS を統合して出す
+// (取得は src/utils/post.ts と src/utils/feeds.ts)。
+// アドベントカレンダーへの特設導線もここに置く予定。
+import HomeSection from "./HomeSection.astro";
+---
+
+<HomeSection id="blog" index="02" title="Blog" caption="書いたもの">
+    <p class="placeholder">ここに最新記事のフィードが並ぶ(準備中)</p>
+</HomeSection>
+
+<style>
+    .placeholder {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+</style>

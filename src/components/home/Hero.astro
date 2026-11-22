@@ -1,0 +1,407 @@
+---
+// トップのファーストビュー(100dvh)。
+//
+// 重なり順(手前ほど数字が大きい):
+//   30 … タイトル「ToraMutton」・スクロール誘導・SNS ドック
+//   20 … 左右のサイド UI(マスコット。フーリエ波形と縦バーは後で足す)
+//   15 … 右下の斜め三角形 2 枚(外側 --bg-mid / 内側 --bg-deep)と、その中の草グラフ
+//   10 … 3D キャンバス(メビウスの帯。src/scripts/mobius.ts を後から読み込む)
+import BrandIcon from "../BrandIcon.astro";
+import Mascot from "../../assets/profile/toramutton-line.svg";
+import { socials } from "../../data/home";
+import { getContributions } from "../../utils/github";
+
+// ---- GitHub の草 ----
+// 縦 7 マス(日〜土)× 横に週が並ぶ。1 日目の曜日ぶん先頭を空けて、曜日の行を揃える
+const contributions = await getContributions();
+const firstDay = contributions.days[0];
+const leadingBlanks = firstDay ? new Date(`${firstDay.date}T00:00:00Z`).getUTCDay() : 0;
+---
+
+<section class="hero" id="top" aria-label="ToraMutton">
+    <div class="hero-canvas" data-hero-canvas aria-hidden="true"></div>
+
+    <div class="hero-tri hero-tri-outer" aria-hidden="true"></div>
+    <div class="hero-tri hero-tri-inner">
+        {
+            contributions.days.length > 0 && (
+                <a
+                    class="grass"
+                    href="https://github.com/toramutton"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`GitHub: 直近1年で ${contributions.total} contributions`}
+                >
+                    <span class="grass-total">
+                        {contributions.total.toLocaleString("en-US")}
+                    </span>
+                    <span class="grass-grid" aria-hidden="true">
+                        {Array.from({ length: leadingBlanks }, () => (
+                            <span class="grass-cell is-blank" />
+                        ))}
+                        {contributions.days.map((day) => (
+                            <span class={`grass-cell lv-${day.level}`} />
+                        ))}
+                    </span>
+                </a>
+            )
+        }
+    </div>
+
+    <div class="hero-side-left">
+        <Mascot class="mascot" aria-hidden="true" />
+    </div>
+
+    <!-- 背後の 3D をドラッグできるよう、タイトルはポインター操作を素通しする -->
+    <h1 class="hero-title">ToraMutton</h1>
+
+    <a class="scroll-cue" href="#works" aria-label="下のセクションへ">
+        <span class="scroll-label" aria-hidden="true">SCROLL</span>
+        <span class="chevrons" aria-hidden="true">
+            <span class="chevron"></span>
+            <span class="chevron"></span>
+            <span class="chevron"></span>
+        </span>
+    </a>
+
+    <ul class="social-dock">
+        {
+            socials.map((s) => (
+                <li>
+                    <a
+                        href={s.url}
+                        class={`social-link social-${s.icon}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={s.name}
+                    >
+                        <BrandIcon name={s.icon} size={18} />
+                    </a>
+                </li>
+            ))
+        }
+    </ul>
+</section>
+
+<script>
+    // three(数百KB)は初期表示に要らないので、ブラウザが暇になってから読み込む。
+    // ClientRouter でページを行き来するので、来たらマウント・離れる前に片付ける。
+    import type { MobiusHandle } from "../../scripts/mobius";
+
+    let handle: MobiusHandle | null = null;
+
+    function init() {
+        const el = document.querySelector<HTMLElement>("[data-hero-canvas]");
+        if (!el || handle) return;
+        const start = () =>
+            import("../../scripts/mobius").then((m) => {
+                // 読み込み中に別ページへ移動していたら何もしない
+                if (document.contains(el) && !handle) handle = m.mountMobius(el);
+            });
+        if ("requestIdleCallback" in window) {
+            requestIdleCallback(start, { timeout: 1200 });
+        } else {
+            setTimeout(start, 150);
+        }
+    }
+
+    document.addEventListener("astro:page-load", init);
+    document.addEventListener("astro:before-swap", () => {
+        handle?.destroy();
+        handle = null;
+    });
+</script>
+
+<style>
+    .hero {
+        position: relative;
+        height: 100dvh;
+        min-height: 560px;
+        overflow: hidden;
+        background: var(--bg);
+    }
+
+    .hero-canvas {
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        opacity: 0;
+        transition: opacity 1.2s var(--ease-out);
+    }
+
+    /* mobius.ts が最初のフレームを描いたら付ける */
+    .hero-canvas:global(.is-ready) {
+        opacity: 1;
+    }
+
+    .hero-canvas :global(canvas) {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+    /* ---- 斜め三角形 2 枚 ----
+       どちらも右下の角を共有し、内側ほど暗い(ライトでは明るい)。
+       内側の --bg-deep は下層セクションの背景と同じ色なので、境目なくつながる。 */
+    .hero-tri {
+        position: absolute;
+        inset: 0;
+        z-index: 15;
+        pointer-events: none;
+    }
+
+    .hero-tri-outer {
+        background: var(--bg-mid);
+        clip-path: polygon(100% 40%, 100% 100%, 46% 100%);
+    }
+
+    .hero-tri-inner {
+        background: var(--bg-deep);
+        clip-path: polygon(100% 60%, 100% 100%, 64% 100%);
+    }
+
+    /* ---- 草グラフ(内側の三角形の中。斜辺で切り取られる) ---- */
+    .grass {
+        position: absolute;
+        right: clamp(1rem, 3vw, 2.5rem);
+        bottom: 5.25rem;
+        display: grid;
+        justify-items: end;
+        gap: 0.4rem;
+        color: var(--text-muted);
+        pointer-events: auto;
+        text-decoration: none;
+    }
+
+    .grass-total {
+        font-family: var(--font-mono);
+        font-size: 1.5rem;
+        font-weight: 500;
+        line-height: 1;
+        color: var(--text);
+        transition: color 0.2s ease;
+    }
+
+    .grass:hover .grass-total,
+    .grass:focus-visible .grass-total {
+        color: var(--accent);
+    }
+
+    .grass-grid {
+        --cell: 7px;
+        display: grid;
+        grid-template-rows: repeat(7, var(--cell));
+        grid-auto-flow: column;
+        grid-auto-columns: var(--cell);
+        gap: 2px;
+    }
+
+    .grass-cell {
+        border-radius: 1.5px;
+        background: color-mix(in srgb, var(--text) 7%, transparent);
+    }
+
+    .grass-cell.is-blank {
+        background: none;
+    }
+
+    /* 色は増やさず、アクセント 1 色の濃さで段階を出す */
+    .lv-1 {
+        background: color-mix(in srgb, var(--accent) 30%, transparent);
+    }
+    .lv-2 {
+        background: color-mix(in srgb, var(--accent) 52%, transparent);
+    }
+    .lv-3 {
+        background: color-mix(in srgb, var(--accent) 76%, transparent);
+    }
+    .lv-4 {
+        background: var(--accent);
+    }
+
+    /* ---- 左サイド ---- */
+    .hero-side-left {
+        position: absolute;
+        top: 88px;
+        left: clamp(1rem, 3vw, 2.5rem);
+        z-index: 20;
+    }
+
+    .mascot {
+        display: block;
+        width: 44px;
+        height: 44px;
+        color: var(--text);
+    }
+
+    /* ---- タイトル ---- */
+    .hero-title {
+        position: absolute;
+        top: 50%;
+        right: clamp(1.5rem, 8vw, 9rem);
+        z-index: 30;
+        margin: 0;
+        transform: translateY(-50%);
+        font-family: var(--font-mono);
+        font-size: clamp(2.75rem, 8vw, 7rem);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1;
+        color: var(--text);
+        pointer-events: none;
+        user-select: none;
+    }
+
+    /* ---- スクロール誘導(縦書きの SCROLL + 縦に3つ並んだシェブロン) ---- */
+    .scroll-cue {
+        position: absolute;
+        left: clamp(1rem, 3vw, 2.5rem);
+        bottom: 1.75rem;
+        z-index: 30;
+        display: grid;
+        justify-items: center;
+        gap: 0.9rem;
+        padding: 0.5rem;
+        color: var(--text);
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    .scroll-cue:hover,
+    .scroll-cue:focus-visible {
+        color: var(--accent);
+    }
+
+    .scroll-label {
+        writing-mode: vertical-rl;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.35em;
+        color: var(--text-muted);
+    }
+
+    .chevrons {
+        display: grid;
+        gap: 0;
+    }
+
+    .chevron {
+        display: block;
+        width: 20px;
+        height: 20px;
+        margin-top: -6px;
+        border-right: 2.5px solid currentColor;
+        border-bottom: 2.5px solid currentColor;
+        transform: rotate(45deg);
+        animation: chevron-flow 1.6s ease-in-out infinite;
+    }
+
+    /* 上から順に少しずつ遅らせて、光が下へ流れ落ちるように見せる */
+    .chevron:nth-child(2) {
+        animation-delay: 0.18s;
+    }
+    .chevron:nth-child(3) {
+        animation-delay: 0.36s;
+    }
+
+    @keyframes chevron-flow {
+        0%,
+        100% {
+            opacity: 0.2;
+            translate: 0 0;
+        }
+        45% {
+            opacity: 1;
+            translate: 0 5px;
+        }
+    }
+
+    /* ---- SNS ドック(右下の三角形の中) ---- */
+    .social-dock {
+        position: absolute;
+        right: clamp(1rem, 3vw, 2.5rem);
+        bottom: 1.75rem;
+        z-index: 30;
+        display: flex;
+        gap: 0.5rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    /* 普段はモノクロ。ホバーしたときだけブランドカラーになる */
+    .social-link {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        color: var(--text-muted);
+        --brand: var(--text);
+        transition:
+            color 0.2s ease,
+            background-color 0.2s ease;
+    }
+
+    .social-zenn {
+        --brand: var(--brand-zenn);
+    }
+    .social-qiita {
+        --brand: var(--brand-qiita);
+    }
+    .social-note {
+        --brand: var(--brand-note);
+    }
+
+    .social-link:hover,
+    .social-link:focus-visible {
+        color: var(--brand);
+        background: var(--elevated);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .chevron {
+            animation: none;
+            opacity: 0.8;
+        }
+        .hero-canvas {
+            transition: none;
+        }
+    }
+
+    /* ---- モバイル: タイトルを中央に、三角形は控えめに、草は省く ---- */
+    @media (max-width: 768px) {
+        .hero-title {
+            right: 50%;
+            transform: translate(50%, -50%);
+        }
+
+        .hero-tri-outer {
+            clip-path: polygon(100% 70%, 100% 100%, 20% 100%);
+        }
+
+        .hero-tri-inner {
+            clip-path: polygon(100% 84%, 100% 100%, 55% 100%);
+        }
+
+        .grass {
+            display: none;
+        }
+
+        .social-dock {
+            right: 50%;
+            bottom: 6.5rem;
+            transform: translateX(50%);
+        }
+
+        .scroll-cue {
+            left: 50%;
+            bottom: 0.75rem;
+            transform: translateX(-50%);
+        }
+
+        .scroll-label {
+            display: none;
+        }
+    }
+</style>
