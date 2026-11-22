@@ -1,5 +1,5 @@
 ---
-// トップページ。1枚のストーリーとして、ヒーロー → Works → Blog → About の順に縦に並べる。
+// トップページ。1枚のストーリーとして、ヒーロー → Works → Blog → About → Others の順に縦に並べる。
 // 見た目と動きは src/components/home/ の各部品が持ち、このファイルは並べるだけにする。
 export const prerender = true;
 import Layout from "../layouts/BaseLayout.astro";
@@ -8,6 +8,7 @@ import Hero from "../components/home/Hero.astro";
 import WorksSection from "../components/home/WorksSection.astro";
 import BlogSection from "../components/home/BlogSection.astro";
 import AboutSection from "../components/home/AboutSection.astro";
+import OthersSection from "../components/home/OthersSection.astro";
 ---
 
 <Layout title={SITE_TITLE} description={SITE_DESCRIPTION} width="bare">
@@ -15,4 +16,5 @@ import AboutSection from "../components/home/AboutSection.astro";
     <WorksSection />
     <BlogSection />
     <AboutSection />
+    <OthersSection />
 </Layout>

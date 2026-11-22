@@ -1,12 +1,31 @@
 ---
-const year = new Date().getFullYear();
+// 全ページ共通のフッター。境界線を使わず、暗い地に光だまりと曲線のパネルを重ねた「没入型」。
+//
+//   背景 … 奥に倒した平面の上を 16 進数の行が左右に流れ、ときどき一部がちらつく
+//   本文 … 4 列(サイトマップ / 最終ビルド / SNS / クレジット)+ Back to top
+import { getVisiblePosts } from "../utils/post";
+import { works } from "../data/works";
+import { socials } from "../data/home";
+import { footerHex } from "../data/footerHex";
+import BrandIcon from "./BrandIcon.astro";
 
-// --- ビルド情報の生成 ---
+// ---- 1 列目: サイトマップ。件数は右肩に小さく出す ----
+const postCount = (await getVisiblePosts()).length;
+const mainLinks = [
+    { href: "/", label: "Top" },
+    { href: "/works", label: "Works", count: works.length },
+    { href: "/blog", label: "Blog", count: postCount },
+    { href: "/about", label: "About" },
+];
+const otherLinks = [
+    { href: "/links", label: "Links" },
+    { href: "/advent2026", label: "Advent 2026" },
+    // retro は見た目が全く違うページなので、ClientRouter を使わず普通に読み込む
+    { href: "/retro/", label: "Retro", reload: true },
+];
+
+// ---- 2 列目: 最終ビルド(JST) ----
 const buildDate = new Date();
-// タイムスタンプの16進数下8桁で疑似ハッシュ生成
-const buildHash = buildDate.getTime().toString(16).slice(-8);
-
-// JST (Asia/Tokyo) で日付と時刻をフォーマット
 const buildDay = new Intl.DateTimeFormat("ja-JP", {
     timeZone: "Asia/Tokyo",
     year: "numeric",
@@ -15,369 +34,511 @@ const buildDay = new Intl.DateTimeFormat("ja-JP", {
 })
     .format(buildDate)
     .replace(/\//g, "-");
-
 const buildTime = new Intl.DateTimeFormat("ja-JP", {
     timeZone: "Asia/Tokyo",
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
 }).format(buildDate);
+
+const year = buildDate.getFullYear();
+
+// ---- 背景の 16 進数 ----
+// バイト列を ROWS 行 × BYTES 個に切り分ける(足りなければ先頭に戻って繰り返す)。
+// 各行は横に流すので、同じ内容を 2 回つなげておき、半分ずれたところで継ぎ目なく戻す
+const ROWS = 16;
+const BYTES = 64;
+const bytes = footerHex.replace(/\s+/g, "").match(/.{2}/g) ?? [];
+const hexRows = bytes.length
+    ? Array.from({ length: ROWS }, (_, r) =>
+          Array.from({ length: BYTES }, (_, i) => bytes[(r * BYTES + i) % bytes.length]).join(" "),
+      )
+    : [];
 ---
 
-<footer>
-    <div class="footer-hex" aria-hidden="true">
-        e3 81 93 e3 82 93 e3 81 ab e3 81 a1 e3 81 af e3 80 81 e7 9c 9f e5 b3 b6
-        e8 8c 82 e6 a8 b9 e3 81 a7 e3 81 99 e3 80 82 0a 0a e3 83 91 e3 83 81 e3
-        83 b3 e3 82 b3 ef bc a3 ef bc b2 e3 83 9e e3 83 84 e3 82 b1 e3 83 b3 e3
-        82 b5 e3 83 90 e3 83 88 e3 82 a5 e3 83 bc e3 81 af e3 80 81 e8 b8 8a e3
-        82 8b e3 83 91 e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81 0a 0a e3 81
-        a7 e3 81 af e3 80 81 e5 8b 87 e6 b0 97 e3 82 92 e5 87 ba e3 81 97 e3 81
-        a6 e3 80 81 e8 b8 8a e3 81 a3 e3 81 a6 e3 81 bf e3 81 be e3 81 97 e3 82
-        87 e3 81 86 ef bc 81 0a 0a 20 0a 0a e3 83 8f e3 82 a4 e3 80 81 e3 83 af
-        e3 83 b3 e3 83 88 e3 82 a5 e3 83 bc ef bc 81 0a 0a e3 82 b5 e3 83 b3 e3
-        83 90 e3 81 ae e3 83 aa e3 82 ba e3 83 a0 e3 81 a7 e3 83 91 e3 83 bc e3
-        83 91 e3 83 bc e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81 0a 0a e3 83
-        9e e3 83 84 e3 82 b1 e3 83 b3 e3 82 b5 e3 83 b3 e3 83 90 e3 81 a7 e3 83
-        91 e3 83 bc e3 83 91 e3 83 bc e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc
-        81 0a 0a e3 80 8c e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81 e3 80 8d
-        e3 81 a7 e8 85 b0 e3 82 92 e7 aa 81 e3 81 8d e5 87 ba e3 81 97 e3 81 a6
-        e3 80 82 e3 83 bb e3 83 bb e3 83 bb e3 81 9d e3 81 86 ef bc 81 0a 0a e3
-        83 9e e3 83 84 e3 82 b1 e3 83 b3 e3 83 9c e3 83 bc e3 83 8a e3 82 b9 e5
-        87 ba e7 8e 89 e3 81 8c e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81 e3
-        83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81 0a 0a 20 0a 0a e3 83 bb e3 83
-        bb e3 83 bb e3 81 9d e3 81 86 e3 80 82 e5 88 87 e3 82 8c e3 82 88 e3 81
-        8f e3 80 8c e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81 e3 80 8d e3 80
-        8c e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81 e3 80 8d e3 81 a8 e3 80
-        82 0a 0a e3 83 95 e3 82 a3 e3 82 ae e3 83 a5 e3 82 a2 e3 81 8c e8 b8 8a
-        e3 82 8b e3 82 88 e3 83 91 e3 83 bc e3 83 91 e3 83 bc e3 83 86 e3 82 a3
-        e3 83 b3 e3 82 b3 ef bc 81 0a 0a e7 a2 ba e5 a4 89 e3 82 b2 e3 83 83 e3
-        83 88 e3 81 a7 e4 b8 8a e4 b8 8a e3 83 bb e4 b8 8b e4 b8 8b e3 83 bb e3
-        82 aa e3 83 bc e3 83 97 e3 83 b3 ef bc 81 0a 0a 20 0a 0a e3 83 9c e3 83
-        bc e3 83 8a e3 82 b9 e3 82 b2 e3 83 83 e3 83 88 e3 81 a7 e5 89 8d e3 83
-        bb e5 89 8d e3 83 bb e5 be 8c e3 82 8d ef bc 81 0a 0a e3 83 95 e3 82 a3
-        e3 82 ae e3 83 a5 e3 82 a2 e3 81 8c e8 b8 8a e3 82 8b e3 82 88 e3 83 91
-        e3 83 bc e3 83 91 e3 83 bc e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81
-        0a 0a e3 83 9e e3 83 84 e3 82 b1 e3 83 b3 e3 82 b5 e3 83 b3 e3 83 90 e3
-        81 a7 e3 83 91 e3 83 bc e3 83 91 e3 83 bc e3 83 86 e3 82 a3 e3 83 b3 e3
-        82 b3 e3 83 bc e3 83 bc e3 83 bc e3 83 bc ef bc 81 ef bc 81 ef bc 81 0a
-        0a 20 0a 0a e3 83 bb e3 83 bb e3 83 bb e3 83 86 e3 82 a3 e3 83 b3 e3 82
-        b3 ef bc 81 0a 0a e3 83 bb e3 83 bb e3 83 bb e3 82 82 e3 81 86 ef bc 91
-        e5 9b 9e e3 80 82 0a 0a e3 83 bb e3 83 bb e3 83 bb e3 83 86 e3 82 a3 e3
-        83 b3 e3 82 b3 ef bc 81 0a 0a 20 0a 0a ef bc 88 e3 81 8b e3 83 bc e3 82
-        93 ef bc 81 ef bc 81 ef bc 89 0a 0a 20 0a 0a e3 81 af e3 83 bc e3 81 84
-        e3 80 81 e4 bb 8a e6 97 a5 e3 81 af e3 81 93 e3 82 8c e3 81 8f e3 82 89
-        e3 81 84 e3 81 ab e3 81 97 e3 81 a6 e3 81 8a e3 81 8d e3 81 be e3 81 97
-        e3 82 87 e3 81 86 e3 80 82
+<footer class="site-footer" data-footer>
+    <div class="footer-matrix" aria-hidden="true">
+        <div class="matrix-plane">
+            {
+                hexRows.map((row, i) => (
+                    <div
+                        class="matrix-row"
+                        style={`--dur: ${70 + ((i * 37) % 60)}s; --dir: ${i % 2 === 0 ? "normal" : "reverse"}`}
+                    >
+                        <span class="matrix-text">{`${row} ${row} `}</span>
+                    </div>
+                ))
+            }
+        </div>
     </div>
 
-    <pre
-        class="footer-bg"
-        aria-hidden="true">                  -`
-                 .o+`
-                `ooo/
-               `+oooo:
-              `+oooooo:
-              -+oooooo+:
-            `/:-:++oooo+:
-           `/++++/+++++++:
-          `/++++++++++++++:
-         `/+++ooooooooooooo/`
-        ./ooosssso++osssssso+`
-       .oossssso-````/ossssss+`
-      -osssssso.      :ssssssso.
-     :osssssss/        osssso+++.
-    /ossssssss/        +ssssooo/-
-  `/ossssso+/:-        -:/+osssso+-
- `+sso+:-`                 `.-/+oso:
-`++:.                           `-/+/
-.`                                 `</pre>
+    <!-- 左の曲線パネル。光だまりの当たらない、いちばん暗い面 -->
+    <svg class="footer-curve" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 0 H62 C52 26 92 58 80 100 H0 Z"></path>
+    </svg>
 
-    <div class="footer-main">
-        <div class="build-info" aria-label="Build Information">
-            <div class="build-item">
-                <span class="build-label">BUILT</span>
-                <span class="build-value">{buildDay}</span>
+    <div class="footer-inner">
+        <div class="footer-cols">
+            <nav class="col" aria-label="サイトマップ">
+                <p class="col-label">Index</p>
+                <ul class="link-list">
+                    {
+                        mainLinks.map((l) => (
+                            <li>
+                                <a href={l.href}>
+                                    {l.label}
+                                    {l.count !== undefined && <sup>{l.count}</sup>}
+                                </a>
+                            </li>
+                        ))
+                    }
+                </ul>
+                <ul class="link-list sub">
+                    {
+                        otherLinks.map((l) => (
+                            <li>
+                                <a href={l.href} data-astro-reload={l.reload ? true : undefined}>
+                                    {l.label}
+                                </a>
+                            </li>
+                        ))
+                    }
+                </ul>
+            </nav>
+
+            <div class="col">
+                <p class="col-label">Last build</p>
+                <p class="build-day">{buildDay}</p>
+                <p class="build-time">{buildTime} <span>JST</span></p>
             </div>
-            <div class="build-item">
-                <span class="build-label">JST</span>
-                <span class="build-value">{buildTime}</span>
+
+            <div class="col">
+                <p class="col-label">Elsewhere</p>
+                <ul class="link-list social-list">
+                    {
+                        socials.map((s) => (
+                            <li>
+                                <a
+                                    href={s.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class={`social-${s.icon}`}
+                                >
+                                    <BrandIcon name={s.icon} size={15} />
+                                    <span>{s.name === "Twitter" ? "X (Twitter)" : s.name}</span>
+                                </a>
+                            </li>
+                        ))
+                    }
+                </ul>
             </div>
-            <div class="build-item">
-                <span class="build-label">HASH</span>
-                <span class="build-value">0x{buildHash}</span>
+
+            <div class="col credit">
+                <p class="col-label">&copy; {year}</p>
+                <p class="credit-name">ToraMutton</p>
+                <p class="credit-meta">UEC / I類 CS Program · MMA</p>
+                <p class="credit-meta">
+                    Built with <a href="https://astro.build" target="_blank" rel="noopener noreferrer">Astro</a>
+                </p>
+                <p class="kaomoji">( ∩՞ټ՞∩) ﾝﾌ～～</p>
             </div>
         </div>
-        <p class="time-message" id="footer-time-msg"># ...</p>
 
-        <p class="credit">
-            &copy; {year} ToraMutton · Built with <a
-                href="https://astro.build"
-                target="_blank"
-                rel="noopener noreferrer">Astro</a
-            >
-        </p>
-
-        <p class="kaomoji">
-            <a href="/retro/" data-astro-reload>( ∩՞ټ՞∩) ﾝﾌ～～</a>
-        </p>
+        <div class="footer-bottom">
+            <a href="#" class="back-to-top" data-back-to-top>
+                <span>Back to top</span>
+                <span class="arrow" aria-hidden="true">↑</span>
+            </a>
+        </div>
     </div>
 </footer>
 
 <script>
+    // ---- 背景の 16 進数のちらつき ----
+    // 頻度は控えめに。1.6〜3.2 秒に一度、ランダムな行で次のどちらかが起きる
+    //   - 数バイトが一瞬だけ別の値に化ける
+    //   - 行全体がふっと明るくなる
+    // フッターが画面に入っている間だけ動かす(行の横移動の CSS アニメーションも止める)
+    let stop: (() => void) | null = null;
+
+    function start(footer: HTMLElement) {
+        stop?.();
+        const rows = Array.from(footer.querySelectorAll<HTMLElement>(".matrix-text"));
+        if (rows.length === 0) return;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+        let timer = 0;
+        let active = false;
+        const HEX = "0123456789ABCDEF";
+        const randomByte = () =>
+            HEX[(Math.random() * 16) | 0] + HEX[(Math.random() * 16) | 0];
+
+        const glitch = () => {
+            const row = rows[(Math.random() * rows.length) | 0];
+            if (Math.random() < 0.65) {
+                const original = row.textContent ?? "";
+                const chars = original.split("");
+                const half = chars.length / 2;
+                const n = 2 + ((Math.random() * 3) | 0);
+                for (let k = 0; k < n; k++) {
+                    // 1 バイト = "XX " の 3 文字。前半と後半(つなげた 2 回目)の同じ位置を一緒に変える
+                    const pos = ((Math.random() * (half / 3)) | 0) * 3;
+                    const b = randomByte();
+                    for (const offset of [0, half]) {
+                        chars[pos + offset] = b[0];
+                        chars[pos + offset + 1] = b[1];
+                    }
+                }
+                row.textContent = chars.join("");
+                setTimeout(() => (row.textContent = original), 140);
+            } else {
+                row.classList.add("is-flash");
+                setTimeout(() => row.classList.remove("is-flash"), 260);
+            }
+        };
+
+        const loop = () => {
+            if (!active) return;
+            glitch();
+            timer = window.setTimeout(loop, 1600 + Math.random() * 1600);
+        };
+
+        const io = new IntersectionObserver(([entry]) => {
+            active = entry.isIntersecting;
+            footer.classList.toggle("is-active", active);
+            clearTimeout(timer);
+            if (active) timer = window.setTimeout(loop, 800);
+        });
+        io.observe(footer);
+
+        stop = () => {
+            io.disconnect();
+            clearTimeout(timer);
+            stop = null;
+        };
+    }
+
     document.addEventListener("astro:page-load", () => {
-        const el = document.getElementById("footer-time-msg");
-        if (!el) return;
+        const footer = document.querySelector<HTMLElement>("[data-footer]");
+        if (footer) start(footer);
 
-        // Asia/Tokyo の「時」を 0〜23 で取得
-        const hourStr = new Intl.DateTimeFormat("en-US", {
-            timeZone: "Asia/Tokyo",
-            hour: "2-digit",
-            hourCycle: "h23",
-        }).format(new Date());
-        let hour = parseInt(hourStr, 10);
-        if (Number.isNaN(hour) || hour === 24) hour = 0;
-
-        let pool: string[];
-        if (hour <= 4) {
-            pool = ["# はよ寝ろ", "# 日付跨いでますよ！早く気づいて！"];
-        } else if (hour <= 6) {
-            pool = [
-                "# そろそろ能力が高い人が起きてきそう",
-                "# 早起きか、夜更かしか",
-            ];
-        } else if (hour <= 11) {
-            pool = ["# おはようございます！", "# ド級の起床、ド起床"];
-        } else if (hour <= 17) {
-            pool = ["# 午後もがんばれ", "# 眠くなってくる時間帯"];
-        } else if (hour <= 21) {
-            pool = ["# お疲れ様です", "# 脱くねくね"];
-        } else {
-            // 22〜23時
-            pool = ["# そろそろ寝ろ", "# おやすみなさい！"];
+        const top = document.querySelector<HTMLAnchorElement>("[data-back-to-top]");
+        if (top) {
+            top.onclick = (e) => {
+                e.preventDefault();
+                const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+                window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+            };
         }
-
-        el.textContent = pool[Math.floor(Math.random() * pool.length)];
     });
+    document.addEventListener("astro:before-swap", () => stop?.());
 </script>
 
 <style>
-    footer {
+    .site-footer {
         position: relative;
         overflow: hidden;
         margin-top: auto;
-        padding: 3rem 1rem 2.5rem;
-        border-top: 1px solid var(--border-color);
-        background: var(--background);
+        min-height: 480px;
+        /* 中央やや右にぼんやりした光だまりを置き、境界線なしで奥行きを出す。
+           上端では完全に透明にして、直前のセクションとの継ぎ目を見せない */
+        background:
+            radial-gradient(
+                ellipse 60% 55% at 62% 55%,
+                color-mix(in srgb, var(--text) 6%, transparent),
+                transparent 70%
+            ),
+            var(--bg-deep);
+        color: var(--text);
     }
 
-    /* === 背景: Hex Dump with maji === */
-    .footer-hex {
+    /* ---- 背景: 奥に倒した平面の上を流れる 16 進数 ---- */
+    .footer-matrix {
         position: absolute;
-        bottom: -0.5rem;
-        left: -0.5rem;
-        width: 40%;
-        max-height: 100%;
-        z-index: 0;
-
-        font-family: var(--font-mono);
-        font-size: clamp(0.4rem, 1.8vw, 0.7rem);
-        line-height: 1.4;
-        word-break: break-all;
-        color: var(--text-muted);
-        opacity: 0.5;
-        text-transform: uppercase;
-
-        /* 上に向かって徐々に消えていくグラデーションマスク */
-        mask-image: linear-gradient(to top right, black 10%, transparent 80%);
-        -webkit-mask-image: linear-gradient(
-            to top right,
-            black 10%,
-            transparent 80%
-        );
-
-        overflow: hidden;
+        inset: 0;
+        perspective: 700px;
+        perspective-origin: 50% 0%;
         pointer-events: none;
         user-select: none;
+        /* 奥(上)ほど消える */
+        mask-image: linear-gradient(to bottom, transparent 0%, black 55%, black 100%);
     }
 
-    /* === 背景: Arch ASCIIアート === */
-    .footer-bg {
+    .matrix-plane {
         position: absolute;
-        bottom: -1rem;
-        right: -1rem;
-        margin: 0;
-        padding: 0;
-        z-index: 0;
-
-        font-family: var(--font-mono);
-        font-size: clamp(0.45rem, 2.4vw, 0.8rem);
-        line-height: 1.15;
-        white-space: pre;
-        color: var(--text-muted);
-        opacity: 0.28;
-
-        /* global.css の pre デフォルトスタイルを上書き */
-        background: transparent;
-        border: none;
-        border-radius: 0;
-        padding: 0;
-        /* pre デフォルトのスクロールバーを潰す */
-        overflow: hidden;
-        pointer-events: none;
-        user-select: none;
-    }
-
-    /* === メインカラム === */
-    .footer-main {
-        position: relative;
-        z-index: 1;
-        max-width: 1100px;
-        margin: 0 auto;
+        left: -25%;
+        right: -25%;
+        bottom: -12%;
+        height: 150%;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        gap: 1.25rem;
-        text-align: center;
+        justify-content: flex-end;
+        transform-origin: 50% 100%;
+        transform: rotateX(52deg);
     }
 
-    /* === ビルド情報パネル === */
-    .build-info {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        column-gap: 1.5rem;
-        row-gap: 0.5rem;
-        padding: 0.6rem 1.2rem;
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
+    .matrix-row {
+        overflow: hidden;
+        white-space: nowrap;
         font-family: var(--font-mono);
-        font-size: 0.75rem;
-
-        background: var(--background);
-        z-index: 2;
-
-        max-width: fit-content;
+        font-size: 15px;
+        line-height: 1.9;
+        letter-spacing: 0.08em;
+        color: var(--text);
+        opacity: 0.07;
+        transition: opacity 0.25s ease;
     }
 
-    .build-item {
-        display: flex;
-        gap: 0.5rem;
-        align-items: center;
+    .matrix-text {
+        display: inline-block;
+        animation: matrix-flow var(--dur) linear infinite;
+        animation-direction: var(--dir);
+        animation-play-state: paused;
     }
 
-    .build-label {
-        color: var(--text-muted);
+    .site-footer.is-active .matrix-text {
+        animation-play-state: running;
     }
 
-    .build-value {
-        /* 変数がない場合は白や黒になるようにフォールバック */
-        color: var(--text-main, #e2e8f0);
-        font-weight: 600;
-        letter-spacing: 0.05em;
+    .matrix-row:has(.is-flash) {
+        opacity: 0.22;
+        color: var(--accent);
     }
 
-    /* === 時間帯メッセージ === */
-    .time-message {
-        margin: 0;
-        font-family: var(--font-mono);
-        font-size: 0.8rem;
-        color: var(--text-muted);
-        letter-spacing: 0.02em;
-    }
-
-    /* === クレジット === */
-    .credit {
-        margin: 0;
-        font-family: var(--font-mono);
-        font-size: 0.72rem;
-        color: var(--text-muted);
-        letter-spacing: 0.02em;
-    }
-
-    .credit a {
-        color: var(--text-muted);
-        text-decoration: none;
-        font-weight: 600;
-        transition: color 0.2s ease;
-    }
-
-    /* === おまけ === */
-    .kaomoji {
-        margin: 0;
-        font-family: var(--font-mono);
-        font-size: 0.7rem;
-        color: var(--text-muted);
-        opacity: 0.65;
-    }
-
-    /* イースターエッグの入口。見た目は普通の顔文字のまま */
-    .kaomoji a {
-        color: inherit;
-        text-decoration: none;
-    }
-
-    /* === hover (ポインタデバイスのみ) === */
-    @media (hover: hover) {
-        .credit a:hover {
-            color: var(--accent-blue);
+    @keyframes matrix-flow {
+        to {
+            transform: translateX(-50%);
         }
     }
 
-    /* === reduced-motion 配慮 === */
+    /* ---- 左の曲線パネル ---- */
+    .footer-curve {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: min(34%, 420px);
+        height: 100%;
+        fill: var(--bg-deep);
+        filter: drop-shadow(12px 0 24px rgb(0 0 0 / 0.25));
+        pointer-events: none;
+    }
+
+    /* ---- 本文 ---- */
+    .footer-inner {
+        position: relative;
+        z-index: 1;
+        max-width: var(--max-width);
+        margin: 0 auto;
+        padding: 7rem 1.5rem 2.5rem;
+    }
+
+    .footer-cols {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 2.5rem;
+    }
+
+    .col p {
+        margin: 0;
+    }
+
+    .col-label {
+        margin-bottom: 1.25rem !important;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: var(--accent);
+    }
+
+    .link-list {
+        display: grid;
+        gap: 0.45rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .link-list.sub {
+        margin-top: 1.25rem;
+    }
+
+    .link-list a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        color: var(--text);
+        font-size: 0.95rem;
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    .link-list.sub a {
+        color: var(--text-muted);
+        font-size: 0.88rem;
+    }
+
+    .link-list sup {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        color: var(--text-muted);
+        margin-left: 0.15rem;
+    }
+
+    .social-list a {
+        color: var(--text-muted);
+        --brand: var(--text);
+    }
+    .social-list .social-zenn {
+        --brand: var(--brand-zenn);
+    }
+    .social-list .social-qiita {
+        --brand: var(--brand-qiita);
+    }
+    .social-list .social-note {
+        --brand: var(--brand-note);
+    }
+
+    @media (hover: hover) {
+        .link-list a:hover {
+            color: var(--accent);
+        }
+        .social-list a:hover {
+            color: var(--brand);
+        }
+    }
+
+    .build-day {
+        font-family: var(--font-mono);
+        font-size: 1.35rem;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+    }
+
+    .build-time {
+        margin-top: 0.35rem !important;
+        font-family: var(--font-mono);
+        font-size: 0.95rem;
+        color: var(--text-muted);
+    }
+
+    .build-time span {
+        margin-left: 0.25rem;
+        font-size: 0.7rem;
+        letter-spacing: 0.15em;
+    }
+
+    .credit-name {
+        font-family: var(--font-mono);
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem !important;
+    }
+
+    .credit-meta {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        line-height: 1.9;
+    }
+
+    .credit-meta a {
+        color: var(--text);
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    @media (hover: hover) {
+        .credit-meta a:hover {
+            color: var(--accent);
+        }
+    }
+
+    .kaomoji {
+        margin-top: 1.25rem !important;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        opacity: 0.7;
+    }
+
+    /* ---- Back to top ---- */
+    .footer-bottom {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 4.5rem;
+    }
+
+    .back-to-top {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    .back-to-top .arrow {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border: 1px solid var(--border);
+        border-radius: 50%;
+        font-size: 0.95rem;
+        letter-spacing: 0;
+        transition:
+            border-color 0.2s ease,
+            transform 0.35s var(--ease-out);
+    }
+
+    @media (hover: hover) {
+        .back-to-top:hover {
+            color: var(--accent);
+        }
+        .back-to-top:hover .arrow {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+        }
+    }
+
     @media (prefers-reduced-motion: reduce) {
-        .credit a {
+        .matrix-text {
+            animation: none;
+        }
+        .back-to-top .arrow {
             transition: none;
         }
     }
 
-    /* === モバイル === */
-    @media (max-width: 720px) {
-        footer {
-            padding: 2.5rem 1rem 2rem;
+    /* ---- タブレット: 2 列 ---- */
+    @media (max-width: 900px) {
+        .footer-cols {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            row-gap: 3rem;
         }
-
-        /* モバイル時のHex表示領域調整 */
-        .footer-hex {
-            width: 65%;
-            font-size: clamp(0.35rem, 2.5vw, 0.6rem);
-            bottom: -0.2rem;
-            left: -0.2rem;
-            mask-image: linear-gradient(
-                to top right,
-                black 5%,
-                transparent 60%
-            );
-            -webkit-mask-image: linear-gradient(
-                to top right,
-                black 5%,
-                transparent 60%
-            );
+        .footer-curve {
+            width: 46%;
         }
+    }
 
-        .footer-bg {
-            font-size: clamp(0.3rem, 2.6vw, 0.5rem);
-            opacity: 0.15;
-            bottom: -0.5rem;
-            right: -0.5rem;
+    /* ---- スマホ ---- */
+    @media (max-width: 520px) {
+        .footer-inner {
+            padding: 5rem 1.25rem 2rem;
         }
-
-        .footer-main {
-            gap: 1rem;
+        .footer-cols {
+            gap: 2.25rem 1.5rem;
         }
-
-        .build-info {
-            flex-direction: column;
-            width: 100%;
-            max-width: 100%;
-            padding: 0.8rem 1rem;
-            gap: 0.5rem;
-            background: var(--surface);
+        .footer-bottom {
+            justify-content: center;
+            margin-top: 3.5rem;
         }
-
-        .build-item {
-            width: 100%;
-            justify-content: space-between; /* ラベルを左端、値を右端に押しやる */
-            /* border-bottom: 1px dashed var(--border-color); */
+        .footer-curve {
+            width: 60%;
         }
     }
 </style>

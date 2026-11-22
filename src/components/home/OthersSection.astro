@@ -1,0 +1,69 @@
+---
+// そのほかのページへの導線(Links / Advent 2026 / Retro)。
+// 中身の見せ方は後で作り込む。今は行き先だけ並べておく
+import HomeSection from "./HomeSection.astro";
+
+const items = [
+    { href: "/links", name: "Links", desc: "友人・お気に入りのサイト" },
+    { href: "/advent2026", name: "Advent 2026", desc: "トラマト一人アドベントカレンダー" },
+    // retro は通常ページと見た目が全く違うので、ClientRouter を使わず普通に読み込む
+    { href: "/retro/", name: "Retro", desc: "むかしのホームページごっこ", reload: true },
+];
+---
+
+<HomeSection id="others" index="04" title="Others" caption="そのほか">
+    <ul class="others">
+        {
+            items.map((item) => (
+                <li>
+                    <a href={item.href} data-astro-reload={item.reload ? true : undefined}>
+                        <span class="name">{item.name}</span>
+                        <span class="desc">{item.desc}</span>
+                    </a>
+                </li>
+            ))
+        }
+    </ul>
+</HomeSection>
+
+<style>
+    .others {
+        display: grid;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        border-top: 1px solid var(--border);
+    }
+
+    .others a {
+        display: flex;
+        align-items: baseline;
+        gap: 1.5rem;
+        padding: 1.25rem 0;
+        border-bottom: 1px solid var(--border);
+        color: var(--text);
+        text-decoration: none;
+        transition:
+            color 0.2s ease,
+            padding-left 0.3s var(--ease-out);
+    }
+
+    .name {
+        min-width: 9rem;
+        font-family: var(--font-mono);
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    .desc {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+
+    @media (hover: hover) {
+        .others a:hover {
+            color: var(--accent);
+            padding-left: 0.75rem;
+        }
+    }
+</style>

@@ -36,6 +36,8 @@ import {
 } from "three";
 
 export interface MobiusHandle {
+  /** true の間は描画ループを止める(三角形がヒーローを覆い切ったときなど) */
+  setSuspended(value: boolean): void;
   destroy(): void;
 }
 
@@ -398,8 +400,9 @@ export function mountMobius(container: HTMLElement): MobiusHandle | null {
   // ヒーローが見えていて、タブも表示中のときだけループを回す
   let running = false;
   let visible = true;
+  let suspended = false;
   function sync() {
-    const shouldRun = visible && !document.hidden;
+    const shouldRun = visible && !suspended && !document.hidden;
     if (shouldRun === running) return;
     running = shouldRun;
     prev = 0;
@@ -418,6 +421,10 @@ export function mountMobius(container: HTMLElement): MobiusHandle | null {
   requestAnimationFrame(() => container.classList.add("is-ready"));
 
   return {
+    setSuspended(value: boolean) {
+      suspended = value;
+      sync();
+    },
     destroy() {
       renderer.setAnimationLoop(null);
       io.disconnect();

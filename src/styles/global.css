@@ -397,31 +397,3 @@ html:not(.dark) .mission-title {
         transition: none;
     }
 }
-
-/* =========================================
-   6. View Transition (テーマ切替アニメーション)
-   ========================================= */
-html.theme-transitioning::view-transition-old(root),
-html.theme-transitioning::view-transition-new(root) {
-    animation: none;
-    mix-blend-mode: normal;
-}
-
-html.theme-transitioning::view-transition-old(root) {
-    z-index: 1;
-}
-
-html.theme-transitioning::view-transition-new(root) {
-    z-index: 9999;
-    animation: circle-reveal 0.5s ease-in-out;
-}
-
-@keyframes circle-reveal {
-    from {
-        clip-path: circle(0% at var(--tx, 50%) var(--ty, 50%));
-    }
-
-    to {
-        clip-path: circle(150% at var(--tx, 50%) var(--ty, 50%));
-    }
-}

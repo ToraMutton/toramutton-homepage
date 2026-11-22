@@ -1,96 +1,105 @@
 ---
-// トップのファーストビュー(100dvh)。
+// トップのファーストビュー。
+//
+// スクロールの仕組み
+//   .hero-track は画面より少し縦長で、その中の .hero が sticky で画面に張り付く。
+//   張り付いている間のスクロール量を進捗 p(0〜1)にして、右下の三角形を広げる。
+//   p = 1 で画面全体が --bg-deep になり、同じ色の Works セクションへ継ぎ目なく続く。
 //
 // 重なり順(手前ほど数字が大きい):
-//   30 … タイトル「ToraMutton」・スクロール誘導・SNS ドック
-//   20 … 左右のサイド UI(マスコット。フーリエ波形と縦バーは後で足す)
-//   15 … 右下の斜め三角形 2 枚(外側 --bg-mid / 内側 --bg-deep)と、その中の草グラフ
+//   30 … タイトル・スクロール誘導・SNS ドック・草グラフ(三角形と一緒には拡大しない)
+//   20 … 左サイド UI(フーリエ波形を後で足す)
+//   15 … 右下の斜め三角形 2 枚(頂点を共有し、斜辺の角度だけ違う。間がスリットになる)
 //   10 … 3D キャンバス(メビウスの帯。src/scripts/mobius.ts を後から読み込む)
 import BrandIcon from "../BrandIcon.astro";
-import Mascot from "../../assets/profile/toramutton-line.svg";
 import { socials } from "../../data/home";
 import { getContributions } from "../../utils/github";
 
 // ---- GitHub の草 ----
-// 縦 7 マス(日〜土)× 横に週が並ぶ。1 日目の曜日ぶん先頭を空けて、曜日の行を揃える
+// 細部を見せたいわけではないので、直近 WEEKS 週だけを日曜始まりで切り出す。
+// 縦 7 マス(日〜土)× 横 WEEKS 列。三角形の中に欠けずに収まる幅にしてある
+const WEEKS = 16;
 const contributions = await getContributions();
-const firstDay = contributions.days[0];
-const leadingBlanks = firstDay ? new Date(`${firstDay.date}T00:00:00Z`).getUTCDay() : 0;
+const days = contributions.days;
+let recent = days;
+if (days.length > 0) {
+    const last = days[days.length - 1];
+    const lastWeekday = new Date(`${last.date}T00:00:00Z`).getUTCDay();
+    // 最終週の日曜日から (WEEKS - 1) 週さかのぼった日曜日が先頭
+    recent = days.slice(Math.max(0, days.length - (lastWeekday + 1) - (WEEKS - 1) * 7));
+}
+const recentTotal = recent.reduce((sum, d) => sum + d.count, 0);
 ---
 
-<section class="hero" id="top" aria-label="ToraMutton">
-    <div class="hero-canvas" data-hero-canvas aria-hidden="true"></div>
+<div class="hero-track" data-hero-track>
+    <section class="hero" id="top" aria-label="ToraMutton" data-hero>
+        <div class="hero-canvas" data-hero-canvas aria-hidden="true"></div>
 
-    <div class="hero-tri hero-tri-outer" aria-hidden="true"></div>
-    <div class="hero-tri hero-tri-inner">
+        <div class="hero-tri hero-tri-a" aria-hidden="true"></div>
+        <div class="hero-tri hero-tri-b" aria-hidden="true"></div>
+
+        <!-- 左サイド UI の置き場所(フーリエ波形はここに足す) -->
+        <div class="hero-side-left"></div>
+
+        <!-- 背後の 3D をドラッグできるよう、タイトルはポインター操作を素通しする -->
+        <h1 class="hero-title">ToraMutton</h1>
+
+        <a class="scroll-cue hero-fade" href="#works" aria-label="下のセクションへ">
+            <span class="scroll-label" aria-hidden="true">SCROLL</span>
+            <span class="chevrons" aria-hidden="true">
+                <span class="chevron"></span>
+                <span class="chevron"></span>
+                <span class="chevron"></span>
+            </span>
+        </a>
+
         {
-            contributions.days.length > 0 && (
+            recent.length > 0 && (
                 <a
-                    class="grass"
+                    class="grass hero-fade"
                     href="https://github.com/toramutton"
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label={`GitHub: 直近1年で ${contributions.total} contributions`}
+                    aria-label={`GitHub: 直近${WEEKS}週で ${recentTotal} contributions`}
                 >
-                    <span class="grass-total">
-                        {contributions.total.toLocaleString("en-US")}
-                    </span>
+                    <span class="grass-total">{recentTotal.toLocaleString("en-US")}</span>
                     <span class="grass-grid" aria-hidden="true">
-                        {Array.from({ length: leadingBlanks }, () => (
-                            <span class="grass-cell is-blank" />
-                        ))}
-                        {contributions.days.map((day) => (
+                        {recent.map((day) => (
                             <span class={`grass-cell lv-${day.level}`} />
                         ))}
                     </span>
                 </a>
             )
         }
-    </div>
 
-    <div class="hero-side-left">
-        <Mascot class="mascot" aria-hidden="true" />
-    </div>
-
-    <!-- 背後の 3D をドラッグできるよう、タイトルはポインター操作を素通しする -->
-    <h1 class="hero-title">ToraMutton</h1>
-
-    <a class="scroll-cue" href="#works" aria-label="下のセクションへ">
-        <span class="scroll-label" aria-hidden="true">SCROLL</span>
-        <span class="chevrons" aria-hidden="true">
-            <span class="chevron"></span>
-            <span class="chevron"></span>
-            <span class="chevron"></span>
-        </span>
-    </a>
-
-    <ul class="social-dock">
-        {
-            socials.map((s) => (
-                <li>
-                    <a
-                        href={s.url}
-                        class={`social-link social-${s.icon}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={s.name}
-                    >
-                        <BrandIcon name={s.icon} size={18} />
-                    </a>
-                </li>
-            ))
-        }
-    </ul>
-</section>
+        <ul class="social-dock hero-fade">
+            {
+                socials.map((s) => (
+                    <li>
+                        <a
+                            href={s.url}
+                            class={`social-link social-${s.icon}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={s.name}
+                        >
+                            <BrandIcon name={s.icon} size={18} />
+                        </a>
+                    </li>
+                ))
+            }
+        </ul>
+    </section>
+</div>
 
 <script>
-    // three(数百KB)は初期表示に要らないので、ブラウザが暇になってから読み込む。
-    // ClientRouter でページを行き来するので、来たらマウント・離れる前に片付ける。
     import type { MobiusHandle } from "../../scripts/mobius";
 
     let handle: MobiusHandle | null = null;
+    let cleanupScroll: (() => void) | null = null;
 
-    function init() {
+    // ---- 3D: three(数百KB)は初期表示に要らないので、ブラウザが暇になってから読み込む ----
+    function mountMobius() {
         const el = document.querySelector<HTMLElement>("[data-hero-canvas]");
         if (!el || handle) return;
         const start = () =>
@@ -105,16 +114,68 @@ const leadingBlanks = firstDay ? new Date(`${firstDay.date}T00:00:00Z`).getUTCDa
         }
     }
 
-    document.addEventListener("astro:page-load", init);
+    // ---- スクロールで三角形を広げる ----
+    // CSS には進捗そのもの(--p)と、加減速を付けた値(--e)を渡す。
+    // 拡大率などの計算は CSS 側で行う
+    function bindScroll() {
+        const track = document.querySelector<HTMLElement>("[data-hero-track]");
+        const hero = document.querySelector<HTMLElement>("[data-hero]");
+        if (!track || !hero) return;
+
+        // 0→1 を、ゆっくり始まりゆっくり終わる曲線にする(easeInOutCubic)
+        const ease = (t: number) =>
+            t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+        let queued = false;
+        const update = () => {
+            queued = false;
+            const distance = track.offsetHeight - window.innerHeight;
+            const raw = distance > 0 ? -track.getBoundingClientRect().top / distance : 0;
+            const p = Math.min(1, Math.max(0, raw));
+            hero.style.setProperty("--p", p.toFixed(4));
+            hero.style.setProperty("--e", ease(p).toFixed(4));
+            hero.classList.toggle("is-covered", p > 0.4);
+            // 覆い切ったらメビウスは見えないので描画を止める
+            handle?.setSuspended(p >= 0.999);
+        };
+        const onScroll = () => {
+            if (queued) return;
+            queued = true;
+            requestAnimationFrame(update);
+        };
+        window.addEventListener("scroll", onScroll, { passive: true });
+        window.addEventListener("resize", onScroll);
+        update();
+        cleanupScroll = () => {
+            window.removeEventListener("scroll", onScroll);
+            window.removeEventListener("resize", onScroll);
+        };
+    }
+
+    document.addEventListener("astro:page-load", () => {
+        mountMobius();
+        bindScroll();
+    });
     document.addEventListener("astro:before-swap", () => {
         handle?.destroy();
         handle = null;
+        cleanupScroll?.();
+        cleanupScroll = null;
     });
 </script>
 
 <style>
-    .hero {
+    /* 画面 1 枚ぶん + 三角形を広げるためのスクロール量 */
+    .hero-track {
         position: relative;
+        height: 165dvh;
+    }
+
+    .hero {
+        --p: 0;
+        --e: 0;
+        position: sticky;
+        top: 0;
         height: 100dvh;
         min-height: 560px;
         overflow: hidden;
@@ -129,53 +190,74 @@ const leadingBlanks = firstDay ? new Date(`${firstDay.date}T00:00:00Z`).getUTCDa
         transition: opacity 1.2s var(--ease-out);
     }
 
-    /* mobius.ts が最初のフレームを描いたら付ける */
+    /* mobius.ts が最初のフレームを描いたら付ける(一度だけのフェードイン) */
     .hero-canvas:global(.is-ready) {
         opacity: 1;
     }
 
+    /* スクロール連動で沈めるのは中の canvas の方。入れ物と同じ opacity に掛けると、
+       スクロールのたびにフェードインのトランジションがやり直しになってしまう */
     .hero-canvas :global(canvas) {
         display: block;
         width: 100%;
         height: 100%;
+        opacity: calc(1 - var(--e) * 0.5);
     }
 
     /* ---- 斜め三角形 2 枚 ----
-       どちらも右下の角を共有し、内側ほど暗い(ライトでは明るい)。
-       内側の --bg-deep は下層セクションの背景と同じ色なので、境目なくつながる。 */
+       どちらも頂点 (100%, 50%) と右下の角を共有し、底辺の長さ(= 斜辺の角度)だけ違う。
+         A: なだらかな方。底辺は 57% から
+         B: 急な方。底辺は 72% から
+       A は B と重ならないよう 71.4% で止めて、0.6% ぶんのすき間をスリットにする
+       (頂点に近づくほど細くなり、頂点で消える)。
+       スクロールすると右下の角を中心に拡大する。B の方が速く広がるので、途中で A を飲み込む。 */
     .hero-tri {
         position: absolute;
         inset: 0;
         z-index: 15;
-        pointer-events: none;
-    }
-
-    .hero-tri-outer {
-        background: var(--bg-mid);
-        clip-path: polygon(100% 40%, 100% 100%, 46% 100%);
-    }
-
-    .hero-tri-inner {
         background: var(--bg-deep);
-        clip-path: polygon(100% 60%, 100% 100%, 64% 100%);
+        transform-origin: 100% 100%;
+        pointer-events: none;
+        will-change: transform;
     }
 
-    /* ---- 草グラフ(内側の三角形の中。斜辺で切り取られる) ---- */
+    .hero-tri-a {
+        clip-path: polygon(100% 50%, 71.4% 100%, 57% 100%);
+        transform: scale(calc(1 + var(--e) * 2.2));
+    }
+
+    .hero-tri-b {
+        clip-path: polygon(100% 50%, 100% 100%, 72% 100%);
+        /* 1/0.28 + 1/0.5 ≈ 5.6 倍で画面全体を覆う。p = 1 でちょうど覆い切るよう 5.9 倍まで */
+        transform: scale(calc(1 + var(--e) * 4.9));
+    }
+
+    /* 三角形と一緒に拡大しないもの(文字やアイコン)は、広がるにつれて消す */
+    .hero-fade {
+        opacity: calc(1 - var(--p) * 2.5);
+    }
+
+    /* 見えなくなったリンクを押せないようにする */
+    .hero.is-covered .hero-fade {
+        visibility: hidden;
+    }
+
+    /* ---- 草グラフ(内側の三角形 B の中) ---- */
     .grass {
         position: absolute;
         right: clamp(1rem, 3vw, 2.5rem);
         bottom: 5.25rem;
+        z-index: 30;
         display: grid;
         justify-items: end;
         gap: 0.4rem;
         color: var(--text-muted);
-        pointer-events: auto;
         text-decoration: none;
     }
 
     .grass-total {
         font-family: var(--font-mono);
-        font-size: 1.5rem;
+        font-size: 1.25rem;
         font-weight: 500;
         line-height: 1;
         color: var(--text);
@@ -201,10 +283,6 @@ const leadingBlanks = firstDay ? new Date(`${firstDay.date}T00:00:00Z`).getUTCDa
         background: color-mix(in srgb, var(--text) 7%, transparent);
     }
 
-    .grass-cell.is-blank {
-        background: none;
-    }
-
     /* 色は増やさず、アクセント 1 色の濃さで段階を出す */
     .lv-1 {
         background: color-mix(in srgb, var(--accent) 30%, transparent);
@@ -227,13 +305,6 @@ const leadingBlanks = firstDay ? new Date(`${firstDay.date}T00:00:00Z`).getUTCDa
         z-index: 20;
     }
 
-    .mascot {
-        display: block;
-        width: 44px;
-        height: 44px;
-        color: var(--text);
-    }
-
     /* ---- タイトル ---- */
     .hero-title {
         position: absolute;
@@ -241,7 +312,8 @@ const leadingBlanks = firstDay ? new Date(`${firstDay.date}T00:00:00Z`).getUTCDa
         right: clamp(1.5rem, 8vw, 9rem);
         z-index: 30;
         margin: 0;
-        transform: translateY(-50%);
+        transform: translateY(calc(-50% - var(--e) * 6vh));
+        opacity: calc(1 - var(--e) * 1.6);
         font-family: var(--font-mono);
         font-size: clamp(2.75rem, 8vw, 7rem);
         font-weight: 700;
@@ -282,7 +354,6 @@ const leadingBlanks = firstDay ? new Date(`${firstDay.date}T00:00:00Z`).getUTCDa
 
     .chevrons {
         display: grid;
-        gap: 0;
     }
 
     .chevron {
@@ -369,19 +440,29 @@ const leadingBlanks = firstDay ? new Date(`${firstDay.date}T00:00:00Z`).getUTCDa
         }
     }
 
+    /* 三角形が狭くなる中間の幅では、草を直近 10 週に減らして欠けないようにする */
+    @media (max-width: 1180px) {
+        .grass-cell:nth-child(-n + 42) {
+            display: none;
+        }
+    }
+
     /* ---- モバイル: タイトルを中央に、三角形は控えめに、草は省く ---- */
     @media (max-width: 768px) {
         .hero-title {
             right: 50%;
-            transform: translate(50%, -50%);
+            transform: translate(50%, calc(-50% - var(--e) * 6vh));
         }
 
-        .hero-tri-outer {
-            clip-path: polygon(100% 70%, 100% 100%, 20% 100%);
+        .hero-tri-a {
+            clip-path: polygon(100% 72%, 66% 100%, 24% 100%);
         }
 
-        .hero-tri-inner {
-            clip-path: polygon(100% 84%, 100% 100%, 55% 100%);
+        .hero-tri-b {
+            clip-path: polygon(100% 72%, 100% 100%, 67% 100%);
+            /* 縦長画面は底辺が短いので、もっと大きくしないと覆い切れない */
+            /* 1/0.33 + 1/0.28 ≈ 6.6 倍 */
+            transform: scale(calc(1 + var(--e) * 5.9));
         }
 
         .grass {
