@@ -18,12 +18,14 @@ interface Props {
     title: string;
     /** 小さく添える日本語 */
     caption: string;
+    /** ヒーローの直後のセクションなら true(下の .after-hero を参照) */
+    afterHero?: boolean;
 }
 
-const { id, index, title, caption } = Astro.props;
+const { id, index, title, caption, afterHero = false } = Astro.props;
 ---
 
-<section class="home-section" id={id} data-home-section>
+<section class:list={["home-section", { "after-hero": afterHero }]} id={id} data-home-section>
     <div class="inner">
         <div class="head">
             <SectionTitle {index} {title} {caption} />
@@ -40,6 +42,20 @@ const { id, index, title, caption } = Astro.props;
         padding: clamp(5rem, 12vh, 9rem) 0;
         /* wide スロットのはみ出しで横スクロールが出ないように(clip は hidden と違いスクロール領域を作らない) */
         overflow-x: clip;
+    }
+
+    /* ヒーロー直後のセクション。
+       ヒーローは三角形が画面を覆い切る(スクロール量 約 40dvh、p ≈ 0.6)のに、
+       最後(65dvh)まで画面に貼り付いたままで、その間ずっと「同じ色だけの画面」が続いて見出しが遅れて見えた。
+       そこで覆い切るころから、セクションをヒーローの末尾に 22dvh 重ねて、早く持ち上げる。
+       重なる相手(ヒーロー)はその時点で全面が --bg-deep なので、継ぎ目は見えない。
+       (三角形の拡大の速さは変えていない。覆い切る位置を変えたら、ここの数値も見直すこと)
+       sticky のヒーローより手前に描くため position + z-index が要る */
+    .after-hero {
+        position: relative;
+        z-index: 1;
+        margin-top: -22dvh;
+        padding-top: clamp(3rem, 6vh, 5rem);
     }
 
     .inner {

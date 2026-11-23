@@ -10,18 +10,24 @@
 // 矢印・ドラッグ・スワイプ・キー・目盛りクリック・横向きホイールは、どれも pos の「行き先(goal)」を
 // 変えるだけ。pos は goal へなめらかに近づくので、操作の種類によらず同じ動きになる。
 // 縦のホイールは触らない(ページのスクロールを奪わない)。
+//
+// ループする: カードは円環に並んでいて、最後の次は最初に戻る。
+// pos / goal は上限も下限もなく増減し続け(11 → 01 → 02… と回り続ける)、
+// 各カードの d は「円環上でいちばん近い向きの距離」にする。
+// そのため、どの位置でも中心の左右に同じだけカードが並び、端の空きができない。
 
 export interface CoverflowOptions {
   /** ポインター操作(ドラッグ・ホイール・キー)を受ける枠 */
   stage: HTMLElement;
   /** 並べるカード。この順が並び順 */
   cards: HTMLElement[];
-  /** 中心のカードが変わったときに呼ばれる(開始直後にも 1 回) */
+  /** 中心のカードが変わったときに呼ばれる(0 〜 n-1。開始直後にも 1 回) */
   onChange?: (index: number) => void;
 }
 
 export interface CoverflowHandle {
   readonly index: number;
+  /** index 番のカードを中心へ。円環上の近い向きに回る */
   go(index: number): void;
   prev(): void;
   next(): void;
@@ -32,6 +38,10 @@ export interface CoverflowHandle {
 const NEIGHBOR = 0.8;
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
+/** 負の数でも 0 〜 n-1 に収める余り */
+const mod = (v: number, n: number) => ((v % n) + n) % n;
+/** 円環上の差を -n/2 〜 n/2 に収める(いちばん近い向きの距離) */
+const wrap = (d: number, n: number) => d - n * Math.round(d / n);
 
 /** 中心からの距離 d に対する、カードの位置(カード幅の倍数)・拡大率・暗さ・透明度 */
 function placement(d: number) {
@@ -64,7 +74,7 @@ export function mountCoverflow({ stage, cards, onChange }: CoverflowOptions): Co
   // ---- 描画 ----
   const render = () => {
     cards.forEach((card, i) => {
-      const p = placement(i - pos);
+      const p = placement(wrap(i - pos, n));
       card.style.transform = `translate3d(${(p.x * width).toFixed(2)}px, 0, 0) scale(${p.scale.toFixed(4)})`;
       card.style.opacity = String(p.opacity);
       card.style.zIndex = String(p.z);
@@ -72,7 +82,7 @@ export function mountCoverflow({ stage, cards, onChange }: CoverflowOptions): Co
       // 見えていないカードは当たり判定も描画もなくす
       card.style.visibility = p.opacity < 0.01 ? "hidden" : "visible";
     });
-    const index = clamp(Math.round(pos), 0, n - 1);
+    const index = mod(Math.round(pos), n);
     if (index !== current) {
       current = index;
       onChange?.(index);
@@ -98,8 +108,9 @@ export function mountCoverflow({ stage, cards, onChange }: CoverflowOptions): Co
     raf = requestAnimationFrame(tick);
   };
 
-  const go = (index: number) => {
-    goal = clamp(Math.round(index), 0, n - 1);
+  /** 行き先を決める(goal は円環を何周もした値のままでよい) */
+  const setGoal = (g: number) => {
+    goal = Math.round(g);
     if (reduceMotion.matches) {
       pos = goal;
       render();
@@ -107,12 +118,10 @@ export function mountCoverflow({ stage, cards, onChange }: CoverflowOptions): Co
       kick();
     }
   };
+  const go = (index: number) => setGoal(goal + wrap(index - mod(goal, n), n));
+  const step = (delta: number) => setGoal(goal + delta);
 
   // ---- ドラッグ / スワイプ ----
-  // 端を越えて引くとゴムのように重くなる
-  const rubber = (p: number) =>
-    p < 0 ? p * 0.35 : p > n - 1 ? n - 1 + (p - (n - 1)) * 0.35 : p;
-
   let pointerId = -1;
   let startX = 0;
   let startY = 0;
@@ -147,7 +156,7 @@ export function mountCoverflow({ stage, cards, onChange }: CoverflowOptions): Co
     }
     samples.push({ t: e.timeStamp, x: e.clientX });
     if (samples.length > 6) samples.shift();
-    pos = rubber(startPos - dx / (width * NEIGHBOR));
+    pos = startPos - dx / (width * NEIGHBOR);
   };
 
   const endDrag = (e: PointerEvent) => {
@@ -163,7 +172,7 @@ export function mountCoverflow({ stage, cards, onChange }: CoverflowOptions): Co
     const first = samples.find((s) => e.timeStamp - s.t < 120) ?? samples[0];
     const dt = Math.max(1, e.timeStamp - first.t);
     const velocity = -((e.clientX - first.x) / dt) * 1000 / (width * NEIGHBOR);
-    go(clamp(pos + velocity * 0.18, pos - 2, pos + 2));
+    setGoal(clamp(pos + velocity * 0.18, pos - 2, pos + 2));
   };
 
   // ---- クリック: 脇のカードは真ん中へ呼ぶ。ドラッグ直後は無視 ----
@@ -188,14 +197,14 @@ export function mountCoverflow({ stage, cards, onChange }: CoverflowOptions): Co
     e.preventDefault(); // 横スワイプでブラウザの「戻る」が発動するのも防ぐ
     if (e.timeStamp - wheelAt < 380 || Math.abs(e.deltaX) < 6) return;
     wheelAt = e.timeStamp;
-    go(current + Math.sign(e.deltaX));
+    step(Math.sign(e.deltaX));
   };
 
   // ---- キーボード ----
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.target !== stage) return; // カード内のリンクなどにフォーカスがあるときは触らない
-    if (e.key === "ArrowLeft") go(current - 1);
-    else if (e.key === "ArrowRight") go(current + 1);
+    if (e.key === "ArrowLeft") step(-1);
+    else if (e.key === "ArrowRight") step(1);
     else return;
     e.preventDefault();
   };
@@ -225,8 +234,8 @@ export function mountCoverflow({ stage, cards, onChange }: CoverflowOptions): Co
       return current;
     },
     go,
-    prev: () => go(current - 1),
-    next: () => go(current + 1),
+    prev: () => step(-1),
+    next: () => step(1),
     destroy() {
       cancelAnimationFrame(raf);
       resize.disconnect();

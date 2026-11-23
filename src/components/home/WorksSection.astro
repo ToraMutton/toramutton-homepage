@@ -1,6 +1,7 @@
 ---
 // 制作物のカルーセル。データは src/data/works.ts(並び順もそのまま)。
-// 奥のカードが重なる coverflow 風。矢印・ドラッグ・スワイプ・キー・目盛りで動かせる。
+// 奥のカードが重なる coverflow 風。ループする(最後の次は最初)ので、どの位置でも左右にカードが並ぶ。
+// 矢印・ドラッグ・スワイプ・キー・目盛りで動かせる。
 // 動き(位置の計算・入力処理)は src/scripts/coverflow.ts。ここは見た目と、カード状態の反映だけ。
 //
 // 構成: 見出し行(右に「すべて見る」)→ 画面いっぱいのカード列(両端は溶かす)→ 操作列(＜ 03 / 12 ＞ と目盛り)
@@ -14,7 +15,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
 const total = works.length;
 ---
 
-<HomeSection id="works" index="01" title="Works" caption="つくったもの">
+<HomeSection id="works" index="01" title="Works" caption="つくったもの" afterHero>
     <a slot="aside" class="view-all" href="/works">
         <span>すべて見る</span>
         <ArrowRight size={16} strokeWidth={1.5} />
@@ -153,8 +154,6 @@ const total = works.length;
             cards,
             onChange: (index) => {
                 currentEl.textContent = String(index + 1).padStart(2, "0");
-                prev.disabled = index === 0;
-                next.disabled = index === cards.length - 1;
                 ticks.forEach((t, i) => {
                     if (i === index) t.setAttribute("aria-current", "true");
                     else t.removeAttribute("aria-current");
@@ -463,14 +462,8 @@ const total = works.length;
         cursor: pointer;
         transition:
             color 0.25s ease,
-            opacity 0.25s ease,
             transform 0.3s var(--ease-out);
         -webkit-tap-highlight-color: transparent;
-    }
-
-    .step:disabled {
-        opacity: 0.25;
-        cursor: default;
     }
 
     .step:focus-visible {
@@ -479,13 +472,13 @@ const total = works.length;
     }
 
     @media (hover: hover) {
-        .step:not(:disabled):hover {
+        .step:hover {
             color: var(--text);
         }
-        [data-works-prev]:not(:disabled):hover {
+        [data-works-prev]:hover {
             transform: translateX(-3px);
         }
-        [data-works-next]:not(:disabled):hover {
+        [data-works-next]:hover {
             transform: translateX(3px);
         }
     }
