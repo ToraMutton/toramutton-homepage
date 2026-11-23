@@ -9,8 +9,8 @@ export const PROFILE = {
   handle: "toramutton",
   kana: "トラマト",
   kanji: "寅松",
-  univ: "電気通信大学 情報理工学域 I類",
-  program: "CS Program",
+  univ: "電気通信大学 情報理工学域",
+  program: "Computer Science Program",
   /** 入学年度つきの略称 */
   univShort: "UEC25",
   club: "MMA",
@@ -40,7 +40,7 @@ export const FEATURED_SKILLS: FeaturedSkill[] = [
   { name: "JavaScript", icon: si("javascript") },
   { name: "TypeScript", icon: si("typescript") },
   { name: "HTML", icon: si("html5") },
-  { name: "CSS", icon: si("css") },
+  { name: "CSS", icon: si("css3") },
   { name: "React", icon: si("react") },
   { name: "Astro", icon: si("astro") },
   { name: "Qt", icon: si("qt") },
@@ -274,8 +274,6 @@ export interface TimelineEntry {
   /** YYYY.MM.DD */
   date: string;
   desc: string;
-  /** true なら日付は年だけ出す(誕生日を出したくない項目用) */
-  yearOnly?: boolean;
   /** 資格の取得を表す項目(QUALIFICATIONS の id) */
   qualification?: string;
 }
@@ -291,8 +289,8 @@ const EVENTS: TimelineEntry[] = [
   { date: "2026.02.13", desc: "自作PCをビルド" },
   { date: "2026.01.02", desc: "このホームページを開設" },
   { date: "2025.04.14", desc: "電気通信大学 MMA 入部" },
-  { date: "2025.04.04", desc: "電気通信大学 I類 入学" },
-  { date: "2006.06.20", desc: "誕生", yearOnly: true },
+  { date: "2025.04.04", desc: "電気通信大学 入学" },
+  { date: "2006.06.20", desc: "誕生" },
 ];
 
 export const TIMELINE: TimelineEntry[] = [

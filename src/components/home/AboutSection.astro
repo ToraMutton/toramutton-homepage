@@ -4,16 +4,22 @@
 // 5 つのブロック(ID / 資格 + 経歴 / スキル / 趣味 / 環境)を、同じ角度の「斜めの面」で区切って並べる。
 // 箱や枠線の代わりに、面の色の違いと細い斜線で区切ることで、情報を詰めても窮屈に見せない。
 //
-//   Row 1   [ ID  / 資格 + 経歴 ]    ← 区切りが「/」
-//   Row 2   [   スキル 8 × 2     ]    ← 両端が「/」の帯
-//   Row 3   [ 趣味 \ 環境(写真) ]    ← 区切りが「\」(Row 1 と鏡写しでリズムをつける)
+//   Row 1   [ ID  / 資格 + 経歴 ]    ← 左右の区切りが「/」
+//   Row 2   [   スキル 8 × 2     ]    ← 両端が「/」の帯。Row 1 の上に重なる
+//   Row 3   [ 趣味 \ 環境(写真) ]    ← 区切りが「\」(Row 1 と鏡写し)。Row 2 の上に重なる
 //
-// 斜めの作り方: 面の背景は ::before に分けて transform: skewX で傾ける(中身は傾けない)。
+// 斜めの作り方: 面の背景は ::before に分けて transform: skewX / skewY で傾ける(中身は傾けない)。
+//   skewX … 左右の区切り(縦の斜め)。skewY … 行と行の境目(ほんの少しの横の傾き)。
 // clip-path で多角形を切ると、面の高さが変わったときに角度が変わってしまう。skew なら高さによらず角度が一定。
-// 隣り合う面は同じ角度・同じ中心なので、すき間(--gap)はどこでも同じ幅の平行な帯になり、真ん中に細い斜線を引く。
+//
+// 行と行の重なり: 隣の行と skewY の向きを逆にしてあるので、境目は片側で重なり、反対側でくさび形に開く。
+//   後の行ほど手前に描かれるので、「下の層が上の層に斜めに乗り上げる」見た目になる。
+// 傾ける中心(transform-origin)は、すべての面で「行の真ん中の x」にそろえてある。
+//   面ごとに中心がバラバラだと、左右の面で上端の高さがズレて、境目に段差ができてしまうため。
+// 左右に区切りがある行(Row 1・3)は、境目のすき間(--gap)の真ん中に細い斜線を引く。
 // 画面の端まで広がる面(左端・右端)は、傾けたときに角が欠けないよう --bleed ぶん外へはみ出させている。
 //
-// スマホ幅では縦に積み、斜めは skewY のゆるい傾きに置き換える。
+// スマホ幅では縦に積み、斜めは skewY のゆるい傾きだけにする(行ごとに向きを交互に)。
 import { Image } from "astro:assets";
 import { Award, Check, ChevronDown, Copy } from "lucide-astro";
 import faceImg from "../../assets/profile/toramutton.jpg";
@@ -38,8 +44,6 @@ const pcSpecs = (["cpu", "gpu", "memory"] as const)
     .map((k) => desktop?.rows.find((r) => r.k === k)?.v)
     .filter((v): v is string => Boolean(v));
 
-/** 日付の表示。年だけ出す項目は年のみ */
-const showDate = (e: (typeof TIMELINE)[number]) => (e.yearOnly ? e.date.slice(0, 4) : e.date);
 /** 資格の取得年月(チップ用) */
 const ym = (d: string) => d.slice(0, 7);
 ---
@@ -52,21 +56,14 @@ const ym = (d: string) => d.slice(0, 7);
         <div class="row row-1">
             <section class="panel p-id" aria-label="プロフィール" data-reveal>
                 <div class="id-top">
-                    <button
-                        class="face"
-                        type="button"
-                        aria-pressed="false"
-                        aria-label="アイコンの色を切り替える"
-                        data-ab-face
-                    >
+                    <div class="face">
                         <Image
                             src={faceImg}
                             width={288}
                             height={288}
                             alt="ToraMutton のアイコン(ピカチュウのぬいぐるみ)"
                         />
-                        <span class="face-tint" aria-hidden="true"></span>
-                    </button>
+                    </div>
                     <div class="who">
                         <h3 class="who-name">{PROFILE.kana}</h3>
                         <p class="who-sub">{PROFILE.kanji}<span aria-hidden="true"> · </span>{PROFILE.handle}</p>
@@ -78,14 +75,14 @@ const ym = (d: string) => d.slice(0, 7);
                         <dt>Univ</dt>
                         <dd>
                             {PROFILE.univ}
-                            <span class="muted nowrap">{PROFILE.program} ({PROFILE.univShort})</span>
+                            <span class="muted block">{PROFILE.program} ({PROFILE.univShort})</span>
                         </dd>
                     </div>
                     <div>
                         <dt>Club</dt>
                         <dd>{PROFILE.club}</dd>
                     </div>
-                    <div class="faint">
+                    <div>
                         <dt>MBTI</dt>
                         <dd>{PROFILE.mbti}</dd>
                     </div>
@@ -124,8 +121,8 @@ const ym = (d: string) => d.slice(0, 7);
                         <ol class="tl-list" data-ab-tl-list>
                             {
                                 TIMELINE.map((e) => (
-                                    <li class:list={["tl-row", { "is-qual": e.qualification }]}>
-                                        <time class="tl-date">{showDate(e)}</time>
+                                    <li class="tl-row">
+                                        <time class="tl-date">{e.date}</time>
                                         <span class="tl-node" aria-hidden="true"></span>
                                         <span class="tl-desc">{e.desc}</span>
                                     </li>
@@ -205,16 +202,21 @@ const ym = (d: string) => d.slice(0, 7);
 <style>
     /* ---- 全体の変数 ----
        --skew      斜めの角度。面の左右の境目の傾き(Row 3 は鏡写しにするので符号を反転)
-       --skew-y    スマホ幅で使う、面の上下のゆるい傾き(PC では 0)
+       --skew-y    面の上下のゆるい傾き。行ごとに向きを交互にして、境目をくさび形に重ねる
+       --col1      左右に分かれる行の、左の面の幅(= 区切りの位置。傾ける中心の計算に使う)
        --gap       面と面のすき間
        --edge      コンテンツ幅の端から画面の端までの距離 + 余白。他のセクションの文字の左端とそろえる
        --slant-pad 斜めの境目に文字が触れないための余白 */
     .about {
         --skew: -18deg;
         --skew-y: 0deg;
+        --tilt: 1.1deg;
         --gap: 14px;
         --bleed: 240px;
         --slant-pad: 4.5rem;
+        /* 右の面は、経歴を開くと行が縦に伸びて、区切りの上端が右へ大きくずれる(高さの半分 × tan 18°)。
+           開いた状態でも見出しなどが斜線に触れないよう、広めにとってある。経歴を増やしたら見直すこと */
+        --slant-pad-r: 8.5rem;
         --edge: max(1.5rem, calc((100cqw - var(--max-width)) / 2 + 1.5rem));
         /* cqw(コンテナ幅)を使うために、これ自身をコンテナにする。画面幅ではなく「スクロールバーを除いた幅」で測れる */
         container-type: inline-size;
@@ -227,14 +229,25 @@ const ym = (d: string) => d.slice(0, 7);
         gap: var(--gap);
     }
 
+    .row-1,
+    .row-3 {
+        grid-template-columns: var(--col1) 1fr;
+    }
+
     .row-1 {
-        /* 左の面 = 左端の余白 + コンテンツ幅の 38%。右の面は残り */
-        grid-template-columns: calc(var(--edge) + (100cqw - 2 * var(--edge)) * 0.42) 1fr;
+        --skew-y: var(--tilt);
+        /* 左の面 = 左端の余白 + コンテンツ幅の 42%。右の面は残り */
+        --col1: calc(var(--edge) + (100cqw - 2 * var(--edge)) * 0.42);
+    }
+
+    .row-2 {
+        --skew-y: calc(-1 * var(--tilt));
     }
 
     .row-3 {
         --skew: 18deg;
-        grid-template-columns: calc(var(--edge) + (100cqw - 2 * var(--edge)) * 0.4) 1fr;
+        --skew-y: var(--tilt);
+        --col1: calc(var(--edge) + (100cqw - 2 * var(--edge)) * 0.4);
     }
 
     /* ---- 面の共通 ---- */
@@ -253,14 +266,19 @@ const ym = (d: string) => d.slice(0, 7);
         z-index: -1;
         background: var(--panel);
         transform: skewX(var(--skew)) skewY(var(--skew-y));
+        /* 傾ける中心は、どの面でも「行の真ん中の x」(下の各面ごとに指定)。高さは面の真ん中 */
+        transform-origin: 50% 50%;
     }
 
-    /* 左端の面は左へ、右端の面は右へ、傾けても画面の端が欠けないようはみ出させる */
+    /* 左端の面は左へ、右端の面は右へ、傾けても画面の端が欠けないようはみ出させる。
+       transform-origin は、::before の左端から行の真ん中までの距離で表す */
     .row > .panel:first-child::before {
         left: calc(-1 * var(--bleed));
+        transform-origin: calc(50cqw + var(--bleed)) 50%;
     }
     .row > .panel:last-child::before {
         right: calc(-1 * var(--bleed));
+        transform-origin: calc(50cqw - var(--col1) - var(--gap)) 50%;
     }
     /* 文字の置き場所。外側の端はコンテンツ幅にそろえ、斜めの境目側は余白をとる */
     .row > .panel:first-child {
@@ -275,7 +293,7 @@ const ym = (d: string) => d.slice(0, 7);
     }
     .row-1 > .panel:last-child,
     .row-3 > .panel:last-child {
-        padding-left: var(--slant-pad);
+        padding-left: var(--slant-pad-r);
     }
 
     /* 境目の真ん中に引く細い斜線。面より少し長く伸ばして、すき間から飛び出させる */
@@ -290,7 +308,8 @@ const ym = (d: string) => d.slice(0, 7);
         width: 1px;
         background: var(--accent);
         opacity: 0.75;
-        transform: skewX(var(--skew));
+        transform: skewX(var(--skew)) skewY(var(--skew-y));
+        transform-origin: calc(50cqw - var(--col1) - var(--gap) / 2) 50%;
         pointer-events: none;
     }
 
@@ -317,23 +336,16 @@ const ym = (d: string) => d.slice(0, 7);
         margin-bottom: 1.75rem;
     }
 
-    /* 顔: 普段はサイトの色(アクセント)の単色、ホバー / タップで元の色 */
+    /* 顔: 丸く切り抜く。面の色で 6px の余白をつくって、その外側にアクセントの細いリングを描く */
     .face {
-        position: relative;
-        isolation: isolate;
         flex: none;
         width: 7.25rem;
         aspect-ratio: 1;
-        padding: 0;
-        border: 0;
         border-radius: 50%;
         overflow: hidden;
-        cursor: pointer;
-        /* 面の色で 6px の余白をつくって、その外側にアクセントの細いリングを描く */
         box-shadow:
             0 0 0 6px var(--panel),
             0 0 0 7px var(--accent);
-        -webkit-tap-highlight-color: transparent;
     }
 
     .face :global(img) {
@@ -341,32 +353,6 @@ const ym = (d: string) => d.slice(0, 7);
         width: 100%;
         height: 100%;
         object-fit: cover;
-        filter: contrast(1.08) brightness(0.96);
-    }
-
-    /* mix-blend-mode: color は「下の絵の明るさ」と「上の色の色味」を合成する。
-       元の絵の陰影を残したまま、色だけがアクセント一色になる */
-    .face-tint {
-        position: absolute;
-        inset: 0;
-        background: var(--accent);
-        mix-blend-mode: color;
-        transition: opacity 0.5s ease;
-    }
-
-    .face.is-color .face-tint {
-        opacity: 0;
-    }
-
-    @media (hover: hover) {
-        .face:hover .face-tint {
-            opacity: 0;
-        }
-    }
-
-    .face:focus-visible {
-        outline: 2px solid var(--accent);
-        outline-offset: 8px;
     }
 
     .who-name {
@@ -416,14 +402,8 @@ const ym = (d: string) => d.slice(0, 7);
     }
 
     /* 所属は「大学・学域」と「プログラム(入学年度)」の 2 行にする */
-    .nowrap {
+    .block {
         display: block;
-        white-space: nowrap;
-    }
-
-    /* MBTI は「薄く残す」 */
-    .specs .faint {
-        opacity: 0.5;
     }
 
     .uuid {
@@ -496,7 +476,7 @@ const ym = (d: string) => d.slice(0, 7);
     .quals {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.6rem;
+        gap: 0.5rem 1.75rem;
         margin: 0 0 2rem;
         padding: 0;
         list-style: none;
@@ -506,10 +486,7 @@ const ym = (d: string) => d.slice(0, 7);
         display: inline-flex;
         align-items: center;
         gap: 0.55rem;
-        padding: 0.4rem 0.9rem 0.4rem 0.7rem;
-        border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
-        border-radius: 999px;
-        font-size: 0.85rem;
+        font-size: 0.92rem;
         color: var(--text);
     }
 
@@ -605,16 +582,6 @@ const ym = (d: string) => d.slice(0, 7);
         line-height: 1.5;
     }
 
-    /* 資格の取得は、節目としてアクセントで目立たせる */
-    .tl-row.is-qual .tl-node {
-        background: var(--accent);
-        border-color: var(--accent);
-        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
-    }
-    .tl-row.is-qual .tl-desc {
-        color: var(--accent);
-    }
-
     .tl-more {
         display: inline-flex;
         align-items: center;
@@ -665,6 +632,7 @@ const ym = (d: string) => d.slice(0, 7);
         /* 帯の両端はコンテンツ幅より少し外に出す(画面の端までは行かない) */
         left: calc(var(--edge) - 3.25rem);
         right: calc(var(--edge) - 3.25rem);
+        transform-origin: calc(50cqw - var(--edge) + 3.25rem) 50%;
     }
 
     .skills {
@@ -771,17 +739,20 @@ const ym = (d: string) => d.slice(0, 7);
         z-index: -1;
         overflow: hidden;
         transform: skewX(var(--skew)) skewY(var(--skew-y));
+        transform-origin: calc(50cqw - var(--col1) - var(--gap)) 50%;
     }
 
+    /* 逆変換は「逆の順番で逆向き」(skewX → skewY の逆は skewY⁻¹ → skewX⁻¹)。
+       縦の傾きの分だけ写真の上下がはみ出して欠けないよう、上下にも余裕をとる */
     .photo :global(.photo-img) {
         position: absolute;
-        top: 0;
+        top: -40px;
         left: -22%;
         width: 144%;
-        height: 100%;
+        height: calc(100% + 80px);
         object-fit: cover;
         object-position: 50% 42%;
-        transform: skewX(calc(-1 * var(--skew))) skewY(calc(-1 * var(--skew-y)));
+        transform: skewY(calc(-1 * var(--skew-y))) skewX(calc(-1 * var(--skew)));
     }
 
     /* 文字が読めるよう、左下をうっすら暗くする */
@@ -820,13 +791,13 @@ const ym = (d: string) => d.slice(0, 7);
     @media (max-width: 860px) {
         .about {
             --skew: 0deg;
-            --skew-y: -3.5deg;
+            --tilt: 3.5deg;
             --slant-pad: var(--edge);
+            --slant-pad-r: var(--edge);
         }
 
         .row-3 {
             --skew: 0deg;
-            --skew-y: 3.5deg;
         }
 
         .row-1,
@@ -845,9 +816,20 @@ const ym = (d: string) => d.slice(0, 7);
         .panel::before,
         .row > .panel:first-child::before,
         .row > .panel:last-child::before,
-        .row-2 > .panel::before {
+        .row-2 > .panel.p-skills::before {
             left: 0;
             right: 0;
+        }
+
+        /* 縦積みでは、どの面も画面幅いっぱいなので、傾ける中心は面の真ん中でよい */
+        .panel::before,
+        .row > .panel:first-child::before,
+        .row > .panel:last-child::before,
+        .row-2 > .panel.p-skills::before,
+        .photo,
+        .row-1 > .panel:last-child::after,
+        .row-3 > .panel:last-child::after {
+            transform-origin: 50% 50%;
         }
 
         .photo {
@@ -898,7 +880,6 @@ const ym = (d: string) => d.slice(0, 7);
     @media (prefers-reduced-motion: reduce) {
         .tl.is-ready .tl-clip,
         .tl-clip::after,
-        .face-tint,
         .skill-ico {
             transition: none;
         }
@@ -906,19 +887,11 @@ const ym = (d: string) => d.slice(0, 7);
 </style>
 
 <script>
-    // 1) 顔: タップで元の色 / 単色を切り替える(ホバーは CSS)
-    // 2) UUID: クリックでコピー
-    // 3) 経歴: 先頭の数件だけ見せて、続きを開く
+    // 1) UUID: クリックでコピー
+    // 2) 経歴: 先頭の数件だけ見せて、続きを開く
     function init() {
         const root = document.querySelector<HTMLElement>("[data-about]");
         if (!root) return;
-
-        // ---- 顔 ----
-        const face = root.querySelector<HTMLButtonElement>("[data-ab-face]");
-        face?.addEventListener("click", () => {
-            const on = face.classList.toggle("is-color");
-            face.setAttribute("aria-pressed", String(on));
-        });
 
         // ---- UUID ----
         const uuid = root.querySelector<HTMLButtonElement>("[data-ab-copy]");
