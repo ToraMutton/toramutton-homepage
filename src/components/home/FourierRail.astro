@@ -19,7 +19,8 @@
     import type { FourierHandle, Wave } from "../../scripts/fourier";
 
     let handle: FourierHandle | null = null;
-    let io: IntersectionObserver | null = null;
+    let stopWatch: (() => void) | null = null;
+    let stopCover: (() => void) | null = null;
 
     async function init() {
         const root = document.querySelector<HTMLElement>("[data-fourier]");
@@ -43,32 +44,46 @@
             }, 250);
         };
 
+        // フッター(16 進数の帯)がラベルの下端まで上がってきたら、ラベルだけ消して被りを避ける。
+        // 低いウィンドウだと位置の調整だけでは避けきれないための保険
+        const footer = document.querySelector<HTMLElement>("[data-footer]");
+        let raf = 0;
+        const checkCovered = () => {
+            raf = 0;
+            if (!footer) return;
+            const covered = footer.getBoundingClientRect().top < label.getBoundingClientRect().bottom;
+            label.classList.toggle("is-covered", covered);
+        };
+        const requestCheck = () => {
+            if (!raf) raf = requestAnimationFrame(checkCovered);
+        };
+        window.addEventListener("scroll", requestCheck, { passive: true });
+        window.addEventListener("resize", requestCheck);
+        stopCover = () => {
+            cancelAnimationFrame(raf);
+            window.removeEventListener("scroll", requestCheck);
+            window.removeEventListener("resize", requestCheck);
+        };
+        checkCovered();
+
         const { mountFourier } = await import("../../scripts/fourier");
         if (!document.contains(canvas)) return;
         handle = mountFourier(canvas, onLabel);
 
-        // 画面の縦中央をまたいでいるセクションを「今いるセクション」とする
-        io = new IntersectionObserver(
-            (entries) => {
-                for (const entry of entries) {
-                    if (!entry.isIntersecting) continue;
-                    const el = entry.target as HTMLElement;
-                    handle?.setWave(el.dataset.heroTrack !== undefined ? "top" : el.id);
-                }
-            },
-            { rootMargin: "-50% 0px -50% 0px" },
-        );
-        document
-            .querySelectorAll("[data-hero-track], [data-home-section]")
-            .forEach((el) => io!.observe(el));
+        // 今いるセクション(右の現在位置バーと同じ判定)に合わせて波形を変える
+        const { watchCurrentSection } = await import("../../scripts/current-section");
+        if (!handle) return; // 読み込み中にページが切り替わっていた
+        stopWatch = watchCurrentSection((id) => handle?.setWave(id));
     }
 
     document.addEventListener("astro:page-load", init);
     document.addEventListener("astro:before-swap", () => {
         handle?.destroy();
         handle = null;
-        io?.disconnect();
-        io = null;
+        stopWatch?.();
+        stopWatch = null;
+        stopCover?.();
+        stopCover = null;
     });
 </script>
 
@@ -93,11 +108,15 @@
         mask-image: linear-gradient(to bottom, transparent, black 8%, black 88%, transparent);
     }
 
-    /* 波の右に縦書きで小さく添える式。気づいた人だけニヤッとする濃さ */
+    /* 波の右に縦書きで小さく添える式。気づいた人だけニヤッとする濃さ。
+       下端だとフッターの 16 進数の帯や下のコンテンツとぶつかるので、マスコット側(上)に寄せる。
+       180° 回しているので flex の始点(式の書き出し)は箱の下端。箱の高さを固定して、
+       式の長さが変わっても書き出しの位置が動かないようにしている */
     .fourier-label {
         position: absolute;
-        bottom: 0;
+        top: 8%;
         left: 100%;
+        height: 20rem;
         display: flex;
         gap: 1.1em;
         margin: 0 0 0 0.5rem;
@@ -112,7 +131,8 @@
         transition: opacity 0.25s ease;
     }
 
-    .fourier-label.is-changing {
+    .fourier-label.is-changing,
+    .fourier-label.is-covered {
         opacity: 0;
     }
 

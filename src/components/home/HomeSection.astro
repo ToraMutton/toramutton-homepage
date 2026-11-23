@@ -1,7 +1,8 @@
 ---
 // トップの下層セクション(Works / Blog / About)の共通の枠。
 // 背景はヒーローの斜め三角形と同じ --bg-deep なので、ヒーローから境目なくつながる。
-// 右の縦バーインジケーターは、この data-home-section を目印に現在地を判定する予定。
+// 左の波形(FourierRail)と右の縦バー(SectionRail)は、この id を目印に現在地を判定する
+// (src/scripts/current-section.ts)。id を変えるときは SECTION_IDS も直すこと。
 import SectionTitle from "../ui/SectionTitle.astro";
 
 interface Props {
