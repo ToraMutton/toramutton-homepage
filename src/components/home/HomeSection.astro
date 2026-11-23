@@ -6,7 +6,7 @@
 //
 // スロット:
 //   (default) … コンテンツ幅(--max-width)の中に入る本文
-//   aside     … 見出し行の右端(「すべて見る」リンクなど)。見出しの下端にそろう
+//   aside     … 見出し行の右端(「View all」リンクなど)。見出しの下端にそろう
 //   wide      … コンテンツ幅の外。画面いっぱいに広げたいもの(カルーセルなど)用
 import SectionTitle from "../ui/SectionTitle.astro";
 
@@ -74,5 +74,20 @@ const { id, index, title, caption, afterHero = false } = Astro.props;
 
     .aside {
         padding-bottom: 2.5rem;
+    }
+
+    /* スマホ幅では、見出しの右に並べると窮屈(リンクが折り返して見出しも潰れる)ので、見出しの下へ回す。
+       SectionTitle が下に持つ 2.5rem の余白のうち 1.5rem を食い込ませて、見出しに近づける */
+    @media (max-width: 520px) {
+        .head {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0;
+        }
+
+        .aside {
+            margin-top: -1.5rem;
+            padding-bottom: 2rem;
+        }
     }
 </style>

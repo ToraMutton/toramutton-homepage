@@ -4,10 +4,11 @@
 // 矢印・ドラッグ・スワイプ・キー・目盛りで動かせる。
 // 動き(位置の計算・入力処理)は src/scripts/coverflow.ts。ここは見た目と、カード状態の反映だけ。
 //
-// 構成: 見出し行(右に「すべて見る」)→ 画面いっぱいのカード列(両端は溶かす)→ 操作列(＜ 03 / 12 ＞ と目盛り)
+// 構成: 見出し行(右に「View all」)→ 画面いっぱいのカード列(両端は溶かす)→ 操作列(＜ 03 / 12 ＞ と目盛り)
 import { Image } from "astro:assets";
-import { ArrowRight, ChevronLeft, ChevronRight, ExternalLink, Github } from "lucide-astro";
+import { ChevronLeft, ChevronRight, ExternalLink, Github } from "lucide-astro";
 import { works } from "../../data/works";
+import ViewAll from "../ui/ViewAll.astro";
 import HomeSection from "./HomeSection.astro";
 
 const statusLabel = { "in-progress": "制作中", planned: "構想中" } as const;
@@ -16,10 +17,7 @@ const total = works.length;
 ---
 
 <HomeSection id="works" index="01" title="Works" caption="つくったもの" afterHero>
-    <a slot="aside" class="view-all" href="/works">
-        <span>すべて見る</span>
-        <ArrowRight size={16} strokeWidth={1.5} />
-    </a>
+    <ViewAll slot="aside" href="/works" />
 
     <div slot="wide" class="works-wide" data-works>
         <div
@@ -184,30 +182,6 @@ const total = works.length;
 </script>
 
 <style>
-    /* ---- 「すべて見る」(見出し行の右端) ---- */
-    .view-all {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.85rem;
-        color: var(--text-muted);
-        text-decoration: none;
-        transition: color 0.25s ease;
-    }
-
-    .view-all :global(svg) {
-        transition: transform 0.35s var(--ease-out);
-    }
-
-    @media (hover: hover) {
-        .view-all:hover {
-            color: var(--accent);
-        }
-        .view-all:hover :global(svg) {
-            transform: translateX(4px);
-        }
-    }
-
     /* ---- カード列 ---- */
     .works-wide {
         --card-w: clamp(260px, 80vw, 360px);
@@ -559,7 +533,6 @@ const total = works.length;
     }
 
     @media (prefers-reduced-motion: reduce) {
-        .view-all :global(svg),
         .step,
         .tick,
         .tick span {
