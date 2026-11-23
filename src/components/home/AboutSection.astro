@@ -1,17 +1,978 @@
 ---
-// プロフィールの要約。詳細は /about(データは src/data/about.ts)。
+// プロフィールのダイジェスト。詳しい内容は /about(データは src/data/about.ts)。
+//
+// 5 つのブロック(ID / 資格 + 経歴 / スキル / 趣味 / 環境)を、同じ角度の「斜めの面」で区切って並べる。
+// 箱や枠線の代わりに、面の色の違いと細い斜線で区切ることで、情報を詰めても窮屈に見せない。
+//
+//   Row 1   [ ID  / 資格 + 経歴 ]    ← 区切りが「/」
+//   Row 2   [   スキル 8 × 2     ]    ← 両端が「/」の帯
+//   Row 3   [ 趣味 \ 環境(写真) ]    ← 区切りが「\」(Row 1 と鏡写しでリズムをつける)
+//
+// 斜めの作り方: 面の背景は ::before に分けて transform: skewX で傾ける(中身は傾けない)。
+// clip-path で多角形を切ると、面の高さが変わったときに角度が変わってしまう。skew なら高さによらず角度が一定。
+// 隣り合う面は同じ角度・同じ中心なので、すき間(--gap)はどこでも同じ幅の平行な帯になり、真ん中に細い斜線を引く。
+// 画面の端まで広がる面(左端・右端)は、傾けたときに角が欠けないよう --bleed ぶん外へはみ出させている。
+//
+// スマホ幅では縦に積み、斜めは skewY のゆるい傾きに置き換える。
+import { Image } from "astro:assets";
+import { Award, Check, ChevronDown, Copy } from "lucide-astro";
+import faceImg from "../../assets/profile/toramutton.jpg";
+import pcImg from "../../assets/desktop/trapezium-8.webp";
+import {
+    ENV_BLOCKS,
+    FEATURED_SKILLS,
+    INTERESTS,
+    PROFILE,
+    QUALIFICATIONS,
+    TIMELINE,
+} from "../../data/about";
+import ViewAll from "../ui/ViewAll.astro";
 import HomeSection from "./HomeSection.astro";
+
+/** 折りたたんだときに見せる経歴の件数 */
+const TIMELINE_PEEK = 4;
+
+const desktop = ENV_BLOCKS.find((b) => b.section === "desktop");
+const pcName = desktop?.meta?.split(":")[0].trim() ?? "";
+const pcSpecs = (["cpu", "gpu", "memory"] as const)
+    .map((k) => desktop?.rows.find((r) => r.k === k)?.v)
+    .filter((v): v is string => Boolean(v));
+
+/** 日付の表示。年だけ出す項目は年のみ */
+const showDate = (e: (typeof TIMELINE)[number]) => (e.yearOnly ? e.date.slice(0, 4) : e.date);
+/** 資格の取得年月(チップ用) */
+const ym = (d: string) => d.slice(0, 7);
 ---
 
 <HomeSection id="about" index="03" title="About" caption="ToraMutton について">
-    <p class="placeholder">ここにプロフィールの要約が入る(準備中)</p>
+    <ViewAll slot="aside" href="/about" />
+
+    <div slot="wide" class="about" data-about>
+        <!-- ===== Row 1: ID / 資格 + 経歴 ===== -->
+        <div class="row row-1">
+            <section class="panel p-id" aria-label="プロフィール" data-reveal>
+                <div class="id-top">
+                    <button
+                        class="face"
+                        type="button"
+                        aria-pressed="false"
+                        aria-label="アイコンの色を切り替える"
+                        data-ab-face
+                    >
+                        <Image
+                            src={faceImg}
+                            width={288}
+                            height={288}
+                            alt="ToraMutton のアイコン(ピカチュウのぬいぐるみ)"
+                        />
+                        <span class="face-tint" aria-hidden="true"></span>
+                    </button>
+                    <div class="who">
+                        <h3 class="who-name">{PROFILE.kana}</h3>
+                        <p class="who-sub">{PROFILE.kanji}<span aria-hidden="true"> · </span>{PROFILE.handle}</p>
+                    </div>
+                </div>
+
+                <dl class="specs">
+                    <div>
+                        <dt>Univ</dt>
+                        <dd>
+                            {PROFILE.univ}
+                            <span class="muted nowrap">{PROFILE.program} ({PROFILE.univShort})</span>
+                        </dd>
+                    </div>
+                    <div>
+                        <dt>Club</dt>
+                        <dd>{PROFILE.club}</dd>
+                    </div>
+                    <div class="faint">
+                        <dt>MBTI</dt>
+                        <dd>{PROFILE.mbti}</dd>
+                    </div>
+                    <div>
+                        <dt>UUID</dt>
+                        <dd>
+                            <button class="uuid" type="button" data-ab-copy={PROFILE.uuid} aria-label="UUID をコピー">
+                                <span class="uuid-v">{PROFILE.uuid}</span>
+                                <span class="uuid-ico">
+                                    <Copy size={14} strokeWidth={1.5} class="ico-copy" />
+                                    <Check size={14} strokeWidth={2} class="ico-done" />
+                                </span>
+                            </button>
+                        </dd>
+                    </div>
+                </dl>
+            </section>
+
+            <section class="panel p-tl" aria-label="資格と経歴" data-reveal style="--i: 1">
+                <h3 class="label">Qualifications</h3>
+                <ul class="quals">
+                    {
+                        QUALIFICATIONS.map((q) => (
+                            <li class="qual">
+                                <Award size={15} strokeWidth={1.5} />
+                                <span>{q.name}</span>
+                                <time datetime={q.date.replaceAll(".", "-")}>{ym(q.date)}</time>
+                            </li>
+                        ))
+                    }
+                </ul>
+
+                <h3 class="label">Timeline</h3>
+                <div class="tl" data-ab-tl data-peek={TIMELINE_PEEK}>
+                    <div class="tl-clip" data-ab-tl-clip>
+                        <ol class="tl-list" data-ab-tl-list>
+                            {
+                                TIMELINE.map((e) => (
+                                    <li class:list={["tl-row", { "is-qual": e.qualification }]}>
+                                        <time class="tl-date">{showDate(e)}</time>
+                                        <span class="tl-node" aria-hidden="true"></span>
+                                        <span class="tl-desc">{e.desc}</span>
+                                    </li>
+                                ))
+                            }
+                        </ol>
+                    </div>
+                    <button class="tl-more" type="button" aria-expanded="false" data-ab-tl-more hidden>
+                        <span data-ab-tl-label>続きを見る</span>
+                        <ChevronDown size={15} strokeWidth={1.5} />
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <!-- ===== Row 2: スキル ===== -->
+        <div class="row row-2">
+            <section class="panel p-skills" aria-label="スキル" data-reveal>
+                <h3 class="label">Skills</h3>
+                <ul class="skills">
+                    {
+                        FEATURED_SKILLS.map((s) => (
+                            <li class="skill">
+                                <span class="skill-ico" style={`--icon: url(${s.icon})`} aria-hidden="true" />
+                                <span class="skill-name">{s.name}</span>
+                            </li>
+                        ))
+                    }
+                </ul>
+            </section>
+        </div>
+
+        <!-- ===== Row 3: 趣味 / 環境 ===== -->
+        <div class="row row-3">
+            <section class="panel p-hobby" aria-label="趣味" data-reveal>
+                <h3 class="label">Hobbies</h3>
+                <dl class="hobbies">
+                    {
+                        INTERESTS.map((g) => (
+                            <div>
+                                <dt>{g.section}</dt>
+                                <dd>
+                                    {g.items.map((it, i) => (
+                                        <>
+                                            {i > 0 && (
+                                                <span class="sep" aria-hidden="true">
+                                                    /
+                                                </span>
+                                            )}
+                                            <span>{it}</span>
+                                        </>
+                                    ))}
+                                </dd>
+                            </div>
+                        ))
+                    }
+                </dl>
+            </section>
+
+            <section class="panel p-env" aria-label="環境" data-reveal style="--i: 1">
+                <div class="photo" aria-hidden="true">
+                    <Image src={pcImg} width={1100} alt="" class="photo-img" />
+                    <span class="photo-shade"></span>
+                </div>
+                <div class="env-text">
+                    <h3 class="label">Environment</h3>
+                    <p class="env-name">{pcName}</p>
+                    <ul class="env-specs">
+                        {pcSpecs.map((v) => <li>{v}</li>)}
+                    </ul>
+                </div>
+            </section>
+        </div>
+    </div>
 </HomeSection>
 
 <style>
-    .placeholder {
-        margin: 0;
+    /* ---- 全体の変数 ----
+       --skew      斜めの角度。面の左右の境目の傾き(Row 3 は鏡写しにするので符号を反転)
+       --skew-y    スマホ幅で使う、面の上下のゆるい傾き(PC では 0)
+       --gap       面と面のすき間
+       --edge      コンテンツ幅の端から画面の端までの距離 + 余白。他のセクションの文字の左端とそろえる
+       --slant-pad 斜めの境目に文字が触れないための余白 */
+    .about {
+        --skew: -18deg;
+        --skew-y: 0deg;
+        --gap: 14px;
+        --bleed: 240px;
+        --slant-pad: 4.5rem;
+        --edge: max(1.5rem, calc((100cqw - var(--max-width)) / 2 + 1.5rem));
+        /* cqw(コンテナ幅)を使うために、これ自身をコンテナにする。画面幅ではなく「スクロールバーを除いた幅」で測れる */
+        container-type: inline-size;
+        display: grid;
+        gap: var(--gap);
+    }
+
+    .row {
+        display: grid;
+        gap: var(--gap);
+    }
+
+    .row-1 {
+        /* 左の面 = 左端の余白 + コンテンツ幅の 38%。右の面は残り */
+        grid-template-columns: calc(var(--edge) + (100cqw - 2 * var(--edge)) * 0.42) 1fr;
+    }
+
+    .row-3 {
+        --skew: 18deg;
+        grid-template-columns: calc(var(--edge) + (100cqw - 2 * var(--edge)) * 0.4) 1fr;
+    }
+
+    /* ---- 面の共通 ---- */
+    .panel {
+        --panel: var(--bg);
+        position: relative;
+        isolation: isolate;
+        padding-block: clamp(2.25rem, 5vw, 3.5rem);
+    }
+
+    /* 背景だけ傾ける */
+    .panel::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background: var(--panel);
+        transform: skewX(var(--skew)) skewY(var(--skew-y));
+    }
+
+    /* 左端の面は左へ、右端の面は右へ、傾けても画面の端が欠けないようはみ出させる */
+    .row > .panel:first-child::before {
+        left: calc(-1 * var(--bleed));
+    }
+    .row > .panel:last-child::before {
+        right: calc(-1 * var(--bleed));
+    }
+    /* 文字の置き場所。外側の端はコンテンツ幅にそろえ、斜めの境目側は余白をとる */
+    .row > .panel:first-child {
+        padding-left: var(--edge);
+    }
+    .row > .panel:last-child {
+        padding-right: var(--edge);
+    }
+    .row-1 > .panel:first-child,
+    .row-3 > .panel:first-child {
+        padding-right: var(--slant-pad);
+    }
+    .row-1 > .panel:last-child,
+    .row-3 > .panel:last-child {
+        padding-left: var(--slant-pad);
+    }
+
+    /* 境目の真ん中に引く細い斜線。面より少し長く伸ばして、すき間から飛び出させる */
+    .row-1 > .panel:last-child::after,
+    .row-3 > .panel:last-child::after {
+        content: "";
+        position: absolute;
+        z-index: 2;
+        top: -1.75rem;
+        bottom: -1.75rem;
+        left: calc(var(--gap) / -2);
+        width: 1px;
+        background: var(--accent);
+        opacity: 0.75;
+        transform: skewX(var(--skew));
+        pointer-events: none;
+    }
+
+    /* 小さな見出し */
+    .label {
+        margin: 0 0 1rem;
         font-family: var(--font-mono);
-        font-size: 0.85rem;
+        font-size: 0.7rem;
+        font-weight: 500;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--accent);
+    }
+
+    /* ======== Row 1 左: ID ======== */
+    .p-id {
+        --panel: var(--surface);
+    }
+
+    .id-top {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        margin-bottom: 1.75rem;
+    }
+
+    /* 顔: 普段はサイトの色(アクセント)の単色、ホバー / タップで元の色 */
+    .face {
+        position: relative;
+        isolation: isolate;
+        flex: none;
+        width: 7.25rem;
+        aspect-ratio: 1;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        overflow: hidden;
+        cursor: pointer;
+        /* 面の色で 6px の余白をつくって、その外側にアクセントの細いリングを描く */
+        box-shadow:
+            0 0 0 6px var(--panel),
+            0 0 0 7px var(--accent);
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .face :global(img) {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: contrast(1.08) brightness(0.96);
+    }
+
+    /* mix-blend-mode: color は「下の絵の明るさ」と「上の色の色味」を合成する。
+       元の絵の陰影を残したまま、色だけがアクセント一色になる */
+    .face-tint {
+        position: absolute;
+        inset: 0;
+        background: var(--accent);
+        mix-blend-mode: color;
+        transition: opacity 0.5s ease;
+    }
+
+    .face.is-color .face-tint {
+        opacity: 0;
+    }
+
+    @media (hover: hover) {
+        .face:hover .face-tint {
+            opacity: 0;
+        }
+    }
+
+    .face:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 8px;
+    }
+
+    .who-name {
+        margin: 0;
+        font-size: clamp(1.6rem, 2.6vw, 2.1rem);
+        font-weight: 700;
+        line-height: 1.15;
+        letter-spacing: 0.04em;
+    }
+
+    .who-sub {
+        margin: 0.35rem 0 0;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        letter-spacing: 0.06em;
         color: var(--text-muted);
     }
+
+    .specs {
+        display: grid;
+        gap: 0.7rem;
+        margin: 0;
+    }
+
+    .specs > div {
+        display: grid;
+        grid-template-columns: 3.6rem minmax(0, 1fr);
+        align-items: baseline;
+        gap: 0.75rem;
+    }
+
+    .specs dt {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.16em;
+        color: var(--text-muted);
+    }
+
+    .specs dd {
+        margin: 0;
+        font-size: 0.9rem;
+        line-height: 1.55;
+    }
+
+    .muted {
+        color: var(--text-muted);
+    }
+
+    /* 所属は「大学・学域」と「プログラム(入学年度)」の 2 行にする */
+    .nowrap {
+        display: block;
+        white-space: nowrap;
+    }
+
+    /* MBTI は「薄く残す」 */
+    .specs .faint {
+        opacity: 0.5;
+    }
+
+    .uuid {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        max-width: 100%;
+        padding: 0;
+        border: 0;
+        background: none;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.02em;
+        text-align: left;
+        color: var(--text-muted);
+        cursor: copy;
+        transition: color 0.25s ease;
+    }
+
+    .uuid-v {
+        overflow-wrap: anywhere;
+    }
+
+    .uuid-ico {
+        position: relative;
+        flex: none;
+        display: inline-grid;
+        width: 14px;
+        height: 14px;
+    }
+
+    .uuid-ico :global(svg) {
+        grid-area: 1 / 1;
+        transition:
+            opacity 0.2s ease,
+            transform 0.3s var(--ease-out);
+    }
+
+    .uuid-ico :global(.ico-done) {
+        opacity: 0;
+        transform: scale(0.6);
+        color: var(--accent);
+    }
+
+    .uuid.is-copied .uuid-ico :global(.ico-copy) {
+        opacity: 0;
+        transform: scale(0.6);
+    }
+    .uuid.is-copied .uuid-ico :global(.ico-done) {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    @media (hover: hover) {
+        .uuid:hover {
+            color: var(--accent);
+        }
+    }
+
+    .uuid:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+    }
+
+    /* ======== Row 1 右: 資格 + 経歴 ======== */
+    .p-tl {
+        --panel: var(--bg);
+    }
+
+    .quals {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        margin: 0 0 2rem;
+        padding: 0;
+        list-style: none;
+    }
+
+    .qual {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.4rem 0.9rem 0.4rem 0.7rem;
+        border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+        border-radius: 999px;
+        font-size: 0.85rem;
+        color: var(--text);
+    }
+
+    .qual :global(svg) {
+        color: var(--accent);
+    }
+
+    .qual time {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+    }
+
+    /* 折りたたみ。JS が高さを測って --clip を入れるまでは(JS が無ければ)全部見える */
+    .tl-clip {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .tl.is-ready .tl-clip {
+        max-height: var(--clip, none);
+        transition: max-height 0.55s var(--ease-out);
+    }
+
+    .tl.is-ready.is-open .tl-clip {
+        max-height: var(--full, none);
+    }
+
+    /* 折りたたみ中は、下端を面の色へ溶かして「続きがある」ことを見せる */
+    .tl-clip::after {
+        content: "";
+        position: absolute;
+        inset: auto 0 0;
+        height: 4.5rem;
+        background: linear-gradient(to bottom, transparent, var(--panel));
+        opacity: 0;
+        transition: opacity 0.35s ease;
+        pointer-events: none;
+    }
+
+    .tl.is-ready:not(.is-open) .tl-clip::after {
+        opacity: 1;
+    }
+
+    .tl-list {
+        position: relative;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        --date-w: 5.2rem;
+    }
+
+    /* 縦の軸 */
+    .tl-list::before {
+        content: "";
+        position: absolute;
+        top: 0.6rem;
+        bottom: 0.6rem;
+        left: calc(var(--date-w) + 0.5rem);
+        width: 1px;
+        background: var(--border);
+    }
+
+    .tl-row {
+        display: grid;
+        grid-template-columns: var(--date-w) 1rem minmax(0, 1fr);
+        align-items: baseline;
+        padding: 0.45rem 0;
+    }
+
+    .tl-date {
+        font-family: var(--font-mono);
+        font-size: 0.74rem;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+    }
+
+    .tl-node {
+        position: relative;
+        justify-self: center;
+        align-self: center;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--bg);
+        border: 1px solid var(--text-muted);
+    }
+
+    .tl-desc {
+        padding-left: 0.9rem;
+        font-size: 0.92rem;
+        line-height: 1.5;
+    }
+
+    /* 資格の取得は、節目としてアクセントで目立たせる */
+    .tl-row.is-qual .tl-node {
+        background: var(--accent);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+    }
+    .tl-row.is-qual .tl-desc {
+        color: var(--accent);
+    }
+
+    .tl-more {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin: 0.9rem 0 0 calc(var(--date-w) + 1.5rem);
+        padding: 0.2rem 0;
+        border: 0;
+        background: none;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: color 0.25s ease;
+    }
+
+    .tl-more :global(svg) {
+        transition: transform 0.35s var(--ease-out);
+    }
+
+    .tl.is-open .tl-more :global(svg) {
+        transform: rotate(180deg);
+    }
+
+    @media (hover: hover) {
+        .tl-more:hover {
+            color: var(--accent);
+        }
+    }
+
+    .tl-more:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 4px;
+    }
+
+    /* ======== Row 2: スキル ======== */
+    .row-2 {
+        /* 帯は左右の端まで行かず、コンテンツ幅のまわりで両端を斜めに切る */
+        grid-template-columns: 1fr;
+    }
+
+    .p-skills {
+        --panel: var(--surface);
+        padding-inline: var(--edge);
+    }
+
+    .row-2 > .panel.p-skills::before {
+        /* 帯の両端はコンテンツ幅より少し外に出す(画面の端までは行かない) */
+        left: calc(var(--edge) - 3.25rem);
+        right: calc(var(--edge) - 3.25rem);
+    }
+
+    .skills {
+        display: grid;
+        grid-template-columns: repeat(8, minmax(0, 1fr));
+        gap: 1.6rem 0.5rem;
+        margin: 0;
+        padding: 0 1.5rem;
+        list-style: none;
+    }
+
+    .skill {
+        display: grid;
+        justify-items: center;
+        gap: 0.55rem;
+        color: var(--text-muted);
+        transition: color 0.25s ease;
+    }
+
+    /* 単色アイコン: SVG を mask にして currentColor で塗る */
+    .skill-ico {
+        width: 2.1rem;
+        height: 2.1rem;
+        background: currentColor;
+        -webkit-mask: var(--icon) center / contain no-repeat;
+        mask: var(--icon) center / contain no-repeat;
+        transition: transform 0.35s var(--ease-out);
+    }
+
+    .skill-name {
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        letter-spacing: 0.06em;
+        text-align: center;
+    }
+
+    @media (hover: hover) {
+        .skill:hover {
+            color: var(--accent);
+        }
+        .skill:hover .skill-ico {
+            transform: translateY(-3px);
+        }
+    }
+
+    /* ======== Row 3 左: 趣味 ======== */
+    .p-hobby {
+        --panel: var(--bg);
+    }
+
+    .hobbies {
+        display: grid;
+        margin: 0;
+    }
+
+    .hobbies > div {
+        display: grid;
+        grid-template-columns: 4.5rem minmax(0, 1fr);
+        align-items: baseline;
+        gap: 0.75rem;
+        padding: 0.85rem 0;
+        border-top: 1px solid var(--border);
+    }
+
+    .hobbies > div:last-child {
+        border-bottom: 1px solid var(--border);
+    }
+
+    .hobbies dt {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+    }
+
+    .hobbies dd {
+        margin: 0;
+        font-size: 0.95rem;
+        line-height: 1.7;
+    }
+
+    .sep {
+        margin: 0 0.6em;
+        font-family: var(--font-mono);
+        color: var(--accent);
+        opacity: 0.7;
+    }
+
+    /* ======== Row 3 右: 環境(写真の面) ======== */
+    .p-env {
+        --panel: #0c0d0f;
+        color: #e8eaed;
+        min-height: 18rem;
+        display: flex;
+        align-items: flex-end;
+    }
+
+    /* 写真も面と同じ角度で切る。枠を傾け、中の写真を逆向きに傾けて、写真そのものはまっすぐに見せる */
+    .photo {
+        position: absolute;
+        inset: 0;
+        right: calc(-1 * var(--bleed));
+        z-index: -1;
+        overflow: hidden;
+        transform: skewX(var(--skew)) skewY(var(--skew-y));
+    }
+
+    .photo :global(.photo-img) {
+        position: absolute;
+        top: 0;
+        left: -22%;
+        width: 144%;
+        height: 100%;
+        object-fit: cover;
+        object-position: 50% 42%;
+        transform: skewX(calc(-1 * var(--skew))) skewY(calc(-1 * var(--skew-y)));
+    }
+
+    /* 文字が読めるよう、左下をうっすら暗くする */
+    .photo-shade {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top right, rgb(8 9 11 / 0.82), rgb(8 9 11 / 0.15) 60%);
+    }
+
+    .env-text .label {
+        color: #b4dde5;
+    }
+
+    /* 写真の上なので、テーマに関わらず明るい文字色(グローバルの p の色に負けないよう明示) */
+    .env-name {
+        margin: 0 0 0.5rem;
+        color: #e8eaed;
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+    }
+
+    .env-specs {
+        display: grid;
+        gap: 0.2rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        letter-spacing: 0.04em;
+        color: #c9ced4;
+    }
+
+    /* ======== スマホ・タブレット: 縦に積む ======== */
+    @media (max-width: 860px) {
+        .about {
+            --skew: 0deg;
+            --skew-y: -3.5deg;
+            --slant-pad: var(--edge);
+        }
+
+        .row-3 {
+            --skew: 0deg;
+            --skew-y: 3.5deg;
+        }
+
+        .row-1,
+        .row-3 {
+            grid-template-columns: 1fr;
+        }
+
+        .panel,
+        .row > .panel:first-child,
+        .row > .panel:last-child {
+            padding-inline: var(--edge);
+            padding-block: 3.25rem;
+        }
+
+        /* 面の背景は、画面の端から端まで */
+        .panel::before,
+        .row > .panel:first-child::before,
+        .row > .panel:last-child::before,
+        .row-2 > .panel::before {
+            left: 0;
+            right: 0;
+        }
+
+        .photo {
+            right: 0;
+        }
+
+        .photo :global(.photo-img) {
+            left: 0;
+            width: 100%;
+        }
+
+        /* 斜線は面の境目に沿って横向きに */
+        .row-1 > .panel:last-child::after,
+        .row-3 > .panel:last-child::after {
+            top: calc(var(--gap) / -2);
+            bottom: auto;
+            left: 0;
+            right: 0;
+            width: auto;
+            height: 1px;
+            transform: skewY(var(--skew-y));
+        }
+
+        .skills {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            padding: 0;
+        }
+
+        .p-env {
+            min-height: 15rem;
+        }
+    }
+
+    @media (max-width: 420px) {
+        .id-top {
+            gap: 1rem;
+        }
+
+        .face {
+            width: 6rem;
+        }
+
+        .specs > div {
+            grid-template-columns: 3.2rem minmax(0, 1fr);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .tl.is-ready .tl-clip,
+        .tl-clip::after,
+        .face-tint,
+        .skill-ico {
+            transition: none;
+        }
+    }
 </style>
+
+<script>
+    // 1) 顔: タップで元の色 / 単色を切り替える(ホバーは CSS)
+    // 2) UUID: クリックでコピー
+    // 3) 経歴: 先頭の数件だけ見せて、続きを開く
+    function init() {
+        const root = document.querySelector<HTMLElement>("[data-about]");
+        if (!root) return;
+
+        // ---- 顔 ----
+        const face = root.querySelector<HTMLButtonElement>("[data-ab-face]");
+        face?.addEventListener("click", () => {
+            const on = face.classList.toggle("is-color");
+            face.setAttribute("aria-pressed", String(on));
+        });
+
+        // ---- UUID ----
+        const uuid = root.querySelector<HTMLButtonElement>("[data-ab-copy]");
+        let copiedTimer = 0;
+        uuid?.addEventListener("click", async () => {
+            try {
+                await navigator.clipboard.writeText(uuid.dataset.abCopy ?? "");
+            } catch {
+                return; // コピーできない環境では何もしない
+            }
+            uuid.classList.add("is-copied");
+            clearTimeout(copiedTimer);
+            copiedTimer = window.setTimeout(() => uuid.classList.remove("is-copied"), 1400);
+        });
+
+        // ---- 経歴の折りたたみ ----
+        const tl = root.querySelector<HTMLElement>("[data-ab-tl]");
+        const list = root.querySelector<HTMLElement>("[data-ab-tl-list]");
+        const more = root.querySelector<HTMLButtonElement>("[data-ab-tl-more]");
+        const label = root.querySelector<HTMLElement>("[data-ab-tl-label]");
+        const clip = root.querySelector<HTMLElement>("[data-ab-tl-clip]");
+        if (!tl || !list || !more || !label || !clip) return;
+
+        const rows = Array.from(list.children) as HTMLElement[];
+        const peek = Number(tl.dataset.peek ?? 4);
+        // 折りたたんでも見える件数より少ないなら、ボタンは要らない
+        if (rows.length <= peek) return;
+
+        more.hidden = false;
+        label.textContent = `続きを見る (+${rows.length - peek})`;
+
+        // 高さは行ごとに違う(折り返しがある)ので、実際に測る。画面幅やフォントの読み込みで変わるので測り直す
+        const measure = () => {
+            const last = rows[peek - 1];
+            // 「見せたい最後の行」の下端 + 次の行が少し覗く分(続きがあるのが分かるように)
+            const peekNext = Math.min(rows[peek].offsetHeight * 0.55, 28);
+            tl.style.setProperty("--clip", `${last.offsetTop + last.offsetHeight + peekNext}px`);
+            tl.style.setProperty("--full", `${list.scrollHeight}px`);
+        };
+        measure();
+        tl.classList.add("is-ready");
+
+        const resize = new ResizeObserver(measure);
+        resize.observe(list);
+        document.fonts?.ready.then(measure);
+
+        more.addEventListener("click", () => {
+            const open = tl.classList.toggle("is-open");
+            more.setAttribute("aria-expanded", String(open));
+            label.textContent = open ? "閉じる" : `続きを見る (+${rows.length - peek})`;
+        });
+
+        document.addEventListener("astro:before-swap", () => resize.disconnect(), { once: true });
+    }
+
+    document.addEventListener("astro:page-load", init);
+</script>

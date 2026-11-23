@@ -28,6 +28,7 @@ import {
   TW_DAILY_URL,
   ZENN_URL,
 } from "../consts";
+import { PROFILE } from "./about";
 import type { WorkCategory } from "./works";
 import type { MissionInput } from "../utils/countdown";
 
@@ -68,7 +69,7 @@ export const heroSpecs: HeroSpec[] = [
   {
     key: "UUID",
     icon: Fingerprint,
-    value: "1b45a0db-7238-47e4-b95e-206522388c88",
+    value: PROFILE.uuid,
     copy: true,
   },
   // 今やっていること。気が向いたら書き換える
