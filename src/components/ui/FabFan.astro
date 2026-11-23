@@ -19,6 +19,11 @@
 //   fab-fan:open … 開いた(ほかのパネルを閉じたいときに使う)
 //   fab-fan:select … ボタン項目が選ばれた
 //
+// 星の軌跡(アクセント)
+//   開くと、項目を通る細い円弧が、右下から左上へ流れ星のように描かれ、先端に小さな光が灯る。
+//   尾(右下側)は薄く消えていく。項目の円の裏を通るので、数珠のように項目が円弧に連なって見える。
+//   trail={false} で無効にできる。
+//
 // 開く向きに気をつけること: 画面の端に置くときは、項目が画面外へはみ出さない角度を選ぶ。
 //   例) 右上のヘッダー … 真下(90°)〜左下(150°)。左へ振りすぎると、隣のボタンに重なる。
 import type { House } from "lucide-astro";
@@ -48,12 +53,42 @@ interface Props {
     end?: number;
     /** FAB の中心から項目の中心までの距離(px) */
     radius?: number;
+    /** 星の軌跡(円弧)を描くか。省略すると描く */
+    trail?: boolean;
     class?: string;
 }
 
-const { items, label, icon: ToggleIcon, start = 95, end = 145, radius = 124, class: className } = Astro.props;
+const {
+    items,
+    label,
+    icon: ToggleIcon,
+    start = 95,
+    end = 145,
+    radius = 124,
+    trail = true,
+    class: className,
+} = Astro.props;
 
 const angle = (i: number) => (items.length === 1 ? start : start + ((end - start) * i) / (items.length - 1));
+
+// ---- 星の軌跡の形 ----
+// FAB の中心を原点とする正方形の SVG の上に、円弧を描く(角度は右が 0°、下が 90°、左が 180°。時計回りに増える)。
+// SVG の弧は「開始点 → 終了点」へ時計回りに描く(sweep-flag = 1)ので、角度が増える向き = 右下 → 左上にあたる。
+const RAD = Math.PI / 180;
+const TRAIL_PAD = 24; // 項目の円の外側に取る余白
+const trailSize = (radius + TRAIL_PAD) * 2;
+const c = trailSize / 2;
+const at = (deg: number, r: number) => ({ x: c + r * Math.cos(deg * RAD), y: c + r * Math.sin(deg * RAD) });
+const arc = (from: number, to: number, r: number) => {
+    const a = at(from, r);
+    const b = at(to, r);
+    return `M ${a.x.toFixed(1)} ${a.y.toFixed(1)} A ${r} ${r} 0 0 1 ${b.x.toFixed(1)} ${b.y.toFixed(1)}`;
+};
+// 主の弧は項目の外へ少しはみ出す(右下は長く尾を引き、左上は先端の光まで)。副の弧は少し外側に短く添える
+const trailEnd = end + 17;
+const trailMain = arc(start - 14, trailEnd, radius);
+const trailSub = arc(start + 4, end - 8, radius + 11);
+const head = at(trailEnd, radius);
 ---
 
 <div class:list={["fab-fan", className]} data-fab-fan style={`--ff-r: ${radius}px`}>
@@ -61,6 +96,22 @@ const angle = (i: number) => (items.length === 1 ? start : start + ((end - start
         <span class="ff-ico ff-ico-open"><ToggleIcon size={22} /></span>
         <span class="ff-ico ff-ico-close"><X size={22} /></span>
     </button>
+
+    {
+        trail && (
+            <svg
+                class="fab-fan-trail"
+                viewBox={`0 0 ${trailSize} ${trailSize}`}
+                style={`--ff-trail: ${trailSize}px`}
+                aria-hidden="true"
+            >
+                <path class="tr tr-main" d={trailMain} pathLength="1" />
+                <path class="tr tr-sub" d={trailSub} pathLength="1" />
+                <circle class="tr-glow" cx={head.x.toFixed(1)} cy={head.y.toFixed(1)} r="6" />
+                <circle class="tr-head" cx={head.x.toFixed(1)} cy={head.y.toFixed(1)} r="2" />
+            </svg>
+        )
+    }
 
     <ul class="fab-fan-items">
         {
@@ -353,6 +404,85 @@ const angle = (i: number) => (items.length === 1 ? start : start + ((end - start
         pointer-events: none;
     }
 
+    /* ---- 星の軌跡 ----
+       FAB の中心に重ねた正方形の SVG。項目(z 1)の下、ページの上。
+       path は pathLength="1" にしてあるので、dasharray / dashoffset は 0〜1 の割合で書ける
+       (1 → 0 で、描き始めから終わりへ線が伸びる)。
+       mask は、右下(尾)を透明に、左上(先端)を不透明にする斜めのグラデーション。
+       円弧は SVG の左下の 4 分の 1 にあるので、箱全体の対角方向でちょうど尾から先端へ向かう */
+    .fab-fan-trail {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 0;
+        width: var(--ff-trail);
+        height: var(--ff-trail);
+        transform: translate(-50%, -50%);
+        overflow: visible;
+        pointer-events: none;
+        visibility: hidden;
+        -webkit-mask-image: linear-gradient(to top left, transparent 24%, #000 68%);
+        mask-image: linear-gradient(to top left, transparent 24%, #000 68%);
+        transition: visibility 0s 0.3s;
+    }
+
+    .fab-fan.is-open .fab-fan-trail {
+        visibility: visible;
+        transition: none;
+    }
+
+    .tr {
+        fill: none;
+        stroke: var(--accent);
+        stroke-linecap: round;
+        stroke-dasharray: 1;
+        stroke-dashoffset: 1;
+        opacity: 0;
+        transition:
+            stroke-dashoffset 0.25s ease-in,
+            opacity 0.2s ease;
+    }
+
+    .tr-main {
+        stroke-width: 1.6;
+    }
+
+    .tr-sub {
+        stroke-width: 1;
+    }
+
+    /* 開くと、尾から先端へ向かって線が伸びる。減速しながら止まる曲線で、流れ星の尾のように */
+    .fab-fan.is-open .tr {
+        stroke-dashoffset: 0;
+        opacity: 0.95;
+        transition:
+            stroke-dashoffset 0.95s cubic-bezier(0.22, 1, 0.36, 1) 0.05s,
+            opacity 0.2s ease 0.05s;
+    }
+
+    .fab-fan.is-open .tr-sub {
+        opacity: 0.5;
+        transition-delay: 0.2s;
+    }
+
+    /* 先端の光。線が伸び切るころに、ふっと灯る */
+    .tr-glow,
+    .tr-head {
+        fill: var(--accent);
+        opacity: 0;
+        transition: opacity 0.15s ease;
+    }
+
+    .tr-glow {
+        fill-opacity: 0.28;
+    }
+
+    .fab-fan.is-open .tr-glow,
+    .fab-fan.is-open .tr-head {
+        opacity: 1;
+        transition: opacity 0.45s ease 0.7s;
+    }
+
     /* 開いている間、背景をうっすら暗くして、外側のタップで閉じられるようにする(JS が作る要素) */
     :global(#fab-fan-backdrop) {
         position: fixed;
@@ -376,6 +506,12 @@ const angle = (i: number) => (items.length === 1 ? start : start + ((end - start
         .ff-ico,
         .fab-fan-item,
         .fab-fan.is-open .fab-fan-item,
+        .tr,
+        .fab-fan.is-open .tr,
+        .tr-glow,
+        .tr-head,
+        .fab-fan.is-open .tr-glow,
+        .fab-fan.is-open .tr-head,
         :global(#fab-fan-backdrop) {
             transition: none;
         }

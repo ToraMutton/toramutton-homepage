@@ -9,10 +9,8 @@ export const PROFILE = {
   handle: "toramutton",
   kana: "トラマト",
   kanji: "寅松",
-  univ: "電気通信大学 情報理工学域",
-  program: "Computer Science Program",
-  /** 入学年度つきの略称 */
-  univShort: "UEC25",
+  /** 所属。トップの About とフッターで同じ表記を使う(入学年度 - プログラム) */
+  univ: "UEC25 - Computer Science Program",
   club: "MMA",
   mbti: "INTJ-A",
   /** 先輩からもらった大切な UUID。トップのヒーローと About で使う(クリックでコピー) */

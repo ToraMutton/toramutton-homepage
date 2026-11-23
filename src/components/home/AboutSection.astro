@@ -75,7 +75,6 @@ const ym = (d: string) => d.slice(0, 7);
                         <dt>Univ</dt>
                         <dd>
                             {PROFILE.univ}
-                            <span class="muted block">{PROFILE.program} ({PROFILE.univShort})</span>
                         </dd>
                     </div>
                     <div>
@@ -395,15 +394,6 @@ const ym = (d: string) => d.slice(0, 7);
         margin: 0;
         font-size: 0.9rem;
         line-height: 1.55;
-    }
-
-    .muted {
-        color: var(--text-muted);
-    }
-
-    /* 所属は「大学・学域」と「プログラム(入学年度)」の 2 行にする */
-    .block {
-        display: block;
     }
 
     .uuid {

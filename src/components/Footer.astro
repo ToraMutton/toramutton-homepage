@@ -7,6 +7,7 @@ import { getVisiblePosts } from "../utils/post";
 import { works } from "../data/works";
 import { socials } from "../data/home";
 import { footerHex } from "../data/footerHex";
+import { PROFILE } from "../data/about";
 import BrandIcon from "./BrandIcon.astro";
 
 // ---- 1 列目: サイトマップ。件数は右肩に小さく出す ----
@@ -130,7 +131,7 @@ const tickerRows = bytes.length
 
         <div class="col">
             <p class="col-label">ToraMutton</p>
-            <p class="muted">UEC / I類 CS Program · MMA</p>
+            <p class="muted">{PROFILE.univ}</p>
             <p class="muted">
                 Built with <a href="https://astro.build" target="_blank" rel="noopener noreferrer">Astro</a>
             </p>
