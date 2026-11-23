@@ -5,7 +5,7 @@
 // 箱や枠線の代わりに、面の色の違いと細い斜線で区切ることで、情報を詰めても窮屈に見せない。
 //
 //   Row 1   [ ID  / 資格 + 経歴 ]    ← 左右の区切りが「/」
-//   Row 2   [   スキル 8 × 2     ]    ← 両端が「/」の帯。Row 1 の上に重なる
+//   Row 2   [   スキル 8 × 2     ]    ← 画面の端から端までの帯。Row 1 の上に重なる
 //   Row 3   [ 趣味 \ 環境(写真) ]    ← 区切りが「\」(Row 1 と鏡写し)。Row 2 の上に重なる
 //
 // 斜めの作り方: 面の背景は ::before に分けて transform: skewX / skewY で傾ける(中身は傾けない)。
@@ -619,7 +619,6 @@ const ym = (d: string) => d.slice(0, 7);
 
     /* ======== Row 2: スキル ======== */
     .row-2 {
-        /* 帯は左右の端まで行かず、コンテンツ幅のまわりで両端を斜めに切る */
         grid-template-columns: 1fr;
     }
 
@@ -629,10 +628,10 @@ const ym = (d: string) => d.slice(0, 7);
     }
 
     .row-2 > .panel.p-skills::before {
-        /* 帯の両端はコンテンツ幅より少し外に出す(画面の端までは行かない) */
-        left: calc(var(--edge) - 3.25rem);
-        right: calc(var(--edge) - 3.25rem);
-        transform-origin: calc(50cqw - var(--edge) + 3.25rem) 50%;
+        /* 帯は画面幅にかかわらず、左右の端まで伸ばす(Row 1・3 と同じく --bleed ぶんはみ出させて、傾けても角が欠けないように) */
+        left: calc(-1 * var(--bleed));
+        right: calc(-1 * var(--bleed));
+        transform-origin: calc(50cqw + var(--bleed)) 50%;
     }
 
     .skills {
