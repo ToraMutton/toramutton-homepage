@@ -1,0 +1,383 @@
+---
+// 円形 FAB から、項目が扇状(放射状)に開く共通メニュー。
+//
+//   ・ヘッダーのスマホ用ナビ(Home / Blog / About)
+//   ・(今後)/blog の並び替え(新しい順 / 古い順)
+// など、「小さな丸ボタンを押すと、少数の選択肢が円弧に沿って出てくる」場面で使い回す。
+//
+// 仕組み
+//   .fab-fan(FAB と同じ大きさの箱)の「中心」を基準に、各項目を円弧の上に置く。
+//   i 番目の項目の角度 a は start〜end を等分したもの(角度は右が 0°、下が 90°、左が 180°)。
+//   位置は (cos a, sin a) × 半径 で、CSS の三角関数(cos() / sin())で計算する。
+//   閉じているときは中心(FAB の裏)に小さく隠れていて、開くと順番にはじけて出てくる。
+//
+// 項目
+//   href があればリンク(ページ移動)、なければボタン。ボタンを押すと
+//   fab-fan:select(detail: { value })が .fab-fan から上がってくる(受け取る側で並び替えなどをする)。
+//
+// イベント(.fab-fan から bubbles。document に fab-fan:close を投げると、開いているものが全部閉じる)
+//   fab-fan:open … 開いた(ほかのパネルを閉じたいときに使う)
+//   fab-fan:select … ボタン項目が選ばれた
+//
+// 開く向きに気をつけること: 画面の端に置くときは、項目が画面外へはみ出さない角度を選ぶ。
+//   例) 右上のヘッダー … 真下(90°)〜左下(150°)。左へ振りすぎると、隣のボタンに重なる。
+import type { House } from "lucide-astro";
+import { X } from "lucide-astro";
+
+type Icon = typeof House;
+
+interface FabFanItem {
+    label: string;
+    icon: Icon;
+    /** あればリンク。なければボタン */
+    href?: string;
+    /** ボタンのとき、選ばれたら fab-fan:select で渡す値 */
+    value?: string;
+    /** 現在地・選択中 */
+    active?: boolean;
+}
+
+interface Props {
+    items: FabFanItem[];
+    /** 開閉ボタンの aria-label */
+    label: string;
+    /** 閉じているときの FAB のアイコン(開くと × に変わる) */
+    icon: Icon;
+    /** 開く角度の範囲(度)。項目はこの間に等間隔で並ぶ */
+    start?: number;
+    end?: number;
+    /** FAB の中心から項目の中心までの距離(px) */
+    radius?: number;
+    class?: string;
+}
+
+const { items, label, icon: ToggleIcon, start = 95, end = 145, radius = 124, class: className } = Astro.props;
+
+const angle = (i: number) => (items.length === 1 ? start : start + ((end - start) * i) / (items.length - 1));
+---
+
+<div class:list={["fab-fan", className]} data-fab-fan style={`--ff-r: ${radius}px`}>
+    <button type="button" class="fab-fan-toggle" aria-label={label} aria-expanded="false" data-fab-toggle>
+        <span class="ff-ico ff-ico-open"><ToggleIcon size={22} /></span>
+        <span class="ff-ico ff-ico-close"><X size={22} /></span>
+    </button>
+
+    <ul class="fab-fan-items">
+        {
+            items.map((item, i) => {
+                const Icon = item.icon;
+                const Tag = item.href ? "a" : "button";
+                return (
+                    <li class="fab-fan-item" style={`--a: ${angle(i).toFixed(1)}deg; --i: ${i}`}>
+                        <Tag
+                            class:list={["ff-btn", { active: item.active }]}
+                            href={item.href}
+                            type={item.href ? undefined : "button"}
+                            data-value={item.value}
+                            aria-current={item.href && item.active ? "page" : undefined}
+                            aria-pressed={!item.href && item.value !== undefined ? String(Boolean(item.active)) : undefined}
+                        >
+                            <span class="ff-circle">
+                                <Icon size={20} strokeWidth={1.6} />
+                            </span>
+                            <span class="ff-label">{item.label}</span>
+                        </Tag>
+                    </li>
+                );
+            })
+        }
+    </ul>
+</div>
+
+<script>
+    // 開閉の処理は document への委譲で 1 回だけ登録する(ページ遷移のたびに登録し直さない)。
+    // ClientRouter でページが差し替わると .fab-fan ごと入れ替わるので、個別の後片付けは要らない
+    const OPEN = "is-open";
+    const BACKDROP_ID = "fab-fan-backdrop";
+
+    const backdrop = () => {
+        let el = document.getElementById(BACKDROP_ID);
+        if (!el) {
+            el = document.createElement("div");
+            el.id = BACKDROP_ID;
+            el.setAttribute("aria-hidden", "true");
+            document.body.appendChild(el);
+        }
+        return el;
+    };
+
+    const setOpen = (fan: HTMLElement, open: boolean) => {
+        if (fan.classList.contains(OPEN) === open) return;
+        fan.classList.toggle(OPEN, open);
+        fan.querySelector("[data-fab-toggle]")?.setAttribute("aria-expanded", String(open));
+        backdrop().classList.toggle("visible", open);
+        if (open) fan.dispatchEvent(new CustomEvent("fab-fan:open", { bubbles: true }));
+    };
+
+    const closeAll = () => {
+        document.querySelectorAll<HTMLElement>(`[data-fab-fan].${OPEN}`).forEach((f) => setOpen(f, false));
+        document.getElementById(BACKDROP_ID)?.classList.remove("visible");
+    };
+
+    document.addEventListener("click", (e) => {
+        const target = e.target as HTMLElement;
+        const fan = target.closest<HTMLElement>("[data-fab-fan]");
+
+        // FAB 本体: 開閉。ほかに開いているものは閉じる
+        const toggle = target.closest("[data-fab-toggle]");
+        if (fan && toggle) {
+            const willOpen = !fan.classList.contains(OPEN);
+            closeAll();
+            setOpen(fan, willOpen);
+            return;
+        }
+
+        // 項目: ボタンなら値を渡す。リンクならそのままページ移動。どちらも閉じる
+        const btn = target.closest<HTMLElement>(".ff-btn");
+        if (fan && btn) {
+            if (btn.tagName === "BUTTON") {
+                fan.dispatchEvent(
+                    new CustomEvent("fab-fan:select", { bubbles: true, detail: { value: btn.dataset.value } }),
+                );
+                fan.querySelectorAll<HTMLElement>("button.ff-btn").forEach((b) =>
+                    b.setAttribute("aria-pressed", String(b === btn)),
+                );
+            }
+            setOpen(fan, false);
+            return;
+        }
+
+        // 外側(背景のうす暗い部分など): 閉じる
+        closeAll();
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        const open = document.querySelector<HTMLElement>(`[data-fab-fan].${OPEN}`);
+        if (!open) return;
+        setOpen(open, false);
+        document.getElementById(BACKDROP_ID)?.classList.remove("visible");
+        open.querySelector<HTMLElement>("[data-fab-toggle]")?.focus();
+    });
+
+    // 画面幅が変わって FAB 自体が消えた(PC 幅に広げた)ときは、開いたままにしない
+    window.addEventListener("resize", () => {
+        document.querySelectorAll<HTMLElement>(`[data-fab-fan].${OPEN}`).forEach((f) => {
+            if (f.offsetParent === null) setOpen(f, false);
+        });
+        if (!document.querySelector(`[data-fab-fan].${OPEN}`)) {
+            document.getElementById(BACKDROP_ID)?.classList.remove("visible");
+        }
+    });
+
+    document.addEventListener("fab-fan:close", closeAll);
+    document.addEventListener("astro:before-swap", closeAll);
+</script>
+
+<style>
+    .fab-fan {
+        --ff-size: 44px;
+        --ff-item: 48px;
+        position: relative;
+        flex: none;
+        width: var(--ff-size);
+        height: var(--ff-size);
+    }
+
+    /* ---- FAB 本体(円形) ---- */
+    .fab-fan-toggle {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        place-items: center;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        border: 1px solid var(--border);
+        border-radius: 50%;
+        background: color-mix(in srgb, var(--surface) 88%, transparent);
+        color: var(--text);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition:
+            border-color 0.25s ease,
+            color 0.25s ease,
+            transform 0.2s ease;
+    }
+
+    .fab-fan-toggle:active {
+        transform: scale(0.92);
+    }
+
+    .fab-fan-toggle:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+    }
+
+    .fab-fan.is-open .fab-fan-toggle {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+    @media (hover: hover) {
+        .fab-fan-toggle:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+    }
+
+    /* 開くと、アイコンが回りながら × に入れ替わる */
+    .ff-ico {
+        grid-area: 1 / 1;
+        display: grid;
+        transition:
+            opacity 0.35s ease,
+            transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .ff-ico-close {
+        opacity: 0;
+        transform: rotate(-90deg) scale(0.5);
+    }
+
+    .fab-fan.is-open .ff-ico-open {
+        opacity: 0;
+        transform: rotate(90deg) scale(0.5);
+    }
+
+    .fab-fan.is-open .ff-ico-close {
+        opacity: 1;
+        transform: none;
+    }
+
+    /* ---- 項目 ----
+       .fab-fan-items は FAB の中心 1 点を指す。項目は left/top 50% でその点に置き、
+       開いたときだけ (dx, dy) 動かす。dx, dy は円弧上の位置(角度 a・半径 r から計算) */
+    .fab-fan-items {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        pointer-events: none;
+    }
+
+    .fab-fan-item {
+        --dx: calc(cos(var(--a)) * var(--ff-r));
+        --dy: calc(sin(var(--a)) * var(--ff-r));
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: var(--ff-item);
+        height: var(--ff-item);
+        /* 閉じるときは、FAB の裏へすっと戻る(順番はつけない) */
+        transform: translate(-50%, -50%) scale(0.3);
+        opacity: 0;
+        visibility: hidden;
+        transition:
+            transform 0.26s cubic-bezier(0.5, 0, 0.75, 0),
+            opacity 0.18s ease,
+            visibility 0s 0.26s;
+    }
+
+    /* 開くときは、順番に少しずつ遅らせて、行き過ぎてから戻る曲線ではじけさせる */
+    .fab-fan.is-open .fab-fan-item {
+        transform: translate(-50%, -50%) translate(var(--dx), var(--dy));
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transition:
+            transform 0.5s cubic-bezier(0.34, 1.5, 0.5, 1) calc(var(--i) * 50ms),
+            opacity 0.25s ease calc(var(--i) * 50ms),
+            visibility 0s;
+    }
+
+    .ff-btn {
+        position: relative;
+        display: block;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--text);
+        text-decoration: none;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .ff-circle {
+        display: grid;
+        place-items: center;
+        width: 100%;
+        height: 100%;
+        border: 1px solid var(--border);
+        border-radius: 50%;
+        background: var(--surface);
+        box-shadow: 0 6px 18px rgb(0 0 0 / 0.25);
+        transition:
+            border-color 0.25s ease,
+            color 0.25s ease;
+    }
+
+    .ff-btn.active .ff-circle,
+    .ff-btn:focus-visible .ff-circle {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+
+    .ff-btn:focus-visible {
+        outline: none;
+    }
+
+    @media (hover: hover) {
+        .ff-btn:hover .ff-circle {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+    }
+
+    /* 名前は円の下に小さく(円の横だと、隣の項目と重なる) */
+    .ff-label {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: var(--font-mono);
+        font-size: 0.64rem;
+        letter-spacing: 0.1em;
+        white-space: nowrap;
+        color: var(--text);
+        text-shadow: 0 0 6px var(--bg), 0 0 2px var(--bg);
+        pointer-events: none;
+    }
+
+    /* 開いている間、背景をうっすら暗くして、外側のタップで閉じられるようにする(JS が作る要素) */
+    :global(#fab-fan-backdrop) {
+        position: fixed;
+        inset: 0;
+        z-index: 9998;
+        /* テーマの背景色のベール(ダークは暗く、ライトは明るく)。真っ黒の暗幕だと、ライトでは重い灰色になる */
+        background: color-mix(in srgb, var(--bg-deep) 72%, transparent);
+        backdrop-filter: blur(3px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+    }
+
+    :global(#fab-fan-backdrop.visible) {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .fab-fan-toggle,
+        .ff-ico,
+        .fab-fan-item,
+        .fab-fan.is-open .fab-fan-item,
+        :global(#fab-fan-backdrop) {
+            transition: none;
+        }
+    }
+</style>

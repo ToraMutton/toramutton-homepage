@@ -13,7 +13,8 @@ import BrandIcon from "./BrandIcon.astro";
 const postCount = (await getVisiblePosts()).length;
 const mainLinks = [
     { href: "/", label: "Top" },
-    { href: "/works", label: "Works", count: works.length },
+    // Works はトップのセクションなので、トップの該当部分へスクロールする(下の script)
+    { href: "/#works", label: "Works", count: works.length, scrollTo: "works" },
     { href: "/blog", label: "Blog", count: postCount },
     { href: "/about", label: "About" },
 ];
@@ -79,7 +80,7 @@ const tickerRows = bytes.length
                 {
                     mainLinks.map((l) => (
                         <li>
-                            <a href={l.href}>
+                            <a href={l.href} data-scroll-home={l.scrollTo}>
                                 {l.label}
                                 {l.count !== undefined && <sup>{l.count}</sup>}
                             </a>
@@ -138,6 +139,28 @@ const tickerRows = bytes.length
         </div>
     </div>
 </footer>
+
+<script>
+    // トップにいるときの「Works」リンクは、ページを読み込み直さず、該当セクションへスムーズにスクロールする。
+    // 他のページからは、通常のリンクとして / へ移動する(ClientRouter が #works まで移動してくれる)。
+    // document への委譲で 1 回だけ登録する(ClientRouter でフッターが入れ替わっても効く)。
+    // ClientRouter も同じリンクのクリックを拾って、同じページ内のハッシュ移動として一瞬で飛んでしまう。
+    // そこで第 3 引数 true(キャプチャ段階)で先に受け取り、stopPropagation で ClientRouter には渡さない
+    document.addEventListener(
+        "click",
+        (e) => {
+            const link = (e.target as HTMLElement).closest<HTMLAnchorElement>("a[data-scroll-home]");
+            if (!link || location.pathname !== "/") return;
+            const section = document.getElementById(link.dataset.scrollHome ?? "");
+            if (!section) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            section.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
+        },
+        true,
+    );
+</script>
 
 <script>
     // ---- 16 進数の帯のちらつき ----

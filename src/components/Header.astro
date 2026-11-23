@@ -1,25 +1,30 @@
 ---
 // 全ページ共通のヘッダー。
 //   左: マスコットのロゴ(押すといつでもトップへ)
-//   右: Home / Works / Blog / About + テーマダイアル(ThemeDial.astro)
+//   右: Home / Blog / About + テーマダイアル(ThemeDial.astro)
+//   スマホ幅(≤720px)では、この 3 つの横並びが、円形 FAB から扇状に開くメニューに変わる
+//   (部品は ui/FabFan.astro。/blog の並び替えなどと共通)。PC 幅では FAB は出ない。
 //
 // 現在地の下線(.nav-indicator)は、今いるページのリンクの中にだけ描く。
 // transition:name を付けてあるので、ClientRouter でページを移ると
 // 「前のページの下線の位置 → 新しいページの下線の位置」へ自動で滑らかに動く。
-import { Menu, X, BookOpenText } from "lucide-astro";
+import { BookOpenText, House, Menu, PenLine, User, X } from "lucide-astro";
 import Mascot from "../assets/profile/toramutton-line.svg";
+import FabFan from "./ui/FabFan.astro";
 import ThemeDial from "./ThemeDial.astro";
 
 const nav = [
-    { href: "/", label: "Home" },
-    { href: "/works", label: "Works" },
-    { href: "/blog", label: "Blog" },
-    { href: "/about", label: "About" },
+    { href: "/", label: "Home", icon: House },
+    { href: "/blog", label: "Blog", icon: PenLine },
+    { href: "/about", label: "About", icon: User },
 ];
 
 // /blog/xxx のような下層ページでも、親(/blog)を現在地として扱う
 const first = Astro.url.pathname.split("/").filter(Boolean)[0];
 const current = first ? `/${first}` : "/";
+
+// スマホ用の扇メニューの項目(上の nav と同じ中身 + 現在地)
+const fanItems = nav.map((item) => ({ ...item, active: item.href === current }));
 ---
 
 <header id="site-header">
@@ -62,17 +67,16 @@ const current = first ? `/${first}` : "/";
 
             <ThemeDial />
 
-            <button
-                id="menu-toggle"
-                class="menu-toggle ctrl-btn"
-                aria-label="メニューを開く"
-                aria-expanded="false"
-            >
-                <div class="icon-container-menu">
-                    <span class="icon-menu"><Menu size={24} /></span>
-                    <span class="icon-close"><X size={24} /></span>
-                </div>
-            </button>
+            <!-- 扇は真下〜左下に開く(左へ振りすぎると、隣のテーマダイアルに重なる) -->
+            <FabFan
+                class="header-fan"
+                items={fanItems}
+                label="メニューを開く"
+                icon={Menu}
+                start={92}
+                end={150}
+                radius={130}
+            />
         </div>
     </nav>
 </header>
@@ -151,36 +155,16 @@ const current = first ? `/${first}` : "/";
                     backdrop.classList.remove("visible");
                 }
 
-                // ハンバーガーが開いていたら閉じる
-                const menuToggle = document.getElementById("menu-toggle");
-                const navLinks = document.getElementById("nav-links");
-                if (menuToggle && menuToggle.classList.contains("open")) {
-                    menuToggle.classList.remove("open");
-                    menuToggle.setAttribute("aria-expanded", "false");
-                    if (navLinks) navLinks.classList.remove("open");
-                    if (header) header.classList.remove("menu-open");
-                }
+                // 扇メニューが開いていたら閉じる
+                document.dispatchEvent(new CustomEvent("fab-fan:close"));
             };
         }
 
-        // --- 1. ハンバーガーメニュー ---
-        const menuToggle = document.getElementById("menu-toggle");
-        const navLinks = document.getElementById("nav-links");
-
-        if (menuToggle && navLinks && header) {
-            menuToggle.onclick = () => {
-                const isExpanded = menuToggle.getAttribute("aria-expanded") === "true";
-                menuToggle.setAttribute("aria-expanded", !isExpanded ? "true" : "false");
-                menuToggle.classList.toggle("open");
-                navLinks.classList.toggle("open");
-                header.classList.toggle("menu-open");
-
-                // ハンバーガーを開く際 TOC が開いていたら閉じる
-                if (!isExpanded && tocSidebar && tocToggle) {
-                    closeToc(tocSidebar, tocToggle as HTMLElement);
-                }
-            };
-        }
+        // --- 1. 扇メニュー(ui/FabFan.astro)を開いたら、目次ドロワーは閉じる ---
+        // 扇は ClientRouter のページ差し替えで入れ替わるので、ここでの登録は積み重ならない
+        document.querySelector("[data-fab-fan]")?.addEventListener("fab-fan:open", () => {
+            if (tocSidebar && tocToggle) closeToc(tocSidebar, tocToggle as HTMLElement);
+        });
     });
 </script>
 
@@ -204,8 +188,7 @@ const current = first ? `/${first}` : "/";
     }
 
     /* ヒーローを抜けた後(他のページではスクロールし始めたら)は背景を付けて読みやすくする */
-    header.is-scrolled,
-    header.menu-open {
+    header.is-scrolled {
         background: color-mix(in srgb, var(--bg-deep) 82%, transparent);
         backdrop-filter: blur(10px);
         border-bottom-color: var(--border);
@@ -378,37 +361,11 @@ const current = first ? `/${first}` : "/";
         }
     }
 
-    /* === ハンバーガー(PC非表示) === */
-    .menu-toggle {
+    /* === 扇メニュー(スマホ幅だけ) ===
+       PC 幅では横並びのリンクを使うので、FAB は出さない */
+    /* FabFan は別コンポーネントなので、ヘッダー側の CSS から触るには :global が要る */
+    :global(.header-fan) {
         display: none;
-    }
-    .icon-container-menu {
-        position: relative;
-        width: 24px;
-        height: 24px;
-    }
-    .icon-menu,
-    .icon-close {
-        position: absolute;
-        top: 0;
-        left: 0;
-        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .icon-menu {
-        opacity: 1;
-        transform: rotate(0deg) scale(1);
-    }
-    .icon-close {
-        opacity: 0;
-        transform: rotate(-90deg) scale(0.5);
-    }
-    .menu-toggle.open .icon-menu {
-        opacity: 0;
-        transform: rotate(90deg) scale(0.5);
-    }
-    .menu-toggle.open .icon-close {
-        opacity: 1;
-        transform: rotate(0deg) scale(1);
     }
 
     /* === スマホ・タブレット(≤720px) === */
@@ -417,78 +374,18 @@ const current = first ? `/${first}` : "/";
             width: 44px;
             height: 44px;
         }
-        .menu-toggle {
-            display: flex;
-            z-index: 1002;
+
+        :global(.header-fan) {
+            display: block;
         }
 
-        /* ナビがドロップダウンとして浮くので、代わりにこちらを右へ押しやる */
+        /* 横並びのリンクは隠し、代わりに FAB を右端に出す。controls-group を右へ押しやる */
+        .internal-links {
+            display: none;
+        }
+
         .controls-group {
             margin-left: auto;
-        }
-
-        .internal-links {
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            margin-left: -50vw;
-            width: 100vw;
-            display: flex;
-            flex-direction: column;
-            gap: 0;
-            background: var(--bg-deep);
-            border-top: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-            max-height: 0;
-            opacity: 0;
-            transform: translateY(-8px);
-            visibility: hidden;
-            transition:
-                max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-                opacity 0.3s ease,
-                transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            overflow: hidden;
-        }
-        .internal-links.open {
-            max-height: 400px;
-            opacity: 1;
-            transform: translateY(0);
-            visibility: visible;
-        }
-
-        .nav-link {
-            display: flex;
-            align-items: center;
-            padding: 1.1rem 1.5rem;
-            width: 100%;
-            font-size: 0.95rem;
-            border-bottom: 1px solid var(--border);
-            opacity: 0;
-            transform: translateY(-4px);
-            transition:
-                opacity 0.3s ease,
-                transform 0.3s ease;
-        }
-        .internal-links.open .nav-link {
-            opacity: 1;
-            transform: translateY(0);
-            transition-delay: 0.1s;
-        }
-        .nav-link:last-child {
-            border-bottom: none;
-        }
-        .nav-link.active {
-            color: var(--accent);
-        }
-
-        /* メニューの中では下線を左端の縦線にする */
-        .nav-indicator {
-            left: 0;
-            top: 25%;
-            bottom: auto;
-            width: 2px;
-            height: 50%;
-            margin-left: 0;
         }
     }
 

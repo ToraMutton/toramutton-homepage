@@ -8,7 +8,6 @@
 import { Image } from "astro:assets";
 import { ChevronLeft, ChevronRight, ExternalLink, Github } from "lucide-astro";
 import { works } from "../../data/works";
-import ViewAll from "../ui/ViewAll.astro";
 import HomeSection from "./HomeSection.astro";
 
 const statusLabel = { "in-progress": "制作中", planned: "構想中" } as const;
@@ -17,8 +16,6 @@ const total = works.length;
 ---
 
 <HomeSection id="works" index="01" title="Works" caption="つくったもの" afterHero>
-    <ViewAll slot="aside" href="/works" />
-
     <div slot="wide" class="works-wide" data-works>
         <div
             class="stage"

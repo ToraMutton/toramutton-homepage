@@ -14,6 +14,10 @@ import remarkLinkCard from 'remark-link-card';
 export default defineConfig({
 	site: 'https://toramutton.me',
 	output: 'server',
+	// /works ページはトップの Works セクションに統合した。古いリンクはそこへ飛ばす
+	redirects: {
+		'/works': '/#works',
+	},
 	adapter: vercel(),
 	// /retro 配下は通常ページと内容がかぶる遊びのページなので、sitemap には載せない
 	integrations: [
