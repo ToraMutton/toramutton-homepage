@@ -21,6 +21,7 @@
     let handle: FourierHandle | null = null;
     let stopWatch: (() => void) | null = null;
     let stopCover: (() => void) | null = null;
+    let waveTimer = 0;
 
     async function init() {
         const root = document.querySelector<HTMLElement>("[data-fourier]");
@@ -73,7 +74,12 @@
         // 今いるセクション(右の現在位置バーと同じ判定)に合わせて波形を変える
         const { watchCurrentSection } = await import("../../scripts/current-section");
         if (!handle) return; // 読み込み中にページが切り替わっていた
-        stopWatch = watchCurrentSection((id) => handle?.setWave(id));
+        // 速くスクロールして複数のセクションを通り過ぎるとき、波が通過のたびに変わると騒がしい。
+        // 現在地が 0.35 秒落ち着いてから切り替える(最後に止まったセクションの波だけを見せる)
+        stopWatch = watchCurrentSection((id) => {
+            clearTimeout(waveTimer);
+            waveTimer = window.setTimeout(() => handle?.setWave(id), 350);
+        });
     }
 
     document.addEventListener("astro:page-load", init);
@@ -84,6 +90,7 @@
         stopWatch = null;
         stopCover?.();
         stopCover = null;
+        clearTimeout(waveTimer);
     });
 </script>
 

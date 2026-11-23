@@ -62,6 +62,13 @@ const TAU = Math.PI * 2;
 const CYCLES = 3.5; // レール全体に入る基本波の周期の数
 const SPEED = 0.9; // 波が流れる速さ(rad/s)
 
+// 波形が切り替わるときの「なめらかさ」。
+// 係数・減衰・travel は、目標に向かって臨界減衰のばね(二次の追従)で近づく。
+//   一次の指数的な近づき方(x += (目標 - x) × k)だと、動き出しの瞬間がいちばん速くて唐突になる。
+//   ばねは速度から立ち上がるので、ゆっくり動き出して、ゆっくり止まる。
+// OMEGA が小さいほど穏やか(だいたい 4.6 / OMEGA 秒で追いつく)。
+const OMEGA = 2.2;
+
 /** 係数の組から、1 周期ぶんの |f| の最大値を数値的に求める(振幅をそろえるため) */
 function peak(b: number[]): number {
   let max = 0;
@@ -85,6 +92,14 @@ export function mountFourier(canvas: HTMLCanvasElement, onLabel: (w: Wave) => vo
   let norm = peak(b);
   let damp = target.damp;
   let travel = target.travel;
+  // ばねの速度(b・damp・travel のそれぞれ)
+  const bVel = new Array<number>(NMAX).fill(0);
+  let dampVel = 0;
+  let travelVel = 0;
+  // 進行波の位相。「速さ × 時刻」ではなく、フレームごとに足していく。
+  //   位相 = SPEED × t × travel だと、travel が変わった瞬間に位相が (t × 変化量) だけ飛んで、
+  //   t が大きい(開いてから時間が経った)ほど、切り替え中に波が激しく暴れてしまう
+  let phase = 0;
 
   let width = 0;
   let height = 0;
@@ -105,7 +120,7 @@ export function mountFourier(canvas: HTMLCanvasElement, onLabel: (w: Wave) => vo
 
   // y(0〜height)での f の値。進行波なら位相が時間で進み、定常波なら振幅が時間で揺れる
   const valueAt = (y: number, t: number, shift: number) => {
-    const theta = (TAU * CYCLES * y) / height - SPEED * t * travel + shift;
+    const theta = (TAU * CYCLES * y) / height - phase + shift;
     let f = 0;
     for (let n = 0; n < NMAX; n++) {
       if (b[n] !== 0) f += b[n] * Math.sin((n + 1) * theta);
@@ -167,11 +182,18 @@ export function mountFourier(canvas: HTMLCanvasElement, onLabel: (w: Wave) => vo
     const dt = prev ? Math.min(0.05, (now - prev) / 1000) : 0;
     prev = now;
     time += dt;
-    // 係数を目標へ近づける(指数的に。だいたい 1 秒で追いつく)
-    const k = 1 - Math.exp(-dt * 3.2);
-    for (let n = 0; n < NMAX; n++) b[n] += (target.b[n] - b[n]) * k;
-    damp += (target.damp - damp) * k;
-    travel += (target.travel - travel) * k;
+    // 係数を目標へ、ばねで近づける(臨界減衰: a = ω²(目標 - x) - 2ω v)
+    const w2 = OMEGA * OMEGA;
+    const w2x = 2 * OMEGA;
+    for (let n = 0; n < NMAX; n++) {
+      bVel[n] += (w2 * (target.b[n] - b[n]) - w2x * bVel[n]) * dt;
+      b[n] += bVel[n] * dt;
+    }
+    dampVel += (w2 * (target.damp - damp) - w2x * dampVel) * dt;
+    damp += dampVel * dt;
+    travelVel += (w2 * (target.travel - travel) - w2x * travelVel) * dt;
+    travel += travelVel * dt;
+    phase += SPEED * travel * dt;
     norm = peak(b);
     draw(time);
     raf = requestAnimationFrame(frame);
@@ -200,6 +222,7 @@ export function mountFourier(canvas: HTMLCanvasElement, onLabel: (w: Wave) => vo
       onLabel(next);
       if (reduceMotion) {
         b.splice(0, NMAX, ...next.b);
+        bVel.fill(0);
         damp = next.damp;
         travel = next.travel;
         norm = peak(b);

@@ -47,6 +47,10 @@ const R = 1; // 帯の中心線の半径
 const W = 0.42; // 帯の半幅
 const TAU = Math.PI * 2;
 
+/** 縁を走る光が、縁をひと回り(0〜4π。表→裏→表)するのにかかる秒数。
+ *  もとは 0.45 rad/s(≒ 27.9 秒)で、それをきりのよい 28 秒に決めた */
+const COMET_LAP_SECONDS = 28;
+
 function mobius(u: number, v: number, out: Vector3): Vector3 {
   const r = R + v * Math.cos(u / 2);
   return out.set(r * Math.cos(u), r * Math.sin(u), v * Math.sin(u / 2));
@@ -240,7 +244,7 @@ export function mountMobius(container: HTMLElement): MobiusHandle | null {
   function updatePoints(time: number) {
     // 縁の彗星: t は 0〜4π を一周する
     for (let h = 0; h < COMETS; h++) {
-      const head = time * 0.45 + (2 * TAU * h) / COMETS;
+      const head = (time * 2 * TAU) / COMET_LAP_SECONDS + (2 * TAU * h) / COMETS;
       for (let i = 0; i < TAIL; i++) {
         mobius(head - i * 0.028, W, tmp);
         const k = (h * TAIL + i) * 3;
