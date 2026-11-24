@@ -6,11 +6,16 @@
 //   行にホバーすると、右からサムネイルが滑り出す。
 //   検索 / 掲載先のトグルで絞ると、全記事から該当だけに入れ替わる(ブラウザ内で絞る。ページ内に全記事を持っている)。
 //
+// /blog だけで使う追加機能(props で入れる):
+//   sortable … 検索欄の右に、新しい順 / 古い順を切り替える矢印ボタンを出す。
+//              古い順のときは、先頭の「特集」(最新記事を大きく見せる行)は付けない
+//   years    … 年が変わるところに「2026」のような年の区切りを入れる(軸に刻んだ大きな目盛りの見た目)
+//
 // 全記事を DOM に置き、limit を超える行は hidden にしておく。
 // こうすると検索結果が同じ見た目の行でそのまま出せて、JS が無くても件数分は読める。
 // /blog では limit を渡さなければ全件が最初から見える。
 import { Image } from "astro:assets";
-import { ArrowRight, ArrowUpRight, Search, X } from "lucide-astro";
+import { ArrowDown, ArrowRight, ArrowUpRight, Search, X } from "lucide-astro";
 import BrandIcon from "../BrandIcon.astro";
 import type { BlogEntry } from "../../utils/all-posts";
 import type { PostSource } from "../../utils/feeds";
@@ -21,9 +26,13 @@ interface Props {
     limit?: number;
     /** 全件ページへのリンク(「View all N posts」行)。出さないなら省略 */
     moreHref?: string;
+    /** 並び替えボタンを出す(/blog 用) */
+    sortable?: boolean;
+    /** 年の区切りを入れる(/blog 用) */
+    years?: boolean;
 }
 
-const { posts, limit = posts.length, moreHref } = Astro.props;
+const { posts, limit = posts.length, moreHref, sortable = false, years = false } = Astro.props;
 
 const sourceLabel: Record<PostSource, string> = {
     local: "Local",
@@ -31,9 +40,8 @@ const sourceLabel: Record<PostSource, string> = {
     note: "Note",
     qiita: "Qiita",
 };
-const sources = (["zenn", "note", "qiita", "local"] as const).filter((s) =>
-    posts.some((p) => p.source === s),
-);
+// 記事が 0 件の媒体も出す。dev では外部サイトの記事が空(feeds.ts)で、絞り込みの挙動を確かめられなくなるため
+const sources = ["zenn", "note", "qiita", "local"] as const;
 const countOf = (s: PostSource) => posts.filter((p) => p.source === s).length;
 
 // 日付は JST で出す(外部記事は時刻つき、ローカルは日付だけ。どちらも日本の日付に揃う)
@@ -51,8 +59,15 @@ const dateParts = (d: Date) => {
 const hiddenCount = Math.max(0, posts.length - limit);
 ---
 
-<div class="tl-root" data-timeline data-limit={limit}>
+<div
+    class:list={["tl-root", { "has-years": years }]}
+    data-timeline
+    data-limit={limit}
+    data-years={years ? "" : undefined}
+    data-sortable={sortable ? "" : undefined}
+>
     <div class="tools">
+        <div class="search-row">
         <label class="search">
             <Search size={16} strokeWidth={1.5} />
             <input
@@ -69,6 +84,22 @@ const hiddenCount = Math.max(0, posts.length - limit);
                 <X size={14} strokeWidth={1.75} />
             </button>
         </label>
+
+        {
+            sortable && (
+                <button
+                    type="button"
+                    class="sort"
+                    data-tl-sort
+                    data-order="desc"
+                    aria-label="並び順: 新しい順(押すと古い順)"
+                >
+                    <ArrowDown size={16} strokeWidth={1.75} class="sort-arrow" />
+                    <span class="sort-label" data-tl-sort-label>Newest</span>
+                </button>
+            )
+        }
+        </div>
 
         <div class="tool-row">
             <!-- 白黒の「すべり台」トグル。選んだ項目の下を、白(ライトでは黒)の台がすべって移る -->
@@ -103,6 +134,7 @@ const hiddenCount = Math.max(0, posts.length - limit);
                             data-tl-row
                             data-featured={i === 0 ? "" : undefined}
                             data-source={post.source}
+                            data-year={year}
                             data-search={haystack}
                             data-title={post.title}
                             hidden={i >= limit}
@@ -167,10 +199,7 @@ const hiddenCount = Math.max(0, posts.length - limit);
             }
         </ol>
 
-        <p class="empty" data-tl-empty hidden>
-            <span>No posts match.</span>
-            <button type="button" data-tl-reset>Clear filters</button>
-        </p>
+        <p class="empty" data-tl-empty hidden>No posts match. (´・ω・｀)</p>
 
         {
             moreHref && hiddenCount > 0 && (
@@ -240,7 +269,10 @@ const hiddenCount = Math.max(0, posts.length - limit);
         const thumb = root.querySelector<HTMLElement>("[data-tl-thumb]")!;
         const status = root.querySelector<HTMLElement>("[data-tl-status]")!;
         const empty = root.querySelector<HTMLElement>("[data-tl-empty]")!;
-        const resetBtn = root.querySelector<HTMLButtonElement>("[data-tl-reset]")!;
+        const rowsEl = root.querySelector<HTMLElement>("[data-tl-rows]")!;
+        const sortBtn = root.querySelector<HTMLButtonElement>("[data-tl-sort]");
+        const sortLabel = root.querySelector<HTMLElement>("[data-tl-sort-label]");
+        const hasYears = root.hasAttribute("data-years");
         const more = root.querySelector<HTMLElement>("[data-tl-more]");
         const list = root.querySelector<HTMLElement>("[data-tl-list]")!;
         const rows = Array.from(root.querySelectorAll<HTMLElement>("[data-tl-row]"));
@@ -250,12 +282,16 @@ const hiddenCount = Math.max(0, posts.length - limit);
         const items = rows.map((row) => ({
             row,
             source: row.dataset.source!,
+            year: row.dataset.year ?? "",
             haystack: fold(row.dataset.search ?? ""),
             title: row.dataset.title ?? "",
             titleEl: row.querySelector<HTMLElement>("[data-tl-title]")!,
         }));
 
         let source = "all";
+        // false: 新しい順(DOM の最初の並び) / true: 古い順
+        let asc = false;
+        const sequence = () => (asc ? [...items].reverse() : items);
 
         // 台(thumb)を、いま選ばれているボタンの位置・幅へ移す。CSS の transition ですべって見える。
         // 初回(と、リサイズ・フォント読み込み後の測り直し)は、すべらせずに置く
@@ -284,16 +320,30 @@ const hiddenCount = Math.max(0, posts.length - limit);
             }
             root.classList.toggle("is-filtering", filtering);
 
+            // 年の区切りは毎回作り直す(並び順と絞り込みで、どの行の前に入るかが変わるため)
+            rowsEl.querySelectorAll(".year").forEach((el) => el.remove());
+
             let shown = 0;
-            items.forEach((item, i) => {
+            let lastYear = "";
+            sequence().forEach((item, i) => {
                 const match =
                     (source === "all" || item.source === source) &&
                     terms.every((t) => item.haystack.includes(t));
                 const visible = filtering ? match : i < limit;
                 item.row.hidden = !visible;
                 item.titleEl.innerHTML = visible && filtering ? highlight(item.title, terms) : escapeHtml(item.title);
+                // 「特集」(先頭の大きな行)は、新しい順のときの先頭だけ。古い順では付けない
+                if (sortBtn) item.row.toggleAttribute("data-featured", !asc && i === 0);
                 if (!visible) return;
                 item.row.style.setProperty("--i", String(shown));
+                if (hasYears && item.year !== lastYear) {
+                    lastYear = item.year;
+                    const divider = document.createElement("li");
+                    divider.className = "year";
+                    divider.style.setProperty("--i", String(shown));
+                    divider.innerHTML = `<span class="year-label">${item.year}</span>`;
+                    rowsEl.insertBefore(divider, item.row);
+                }
                 shown++;
             });
 
@@ -324,9 +374,16 @@ const hiddenCount = Math.max(0, posts.length - limit);
             apply(true);
             input.focus();
         };
-        const onReset = () => {
-            input.value = "";
-            source = "all";
+        const onSort = () => {
+            asc = !asc;
+            // DOM の順番そのものを入れ替える(行は全部 DOM にあるので、並べ直すだけ)
+            rowsEl.append(...sequence().map((item) => item.row));
+            sortBtn!.dataset.order = asc ? "asc" : "desc";
+            sortBtn!.setAttribute(
+                "aria-label",
+                asc ? "並び順: 古い順(押すと新しい順)" : "並び順: 新しい順(押すと古い順)",
+            );
+            if (sortLabel) sortLabel.textContent = asc ? "Oldest" : "Newest";
             apply(true);
         };
         const onChip = (chip: HTMLButtonElement) => () => {
@@ -358,7 +415,7 @@ const hiddenCount = Math.max(0, posts.length - limit);
         input.addEventListener("input", onInput);
         input.addEventListener("keydown", onInputKey);
         clearBtn.addEventListener("click", onClear);
-        resetBtn.addEventListener("click", onReset);
+        sortBtn?.addEventListener("click", onSort);
         chipHandlers.forEach(([chip, h]) => chip.addEventListener("click", h));
         document.addEventListener("keydown", onKey);
 
@@ -387,7 +444,7 @@ const hiddenCount = Math.max(0, posts.length - limit);
             input.removeEventListener("input", onInput);
             input.removeEventListener("keydown", onInputKey);
             clearBtn.removeEventListener("click", onClear);
-            resetBtn.removeEventListener("click", onReset);
+            sortBtn?.removeEventListener("click", onSort);
             chipHandlers.forEach(([chip, h]) => chip.removeEventListener("click", h));
             document.removeEventListener("keydown", onKey);
             cleanup = null;
@@ -414,7 +471,15 @@ const hiddenCount = Math.max(0, posts.length - limit);
         margin-bottom: 2.5rem;
     }
 
+    /* 検索欄 + 並び替えボタン(あれば)を 1 行に */
+    .search-row {
+        display: flex;
+        gap: 0.75rem;
+    }
+
     .search {
+        flex: 1;
+        min-width: 0;
         display: flex;
         align-items: center;
         gap: 0.75rem;
@@ -500,6 +565,53 @@ const hiddenCount = Math.max(0, posts.length - limit);
         .clear:hover {
             color: var(--text);
             background: var(--elevated);
+        }
+    }
+
+    /* 並び替えの単ボタン。押すたびに 新しい順 ⇄ 古い順。矢印が半回転して向きが変わる */
+    .sort {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        height: 3rem;
+        padding: 0 1.15rem 0 1rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--surface);
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition:
+            border-color 0.25s ease,
+            color 0.25s ease,
+            transform 0.2s ease;
+    }
+
+    .sort :global(.sort-arrow) {
+        transition: transform 0.45s var(--ease-out);
+    }
+
+    .sort[data-order="asc"] :global(.sort-arrow) {
+        transform: rotate(180deg);
+    }
+
+    .sort:active {
+        transform: scale(0.96);
+    }
+
+    .sort:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+    }
+
+    @media (hover: hover) {
+        .sort:hover {
+            border-color: var(--accent);
+            color: var(--accent);
         }
     }
 
@@ -951,10 +1063,6 @@ const hiddenCount = Math.max(0, posts.length - limit);
     }
 
     .empty {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: baseline;
-        gap: 0.5rem 1.25rem;
         margin: 0;
         padding: 1.2rem 0 1.2rem calc(var(--date-w) + var(--node-w));
         font-family: var(--font-mono);
@@ -966,26 +1074,66 @@ const hiddenCount = Math.max(0, posts.length - limit);
         display: none;
     }
 
-    .empty button {
-        padding: 0;
-        border: 0;
-        background: none;
-        font: inherit;
+
+    /* ---- 年の区切り ----
+       ※ 区切りは JS が後から作る要素で、スコープ付き CSS が当たらないため、セレクターは :global で書いている
+       軸を横切る長めの目盛り + 年(アクセント色) + 右へ伸びる細い線。数直線の「大きな目盛り」 */
+    :global(.year) {
+        display: grid;
+        grid-template-columns: var(--date-w) var(--node-w) minmax(0, 1fr);
+        align-items: center;
+        padding: 2.1rem 0 0.35rem;
+    }
+
+    :global(.year):first-child {
+        padding-top: 0.35rem;
+    }
+
+    :global(.year)::before {
+        content: "";
+        grid-column: 2;
+        justify-self: center;
+        position: relative;
+        z-index: 1;
+        width: 1.15rem;
+        height: 1px;
+        background: var(--accent);
+    }
+
+    :global(.year-label) {
+        grid-column: 3;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        letter-spacing: 0.22em;
         color: var(--accent);
-        text-decoration: underline;
-        text-underline-offset: 0.25em;
-        cursor: pointer;
+    }
+
+    :global(.year-label)::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+
+    /* 年は区切りに出すので、行の日付からは省く */
+    .has-years .row-date .y {
+        display: none;
     }
 
     /* ---- 出現 ---- */
     /* 行は軸に沿って順に浮かぶ。JS が動いて(is-armed)から、スクロールで見えるまで待つ(is-in)。
        JS が無ければ最初から全部見える */
-    .is-armed:not(.is-in) .row {
+    .is-armed:not(.is-in) .row,
+    .is-armed:not(.is-in) :global(.year) {
         opacity: 0;
         transform: translateY(14px);
     }
 
-    .is-armed .row {
+    .is-armed .row,
+    .is-armed :global(.year) {
         transition:
             opacity 0.7s ease,
             transform 0.8s var(--ease-out);
@@ -1001,7 +1149,8 @@ const hiddenCount = Math.max(0, posts.length - limit);
     }
 
     /* 絞り込みで入れ替わるとき: 少しずつ遅らせて下から浮かぶ */
-    .is-swapping .row {
+    .is-swapping .row,
+    .is-swapping :global(.year) {
         animation: row-in 0.45s var(--ease-out) both;
         animation-delay: calc(var(--i, 0) * 35ms);
     }
@@ -1014,7 +1163,8 @@ const hiddenCount = Math.max(0, posts.length - limit);
     }
 
     @media (prefers-reduced-motion: reduce) {
-        .is-armed:not(.is-in) .row {
+        .is-armed:not(.is-in) .row,
+        .is-armed:not(.is-in) :global(.year) {
             opacity: 1;
             transform: none;
         }
@@ -1022,6 +1172,9 @@ const hiddenCount = Math.max(0, posts.length - limit);
             transform: none;
         }
         .is-armed .row,
+        .is-armed :global(.year),
+        .sort,
+        .sort :global(.sort-arrow),
         .is-armed .timeline::before,
         .row-node,
         .row-title,
@@ -1029,7 +1182,8 @@ const hiddenCount = Math.max(0, posts.length - limit);
         .seg-thumb {
             transition: none;
         }
-        .is-swapping .row {
+        .is-swapping .row,
+        .is-swapping :global(.year) {
             animation: none;
         }
     }
@@ -1074,6 +1228,10 @@ const hiddenCount = Math.max(0, posts.length - limit);
         .status {
             width: 100%;
             margin-left: 0;
+        }
+
+        .sort {
+            padding: 0 0.95rem;
         }
 
         /* 5 項目が 1 行に収まるよう、トグルを少し詰める */
