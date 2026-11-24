@@ -7,11 +7,12 @@
 //   行 2   Countdown     CRT モニター(4–9)  タイムライン(縦 3 行ぶん。内側でスクロール)
 //   行 3   技術スタック(1–5)      GitHub(6–9)
 //   左(環境 + Countdown。行 1〜2 ぶん)と右(資格 + タイムライン)は、列全体を 1 つの入れ物にして中でカードを積む。
-//   行の高さは 16rem / 20rem / 15rem。
+//   行の高さは 17rem / 21rem / 15rem。
 // 1200px 未満: 2 カラム(CRT・技術スタック・GitHub・資格は全幅)  /  720px 以下: 1 カラム縦積み
 //   どちらも、左右の入れ物は display: contents で外して、カードを並べ替えなしに順に敷く。
 //
-// ステップ 4 で CRT モニター(Three.js)に置き換える。いまは枠だけ(.c-crt)。
+// 真ん中の CRT モニター(bento/BentoCrt.astro)は、カードの枠より上へ突き出す(canvas はカードの外に置いてある)。
+// 突き出した先の Uptime・趣味のカードをクリックできるよう、canvas 自体はポインターを素通しする。
 import BentoEnv from "./bento/BentoEnv.astro";
 import BentoCountdown from "./bento/BentoCountdown.astro";
 import BentoUptime from "./bento/BentoUptime.astro";
@@ -19,7 +20,7 @@ import BentoHobby from "./bento/BentoHobby.astro";
 import BentoSkills from "./bento/BentoSkills.astro";
 import BentoGithub from "./bento/BentoGithub.astro";
 import BentoProfile from "./bento/BentoProfile.astro";
-import BentoCard from "./bento/BentoCard.astro";
+import BentoCrt from "./bento/BentoCrt.astro";
 ---
 
 <section class="bento" id="bento" aria-labelledby="bento-title">
@@ -32,11 +33,7 @@ import BentoCard from "./bento/BentoCard.astro";
             </div>
             <div class="cell c-uptime"><BentoUptime /></div>
             <div class="cell c-hobby"><BentoHobby /></div>
-            <div class="cell c-crt">
-                <BentoCard label="Monitor" order={3}>
-                    <p class="crt-note">CRT モニターは、ステップ 4 で置きます。</p>
-                </BentoCard>
-            </div>
+            <div class="cell c-crt"><BentoCrt /></div>
             <div class="cell c-skills"><BentoSkills /></div>
             <div class="cell c-github"><BentoGithub /></div>
             <div class="right"><BentoProfile /></div>
@@ -73,7 +70,7 @@ import BentoCard from "./bento/BentoCard.astro";
         --gap: 14px;
         display: grid;
         grid-template-columns: repeat(12, minmax(0, 1fr));
-        grid-template-rows: 16rem 20rem 15rem;
+        grid-template-rows: 17rem 21rem 15rem;
         gap: var(--gap);
     }
 
@@ -127,17 +124,6 @@ import BentoCard from "./bento/BentoCard.astro";
     .right {
         grid-column: 10 / 13;
         grid-row: 1 / 4;
-    }
-
-    .crt-note {
-        display: grid;
-        place-items: center;
-        flex: 1;
-        margin: 0;
-        font-family: var(--font-mono);
-        font-size: 0.78rem;
-        letter-spacing: 0.08em;
-        color: var(--text-muted);
     }
 
     /* ---- 2 カラム(タブレット・小さめのノート PC) ---- */

@@ -1,10 +1,10 @@
 ---
-// 環境カード。縦長の角丸ピルが 4 つ(Desktop / Laptop / Mobile / Setup)並び、
-// ホバー(スマホはタップ)したピルが横に広がって、パーツ構成・スペックの詳細を見せる。残りの 3 つは細く縮む。
-//   しくみ: ピルは flex の横並びで、どれも flex-grow: 1。開いたピルだけ flex-grow: 8 にする。
-//           flex-grow は transition できるので、幅の再配分がそのままなめらかなアニメーションになる。
-//   操作:   マウス … 乗せると開く / グループから出ると全部閉じる(scripts は下の <script>)
-//           タップ・キーボード … ボタンで開閉(開けるのは常に 1 つだけ)
+// 環境カード。上に Desktop / Laptop / Mobile / Setup の 4 つのタブ(1 本の大きなピルの中を、白い台がすべって移る。
+// Blog の掲載先トグルと同じ見た目)、下に選んだ環境のパーツ構成・スペックを出す。
+//   しくみ: 4 つぶんの詳細(パネル)を同じマスに重ねて置き、選ばれたものだけを見せる(opacity のフェード)。
+//           重ねておくので、どのタブでもカードの高さは一番長いパネルに揃い、切り替えで高さが跳ねない。
+//   操作:   クリック(タップ)で切り替え。ホバーでは何も起きない(誤爆の防止)。
+//           キーボードは ← → / Home / End で移動(タブの標準的な操作)。
 // 中身は src/data/about.ts の ENV_BLOCKS。
 import { Computer, Laptop, Smartphone, SquareTerminal } from "lucide-astro";
 import { ENV_BLOCKS } from "../../../data/about";
@@ -17,260 +17,346 @@ const KIND = {
     setup: { icon: SquareTerminal, label: "Setup" },
 } as const;
 
-const pills = ENV_BLOCKS.map((b) => ({ ...b, ...KIND[b.section as keyof typeof KIND] }));
+const tabs = ENV_BLOCKS.map((b) => ({ ...b, ...KIND[b.section as keyof typeof KIND] }));
 ---
 
 <BentoCard label="Environment" class="env" order={0}>
-    <div class="pills" data-pills>
-        {
-            pills.map((p) => (
-                <div class="pill" data-pill>
+    <div class="env-root" data-env>
+        <div class="seg" role="tablist" aria-label="環境" data-env-seg>
+            <span class="seg-thumb" aria-hidden="true" data-env-thumb></span>
+            {
+                tabs.map((t, i) => (
                     <button
                         type="button"
-                        class="pill-toggle"
-                        aria-expanded="false"
-                        aria-controls={`env-${p.section}`}
-                        data-pill-toggle
+                        class="seg-btn"
+                        role="tab"
+                        id={`env-tab-${t.section}`}
+                        aria-controls={`env-${t.section}`}
+                        aria-selected={i === 0 ? "true" : "false"}
+                        tabindex={i === 0 ? 0 : -1}
+                        data-env-tab
                     >
-                        <p.icon size={20} strokeWidth={1.5} aria-hidden="true" />
-                        <span class="pill-label">{p.label}</span>
+                        <t.icon size={15} strokeWidth={1.75} aria-hidden="true" />
+                        <span class="seg-label">{t.label}</span>
                     </button>
-                    <div class="pill-body" id={`env-${p.section}`} role="region" aria-label={p.label}>
-                        {p.meta && <p class="pill-meta">{p.meta.replace(" : ", "\n").replace(/\//g, ".")}</p>}
+                ))
+            }
+        </div>
+
+        <div class="panels">
+            {
+                tabs.map((t, i) => (
+                    <div
+                        class:list={["panel", { "is-active": i === 0 }]}
+                        id={`env-${t.section}`}
+                        role="tabpanel"
+                        aria-labelledby={`env-tab-${t.section}`}
+                        tabindex="0"
+                        data-env-panel
+                    >
+                        {t.meta && <p class="meta">{t.meta.replace(" : ", " · ").replace(/\//g, ".")}</p>}
                         <dl class="specs">
-                            {p.rows.map((r) => (
-                                <div>
+                            {t.rows.map((r) => (
+                                <div class="spec">
                                     <dt>{r.k}</dt>
                                     <dd>{r.v}</dd>
                                 </div>
                             ))}
                         </dl>
-                        {p.link && (
-                            <a class="pill-link" href={p.link.href}>
-                                {p.link.tag} →
+                        {t.link && (
+                            <a class="more" href={t.link.href}>
+                                {t.link.tag} →
                             </a>
                         )}
                     </div>
-                </div>
-            ))
-        }
+                ))
+            }
+        </div>
     </div>
 </BentoCard>
 
 <script>
-    function bindPills() {
-        document.querySelectorAll<HTMLElement>("[data-pills]").forEach((root) => {
+    function bindEnv() {
+        document.querySelectorAll<HTMLElement>("[data-env]").forEach((root) => {
             if (root.dataset.bound) return;
             root.dataset.bound = "1";
-            const pills = Array.from(root.querySelectorAll<HTMLElement>("[data-pill]"));
 
-            // open = 開くピル(null なら全部閉じる)
-            const set = (open: HTMLElement | null) => {
-                pills.forEach((p) => {
-                    const on = p === open;
-                    p.classList.toggle("is-open", on);
-                    p.querySelector("[data-pill-toggle]")?.setAttribute("aria-expanded", String(on));
-                });
-                root.classList.toggle("has-open", open !== null);
+            const seg = root.querySelector<HTMLElement>("[data-env-seg]")!;
+            const thumb = root.querySelector<HTMLElement>("[data-env-thumb]")!;
+            const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-env-tab]"));
+            const panels = Array.from(root.querySelectorAll<HTMLElement>("[data-env-panel]"));
+
+            // 台を、選ばれたタブの位置・幅へ移す(CSS の transition ですべって見える)
+            const moveThumb = (animate: boolean) => {
+                const active = tabs.find((t) => t.getAttribute("aria-selected") === "true");
+                if (!active || active.offsetWidth === 0) return;
+                if (!animate) thumb.style.transition = "none";
+                thumb.style.setProperty("--x", `${active.offsetLeft}px`);
+                thumb.style.setProperty("--w", `${active.offsetWidth}px`);
+                seg.classList.add("has-thumb");
+                if (!animate) {
+                    void thumb.offsetWidth;
+                    thumb.style.transition = "";
+                }
             };
 
-            pills.forEach((p) => {
-                // マウスは「乗せたら開く」。タッチは乗せた扱いで pointerenter が飛んでくるので、マウスだけに限る
-                p.addEventListener("pointerenter", (e) => {
-                    if (e.pointerType === "mouse") set(p);
+            const select = (index: number, focus = false) => {
+                tabs.forEach((t, i) => {
+                    const on = i === index;
+                    t.setAttribute("aria-selected", String(on));
+                    t.tabIndex = on ? 0 : -1;
+                    panels[i].classList.toggle("is-active", on);
                 });
-                p.querySelector("[data-pill-toggle]")?.addEventListener("click", (e) => {
-                    // マウスの click は、乗せた時点ですでに開いているので何もしない(閉じてしまうのを防ぐ)
-                    if ((e as PointerEvent).pointerType === "mouse") return;
-                    set(p.classList.contains("is-open") ? null : p);
-                });
+                moveThumb(true);
+                if (focus) tabs[index].focus();
+            };
+
+            tabs.forEach((t, i) => t.addEventListener("click", () => select(i)));
+            seg.addEventListener("keydown", (e) => {
+                const cur = tabs.findIndex((t) => t.getAttribute("aria-selected") === "true");
+                const last = tabs.length - 1;
+                const next =
+                    e.key === "ArrowRight" ? (cur >= last ? 0 : cur + 1)
+                    : e.key === "ArrowLeft" ? (cur <= 0 ? last : cur - 1)
+                    : e.key === "Home" ? 0
+                    : e.key === "End" ? last
+                    : -1;
+                if (next < 0) return;
+                e.preventDefault();
+                select(next, true);
             });
-            root.addEventListener("pointerleave", (e) => {
-                if (e.pointerType === "mouse") set(null);
-            });
+
+            // フォントの読み込みやカード幅の変化でタブの幅が変わるので、台を合わせ直す
+            const ro = new ResizeObserver(() => moveThumb(false));
+            ro.observe(seg);
+            moveThumb(false);
         });
     }
 
-    document.addEventListener("astro:page-load", bindPills);
+    document.addEventListener("astro:page-load", bindEnv);
 </script>
 
 <style>
-    .pills {
-        flex: 1;
-        display: flex;
-        gap: 0.4rem;
-        min-height: 15rem;
-    }
-
-    /* 縦長のピル。幅の取り合いは flex-grow だけで決まる */
-    .pill {
-        flex: 1 1 0;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        background: color-mix(in srgb, var(--bg-deep) 62%, transparent);
-        border: 1px solid color-mix(in srgb, var(--text) 9%, transparent);
-        border-radius: 999px;
-        transition:
-            flex-grow 0.55s var(--ease-out),
-            border-radius 0.55s var(--ease-out),
-            border-color 0.3s ease,
-            background-color 0.3s ease;
-    }
-
-    /* 開いたピルは、閉じたピルの 8 倍の幅(閉じたものはアイコンが入るぎりぎりまで細くなる) */
-    .pill.is-open {
-        flex-grow: 8;
-        border-radius: 22px;
-        border-color: color-mix(in srgb, var(--accent) 55%, transparent);
-        background: color-mix(in srgb, var(--bg-deep) 82%, transparent);
-    }
-
-    /* アイコン + ラベル。閉じているときは縦に積んで中央、開いたら横並びで左上へ */
-    .pill-toggle {
-        flex: none;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.4rem;
-        width: 100%;
-        padding: 1.1rem 0.25rem 0.9rem;
-        border: 0;
-        background: none;
-        font: inherit;
-        color: var(--text-muted);
-        cursor: pointer;
-        transition: color 0.25s ease;
-    }
-
-    .pill-toggle:hover,
-    .pill-toggle:focus-visible,
-    .pill.is-open .pill-toggle {
-        color: var(--accent);
-    }
-
-    .pill-label {
-        font-family: var(--font-mono);
-        font-size: 0.56rem;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        white-space: nowrap;
-        transition: opacity 0.2s ease;
-    }
-
-    /* 他のピルが開いて細くなったら、ラベルは隠してアイコンだけにする */
-    .pills.has-open .pill:not(.is-open) .pill-label {
-        opacity: 0;
-    }
-    .pills.has-open .pill:not(.is-open) .pill-toggle {
-        padding-inline: 0;
-    }
-    .pills.has-open .pill:not(.is-open) .pill-toggle :global(svg) {
-        width: 1.05rem;
-        height: 1.05rem;
-    }
-
-    .pill.is-open .pill-toggle {
-        flex-direction: row;
-        justify-content: flex-start;
-        gap: 0.5rem;
-        padding: 0.95rem 1rem 0.5rem;
-    }
-
-    .pill.is-open .pill-label {
-        font-size: 0.64rem;
-        letter-spacing: 0.16em;
-    }
-
-    /* ---- 開いたときの詳細 ---- */
-    .pill-body {
+    .env-root {
         flex: 1;
         min-height: 0;
-        min-width: 7.5rem;
-        padding: 0 0.9rem 0.8rem 1rem;
+        /* タブの幅に応じて、ラベルを出す・隠す(下の @container) */
+        container-type: inline-size;
+        display: flex;
+        flex-direction: column;
+        gap: 0.9rem;
+    }
+
+    /* ---- タブ(Blog の掲載先トグルと同じ作り) ----
+       枠の中を、白(ライトでは黒)の台が選ばれた項目へすべって移る。台の位置・幅は JS が --x / --w に書く。
+       JS が動く前は、選ばれたボタン自身を塗っておく */
+    .seg {
+        position: relative;
+        display: flex;
+        padding: 3px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--surface);
+    }
+
+    .seg-thumb {
+        position: absolute;
+        top: 3px;
+        bottom: 3px;
+        left: 0;
+        width: var(--w, 0);
+        border-radius: 999px;
+        background: var(--text);
+        transform: translateX(var(--x, 0));
+        opacity: 0;
+        /* 少しだけ行き過ぎて戻る、弾むような動き */
+        transition:
+            transform 0.5s cubic-bezier(0.34, 1.35, 0.5, 1),
+            width 0.5s cubic-bezier(0.34, 1.35, 0.5, 1),
+            opacity 0.2s ease;
+    }
+
+    .seg.has-thumb .seg-thumb {
+        opacity: 1;
+    }
+
+    .seg-btn {
+        position: relative;
+        z-index: 1;
+        flex: 1 1 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.3rem;
+        min-width: 0;
+        padding: 0.42rem 0.3rem;
+        border: 0;
+        border-radius: 999px;
+        background: none;
+        font-family: var(--font-mono);
+        font-size: 0.56rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: color 0.35s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .seg-btn :global(svg) {
+        flex: none;
+    }
+
+    /* 選ばれた項目の文字は、台の色と反転させる(ダーク: 黒字 / ライト: 白字) */
+    .seg-btn[aria-selected="true"] {
+        color: var(--bg-deep);
+    }
+
+    .seg:not(.has-thumb) .seg-btn[aria-selected="true"] {
+        background: var(--text);
+    }
+
+    @media (hover: hover) {
+        .seg-btn[aria-selected="false"]:hover {
+            color: var(--text);
+        }
+    }
+
+    .seg-btn:focus-visible {
+        outline: 1px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    /* 狭いカードでは、アイコンだけにして 4 つを収める(ラベルは読み上げ用に残す) */
+    @container (max-width: 14.5rem) {
+        .seg-label {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+        }
+    }
+
+    /* ---- パネル: 同じマスに重ねて置き、選ばれたものだけ見せる ---- */
+    .panels {
+        flex: 1;
+        min-height: 0;
+        display: grid;
+        grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+    }
+
+    .panel {
+        grid-area: 1 / 1;
+        min-height: 0;
+        padding: 0.1rem 0.15rem 0 0.1rem;
         overflow-y: auto;
         scrollbar-width: thin;
         scrollbar-color: color-mix(in srgb, var(--text) 25%, transparent) transparent;
         opacity: 0;
         visibility: hidden;
+        transform: translateY(4px);
         transition:
-            opacity 0.2s ease,
-            visibility 0s linear 0.2s;
+            opacity 0.22s ease,
+            transform 0.22s ease,
+            visibility 0s linear 0.22s;
     }
 
-    .pill.is-open .pill-body {
+    .panel.is-active {
         opacity: 1;
         visibility: visible;
-        /* 幅が広がりきるころに現れる */
+        transform: none;
         transition:
-            opacity 0.3s ease 0.22s,
+            opacity 0.3s ease 0.1s,
+            transform 0.3s var(--ease-out) 0.1s,
             visibility 0s;
     }
 
-    .pill-meta {
-        margin: 0 0 0.6rem;
+    .panel:focus-visible {
+        outline: 1px solid var(--accent);
+        outline-offset: 2px;
+        border-radius: 6px;
+    }
+
+    .meta {
+        margin: 0 0 0.45rem;
         font-family: var(--font-mono);
-        font-size: 0.6rem;
-        line-height: 1.45;
+        font-size: 0.62rem;
+        line-height: 1.5;
         letter-spacing: 0.03em;
-        white-space: pre-line;
         color: var(--text-muted);
     }
 
+    /* 項目名(左)と値(右)の 2 列。9 項目でも縦に収まるよう、1 行ずつ詰める。
+       項目名の列の幅は、そのパネルでいちばん長い項目名に合わせる(subgrid で全行が同じ列を共有する) */
     .specs {
         display: grid;
-        gap: 0.32rem;
+        grid-template-columns: max-content minmax(0, 1fr);
+        column-gap: 0.7rem;
         margin: 0;
     }
 
-    .specs dt {
+    .spec {
+        display: grid;
+        grid-column: 1 / -1;
+        grid-template-columns: subgrid;
+        align-items: baseline;
+        padding: 0.19rem 0;
+        border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent);
+    }
+
+    .spec:first-child {
+        border-top: 0;
+    }
+
+    .spec dt {
         font-family: var(--font-mono);
-        font-size: 0.52rem;
-        line-height: 1.2;
-        letter-spacing: 0.14em;
+        font-size: 0.56rem;
+        line-height: 1.3;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
         color: var(--accent);
-    }
-
-    .specs dd {
-        margin: 0;
-        font-size: 0.7rem;
-        line-height: 1.3;
         overflow-wrap: anywhere;
     }
 
-    .pill-link {
+    .spec dd {
+        margin: 0;
+        font-size: 0.72rem;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+    }
+
+    .more {
         display: inline-block;
-        margin-top: 0.7rem;
+        margin-top: 0.5rem;
         font-family: var(--font-mono);
-        font-size: 0.6rem;
+        font-size: 0.62rem;
         letter-spacing: 0.04em;
         color: var(--accent);
         text-decoration: none;
     }
 
-    .pill-link:hover,
-    .pill-link:focus-visible {
+    .more:hover,
+    .more:focus-visible {
         text-decoration: underline;
     }
 
-    /* 12 カラムのときは、グリッドの行の高さが固定なので、ピルはその中に収まる。
-       それ以外の幅(行の高さが中身まかせ)では、閉じたピルの詳細まで高さに数えられて、
-       いちばん長いデスクトップのスペックにカードが引き伸ばされてしまう。高さを固定して、詳細は内側でスクロールさせる */
-    @media (max-width: 1199px) {
-        .pills {
-            flex: none;
-            height: 17rem;
-            min-height: 0;
+    /* 12 カラムのいちばん狭い幅(1200〜1290px)では、カードが細くて 2 項目が折り返すので、行間を詰めて収める */
+    @media (min-width: 1200px) and (max-width: 1290px) {
+        .spec {
+            padding: 0.1rem 0;
+        }
+        .more {
+            margin-top: 0.35rem;
         }
     }
 
     @media (prefers-reduced-motion: reduce) {
-        .pill,
-        .pill-body,
-        .pill-label {
+        .seg-thumb,
+        .panel,
+        .panel.is-active {
             transition: none;
+            transform: none;
         }
     }
 </style>

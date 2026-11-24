@@ -225,7 +225,7 @@ export const ENV_BLOCKS: EnvBlock[] = [
       { k: "cpu", v: "Core Ultra 7 258V" },
       { k: "gpu", v: "Intel Arc Graphics 140V" },
       { k: "memory", v: "32GB (MoP / LPDDR5x-8533)" },
-      { k: "os", v: "Windows 11 Home　& Arch Linux" },
+      { k: "os", v: "Windows 11 Home & Arch Linux" },
     ],
   },
   {

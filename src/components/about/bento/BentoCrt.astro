@@ -1,0 +1,347 @@
+---
+// Bento の真ん中のカード: ワイヤーフレームのレトロ CRT モニター(Three.js。動きは src/scripts/crt.ts)。
+//
+// 重ね順と「枠からのはみ出し」
+//   .crt(位置の基準)
+//     ├ カード本体(BentoCard)… 左にオリオン座(SVG)、右に LED、ヘッダー右端に状態(ONLINE / SLEEP / PANIC)
+//     └ .crt-stage … カードより上下に広い透明な板。ここに canvas が入って、モニターの上部が
+//                    上のカード(Uptime・趣味)の枠を越えて突き出る。z-index はカードより手前。
+//                    カードと同じ data-reveal(画面に入ったとき一度だけフェードイン)で、同時に現れる。
+//   カードは overflow: hidden なので、はみ出す canvas はカードの外(.crt-stage)に置いてある。
+//   .crt-stage は pointer-events: none。上のカードのクリック・ホバーを邪魔しない。
+//   モニターに乗ったかどうかは、crt.ts が window のポインターと Raycaster で判定する。
+//
+// LED(右端の縦のピル): スリープまでの残り時間。上から順に消えて、全部消えるとモニターが眠る。
+//   操作すると下から順にまた点く。点灯数は crt.ts の onLevel で受け取る(本数は下の LEDS)。
+import BentoCard from "./BentoCard.astro";
+
+const LEDS = 8;
+
+// オリオン座: 本物の赤経(時)・赤緯(度)・等級から、星座早見盤のように(東が左)平面に置く。
+//   x = 中心 − (赤経 − 5.58h) × 15° × cos(赤緯) × K、 y = 中心 − (赤緯 + 1°) × K
+const K = 6.4;
+const RA0 = 5.58;
+type Star = { id: string; ra: number; dec: number; mag: number };
+const STAR_LIST: Star[] = [
+    { id: "betelgeuse", ra: 5.919, dec: 7.407, mag: 0.5 },
+    { id: "bellatrix", ra: 5.419, dec: 6.35, mag: 1.64 },
+    { id: "meissa", ra: 5.585, dec: 9.934, mag: 3.3 },
+    { id: "alnitak", ra: 5.679, dec: -1.943, mag: 1.77 },
+    { id: "alnilam", ra: 5.604, dec: -1.202, mag: 1.69 },
+    { id: "mintaka", ra: 5.533, dec: -0.299, mag: 2.23 },
+    { id: "saiph", ra: 5.796, dec: -9.67, mag: 2.09 },
+    { id: "rigel", ra: 5.242, dec: -8.202, mag: 0.13 },
+    { id: "iota", ra: 5.591, dec: -5.91, mag: 2.77 },
+    { id: "theta", ra: 5.588, dec: -5.39, mag: 4.0 },
+];
+const stars = STAR_LIST.map((s, i) => ({
+    ...s,
+    x: 50 - (s.ra - RA0) * 15 * Math.cos((s.dec * Math.PI) / 180) * K,
+    y: 62 - (s.dec + 1) * K,
+    r: 0.8 + (4.2 - s.mag) * 0.42,
+    // またたきの周期・位相を星ごとにずらす(決定論的)
+    dur: 3.2 + ((i * 7) % 5) * 0.9,
+    delay: -((i * 13) % 7) * 0.8,
+}));
+const at = (id: string) => stars.find((s) => s.id === id)!;
+// 星座線(頭 → 肩 → ベルト → 足、ベルトから小三ツ星へ)
+const LINES: [string, string][] = [
+    ["meissa", "betelgeuse"],
+    ["meissa", "bellatrix"],
+    ["betelgeuse", "alnitak"],
+    ["bellatrix", "mintaka"],
+    ["alnitak", "alnilam"],
+    ["alnilam", "mintaka"],
+    ["alnitak", "saiph"],
+    ["mintaka", "rigel"],
+    ["alnilam", "iota"],
+];
+---
+
+<div class="crt" data-crt data-state="online">
+    <BentoCard label="Monitor" order={3}>
+        <span slot="aside" class="status"><i class="dot" aria-hidden="true"></i><span data-crt-status>ONLINE</span></span>
+
+        <p class="sr-only">
+            ドット絵の顔が映ったレトロな CRT モニターです。カーソルを追いかけて首をかしげ、乗せたりクリックしたりすると反応します。
+            しばらく放っておくと眠ります。
+        </p>
+
+        <div class="deco" aria-hidden="true">
+            <svg class="orion" viewBox="-4 -4 108 134" role="presentation">
+                <g class="orion-drift">
+                    {LINES.map(([a, b]) => <line x1={at(a).x} y1={at(a).y} x2={at(b).x} y2={at(b).y} />)}
+                    {
+                        stars.map((s) => (
+                            <g class="star" style={`--dur:${s.dur}s;--delay:${s.delay}s`}>
+                                <circle class="halo" cx={s.x} cy={s.y} r={s.r * 2.6} />
+                                <circle class="core" cx={s.x} cy={s.y} r={s.r} />
+                            </g>
+                        ))
+                    }
+                </g>
+            </svg>
+            <span class="orion-cap">ORION</span>
+
+            <div class="leds" role="img" aria-label="スリープまでの残り時間" data-crt-leds>
+                {Array.from({ length: LEDS }, (_, i) => <span class="led is-on" style={`--n:${LEDS - 1 - i}`} data-led />)}
+            </div>
+        </div>
+    </BentoCard>
+
+    <div class="crt-stage" data-crt-stage data-reveal style="--i: 3" aria-hidden="true"></div>
+</div>
+
+<script>
+    import type { CrtHandle } from "../../../scripts/crt";
+
+    let handle: CrtHandle | null = null;
+    let observers: IntersectionObserver[] = [];
+
+    const STATUS_TEXT = { online: "ONLINE", sleep: "SLEEP", panic: "PANIC" } as const;
+
+    function mount() {
+        const root = document.querySelector<HTMLElement>("[data-crt]");
+        const stage = root?.querySelector<HTMLElement>("[data-crt-stage]");
+        if (!root || !stage || handle) return;
+        const leds = Array.from(root.querySelectorAll<HTMLElement>("[data-led]"));
+        const status = root.querySelector<HTMLElement>("[data-crt-status]");
+
+        // 星のまたたきなどの CSS アニメーションは、見えているあいだだけ動かす
+        const live = new IntersectionObserver(([e]) => root.classList.toggle("is-live", e.isIntersecting));
+        live.observe(root);
+        observers.push(live);
+
+        // three は、カードが近づいてから読み込む(初期表示を軽くする)
+        const near = new IntersectionObserver(
+            ([e]) => {
+                if (!e.isIntersecting) return;
+                near.disconnect();
+                import("../../../scripts/crt").then((m) => {
+                    // 読み込み中に別ページへ移動していたら何もしない
+                    if (!document.contains(stage) || handle) return;
+                    handle = m.mountCrt(stage, {
+                        // 上から順に消えていく(先頭の LED が一番上)
+                        onLevel: (lit) => leds.forEach((el, i) => el.classList.toggle("is-on", i >= leds.length - lit)),
+                        onState: (s) => {
+                            root.dataset.state = s;
+                            if (status) status.textContent = STATUS_TEXT[s];
+                        },
+                    });
+                });
+            },
+            { rootMargin: "500px 0px" }
+        );
+        near.observe(root);
+        observers.push(near);
+    }
+
+    document.addEventListener("astro:page-load", mount);
+    document.addEventListener("astro:before-swap", () => {
+        handle?.destroy();
+        handle = null;
+        observers.forEach((o) => o.disconnect());
+        observers = [];
+    });
+</script>
+
+<style>
+    .crt {
+        --over: 3.8rem; /* canvas が上のカードへ広がる高さ(モニターの上端はこの中に収まる) */
+        position: relative;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+    }
+    .crt > :global(.card) {
+        flex: 1;
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    /* ---- はみ出す canvas の置き場 ---- */
+    .crt-stage {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(var(--over) * -1);
+        bottom: -0.3rem;
+        z-index: 5;
+        pointer-events: none;
+    }
+
+    /* ---- 状態表示(ヘッダー右端) ---- */
+    .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-size: 0.62rem;
+        letter-spacing: 0.18em;
+        color: var(--text-muted);
+    }
+    .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 70%, transparent);
+        transition: opacity 0.4s ease;
+    }
+    .crt[data-state="sleep"] .dot {
+        opacity: 0.25;
+        box-shadow: none;
+    }
+    .crt[data-state="panic"] .dot {
+        background: var(--text);
+        animation: blink 0.25s steps(2) infinite;
+    }
+    @keyframes blink {
+        50% {
+            opacity: 0.1;
+        }
+    }
+
+    /* ---- 左右の飾り ---- */
+    .deco {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+    }
+
+    .orion {
+        position: absolute;
+        left: 1.1rem;
+        top: 3.1rem;
+        bottom: 1.6rem;
+        width: min(21%, 8.6rem);
+        height: calc(100% - 4.7rem);
+        overflow: visible;
+    }
+    .orion line {
+        stroke: var(--accent);
+        stroke-width: 0.5;
+        stroke-linecap: round;
+        opacity: 0.34;
+    }
+    .core {
+        fill: var(--text);
+    }
+    .halo {
+        fill: var(--accent);
+        opacity: 0.14;
+    }
+    .star {
+        opacity: 0.85;
+    }
+    .orion-cap {
+        position: absolute;
+        left: 1.25rem;
+        bottom: 0.85rem;
+        font-family: var(--font-mono);
+        font-size: 0.5rem;
+        letter-spacing: 0.3em;
+        color: var(--text-muted);
+        opacity: 0.55;
+    }
+
+    /* ゆっくり漂い、星がまたたく。見えていないあいだは止める(.is-live を JS が付け外し) */
+    .orion-drift {
+        animation: drift 26s ease-in-out infinite alternate;
+        animation-play-state: paused;
+    }
+    .star {
+        animation: twinkle var(--dur, 4s) ease-in-out var(--delay, 0s) infinite;
+        animation-play-state: paused;
+    }
+    .crt.is-live .orion-drift,
+    .crt.is-live .star {
+        animation-play-state: running;
+    }
+    @keyframes drift {
+        from {
+            transform: translate(0, 0) rotate(-1.2deg);
+        }
+        to {
+            transform: translate(2.5px, -3px) rotate(1.2deg);
+        }
+    }
+    @keyframes twinkle {
+        0%,
+        100% {
+            opacity: 0.9;
+        }
+        50% {
+            opacity: 0.35;
+        }
+    }
+
+    /* LED: 縦に並んだシアンのピル。上から消えていく */
+    .leds {
+        position: absolute;
+        right: 1.15rem;
+        top: 3.1rem;
+        bottom: 1.6rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 6px;
+    }
+    .led {
+        width: 7px;
+        height: 22px;
+        max-height: 11%;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--text) 14%, transparent);
+        transition:
+            background-color 0.45s ease,
+            box-shadow 0.45s ease;
+    }
+    .led.is-on {
+        background: var(--accent);
+        box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 65%, transparent);
+        /* 復帰したときは、下の LED から順に点く */
+        transition-delay: calc(var(--n) * 45ms);
+    }
+
+    /* ---- 幅が狭いとき: はみ出しを控えめに、飾りを小さく ---- */
+    @media (max-width: 1199px) {
+        .crt {
+            --over: 3.4rem;
+        }
+    }
+    @media (max-width: 720px) {
+        .crt {
+            --over: 2.6rem;
+        }
+        .orion {
+            width: 5.2rem;
+            left: 0.8rem;
+            opacity: 0.8;
+        }
+        .orion-cap {
+            display: none;
+        }
+        .leds {
+            right: 0.85rem;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .orion-drift,
+        .star {
+            animation: none;
+        }
+    }
+</style>
