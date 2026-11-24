@@ -94,6 +94,10 @@ export const socials: Social[] = [
   { name: "Twitter", url: TW_DAILY_URL, icon: "twitter" },
 ];
 
+// ---- Links の紹介文 ----
+// トップの Others と /links ページで共通に使う
+export const LINKS_SUMMARY = "相互リンクしているサイト一覧";
+
 // ---- PALETTE セクション ----
 // サイトの CSS 変数名。ライト/ダークで自動的に切り替わる
 export const heroPalette: string[] = [
