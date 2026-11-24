@@ -13,6 +13,8 @@ export const PROFILE = {
   univ: "UEC25 - Computer Science Program",
   club: "MMA",
   mbti: "INTJ-A",
+  /** 誕生日 YYYY-MM-DD。年齢は utils/age.ts で、JST の今日から数える */
+  birthday: "2006-06-20",
   /** 先輩からもらった大切な UUID。トップのヒーローと About で使う(クリックでコピー) */
   uuid: "1b45a0db-7238-47e4-b95e-206522388c88",
 } as const;

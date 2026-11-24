@@ -76,8 +76,15 @@ const STEP_H = 0.005;
 const TRANSIENT_STEPS = 4400;
 /** 線にする軌道の点の数(STEP_H × 点数 = 方程式上の長さ 10。渦は左 6 周・右 7 周) */
 const TRAJ_POINTS = 2000;
-/** 光の粒が線の上を進む速さ(点 / 秒)。渦を 1 周するのに 2.5 秒ほど */
-const COMET_SPEED = 60;
+/** 線にした軌道に含まれる渦の数(左 6 周 + 右 7 周。TRANSIENT_STEPS・TRAJ_POINTS を変えたら数え直すこと) */
+const LOOP_COUNT = 13;
+/** 光の粒が渦を 1 周するのにかける秒数 = (今年 − 2006) / 10。
+ *  トップのメビウスの縁を走る光(mobius.ts)と同じく年齢に連動する(2026 年なら 2.0 秒、2030 年なら 2.4 秒)。
+ *  メビウスは (今年 − 2006) 秒で縁を 1 周するが、こちらは渦 1 周なので 10 分の 1 にしてある。
+ *  読み込み時に 1 回だけ決める(年越しやタイムゾーンは厳密に扱わない) */
+const LOOP_SECONDS = (new Date().getFullYear() - 2006) / 10;
+/** 光の粒が線の上を進む速さ(点 / 秒)。渦 1 周ぶんの点の数 ÷ 1 周の秒数 */
+const COMET_SPEED = TRAJ_POINTS / LOOP_COUNT / LOOP_SECONDS;
 /** 彗星の数と、尾の点の数。尾の点どうしの間隔は TAIL_GAP 点ぶん */
 const COMETS = 3;
 const TAIL = 48;

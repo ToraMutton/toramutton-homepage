@@ -1,0 +1,397 @@
+---
+// /about ヒーローのミニターミナル(Hyprland 風のすりガラス)。動きは src/scripts/terminal.ts、コマンドは src/data/terminal.ts。
+//
+// 最初から「> fastfetch」の実行結果が出ていて、その下の入力欄に実際にコマンドを打てる。
+//   左(スマホでは上): アバターの ASCII アート(src/data/asciiAvatar.ts)
+//   右(スマホでは下): 縦を抑えるため 6 項目だけ(Name / Univ / MBTI / Birthday / Age / UUID)
+//
+// すりガラスの調整
+//   --term-blur      … ぼかしの強さ。重いときは data-glass="off" で半透明だけの見た目になる
+//   --term-alpha     … 背景の濃さ(すりガラスのとき)
+//   --term-alpha-off … 背景の濃さ(半透明だけのとき。ぼかさない分、文字が読めるよう濃いめ)
+//   非力な端末では、scripts/terminal.ts が自動で data-glass="off" にする(?glass=on / off で強制もできる)
+//
+// AA の大きさ: 等幅フォントの字の幅は 0.6em なので、64 列の AA の幅は 38.4em。--aa-w から font-size を逆算している。
+// 行の高さは字の幅の 2 倍(1.2em)にして、元の画像の縦横比を保つ。
+import { Brain, Cake, Check, Copy, Fingerprint, GraduationCap, Hourglass, User } from "lucide-astro";
+import { asciiAvatar } from "../../data/asciiAvatar";
+import { PROFILE } from "../../data/about";
+import { ageOn, dotDate } from "../../utils/age";
+import { todayJST } from "../../utils/countdown";
+
+const rows = [
+    { icon: User, key: "Name", value: `${PROFILE.kana} / ${PROFILE.kanji} / ${PROFILE.handle}` },
+    { icon: GraduationCap, key: "Univ", value: PROFILE.univ },
+    { icon: Brain, key: "MBTI", value: PROFILE.mbti },
+    { icon: Cake, key: "Birthday", value: dotDate(PROFILE.birthday) },
+    // 年齢は、ビルド時の値を入れておく。ブラウザ側でも JST の今日で数え直す
+    { icon: Hourglass, key: "Age", value: String(ageOn(PROFILE.birthday, todayJST())), age: true },
+    { icon: Fingerprint, key: "UUID", value: PROFILE.uuid, copy: true },
+];
+---
+
+<section class="term" aria-label="ミニターミナル" data-term data-glass="on">
+    <div class="term-body" data-term-body>
+        <div class="term-log" data-term-log role="log" aria-live="polite">
+            <p class="term-line term-cmd"><span class="term-prompt">&gt;</span> fastfetch</p>
+
+            <div class="ff" data-ff>
+                <pre class="aa" aria-hidden="true">{asciiAvatar.join("\n")}</pre>
+                <dl class="info">
+                    {
+                        rows.map((r) => (
+                            <div class="info-row">
+                                <dt>
+                                    <r.icon size={14} strokeWidth={1.75} aria-hidden="true" />
+                                    <span>{r.key}</span>
+                                </dt>
+                                <dd>
+                                    {r.copy ? (
+                                        <button
+                                            type="button"
+                                            class="copy"
+                                            data-copy={r.value}
+                                            aria-label="UUID をコピー"
+                                        >
+                                            <span class="copy-v">{r.value}</span>
+                                            <span class="copy-ico" aria-hidden="true">
+                                                <Copy size={13} strokeWidth={1.75} class="ico-copy" />
+                                                <Check size={13} strokeWidth={2} class="ico-done" />
+                                            </span>
+                                            <span class="copy-done" aria-hidden="true">
+                                                copied
+                                            </span>
+                                        </button>
+                                    ) : r.age ? (
+                                        <span data-age data-birthday={PROFILE.birthday}>
+                                            {r.value}
+                                        </span>
+                                    ) : (
+                                        r.value
+                                    )}
+                                </dd>
+                            </div>
+                        ))
+                    }
+                </dl>
+            </div>
+        </div>
+
+        <form class="term-form" data-term-form>
+            <label class="term-prompt" for="term-input">&gt;</label>
+            <input
+                id="term-input"
+                type="text"
+                spellcheck="false"
+                autocomplete="off"
+                autocapitalize="off"
+                autocorrect="off"
+                enterkeyhint="send"
+                aria-label="コマンドを入力(help で一覧)"
+            />
+        </form>
+    </div>
+</section>
+
+<script>
+    import { mountTerminal } from "../../scripts/terminal";
+
+    let destroy: (() => void) | null = null;
+
+    document.addEventListener("astro:page-load", () => {
+        const root = document.querySelector<HTMLElement>("[data-term]");
+        if (!root || destroy) return;
+        destroy = mountTerminal(root);
+    });
+    document.addEventListener("astro:before-swap", () => {
+        destroy?.();
+        destroy = null;
+    });
+</script>
+
+<style>
+    .term {
+        --term-blur: 10px;
+        --term-alpha: 52%;
+        --term-alpha-off: 86%;
+        --aa-w: clamp(9.5rem, 15vw, 12rem);
+        position: relative;
+        width: clamp(26rem, 48vw, 40rem);
+        max-width: 100%;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        color: var(--text);
+        background: color-mix(in srgb, var(--bg-deep) var(--term-alpha), transparent);
+        border: 1px solid color-mix(in srgb, var(--text) 16%, transparent);
+        border-radius: 12px;
+        box-shadow: 0 14px 36px -16px rgb(0 0 0 / 0.55);
+        -webkit-backdrop-filter: blur(var(--term-blur));
+        backdrop-filter: blur(var(--term-blur));
+        /* 親(ヒーローの左カラム)は背後の 3D をドラッグできるようポインターを素通しするので、ここだけ受け取る */
+        pointer-events: auto;
+    }
+
+    /* 半透明だけ(ぼかさない)。重い端末・「透明効果を減らす」設定のとき */
+    .term[data-glass="off"] {
+        background: color-mix(in srgb, var(--bg-deep) var(--term-alpha-off), transparent);
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+
+    @media (prefers-reduced-transparency: reduce) {
+        .term {
+            background: color-mix(in srgb, var(--bg-deep) var(--term-alpha-off), transparent);
+            -webkit-backdrop-filter: none;
+            backdrop-filter: none;
+        }
+    }
+
+    /* ---- 本体(出力が増えたらここだけがスクロールする) ---- */
+    .term-body {
+        max-height: clamp(14rem, 52dvh, 26rem);
+        padding: 1rem 1.15rem 0.9rem;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: color-mix(in srgb, var(--text) 28%, transparent) transparent;
+        cursor: text;
+    }
+
+    .term-body :global(.term-line) {
+        margin: 0;
+        line-height: 1.65;
+        overflow-wrap: anywhere;
+    }
+
+    .term-body :global(.term-line.dim) {
+        color: var(--text-muted);
+    }
+    .term-body :global(.term-line.err) {
+        color: var(--text-muted);
+    }
+
+    .term-body :global(a) {
+        color: var(--accent);
+    }
+
+    .term-prompt {
+        color: var(--accent);
+        font-weight: 700;
+    }
+    .term-body :global(.term-prompt) {
+        color: var(--accent);
+        font-weight: 700;
+    }
+
+    /* ---- fastfetch ---- */
+    .ff {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: center;
+        gap: 0.5rem 1rem;
+        margin: 0.55rem 0 0.7rem;
+    }
+
+    .aa {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: none;
+        overflow: visible;
+        /* 64 列 = 38.4em */
+        font-family: var(--font-mono);
+        font-size: calc(var(--aa-w) / 38.4);
+        line-height: 1.2;
+        white-space: pre;
+        color: var(--accent);
+        opacity: 0.92;
+        user-select: none;
+    }
+
+    .info {
+        display: grid;
+        gap: 0.42rem;
+        margin: 0;
+        min-width: 0;
+    }
+
+    .info-row {
+        display: grid;
+        grid-template-columns: 5.4rem minmax(0, 1fr);
+        align-items: baseline;
+        gap: 0.5rem;
+    }
+
+    .info dt {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        color: var(--accent);
+        font-weight: 700;
+    }
+
+    .info dt :global(svg) {
+        flex: none;
+        align-self: center;
+    }
+
+    .info dd {
+        margin: 0;
+        min-width: 0;
+        overflow-wrap: anywhere;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* UUID: クリックでコピー。コピーできたら「copied」に切り替わる */
+    .copy {
+        position: relative;
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.4rem;
+        max-width: 100%;
+        padding: 0;
+        border: 0;
+        background: none;
+        font: inherit;
+        /* 36 文字の UUID を 1 行に収めるため、ほんの少しだけ小さく */
+        font-size: 0.7rem;
+        color: inherit;
+        text-align: left;
+        overflow-wrap: anywhere;
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+
+    .copy-ico {
+        display: inline-grid;
+        flex: none;
+        align-self: center;
+        color: var(--text-muted);
+    }
+    .copy-ico > :global(svg) {
+        grid-area: 1 / 1;
+    }
+    .copy-ico :global(.ico-done) {
+        opacity: 0;
+    }
+
+    .copy-done {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        opacity: 0;
+        color: var(--accent);
+        pointer-events: none;
+    }
+
+    .copy:hover,
+    .copy:focus-visible {
+        color: var(--accent);
+    }
+
+    .copy.is-copied .copy-v {
+        opacity: 0;
+    }
+    .copy.is-copied .copy-done {
+        opacity: 1;
+    }
+    .copy.is-copied .copy-ico :global(.ico-copy) {
+        opacity: 0;
+    }
+    .copy.is-copied .copy-ico :global(.ico-done) {
+        opacity: 1;
+        color: var(--accent);
+    }
+
+    /* ---- 出力(JS が足すものなので :global) ---- */
+    .term-body :global(.term-help) {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 0.1rem 1.1rem;
+        margin: 0.15rem 0;
+        line-height: 1.65;
+    }
+    .term-body :global(.term-help-name) {
+        color: var(--accent);
+        font-weight: 700;
+    }
+
+    .term-body :global(.term-music-title) {
+        margin-top: 0.15rem;
+        font-weight: 700;
+        color: var(--accent);
+    }
+    .term-body :global(.term-music-meta) {
+        color: var(--text-muted);
+    }
+
+    /* ---- 入力欄 ---- */
+    .term-form {
+        display: flex;
+        align-items: baseline;
+        gap: 0.55rem;
+        margin: 0;
+    }
+
+    .term-form input {
+        flex: 1;
+        min-width: 0;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        font: inherit;
+        line-height: 1.65;
+        color: var(--text);
+        caret-color: var(--accent);
+    }
+
+    .term-form input::selection {
+        background: color-mix(in srgb, var(--accent) 35%, transparent);
+    }
+
+    /* ---- モバイル: AA を上、情報を下に積む ---- */
+    @media (max-width: 768px) {
+        .term {
+            /* 背後のアトラクタを、すりガラス越しにもう少し透かして見せる */
+            --term-blur: 6px;
+            --term-alpha: 42%;
+            --aa-w: 8.5rem;
+            width: 100%;
+        }
+
+        /* 縦積みで項目が増えるぶん、初期表示(fastfetch)がスクロールなしで収まる高さにする */
+        .term-body {
+            max-height: clamp(14rem, 58dvh, 30rem);
+        }
+
+        .ff {
+            grid-template-columns: 1fr;
+            justify-items: start;
+            gap: 0.8rem;
+            margin: 0.55rem 0 0.8rem;
+        }
+
+        .info {
+            width: 100%;
+        }
+
+        /* iOS は 16px 未満の入力欄にフォーカスすると画面が勝手に拡大されるため、入力欄だけ 16px にする */
+        .term-form input,
+        .term-form label {
+            font-size: 16px;
+        }
+    }
+
+    /* 狭いデスクトップ幅では、項目名の列を詰めて値の幅を稼ぐ */
+    @media (max-width: 1180px) and (min-width: 769px) {
+        .info-row {
+            grid-template-columns: 4.6rem minmax(0, 1fr);
+            gap: 0.4rem;
+        }
+        .info dt :global(svg) {
+            display: none;
+        }
+    }
+</style>

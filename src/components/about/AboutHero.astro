@@ -17,11 +17,12 @@
 //     画面の縦横比によらず、割合だけで決まる。ここにほんの少し(4%)余裕を足している。
 //
 // 重なり順(手前ほど数字が大きい):
-//   30 … タイトル・HUD・スクロール誘導・SNS ドック(三角形と一緒には拡大しない)
+//   30 … タイトル + ミニターミナル・HUD・スクロール誘導・SNS ドック(三角形と一緒には拡大しない)
 //   15 … 左右の三角形
 //   10 … 3D キャンバス(ローレンツアトラクタ。src/scripts/lorenz.ts を後から読み込む)
 import ScrollCue from "../ui/ScrollCue.astro";
 import SocialDock from "../ui/SocialDock.astro";
+import AboutTerminal from "./AboutTerminal.astro";
 ---
 
 <div class="hero-track" data-about-track>
@@ -31,10 +32,12 @@ import SocialDock from "../ui/SocialDock.astro";
         <div class="hero-tri hero-tri-l" aria-hidden="true"></div>
         <div class="hero-tri hero-tri-r" aria-hidden="true"></div>
 
-        <!-- 背後の 3D をドラッグできるよう、タイトルはポインター操作を素通しする -->
-        <h1 class="hero-title hero-fade">About</h1>
-
-        <!-- ミニターミナルは、ここ(タイトルの下)に置く -->
+        <!-- 左カラム: タイトルとミニターミナル。背後の 3D をドラッグできるよう、カラム自体はポインター操作を素通しする
+             (ターミナルだけが自分で受け取る)。スマホでは、すりガラスのターミナルがアトラクタの上に重なる -->
+        <div class="hero-left hero-fade">
+            <h1 class="hero-title">About</h1>
+            <AboutTerminal />
+        </div>
 
         <!-- HUD: ローレンツ方程式と、いま光の粒がいる位置。装飾なので読み上げない・ポインターも素通し -->
         <div class="hud hero-fade" aria-hidden="true">
@@ -202,12 +205,20 @@ import SocialDock from "../ui/SocialDock.astro";
         visibility: hidden;
     }
 
-    /* ---- タイトル(左上) ---- */
-    .hero-title {
+    /* ---- 左カラム(タイトル + ターミナル) ---- */
+    .hero-left {
         position: absolute;
         top: calc(72px + clamp(1rem, 5vh, 3.5rem));
         left: clamp(1.5rem, 6vw, 7rem);
         z-index: 30;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: clamp(0.9rem, 2.5vh, 1.5rem);
+        pointer-events: none;
+    }
+
+    .hero-title {
         margin: 0;
         border: 0;
         font-family: var(--font-mono);
@@ -216,7 +227,6 @@ import SocialDock from "../ui/SocialDock.astro";
         letter-spacing: -0.02em;
         line-height: 1;
         color: var(--text);
-        pointer-events: none;
         user-select: none;
     }
 
@@ -287,6 +297,11 @@ import SocialDock from "../ui/SocialDock.astro";
 
         .hud {
             display: none;
+        }
+
+        /* タイトルとターミナルを、画面の左右の余白をそろえて広げる */
+        .hero-left {
+            right: 1.5rem;
         }
     }
 </style>
