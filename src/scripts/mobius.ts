@@ -48,8 +48,9 @@ const W = 0.42; // 帯の半幅
 const TAU = Math.PI * 2;
 
 /** 縁を走る光が、縁をひと回り(0〜4π。表→裏→表)するのにかかる秒数。
- *  もとは 0.45 rad/s(≒ 27.9 秒)で、それをきりのよい 28 秒に決めた */
-const COMET_LAP_SECONDS = 28;
+ *  年齢を反映して「今年 - 2006」秒(2026 年なら 20 秒、2027 年なら 21 秒)。
+ *  読み込み時に 1 回だけ決める(年越しやタイムゾーンは厳密に扱わない) */
+const COMET_LAP_SECONDS = new Date().getFullYear() - 2006;
 
 function mobius(u: number, v: number, out: Vector3): Vector3 {
   const r = R + v * Math.cos(u / 2);
