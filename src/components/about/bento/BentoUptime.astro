@@ -1,0 +1,189 @@
+---
+// Uptime カード。「〇〇から〇〇日」を 2 つ。背後に Uptime Kuma の応答時間グラフ風の折れ線(シアン)を敷く。
+// 折れ線は 2 つの日数を種(シード)にして決定論的に作る(utils/uptime-graph.ts)ので、
+// 軽い SVG 1 枚で済み、日数が変わる毎日、表情も変わる。
+// 日数は JST のカレンダーで数える。ビルド時の値を、ブラウザ側でも JST の今日で数え直す(Countdown と同じ保険)。
+// 中身は src/data/home.ts の uptimes。
+import { uptimes } from "../../../data/home";
+import { daysBetween, todayJST } from "../../../utils/countdown";
+import { seedFrom, uptimeGraph } from "../../../utils/uptime-graph";
+import BentoCard from "./BentoCard.astro";
+
+const today = todayJST();
+const rows = uptimes.map((u) => ({ ...u, days: daysBetween(u.since, today) }));
+const graph = uptimeGraph(seedFrom(...rows.map((r) => r.days)));
+const fmt = (n: number) => n.toLocaleString("en-US");
+---
+
+<BentoCard label="Uptime" class="uptime" order={1}>
+    <div class="body" data-uptime data-since={rows.map((r) => r.since).join(",")}>
+        <!-- 背景のグラフ。幅は枠いっぱいに伸ばし、線の太さだけは変えない(non-scaling-stroke)。
+             いまの点の丸は、SVG が縦横に歪むので HTML 側に置いて、同じ入れ物の中で % だけ合わせる -->
+        <div class="chart" aria-hidden="true">
+            <svg class="graph" viewBox="0 0 300 100" preserveAspectRatio="none">
+                <defs>
+                    <linearGradient id="uptime-fill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stop-color="var(--accent)" stop-opacity="0.28"></stop>
+                        <stop offset="1" stop-color="var(--accent)" stop-opacity="0"></stop>
+                    </linearGradient>
+                </defs>
+                <path class="area" data-graph-area d={graph.area} fill="url(#uptime-fill)"></path>
+                <path class="line" data-graph-line d={graph.line} vector-effect="non-scaling-stroke"></path>
+            </svg>
+            <span
+                class="pulse"
+                data-graph-dot
+                style={`left: ${(graph.last.x / 300) * 100}%; top: ${graph.last.y}%`}></span>
+        </div>
+
+        <dl class="rows">
+            {
+                rows.map((r) => (
+                    <div class="row">
+                        <dt>
+                            <r.icon size={13} strokeWidth={1.75} aria-hidden="true" />
+                            {r.label}
+                        </dt>
+                        <dd>
+                            <span class="num" data-uptime-days>
+                                {fmt(r.days)}
+                            </span>
+                            <span class="unit">days</span>
+                        </dd>
+                    </div>
+                ))
+            }
+        </dl>
+    </div>
+</BentoCard>
+
+<script>
+    import { daysBetween, todayJST } from "../../../utils/countdown";
+    import { seedFrom, uptimeGraph } from "../../../utils/uptime-graph";
+
+    function refresh() {
+        const root = document.querySelector<HTMLElement>("[data-uptime]");
+        if (!root?.dataset.since) return;
+        const today = todayJST();
+        const days = root.dataset.since.split(",").map((s) => daysBetween(s, today));
+        root.querySelectorAll<HTMLElement>("[data-uptime-days]").forEach((el, i) => {
+            el.textContent = days[i].toLocaleString("en-US");
+        });
+        // 日数が変わっていれば、グラフも作り直す(同じ日数なら同じ形になるので、変わらなければ何も起きない)
+        const g = uptimeGraph(seedFrom(...days));
+        root.querySelector("[data-graph-line]")?.setAttribute("d", g.line);
+        root.querySelector("[data-graph-area]")?.setAttribute("d", g.area);
+        const dot = root.querySelector<HTMLElement>("[data-graph-dot]");
+        if (dot) {
+            dot.style.left = `${(g.last.x / 300) * 100}%`;
+            dot.style.top = `${g.last.y}%`;
+        }
+    }
+    document.addEventListener("astro:page-load", refresh);
+</script>
+
+<style>
+    .body {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+    }
+
+    /* グラフはカードの下半分に敷く。左はカードの端まで、右は少し余白を残して、いまの点が欠けないようにする */
+    .chart {
+        position: absolute;
+        left: -1.25rem;
+        right: 0.9rem;
+        bottom: -1.25rem;
+        height: 52%;
+    }
+
+    .graph {
+        display: block;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+    }
+
+    .line {
+        fill: none;
+        stroke: var(--accent);
+        stroke-width: 1.5;
+        stroke-linejoin: round;
+        stroke-linecap: round;
+        opacity: 0.9;
+    }
+
+    /* いまの点。SVG の座標(300 × 100)を、入れ物に対する % で置き直している */
+    .pulse {
+        position: absolute;
+        width: 7px;
+        height: 7px;
+        margin: -3.5px 0 0 -3.5px;
+        border-radius: 50%;
+        background: var(--accent-glow);
+        box-shadow: 0 0 10px 2px color-mix(in srgb, var(--accent) 70%, transparent);
+        animation: beat 2.4s ease-in-out infinite;
+    }
+
+    @keyframes beat {
+        0%,
+        100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.35;
+        }
+    }
+
+    .rows {
+        position: relative;
+        display: grid;
+        gap: 0.7rem;
+        margin: 0;
+    }
+
+    .row dt {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-family: var(--font-mono);
+        font-size: 0.64rem;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+    }
+
+    .row dt :global(svg) {
+        color: var(--accent);
+    }
+
+    .row dd {
+        display: flex;
+        align-items: baseline;
+        gap: 0.4rem;
+        margin: 0;
+    }
+
+    .num {
+        font-family: var(--font-mono);
+        font-size: 1.9rem;
+        font-weight: 600;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .unit {
+        font-family: var(--font-mono);
+        font-size: 0.64rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .pulse {
+            animation: none;
+        }
+    }
+</style>

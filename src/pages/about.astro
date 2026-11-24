@@ -1,11 +1,12 @@
 ---
 // /about。ファーストビュー(ローレンツアトラクタ + ミニターミナル)と、その下の Bento Grid で構成する。
 //   1. ファーストビュー … components/about/AboutHero.astro(ステップ 1・2 で実装)
-//   2. Bento Grid     … ステップ 3・4 で実装する(いまは三角形の遷移を確かめるための仮の枠)
+//   2. Bento Grid     … components/about/AboutBento.astro(カードは bento/。ステップ 3 で静的カード、ステップ 4 で CRT モニター)
 // 表示する中身は src/data/about.ts にまとめてある。
 export const prerender = true;
 import Layout from "../layouts/BaseLayout.astro";
 import AboutHero from "../components/about/AboutHero.astro";
+import AboutBento from "../components/about/AboutBento.astro";
 ---
 
 <Layout
@@ -15,21 +16,5 @@ import AboutHero from "../components/about/AboutHero.astro";
 >
     <AboutHero />
 
-    <!-- TODO(ステップ 3・4): Bento Grid に置き換える。背景はヒーローの三角形と同じ --bg-deep -->
-    <section class="bento" id="bento">
-        <p>Bento Grid(実装予定)</p>
-    </section>
+    <AboutBento />
 </Layout>
-
-<style>
-    .bento {
-        display: grid;
-        place-items: center;
-        min-height: 100vh;
-        background: var(--bg-deep);
-        font-family: var(--font-mono);
-        font-size: 0.8rem;
-        letter-spacing: 0.08em;
-        color: var(--text-muted);
-    }
-</style>

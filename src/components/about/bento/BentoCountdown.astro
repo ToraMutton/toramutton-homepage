@@ -1,0 +1,225 @@
+---
+// Countdown カード。旧トップ(main ブランチの index.astro)の Countdown をほぼそのまま移植したもの。
+//   1 行 = アイコン + 題(+ ホバーで現れる目標日)+ 残り日数 + 残量バー
+//   バーは固定 365 日を 100% とした「残量ゲージ」で、日が近づくほど縮む。カードが画面に入ると左から伸びる。
+// 日付はすべて JST のカレンダーで数える(utils/countdown.ts)。ビルド時の値を、ブラウザ側でも JST の今日で数え直す
+// (毎日 0:00 にリビルドするが、タブを開きっぱなし・CDN キャッシュの保険)。
+// 中身は src/data/home.ts の missions(毎年のイベントは repeat: "yearly")。
+import { missions } from "../../../data/home";
+import { daysBetween, resolveMissionDate, todayJST } from "../../../utils/countdown";
+import BentoCard from "./BentoCard.astro";
+
+/** バーグラフは固定 365 日を 100% とする */
+const WINDOW_DAYS = 365;
+
+const today = todayJST();
+const items = missions
+    .map((m) => {
+        const date = resolveMissionDate(m, today);
+        const days = daysBetween(today, date);
+        const title = typeof m.title === "function" ? m.title(Number(date.slice(0, 4))) : m.title;
+        return { ...m, title, date, days, p: Math.min(Math.max(days, 0) / WINDOW_DAYS, 1) };
+    })
+    // 過ぎたものは出さない(毎日 0:00 のリビルドで自動的に消える)
+    .filter((m) => m.days >= 0)
+    .sort((a, b) => a.days - b.days);
+
+// 期限切れの一回きりイベントはビルドログで知らせる(消し忘れ防止)
+for (const m of missions) {
+    if (m.repeat !== "yearly" && daysBetween(today, m.date) < 0) {
+        console.warn(`[countdown] 期限切れ: ${m.title} (${m.date}) — src/data/home.ts から消してOK`);
+    }
+}
+---
+
+<BentoCard label="Countdown" class="countdown" order={2}>
+    <ul class="list">
+        {
+            items.length === 0 && <li class="empty">予定なし。のんびりいこう</li>
+        }
+        {
+            items.map((m, i) => (
+                <li class="item" data-mission data-date={m.date} style={`--i: ${i}; --p: ${m.p}`}>
+                    <span class="icon" aria-hidden="true">
+                        <m.icon size={15} strokeWidth={1.75} />
+                    </span>
+                    <span class="title">
+                        {m.title}
+                        <span class="date">{m.date.replaceAll("-", "/")}</span>
+                    </span>
+                    <span class="days">
+                        <span class="num" data-days>
+                            {m.days === 0 ? "Today!" : m.days}
+                        </span>
+                        <span class="unit" data-unit hidden={m.days === 0}>
+                            days
+                        </span>
+                    </span>
+                    <span class="bar" aria-hidden="true">
+                        <span class="bar-fill"></span>
+                    </span>
+                </li>
+            ))
+        }
+    </ul>
+</BentoCard>
+
+<script>
+    import { daysBetween, todayJST } from "../../../utils/countdown";
+
+    function refresh() {
+        const today = todayJST();
+        document.querySelectorAll<HTMLElement>("[data-mission]").forEach((item) => {
+            const target = item.dataset.date;
+            if (!target) return;
+            const days = daysBetween(today, target);
+            // 過ぎたものは隠す(次のリビルドで HTML からも消える)
+            item.hidden = days < 0;
+            if (days < 0) return;
+            const num = item.querySelector<HTMLElement>("[data-days]");
+            if (num) num.textContent = days === 0 ? "Today!" : String(days);
+            const unit = item.querySelector<HTMLElement>("[data-unit]");
+            if (unit) unit.hidden = days === 0;
+            item.style.setProperty("--p", String(Math.min(Math.max(days, 0) / 365, 1)));
+        });
+    }
+    document.addEventListener("astro:page-load", refresh);
+</script>
+
+<style>
+    .list {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        justify-content: space-around;
+        gap: 0.5rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .empty {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    /* 1 行 = [アイコン 題(+ 目標日) … 日数] + 全幅のバー */
+    .item {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: baseline;
+        column-gap: 0.55rem;
+    }
+
+    /* display: grid が UA の [hidden] より強いので明示的に消す */
+    .item[hidden] {
+        display: none;
+    }
+
+    .icon {
+        align-self: center;
+        color: var(--text-muted);
+        transition: color 0.25s ease;
+    }
+
+    .title {
+        font-size: 0.84rem;
+        font-weight: 600;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+    }
+
+    .days {
+        display: flex;
+        align-items: baseline;
+        gap: 0.25rem;
+        font-family: var(--font-mono);
+    }
+
+    .num {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .unit {
+        font-size: 0.6rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+    }
+
+    /* 目標日: 行を指すと、題の隣に現れる(ホバーの無い端末では常時) */
+    .date {
+        display: inline-block;
+        margin-left: 0.45rem;
+        font-family: var(--font-mono);
+        font-weight: 400;
+        font-size: 0.62rem;
+        color: var(--text-muted);
+        opacity: 0;
+        transform: translateX(-4px);
+        transition:
+            opacity 0.2s ease,
+            transform 0.2s ease;
+    }
+
+    .bar {
+        grid-column: 1 / -1;
+        margin-top: 0.3rem;
+        height: 3px;
+        border-radius: 3px;
+        background: color-mix(in srgb, var(--text) 9%, transparent);
+        overflow: hidden;
+        transition: height 0.2s ease;
+    }
+
+    /* 残量ゲージ。カードが画面に入ったら(.is-visible)左から伸びる。行ごとに --i で少しずつ遅らせる */
+    .bar-fill {
+        display: block;
+        height: 100%;
+        background: var(--accent);
+        opacity: 0.6;
+        border-radius: inherit;
+        transform-origin: left;
+        transform: scaleX(0);
+        transition:
+            transform 0.9s cubic-bezier(0.2, 0, 0.2, 1) calc(var(--i) * 90ms + 200ms),
+            opacity 0.2s ease;
+    }
+
+    :global(.card.is-visible) .bar-fill {
+        transform: scaleX(var(--p, 0));
+    }
+
+    @media (hover: hover) {
+        .item:hover .bar {
+            height: 6px;
+        }
+        .item:hover .bar-fill {
+            opacity: 1;
+        }
+        .item:hover .date {
+            opacity: 1;
+            transform: none;
+        }
+        .item:hover .icon {
+            color: var(--accent);
+        }
+    }
+
+    @media (hover: none) {
+        .date {
+            opacity: 1;
+            transform: none;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .bar-fill,
+        .date {
+            transition: none;
+        }
+    }
+</style>

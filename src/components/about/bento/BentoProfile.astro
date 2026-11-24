@@ -1,0 +1,255 @@
+---
+// 資格 + タイムラインのカード(右カラム。縦いっぱい)。トップの About セクションと同じ中身を、最初から全部展開して置く。
+//   上: 資格の一覧   下: 経歴(git log 風。新しいものが上)
+// PC 幅(12 カラムのとき)は、カードの高さをグリッドに合わせ、タイムラインだけをカード内でスクロールさせる。
+//   細いスクロールバー + 上下の端のフェード(まだ続きがある側だけ薄くする)で、続きがあることを示す。
+//   ・フェードの長さは CSS 変数 --fade-top / --fade-bottom。@property で登録して、出入りをなめらかに補間している
+//   ・どちら側に続きがあるかは、スクロールのたびに <script> が .can-up / .can-down を付け外しして伝える
+// 中身は src/data/about.ts の QUALIFICATIONS / TIMELINE(資格を足すと経歴にも自動で入る)。
+import { Award } from "lucide-astro";
+import { QUALIFICATIONS, TIMELINE } from "../../../data/about";
+import BentoCard from "./BentoCard.astro";
+
+/** 資格の取得年月 */
+const ym = (d: string) => d.slice(0, 7);
+---
+
+<BentoCard label="Qualifications" class="profile" order={6}>
+    <ul class="quals">
+        {
+            QUALIFICATIONS.map((q) => (
+                <li class="qual">
+                    <Award size={15} strokeWidth={1.5} aria-hidden="true" />
+                    <span class="qual-name">{q.name}</span>
+                    <time datetime={q.date.replaceAll(".", "-")}>{ym(q.date)}</time>
+                </li>
+            ))
+        }
+    </ul>
+
+    <h3 class="sub">Timeline</h3>
+    <div class="tl" data-tl>
+        <ol class="tl-list" data-tl-list tabindex="0" aria-label="経歴(スクロールできます)">
+            {
+                TIMELINE.map((e) => (
+                    <li class="tl-row">
+                        <time class="tl-date">{e.date}</time>
+                        <span class="tl-node" aria-hidden="true" />
+                        <span class="tl-desc">{e.desc}</span>
+                    </li>
+                ))
+            }
+        </ol>
+    </div>
+</BentoCard>
+
+<script>
+    function bindTimeline() {
+        document.querySelectorAll<HTMLElement>("[data-tl]").forEach((root) => {
+            if (root.dataset.bound) return;
+            root.dataset.bound = "1";
+            const list = root.querySelector<HTMLElement>("[data-tl-list]");
+            if (!list) return;
+            // 上下どちら側に続きがあるか(1px の誤差は無視する)
+            const update = () => {
+                root.classList.toggle("can-up", list.scrollTop > 2);
+                root.classList.toggle("can-down", list.scrollTop + list.clientHeight < list.scrollHeight - 2);
+            };
+            list.addEventListener("scroll", update, { passive: true });
+            new ResizeObserver(update).observe(list);
+            update();
+        });
+    }
+    document.addEventListener("astro:page-load", bindTimeline);
+</script>
+
+<!-- @property は全体に効く宣言なので、スコープを付けない -->
+<style is:global>
+    @property --fade-top {
+        syntax: "<length>";
+        inherits: false;
+        initial-value: 0px;
+    }
+    @property --fade-bottom {
+        syntax: "<length>";
+        inherits: false;
+        initial-value: 0px;
+    }
+</style>
+
+<style>
+    .quals {
+        display: grid;
+        gap: 0.55rem;
+        margin: 0 0 1.4rem;
+        padding: 0;
+        list-style: none;
+    }
+
+    .qual {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        font-size: 0.88rem;
+        line-height: 1.4;
+    }
+
+    .qual :global(svg) {
+        flex: none;
+        color: var(--accent);
+    }
+
+    .qual-name {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .qual time {
+        flex: none;
+        font-family: var(--font-mono);
+        font-size: 0.66rem;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+    }
+
+    .sub {
+        margin: 0 0 0.6rem;
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        font-weight: 500;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--accent);
+    }
+
+    /* タイムラインの置き場。残りの高さをぜんぶ使うが、中身の高さはカードの高さに影響させない
+       (中身は position: absolute にして、スクロール領域としてだけ使う) */
+    .tl {
+        position: relative;
+        flex: 1;
+        min-height: 12rem;
+    }
+
+    .tl-list {
+        --fade-top: 0px;
+        --fade-bottom: 0px;
+        --date-w: 4.7rem;
+        position: absolute;
+        inset: 0;
+        margin: 0;
+        padding: 0 0.4rem 0 0;
+        list-style: none;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: color-mix(in srgb, var(--text) 25%, transparent) transparent;
+        /* 続きがある側の端だけ、薄くなって消えていく */
+        -webkit-mask-image: linear-gradient(
+            to bottom,
+            transparent 0,
+            #000 var(--fade-top),
+            #000 calc(100% - var(--fade-bottom)),
+            transparent 100%
+        );
+        mask-image: linear-gradient(
+            to bottom,
+            transparent 0,
+            #000 var(--fade-top),
+            #000 calc(100% - var(--fade-bottom)),
+            transparent 100%
+        );
+        transition:
+            --fade-top 0.3s ease,
+            --fade-bottom 0.3s ease;
+    }
+
+    .tl.can-up .tl-list {
+        --fade-top: 2.2rem;
+    }
+    .tl.can-down .tl-list {
+        --fade-bottom: 2.2rem;
+    }
+
+    .tl-list::-webkit-scrollbar {
+        width: 4px;
+    }
+    .tl-list::-webkit-scrollbar-thumb {
+        border-radius: 4px;
+        background: color-mix(in srgb, var(--text) 25%, transparent);
+    }
+
+    .tl-list:focus-visible {
+        outline: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+        outline-offset: 4px;
+        border-radius: 4px;
+    }
+
+    /* 縦の軸(スクロールしても一緒に動くよう、行ごとに引く) */
+    .tl-row {
+        position: relative;
+        display: grid;
+        grid-template-columns: var(--date-w) 1rem minmax(0, 1fr);
+        align-items: baseline;
+        padding: 0.4rem 0;
+    }
+
+    .tl-row::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: calc(var(--date-w) + 0.5rem);
+        width: 1px;
+        background: var(--border);
+    }
+    .tl-row:first-child::before {
+        top: 50%;
+    }
+    .tl-row:last-child::before {
+        bottom: 50%;
+    }
+
+    .tl-date {
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        letter-spacing: 0.02em;
+        color: var(--text-muted);
+    }
+
+    .tl-node {
+        position: relative;
+        justify-self: center;
+        align-self: center;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--bg);
+        border: 1px solid var(--text-muted);
+    }
+
+    .tl-desc {
+        padding-left: 0.75rem;
+        font-size: 0.82rem;
+        line-height: 1.5;
+    }
+
+    /* 1 カラム・2 カラムの幅(カードが縦に伸びてよいとき)は、内側でスクロールさせず全部見せる */
+    @media (max-width: 1199px) {
+        .tl {
+            flex: none;
+            min-height: 0;
+        }
+        .tl-list {
+            position: static;
+            overflow: visible;
+            padding: 0;
+            -webkit-mask-image: none;
+            mask-image: none;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .tl-list {
+            transition: none;
+        }
+    }
+</style>

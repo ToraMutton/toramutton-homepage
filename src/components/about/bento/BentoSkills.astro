@@ -1,0 +1,87 @@
+---
+// 技術スタックカード。トップの About セクションと同じ、厳選 16 個の単色アイコン(8 × 2)。
+// アイコンは SVG を mask にして currentColor で塗るので、テーマの色にそのまま追従する(中身は about.ts の FEATURED_SKILLS)。
+import { FEATURED_SKILLS } from "../../../data/about";
+import BentoCard from "./BentoCard.astro";
+---
+
+<BentoCard label="Skills" class="skills" order={4}>
+    <ul class="list">
+        {
+            FEATURED_SKILLS.map((s) => (
+                <li class="skill">
+                    <span class="ico" style={`--icon: url(${s.icon})`} aria-hidden="true" />
+                    <span class="name">{s.name}</span>
+                </li>
+            ))
+        }
+    </ul>
+</BentoCard>
+
+<style>
+    .list {
+        display: grid;
+        grid-template-columns: repeat(8, minmax(0, 1fr));
+        align-content: center;
+        flex: 1;
+        gap: 1.1rem 0.25rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .skill {
+        display: grid;
+        justify-items: center;
+        align-content: start;
+        gap: 0.45rem;
+        color: var(--text-muted);
+        transition: color 0.25s ease;
+    }
+
+    .ico {
+        width: 1.7rem;
+        height: 1.7rem;
+        background: currentColor;
+        -webkit-mask: var(--icon) center / contain no-repeat;
+        mask: var(--icon) center / contain no-repeat;
+        transition: transform 0.35s var(--ease-out);
+    }
+
+    .name {
+        max-width: 100%;
+        font-family: var(--font-mono);
+        font-size: 0.54rem;
+        letter-spacing: 0;
+        text-align: center;
+        overflow-wrap: anywhere;
+    }
+
+    @media (hover: hover) {
+        .skill:hover {
+            color: var(--accent);
+        }
+        .skill:hover .ico {
+            transform: translateY(-3px);
+        }
+    }
+
+    @media (max-width: 720px) {
+        .list {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+        .ico {
+            width: 2rem;
+            height: 2rem;
+        }
+        .name {
+            font-size: 0.62rem;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .ico {
+            transition: none;
+        }
+    }
+</style>

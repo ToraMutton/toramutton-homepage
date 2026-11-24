@@ -1,0 +1,101 @@
+---
+// GitHub カード。トップのヒーローの草と見た目をそろえた、丸いドットの草グラフ。
+//   横スクロールはさせず、枠にきれいに収まるよう、直近 WEEKS 週だけを日曜始まりで切り出す。
+//   縦 7 マス(日〜土)× 横 WEEKS 列。マスは枠の幅に合わせて自動で大きさが決まる(正方形のまま)。
+//   右上の数字は、直近 1 年の contributions の総数(jogruber の API が返す total。トップと同じ数字)。
+import { getContributions } from "../../../utils/github";
+import { GITHUB_URL } from "../../../consts";
+import BentoCard from "./BentoCard.astro";
+
+const WEEKS = 20;
+const contributions = await getContributions();
+const days = contributions.days;
+let recent = days;
+if (days.length > 0) {
+    const last = days[days.length - 1];
+    const lastWeekday = new Date(`${last.date}T00:00:00Z`).getUTCDay();
+    // 最終週の日曜日から (WEEKS - 1) 週さかのぼった日曜日が先頭
+    recent = days.slice(Math.max(0, days.length - (lastWeekday + 1) - (WEEKS - 1) * 7));
+}
+---
+
+<BentoCard label="GitHub" class="github" order={5}>
+    <a
+        slot="aside"
+        class="total"
+        href={GITHUB_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`GitHub: 直近1年で ${contributions.total} contributions`}
+    >
+        {contributions.total.toLocaleString("en-US")}
+    </a>
+
+    {
+        recent.length > 0 ? (
+            <div class="dots" aria-hidden="true" style={`--weeks: ${WEEKS}`}>
+                {recent.map((d) => (
+                    <span class={`dot lv-${d.level}`} title={`${d.date} · ${d.count} contributions`} />
+                ))}
+            </div>
+        ) : (
+            <p class="empty">草を取得できませんでした。</p>
+        )
+    }
+</BentoCard>
+
+<style>
+    .total {
+        color: var(--text);
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+    .total:hover,
+    .total:focus-visible {
+        color: var(--accent);
+    }
+
+    .dots {
+        display: grid;
+        grid-template-columns: repeat(var(--weeks), minmax(0, 1fr));
+        /* 日付順に並べたいので、縦 7 マス × 横 weeks 列を「列方向に」埋める */
+        grid-template-rows: repeat(7, auto);
+        grid-auto-flow: column;
+        gap: 3px;
+        margin-block: auto;
+        width: 100%;
+    }
+
+    .dot {
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: color-mix(in srgb, var(--text) 8%, transparent);
+    }
+
+    /* 色は増やさず、アクセント 1 色の濃さで段階を出す */
+    .lv-1 {
+        background: color-mix(in srgb, var(--accent) 30%, transparent);
+    }
+    .lv-2 {
+        background: color-mix(in srgb, var(--accent) 52%, transparent);
+    }
+    .lv-3 {
+        background: color-mix(in srgb, var(--accent) 76%, transparent);
+    }
+    .lv-4 {
+        background: var(--accent);
+    }
+
+    .empty {
+        margin: auto 0;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    /* 広い 1 枚になる幅(タブレット)では、ドットが大きくなりすぎないよう幅を抑える */
+    @media (max-width: 1199px) and (min-width: 721px) {
+        .dots {
+            max-width: 28rem;
+        }
+    }
+</style>

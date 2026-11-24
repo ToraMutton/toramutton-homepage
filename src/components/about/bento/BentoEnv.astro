@@ -1,0 +1,276 @@
+---
+// 環境カード。縦長の角丸ピルが 4 つ(Desktop / Laptop / Mobile / Setup)並び、
+// ホバー(スマホはタップ)したピルが横に広がって、パーツ構成・スペックの詳細を見せる。残りの 3 つは細く縮む。
+//   しくみ: ピルは flex の横並びで、どれも flex-grow: 1。開いたピルだけ flex-grow: 8 にする。
+//           flex-grow は transition できるので、幅の再配分がそのままなめらかなアニメーションになる。
+//   操作:   マウス … 乗せると開く / グループから出ると全部閉じる(scripts は下の <script>)
+//           タップ・キーボード … ボタンで開閉(開けるのは常に 1 つだけ)
+// 中身は src/data/about.ts の ENV_BLOCKS。
+import { Computer, Laptop, Smartphone, SquareTerminal } from "lucide-astro";
+import { ENV_BLOCKS } from "../../../data/about";
+import BentoCard from "./BentoCard.astro";
+
+const KIND = {
+    desktop: { icon: Computer, label: "Desktop" },
+    laptop: { icon: Laptop, label: "Laptop" },
+    mobile: { icon: Smartphone, label: "Mobile" },
+    setup: { icon: SquareTerminal, label: "Setup" },
+} as const;
+
+const pills = ENV_BLOCKS.map((b) => ({ ...b, ...KIND[b.section as keyof typeof KIND] }));
+---
+
+<BentoCard label="Environment" class="env" order={0}>
+    <div class="pills" data-pills>
+        {
+            pills.map((p) => (
+                <div class="pill" data-pill>
+                    <button
+                        type="button"
+                        class="pill-toggle"
+                        aria-expanded="false"
+                        aria-controls={`env-${p.section}`}
+                        data-pill-toggle
+                    >
+                        <p.icon size={20} strokeWidth={1.5} aria-hidden="true" />
+                        <span class="pill-label">{p.label}</span>
+                    </button>
+                    <div class="pill-body" id={`env-${p.section}`} role="region" aria-label={p.label}>
+                        {p.meta && <p class="pill-meta">{p.meta.replace(" : ", "\n").replace(/\//g, ".")}</p>}
+                        <dl class="specs">
+                            {p.rows.map((r) => (
+                                <div>
+                                    <dt>{r.k}</dt>
+                                    <dd>{r.v}</dd>
+                                </div>
+                            ))}
+                        </dl>
+                        {p.link && (
+                            <a class="pill-link" href={p.link.href}>
+                                {p.link.tag} →
+                            </a>
+                        )}
+                    </div>
+                </div>
+            ))
+        }
+    </div>
+</BentoCard>
+
+<script>
+    function bindPills() {
+        document.querySelectorAll<HTMLElement>("[data-pills]").forEach((root) => {
+            if (root.dataset.bound) return;
+            root.dataset.bound = "1";
+            const pills = Array.from(root.querySelectorAll<HTMLElement>("[data-pill]"));
+
+            // open = 開くピル(null なら全部閉じる)
+            const set = (open: HTMLElement | null) => {
+                pills.forEach((p) => {
+                    const on = p === open;
+                    p.classList.toggle("is-open", on);
+                    p.querySelector("[data-pill-toggle]")?.setAttribute("aria-expanded", String(on));
+                });
+                root.classList.toggle("has-open", open !== null);
+            };
+
+            pills.forEach((p) => {
+                // マウスは「乗せたら開く」。タッチは乗せた扱いで pointerenter が飛んでくるので、マウスだけに限る
+                p.addEventListener("pointerenter", (e) => {
+                    if (e.pointerType === "mouse") set(p);
+                });
+                p.querySelector("[data-pill-toggle]")?.addEventListener("click", (e) => {
+                    // マウスの click は、乗せた時点ですでに開いているので何もしない(閉じてしまうのを防ぐ)
+                    if ((e as PointerEvent).pointerType === "mouse") return;
+                    set(p.classList.contains("is-open") ? null : p);
+                });
+            });
+            root.addEventListener("pointerleave", (e) => {
+                if (e.pointerType === "mouse") set(null);
+            });
+        });
+    }
+
+    document.addEventListener("astro:page-load", bindPills);
+</script>
+
+<style>
+    .pills {
+        flex: 1;
+        display: flex;
+        gap: 0.4rem;
+        min-height: 15rem;
+    }
+
+    /* 縦長のピル。幅の取り合いは flex-grow だけで決まる */
+    .pill {
+        flex: 1 1 0;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: color-mix(in srgb, var(--bg-deep) 62%, transparent);
+        border: 1px solid color-mix(in srgb, var(--text) 9%, transparent);
+        border-radius: 999px;
+        transition:
+            flex-grow 0.55s var(--ease-out),
+            border-radius 0.55s var(--ease-out),
+            border-color 0.3s ease,
+            background-color 0.3s ease;
+    }
+
+    /* 開いたピルは、閉じたピルの 8 倍の幅(閉じたものはアイコンが入るぎりぎりまで細くなる) */
+    .pill.is-open {
+        flex-grow: 8;
+        border-radius: 22px;
+        border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+        background: color-mix(in srgb, var(--bg-deep) 82%, transparent);
+    }
+
+    /* アイコン + ラベル。閉じているときは縦に積んで中央、開いたら横並びで左上へ */
+    .pill-toggle {
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+        width: 100%;
+        padding: 1.1rem 0.25rem 0.9rem;
+        border: 0;
+        background: none;
+        font: inherit;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: color 0.25s ease;
+    }
+
+    .pill-toggle:hover,
+    .pill-toggle:focus-visible,
+    .pill.is-open .pill-toggle {
+        color: var(--accent);
+    }
+
+    .pill-label {
+        font-family: var(--font-mono);
+        font-size: 0.56rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        transition: opacity 0.2s ease;
+    }
+
+    /* 他のピルが開いて細くなったら、ラベルは隠してアイコンだけにする */
+    .pills.has-open .pill:not(.is-open) .pill-label {
+        opacity: 0;
+    }
+    .pills.has-open .pill:not(.is-open) .pill-toggle {
+        padding-inline: 0;
+    }
+    .pills.has-open .pill:not(.is-open) .pill-toggle :global(svg) {
+        width: 1.05rem;
+        height: 1.05rem;
+    }
+
+    .pill.is-open .pill-toggle {
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 0.5rem;
+        padding: 0.95rem 1rem 0.5rem;
+    }
+
+    .pill.is-open .pill-label {
+        font-size: 0.64rem;
+        letter-spacing: 0.16em;
+    }
+
+    /* ---- 開いたときの詳細 ---- */
+    .pill-body {
+        flex: 1;
+        min-height: 0;
+        min-width: 7.5rem;
+        padding: 0 0.9rem 0.8rem 1rem;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: color-mix(in srgb, var(--text) 25%, transparent) transparent;
+        opacity: 0;
+        visibility: hidden;
+        transition:
+            opacity 0.2s ease,
+            visibility 0s linear 0.2s;
+    }
+
+    .pill.is-open .pill-body {
+        opacity: 1;
+        visibility: visible;
+        /* 幅が広がりきるころに現れる */
+        transition:
+            opacity 0.3s ease 0.22s,
+            visibility 0s;
+    }
+
+    .pill-meta {
+        margin: 0 0 0.6rem;
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        line-height: 1.45;
+        letter-spacing: 0.03em;
+        white-space: pre-line;
+        color: var(--text-muted);
+    }
+
+    .specs {
+        display: grid;
+        gap: 0.32rem;
+        margin: 0;
+    }
+
+    .specs dt {
+        font-family: var(--font-mono);
+        font-size: 0.52rem;
+        line-height: 1.2;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent);
+    }
+
+    .specs dd {
+        margin: 0;
+        font-size: 0.7rem;
+        line-height: 1.3;
+        overflow-wrap: anywhere;
+    }
+
+    .pill-link {
+        display: inline-block;
+        margin-top: 0.7rem;
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        letter-spacing: 0.04em;
+        color: var(--accent);
+        text-decoration: none;
+    }
+
+    .pill-link:hover,
+    .pill-link:focus-visible {
+        text-decoration: underline;
+    }
+
+    /* 12 カラムのときは、グリッドの行の高さが固定なので、ピルはその中に収まる。
+       それ以外の幅(行の高さが中身まかせ)では、閉じたピルの詳細まで高さに数えられて、
+       いちばん長いデスクトップのスペックにカードが引き伸ばされてしまう。高さを固定して、詳細は内側でスクロールさせる */
+    @media (max-width: 1199px) {
+        .pills {
+            flex: none;
+            height: 17rem;
+            min-height: 0;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .pill,
+        .pill-body,
+        .pill-label {
+            transition: none;
+        }
+    }
+</style>
