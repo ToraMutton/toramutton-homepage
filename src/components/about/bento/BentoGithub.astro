@@ -1,5 +1,5 @@
 ---
-// GitHub カード。トップのヒーローの草と見た目をそろえた、丸いドットの草グラフ。
+// GitHub カード。本家の GitHub と同じ、角丸の正方形のマスの草グラフ(色はアクセント 1 色の濃淡)。
 //   横スクロールはさせず、枠にきれいに収まるよう、直近 WEEKS 週だけを日曜始まりで切り出す。
 //   縦 7 マス(日〜土)× 横 WEEKS 列。マスは枠の幅に合わせて自動で大きさが決まる(正方形のまま)。
 //   スマホ(1 カラム)ではマスが小さくなりすぎるので、新しい WEEKS_SM 週だけを見せる(古い週は列ごと display: none)。
@@ -70,9 +70,10 @@ if (days.length > 0) {
         width: 100%;
     }
 
+    /* 本家の GitHub と同じ角丸の正方形(1 辺の 2 割ほどの丸み)。トップのヒーローの草は丸のまま */
     .dot {
         aspect-ratio: 1;
-        border-radius: 50%;
+        border-radius: 22%;
         background: color-mix(in srgb, var(--text) 8%, transparent);
     }
 
