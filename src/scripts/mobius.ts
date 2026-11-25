@@ -375,7 +375,8 @@ export function mountMobius(container: HTMLElement): MobiusHandle | null {
   }
   const resizeObserver = new ResizeObserver(() => {
     resize();
-    if (!running) render(lastTime);
+    // 大きさを変えると canvas は消えるので、動いている最中でもすぐ描き直す(空白のコマが点滅して見える)
+    render(lastTime);
   });
   resizeObserver.observe(container);
   resize();

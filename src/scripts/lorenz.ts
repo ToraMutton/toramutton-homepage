@@ -283,7 +283,8 @@ export function mountLorenz(container: HTMLElement, options: LorenzOptions = {})
   }
   const resizeObserver = new ResizeObserver(() => {
     resize();
-    if (!running) render();
+    // 大きさを変えると canvas は消えるので、動いている最中でもすぐ描き直す(空白のコマが点滅して見える)
+    render();
   });
   resizeObserver.observe(container);
   resize();

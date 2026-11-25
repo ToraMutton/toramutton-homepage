@@ -26,7 +26,8 @@ export function bindHeroScroll({ track, hero, coveredAt = 0.4, onProgress }: Her
 
   const update = () => {
     queued = false;
-    const distance = track.offsetHeight - window.innerHeight;
+    // window.innerHeight はスマホのアドレスバーの出入りで変わり、進捗が飛ぶ。高さが固定のヒーローで測る
+    const distance = track.offsetHeight - hero.offsetHeight;
     const raw = distance > 0 ? -track.getBoundingClientRect().top / distance : 0;
     const p = Math.min(1, Math.max(0, raw));
     hero.style.setProperty("--p", p.toFixed(4));

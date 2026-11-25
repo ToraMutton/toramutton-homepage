@@ -127,7 +127,7 @@ import AboutTerminal from "./AboutTerminal.astro";
     /* 画面 1 枚ぶん + 三角形を広げるためのスクロール量 */
     .hero-track {
         position: relative;
-        height: 165dvh;
+        height: 165lvh;
     }
 
     .hero {
@@ -144,7 +144,10 @@ import AboutTerminal from "./AboutTerminal.astro";
         --cover: calc((1 + var(--ll) / var(--la) + var(--rl) / var(--ra)) / (var(--ll) + var(--rl)) * 1.04);
         position: sticky;
         top: 0;
-        height: 100dvh;
+        /* lvh = アドレスバーが隠れた時の高さで固定。dvh だとスクロール中に伸び縮みしてカクつく。
+           下端の部品は --toolbar(バーのぶん)だけ持ち上げる(PC では 0) */
+        --toolbar: calc(100lvh - 100svh);
+        height: 100lvh;
         min-height: 560px;
         overflow: hidden;
         background: var(--bg);
@@ -289,7 +292,7 @@ import AboutTerminal from "./AboutTerminal.astro";
     @media (max-width: 768px) {
         /* 覆い切った後の真っ黒な画面を短くする(Bento 側も重ねて始める) */
         .hero-track {
-            height: 145dvh;
+            height: 145lvh;
         }
 
         /* 縦長画面は底辺が短いので、三角形を少し高く・長くする */
