@@ -1,12 +1,33 @@
 ---
-const year = new Date().getFullYear();
+// 全ページ共通のフッター。引き算でシンプルに。
+//
+//   上端 … 16 進数が左右に流れる 2 行の帯(区切り線の代わり)。ときどき数バイトが光って化ける
+//   本文 … 4 列(Index / Last build / Elsewhere / ToraMutton)
+import { getVisiblePosts } from "../utils/post";
+import { works } from "../data/works";
+import { socials } from "../data/home";
+import { footerHex } from "../data/footerHex";
+import { PROFILE } from "../data/about";
+import BrandIcon from "./BrandIcon.astro";
 
-// --- ビルド情報の生成 ---
+// ---- 1 列目: サイトマップ。件数は右肩に小さく出す ----
+const postCount = (await getVisiblePosts()).length;
+const mainLinks = [
+    { href: "/", label: "Top" },
+    // Works はトップのセクションなので、トップの該当部分へスクロールする(下の script)
+    { href: "/#works", label: "Works", count: works.length, scrollTo: "works" },
+    { href: "/blog", label: "Blog", count: postCount },
+    { href: "/about", label: "About" },
+];
+const otherLinks = [
+    { href: "/links", label: "Links" },
+    { href: "/advent2026", label: "Advent 2026" },
+    // retro は見た目が全く違うページなので、ClientRouter を使わず普通に読み込む
+    { href: "/retro/", label: "Retro", reload: true },
+];
+
+// ---- 2 列目: 最終ビルド(JST) ----
 const buildDate = new Date();
-// タイムスタンプの16進数下8桁で疑似ハッシュ生成
-const buildHash = buildDate.getTime().toString(16).slice(-8);
-
-// JST (Asia/Tokyo) で日付と時刻をフォーマット
 const buildDay = new Intl.DateTimeFormat("ja-JP", {
     timeZone: "Asia/Tokyo",
     year: "numeric",
@@ -15,369 +36,383 @@ const buildDay = new Intl.DateTimeFormat("ja-JP", {
 })
     .format(buildDate)
     .replace(/\//g, "-");
-
 const buildTime = new Intl.DateTimeFormat("ja-JP", {
     timeZone: "Asia/Tokyo",
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
 }).format(buildDate);
+const year = buildDate.getFullYear();
+
+// ---- 上端の 16 進数の帯 ----
+// 2 行。それぞれ別の位置からバイト列を切り出す。
+// 横に流すので同じ並びを 2 回つなげ、半分ずれたところで継ぎ目なく先頭に戻す
+const BYTES = 96;
+const bytes = footerHex.replace(/\s+/g, "").match(/.{2}/g) ?? [];
+const tickerRows = bytes.length
+    ? [0, Math.floor(bytes.length / 2)].map((offset) => {
+          const row = Array.from({ length: BYTES }, (_, i) => bytes[(offset + i) % bytes.length]);
+          return [...row, ...row];
+      })
+    : [];
 ---
 
-<footer>
-    <div class="footer-hex" aria-hidden="true">
-        e3 81 93 e3 82 93 e3 81 ab e3 81 a1 e3 81 af e3 80 81 e7 9c 9f e5 b3 b6
-        e8 8c 82 e6 a8 b9 e3 81 a7 e3 81 99 e3 80 82 0a 0a e3 83 91 e3 83 81 e3
-        83 b3 e3 82 b3 ef bc a3 ef bc b2 e3 83 9e e3 83 84 e3 82 b1 e3 83 b3 e3
-        82 b5 e3 83 90 e3 83 88 e3 82 a5 e3 83 bc e3 81 af e3 80 81 e8 b8 8a e3
-        82 8b e3 83 91 e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81 0a 0a e3 81
-        a7 e3 81 af e3 80 81 e5 8b 87 e6 b0 97 e3 82 92 e5 87 ba e3 81 97 e3 81
-        a6 e3 80 81 e8 b8 8a e3 81 a3 e3 81 a6 e3 81 bf e3 81 be e3 81 97 e3 82
-        87 e3 81 86 ef bc 81 0a 0a 20 0a 0a e3 83 8f e3 82 a4 e3 80 81 e3 83 af
-        e3 83 b3 e3 83 88 e3 82 a5 e3 83 bc ef bc 81 0a 0a e3 82 b5 e3 83 b3 e3
-        83 90 e3 81 ae e3 83 aa e3 82 ba e3 83 a0 e3 81 a7 e3 83 91 e3 83 bc e3
-        83 91 e3 83 bc e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81 0a 0a e3 83
-        9e e3 83 84 e3 82 b1 e3 83 b3 e3 82 b5 e3 83 b3 e3 83 90 e3 81 a7 e3 83
-        91 e3 83 bc e3 83 91 e3 83 bc e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc
-        81 0a 0a e3 80 8c e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81 e3 80 8d
-        e3 81 a7 e8 85 b0 e3 82 92 e7 aa 81 e3 81 8d e5 87 ba e3 81 97 e3 81 a6
-        e3 80 82 e3 83 bb e3 83 bb e3 83 bb e3 81 9d e3 81 86 ef bc 81 0a 0a e3
-        83 9e e3 83 84 e3 82 b1 e3 83 b3 e3 83 9c e3 83 bc e3 83 8a e3 82 b9 e5
-        87 ba e7 8e 89 e3 81 8c e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81 e3
-        83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81 0a 0a 20 0a 0a e3 83 bb e3 83
-        bb e3 83 bb e3 81 9d e3 81 86 e3 80 82 e5 88 87 e3 82 8c e3 82 88 e3 81
-        8f e3 80 8c e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81 e3 80 8d e3 80
-        8c e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81 e3 80 8d e3 81 a8 e3 80
-        82 0a 0a e3 83 95 e3 82 a3 e3 82 ae e3 83 a5 e3 82 a2 e3 81 8c e8 b8 8a
-        e3 82 8b e3 82 88 e3 83 91 e3 83 bc e3 83 91 e3 83 bc e3 83 86 e3 82 a3
-        e3 83 b3 e3 82 b3 ef bc 81 0a 0a e7 a2 ba e5 a4 89 e3 82 b2 e3 83 83 e3
-        83 88 e3 81 a7 e4 b8 8a e4 b8 8a e3 83 bb e4 b8 8b e4 b8 8b e3 83 bb e3
-        82 aa e3 83 bc e3 83 97 e3 83 b3 ef bc 81 0a 0a 20 0a 0a e3 83 9c e3 83
-        bc e3 83 8a e3 82 b9 e3 82 b2 e3 83 83 e3 83 88 e3 81 a7 e5 89 8d e3 83
-        bb e5 89 8d e3 83 bb e5 be 8c e3 82 8d ef bc 81 0a 0a e3 83 95 e3 82 a3
-        e3 82 ae e3 83 a5 e3 82 a2 e3 81 8c e8 b8 8a e3 82 8b e3 82 88 e3 83 91
-        e3 83 bc e3 83 91 e3 83 bc e3 83 86 e3 82 a3 e3 83 b3 e3 82 b3 ef bc 81
-        0a 0a e3 83 9e e3 83 84 e3 82 b1 e3 83 b3 e3 82 b5 e3 83 b3 e3 83 90 e3
-        81 a7 e3 83 91 e3 83 bc e3 83 91 e3 83 bc e3 83 86 e3 82 a3 e3 83 b3 e3
-        82 b3 e3 83 bc e3 83 bc e3 83 bc e3 83 bc ef bc 81 ef bc 81 ef bc 81 0a
-        0a 20 0a 0a e3 83 bb e3 83 bb e3 83 bb e3 83 86 e3 82 a3 e3 83 b3 e3 82
-        b3 ef bc 81 0a 0a e3 83 bb e3 83 bb e3 83 bb e3 82 82 e3 81 86 ef bc 91
-        e5 9b 9e e3 80 82 0a 0a e3 83 bb e3 83 bb e3 83 bb e3 83 86 e3 82 a3 e3
-        83 b3 e3 82 b3 ef bc 81 0a 0a 20 0a 0a ef bc 88 e3 81 8b e3 83 bc e3 82
-        93 ef bc 81 ef bc 81 ef bc 89 0a 0a 20 0a 0a e3 81 af e3 83 bc e3 81 84
-        e3 80 81 e4 bb 8a e6 97 a5 e3 81 af e3 81 93 e3 82 8c e3 81 8f e3 82 89
-        e3 81 84 e3 81 ab e3 81 97 e3 81 a6 e3 81 8a e3 81 8d e3 81 be e3 81 97
-        e3 82 87 e3 81 86 e3 80 82
-    </div>
+<footer class="site-footer" data-footer>
+    {
+        tickerRows.length > 0 && (
+            <div class="ticker" aria-hidden="true">
+                {tickerRows.map((row, i) => (
+                    <div class:list={["ticker-row", { reverse: i === 1 }]}>
+                        <div class="ticker-track">
+                            {row.map((b) => (
+                                <span>{b}</span>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        )
+    }
 
-    <pre
-        class="footer-bg"
-        aria-hidden="true">                  -`
-                 .o+`
-                `ooo/
-               `+oooo:
-              `+oooooo:
-              -+oooooo+:
-            `/:-:++oooo+:
-           `/++++/+++++++:
-          `/++++++++++++++:
-         `/+++ooooooooooooo/`
-        ./ooosssso++osssssso+`
-       .oossssso-````/ossssss+`
-      -osssssso.      :ssssssso.
-     :osssssss/        osssso+++.
-    /ossssssss/        +ssssooo/-
-  `/ossssso+/:-        -:/+osssso+-
- `+sso+:-`                 `.-/+oso:
-`++:.                           `-/+/
-.`                                 `</pre>
+    <div class="footer-inner">
+        <nav class="col" aria-label="サイトマップ">
+            <p class="col-label">Index</p>
+            <ul class="link-list">
+                {
+                    mainLinks.map((l) => (
+                        <li>
+                            <a href={l.href} data-scroll-home={l.scrollTo}>
+                                {l.label}
+                                {l.count !== undefined && <sup>{l.count}</sup>}
+                            </a>
+                        </li>
+                    ))
+                }
+            </ul>
+            <ul class="link-list sub">
+                {
+                    otherLinks.map((l) => (
+                        <li>
+                            <a href={l.href} data-astro-reload={l.reload ? true : undefined}>
+                                {l.label}
+                            </a>
+                        </li>
+                    ))
+                }
+            </ul>
+        </nav>
 
-    <div class="footer-main">
-        <div class="build-info" aria-label="Build Information">
-            <div class="build-item">
-                <span class="build-label">BUILT</span>
-                <span class="build-value">{buildDay}</span>
-            </div>
-            <div class="build-item">
-                <span class="build-label">JST</span>
-                <span class="build-value">{buildTime}</span>
-            </div>
-            <div class="build-item">
-                <span class="build-label">HASH</span>
-                <span class="build-value">0x{buildHash}</span>
-            </div>
+        <div class="col">
+            <p class="col-label">Last build</p>
+            <p class="mono strong">{buildDay}</p>
+            <p class="mono muted">{buildTime} JST</p>
         </div>
-        <p class="time-message" id="footer-time-msg"># ...</p>
 
-        <p class="credit">
-            &copy; {year} ToraMutton · Built with <a
-                href="https://astro.build"
-                target="_blank"
-                rel="noopener noreferrer">Astro</a
-            >
-        </p>
+        <div class="col">
+            <p class="col-label">Elsewhere</p>
+            <ul class="link-list social-list">
+                {
+                    socials.map((s) => (
+                        <li>
+                            <a
+                                href={s.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class={`social-${s.icon}`}
+                            >
+                                <BrandIcon name={s.icon} size={14} />
+                                <span>{s.name}</span>
+                            </a>
+                        </li>
+                    ))
+                }
+            </ul>
+        </div>
 
-        <p class="kaomoji">
-            <a href="/retro/" data-astro-reload>( ∩՞ټ՞∩) ﾝﾌ～～</a>
-        </p>
+        <div class="col">
+            <p class="col-label">ToraMutton</p>
+            <p class="muted">{PROFILE.univ}</p>
+            <p class="muted">
+                Built with <a href="https://astro.build" target="_blank" rel="noopener noreferrer">Astro</a>
+            </p>
+            <p class="muted mono small">&copy; {year} ToraMutton</p>
+            <p class="kaomoji">( ∩՞ټ՞∩) ﾝﾌ～～</p>
+        </div>
     </div>
 </footer>
 
 <script>
+    // トップにいるときの「Works」リンクは、ページを読み込み直さず、該当セクションへスムーズにスクロールする。
+    // 他のページからは、通常のリンクとして / へ移動する(ClientRouter が #works まで移動してくれる)。
+    // document への委譲で 1 回だけ登録する(ClientRouter でフッターが入れ替わっても効く)。
+    // ClientRouter も同じリンクのクリックを拾って、同じページ内のハッシュ移動として一瞬で飛んでしまう。
+    // そこで第 3 引数 true(キャプチャ段階)で先に受け取り、stopPropagation で ClientRouter には渡さない
+    document.addEventListener(
+        "click",
+        (e) => {
+            const link = (e.target as HTMLElement).closest<HTMLAnchorElement>("a[data-scroll-home]");
+            if (!link || location.pathname !== "/") return;
+            const section = document.getElementById(link.dataset.scrollHome ?? "");
+            if (!section) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            section.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
+        },
+        true,
+    );
+</script>
+
+<script>
+    // ---- 16 進数の帯のちらつき ----
+    // 0.5〜1.1 秒ごとに 1〜3 バイトが水色に光り、一瞬だけ別の値に化けてから戻る。
+    // フッターが見えている間だけ動かす(帯の横移動の CSS アニメーションも止める)
+    let stop: (() => void) | null = null;
+
+    function start(footer: HTMLElement) {
+        stop?.();
+        const cells = Array.from(footer.querySelectorAll<HTMLElement>(".ticker-track span"));
+        if (cells.length === 0) return;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+        const HEX = "0123456789ABCDEF";
+        const randomByte = () => HEX[(Math.random() * 16) | 0] + HEX[(Math.random() * 16) | 0];
+        let timer = 0;
+        let active = false;
+
+        const glitch = () => {
+            const n = 1 + ((Math.random() * 3) | 0);
+            for (let k = 0; k < n; k++) {
+                const cell = cells[(Math.random() * cells.length) | 0];
+                if (cell.classList.contains("is-hot")) continue;
+                const original = cell.textContent ?? "";
+                cell.textContent = randomByte();
+                cell.classList.add("is-hot");
+                setTimeout(() => {
+                    cell.textContent = original;
+                    cell.classList.remove("is-hot");
+                }, 380 + Math.random() * 300);
+            }
+        };
+
+        const loop = () => {
+            if (!active) return;
+            glitch();
+            timer = window.setTimeout(loop, 500 + Math.random() * 600);
+        };
+
+        const io = new IntersectionObserver(([entry]) => {
+            active = entry.isIntersecting;
+            footer.classList.toggle("is-active", active);
+            clearTimeout(timer);
+            if (active) loop();
+        });
+        io.observe(footer);
+
+        stop = () => {
+            io.disconnect();
+            clearTimeout(timer);
+            stop = null;
+        };
+    }
+
     document.addEventListener("astro:page-load", () => {
-        const el = document.getElementById("footer-time-msg");
-        if (!el) return;
-
-        // Asia/Tokyo の「時」を 0〜23 で取得
-        const hourStr = new Intl.DateTimeFormat("en-US", {
-            timeZone: "Asia/Tokyo",
-            hour: "2-digit",
-            hourCycle: "h23",
-        }).format(new Date());
-        let hour = parseInt(hourStr, 10);
-        if (Number.isNaN(hour) || hour === 24) hour = 0;
-
-        let pool: string[];
-        if (hour <= 4) {
-            pool = ["# はよ寝ろ", "# 日付跨いでますよ！早く気づいて！"];
-        } else if (hour <= 6) {
-            pool = [
-                "# そろそろ能力が高い人が起きてきそう",
-                "# 早起きか、夜更かしか",
-            ];
-        } else if (hour <= 11) {
-            pool = ["# おはようございます！", "# ド級の起床、ド起床"];
-        } else if (hour <= 17) {
-            pool = ["# 午後もがんばれ", "# 眠くなってくる時間帯"];
-        } else if (hour <= 21) {
-            pool = ["# お疲れ様です", "# 脱くねくね"];
-        } else {
-            // 22〜23時
-            pool = ["# そろそろ寝ろ", "# おやすみなさい！"];
-        }
-
-        el.textContent = pool[Math.floor(Math.random() * pool.length)];
+        const footer = document.querySelector<HTMLElement>("[data-footer]");
+        if (footer) start(footer);
     });
+    document.addEventListener("astro:before-swap", () => stop?.());
 </script>
 
 <style>
-    footer {
-        position: relative;
-        overflow: hidden;
+    .site-footer {
         margin-top: auto;
-        padding: 3rem 1rem 2.5rem;
-        border-top: 1px solid var(--border-color);
-        background: var(--background);
+        background: var(--bg-deep);
+        color: var(--text);
     }
 
-    /* === 背景: Hex Dump with maji === */
-    .footer-hex {
-        position: absolute;
-        bottom: -0.5rem;
-        left: -0.5rem;
-        width: 40%;
-        max-height: 100%;
-        z-index: 0;
-
-        font-family: var(--font-mono);
-        font-size: clamp(0.4rem, 1.8vw, 0.7rem);
-        line-height: 1.4;
-        word-break: break-all;
-        color: var(--text-muted);
-        opacity: 0.5;
-        text-transform: uppercase;
-
-        /* 上に向かって徐々に消えていくグラデーションマスク */
-        mask-image: linear-gradient(to top right, black 10%, transparent 80%);
-        -webkit-mask-image: linear-gradient(
-            to top right,
-            black 10%,
-            transparent 80%
-        );
-
+    /* ---- 16 進数の帯 ---- */
+    .ticker {
+        display: grid;
+        gap: 0.35rem;
+        padding: 1.5rem 0;
         overflow: hidden;
-        pointer-events: none;
-        user-select: none;
-    }
-
-    /* === 背景: Arch ASCIIアート === */
-    .footer-bg {
-        position: absolute;
-        bottom: -1rem;
-        right: -1rem;
-        margin: 0;
-        padding: 0;
-        z-index: 0;
-
         font-family: var(--font-mono);
-        font-size: clamp(0.45rem, 2.4vw, 0.8rem);
-        line-height: 1.15;
-        white-space: pre;
+        font-size: 0.78rem;
+        letter-spacing: 0.06em;
         color: var(--text-muted);
-        opacity: 0.28;
-
-        /* global.css の pre デフォルトスタイルを上書き */
-        background: transparent;
-        border: none;
-        border-radius: 0;
-        padding: 0;
-        /* pre デフォルトのスクロールバーを潰す */
-        overflow: hidden;
-        pointer-events: none;
         user-select: none;
+        /* 左右の端は溶かす */
+        mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
     }
 
-    /* === メインカラム === */
-    .footer-main {
-        position: relative;
-        z-index: 1;
-        max-width: 1100px;
+    .ticker-row {
+        overflow: hidden;
+        white-space: nowrap;
+        opacity: 0.6;
+    }
+
+    .ticker-track {
+        display: inline-flex;
+        gap: 0.9ch;
+        animation: ticker 140s linear infinite;
+        animation-play-state: paused;
+    }
+
+    .ticker-row.reverse .ticker-track {
+        animation-direction: reverse;
+        animation-duration: 180s;
+    }
+
+    .site-footer.is-active .ticker-track {
+        animation-play-state: running;
+    }
+
+    @keyframes ticker {
+        to {
+            transform: translateX(-50%);
+        }
+    }
+
+    .ticker-track span {
+        transition:
+            color 0.35s ease,
+            text-shadow 0.35s ease;
+    }
+
+    /* 化けているバイト。アクセント色でほのかに光らせる */
+    .ticker-track span.is-hot {
+        color: var(--accent);
+        text-shadow: 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent);
+        transition: none;
+    }
+
+    /* ---- 本文 ---- */
+    .footer-inner {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 2.5rem;
+        max-width: var(--max-width);
         margin: 0 auto;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1.25rem;
-        text-align: center;
+        padding: 3.5rem 1.5rem 5rem;
     }
 
-    /* === ビルド情報パネル === */
-    .build-info {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        column-gap: 1.5rem;
-        row-gap: 0.5rem;
-        padding: 0.6rem 1.2rem;
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
+    .col p {
+        margin: 0 0 0.4rem;
+        font-size: 0.9rem;
+        line-height: 1.7;
+    }
+
+    .col p.col-label {
+        margin-bottom: 1.1rem;
         font-family: var(--font-mono);
-        font-size: 0.75rem;
-
-        background: var(--background);
-        z-index: 2;
-
-        max-width: fit-content;
+        font-size: 0.7rem;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: var(--accent);
     }
 
-    .build-item {
-        display: flex;
-        gap: 0.5rem;
-        align-items: center;
-    }
-
-    .build-label {
-        color: var(--text-muted);
-    }
-
-    .build-value {
-        /* 変数がない場合は白や黒になるようにフォールバック */
-        color: var(--text-main, #e2e8f0);
-        font-weight: 600;
-        letter-spacing: 0.05em;
-    }
-
-    /* === 時間帯メッセージ === */
-    .time-message {
-        margin: 0;
+    .mono {
         font-family: var(--font-mono);
-        font-size: 0.8rem;
-        color: var(--text-muted);
-        letter-spacing: 0.02em;
     }
 
-    /* === クレジット === */
-    .credit {
-        margin: 0;
-        font-family: var(--font-mono);
-        font-size: 0.72rem;
-        color: var(--text-muted);
-        letter-spacing: 0.02em;
+    .col p.strong {
+        font-size: 1.15rem;
+        font-weight: 500;
+        margin-bottom: 0.1rem;
     }
 
-    .credit a {
+    .muted {
         color: var(--text-muted);
+    }
+
+    .col p.small {
+        font-size: 0.78rem;
+        margin-top: 1rem;
+    }
+
+    .col a {
+        color: var(--text);
         text-decoration: none;
-        font-weight: 600;
         transition: color 0.2s ease;
     }
 
-    /* === おまけ === */
-    .kaomoji {
+    .link-list {
+        display: grid;
+        gap: 0.35rem;
         margin: 0;
-        font-family: var(--font-mono);
-        font-size: 0.7rem;
+        padding: 0;
+        list-style: none;
+        font-size: 0.95rem;
+    }
+
+    .link-list.sub {
+        margin-top: 1.1rem;
+        font-size: 0.85rem;
+    }
+
+    .link-list.sub a,
+    .social-list a {
         color: var(--text-muted);
-        opacity: 0.65;
     }
 
-    /* イースターエッグの入口。見た目は普通の顔文字のまま */
-    .kaomoji a {
-        color: inherit;
-        text-decoration: none;
+    .link-list sup {
+        margin-left: 0.2rem;
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        color: var(--text-muted);
     }
 
-    /* === hover (ポインタデバイスのみ) === */
+    .social-list a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        --brand: var(--text);
+    }
+    .social-list .social-zenn {
+        --brand: var(--brand-zenn);
+    }
+    .social-list .social-qiita {
+        --brand: var(--brand-qiita);
+    }
+    .social-list .social-note {
+        --brand: var(--brand-note);
+    }
+
     @media (hover: hover) {
-        .credit a:hover {
-            color: var(--accent-blue);
+        .col a:hover {
+            color: var(--accent);
+        }
+        .social-list a:hover {
+            color: var(--brand);
         }
     }
 
-    /* === reduced-motion 配慮 === */
+    .col p.kaomoji {
+        margin-top: 0.25rem;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        opacity: 0.7;
+    }
+
     @media (prefers-reduced-motion: reduce) {
-        .credit a {
-            transition: none;
+        .ticker-track {
+            animation: none;
         }
     }
 
-    /* === モバイル === */
-    @media (max-width: 720px) {
-        footer {
-            padding: 2.5rem 1rem 2rem;
+    /* ---- タブレット・スマホ: 2 列 ---- */
+    @media (max-width: 900px) {
+        .footer-inner {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            row-gap: 3rem;
         }
+    }
 
-        /* モバイル時のHex表示領域調整 */
-        .footer-hex {
-            width: 65%;
-            font-size: clamp(0.35rem, 2.5vw, 0.6rem);
-            bottom: -0.2rem;
-            left: -0.2rem;
-            mask-image: linear-gradient(
-                to top right,
-                black 5%,
-                transparent 60%
-            );
-            -webkit-mask-image: linear-gradient(
-                to top right,
-                black 5%,
-                transparent 60%
-            );
-        }
-
-        .footer-bg {
-            font-size: clamp(0.3rem, 2.6vw, 0.5rem);
-            opacity: 0.15;
-            bottom: -0.5rem;
-            right: -0.5rem;
-        }
-
-        .footer-main {
-            gap: 1rem;
-        }
-
-        .build-info {
-            flex-direction: column;
-            width: 100%;
-            max-width: 100%;
-            padding: 0.8rem 1rem;
-            gap: 0.5rem;
-            background: var(--surface);
-        }
-
-        .build-item {
-            width: 100%;
-            justify-content: space-between; /* ラベルを左端、値を右端に押しやる */
-            /* border-bottom: 1px dashed var(--border-color); */
+    @media (max-width: 520px) {
+        .footer-inner {
+            padding: 2.5rem 1.25rem 3.5rem;
+            gap: 2.5rem 1.5rem;
         }
     }
 </style>

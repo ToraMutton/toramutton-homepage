@@ -1,0 +1,75 @@
+---
+// セクション見出しの共通部品(新デザインの「語彙」その1)。
+//
+//   01 ── つくったもの   ← eyebrow: 小さな等幅・字間広め。番号と日本語の補足
+//   Works                ← 大きく太い英字の見出し
+//
+// トップの各セクションでも、詳細ページの見出しでも同じものを使い、
+// デザイン画のないページでも世界観が揃うようにする。
+interface Props {
+    /** 通し番号。"01" のように2桁で渡す。省略すると番号なし */
+    index?: string;
+    /** 大きく出す英字の見出し */
+    title: string;
+    /** eyebrow に小さく添える日本語の補足 */
+    caption?: string;
+    /** 見出しのレベル。ページの主見出しなら h1 */
+    as?: "h1" | "h2";
+}
+
+const { index, title, caption, as: Heading = "h2" } = Astro.props;
+---
+
+<div class="section-title">
+    {
+        (index || caption) && (
+            <p class="eyebrow">
+                {index && <span class="eyebrow-index">{index}</span>}
+                {index && caption && (
+                    <span class="eyebrow-rule" aria-hidden="true" />
+                )}
+                {caption && <span>{caption}</span>}
+            </p>
+        )
+    }
+    <Heading class="heading">{title}</Heading>
+</div>
+
+<style>
+    .section-title {
+        margin-bottom: 2.5rem;
+    }
+
+    .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 0.75em;
+        margin: 0 0 0.75rem;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        font-weight: 500;
+        letter-spacing: 0.2em;
+        color: var(--accent);
+    }
+
+    .eyebrow-index {
+        color: var(--text-muted);
+    }
+
+    /* 番号と補足の間の細い線。数直線の区間のような見た目にする */
+    .eyebrow-rule {
+        width: 2.5rem;
+        height: 1px;
+        background: currentColor;
+    }
+
+    .heading {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: clamp(2.75rem, 7vw, 5rem);
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: -0.03em;
+        color: var(--text);
+    }
+</style>

@@ -1,0 +1,182 @@
+---
+// トップページ右端の縦中央に固定する「現在位置バー」。
+// Top / Works / Blog / About / Others に対応する細い縦線が 5 本、縦に並ぶ。
+//
+//   現在地 … 明るい色(ダーク: 白 / ライト: 墨色)。ほかは灰色
+//   ホバー … 線が太くなり、左に項目名がふっと出る
+//   クリック … そのセクションへスムーズスクロール。通った順に線の色がなめらかに移る
+//
+// 現在地の判定はスクロール位置から計算する(src/scripts/current-section.ts。左の波形と共通)。
+// 左の波形(FourierRail)と同じく、1240px 未満では表示しない。
+const items = [
+    { id: "top", label: "Top" },
+    { id: "works", label: "Works" },
+    { id: "blog", label: "Blog" },
+    { id: "about", label: "About" },
+    { id: "others", label: "Others" },
+];
+---
+
+<nav class="section-rail" aria-label="ページ内の現在位置" data-section-rail>
+    {
+        items.map((item) => (
+            <a href={`#${item.id}`} class="rail-item" data-rail-id={item.id}>
+                <span class="rail-label">{item.label}</span>
+                <span class="rail-line" aria-hidden="true" />
+            </a>
+        ))
+    }
+</nav>
+
+<script>
+    import { watchCurrentSection } from "../../scripts/current-section";
+
+    let cleanup: (() => void) | null = null;
+
+    function init() {
+        cleanup?.();
+        const root = document.querySelector<HTMLElement>("[data-section-rail]");
+        if (!root) return;
+        // 非表示の幅では何もしない(スクロールのたびの計算もしない)
+        if (getComputedStyle(root).display === "none") return;
+
+        const links = Array.from(root.querySelectorAll<HTMLAnchorElement>("[data-rail-id]"));
+        // "top" は常にいちばん上(要素なし)。ほかは id のセクション
+        const sectionOf = (id: string) => (id === "top" ? null : document.getElementById(id));
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+        // 現在地の判定は左の波形と共通(src/scripts/current-section.ts)
+        const stopWatch = watchCurrentSection((id) => {
+            for (const link of links) {
+                if (link.dataset.railId === id) link.setAttribute("aria-current", "location");
+                else link.removeAttribute("aria-current");
+            }
+        });
+
+        // クリックでスムーズスクロール。ハッシュは書き換えない(戻るボタンを汚さない)
+        const onClick = (e: MouseEvent) => {
+            const link = (e.target as HTMLElement).closest<HTMLAnchorElement>("[data-rail-id]");
+            if (!link) return;
+            e.preventDefault();
+            const behavior = reduceMotion.matches ? "auto" : "smooth";
+            const section = sectionOf(link.dataset.railId!);
+            if (section) section.scrollIntoView({ behavior, block: "start" });
+            else window.scrollTo({ top: 0, behavior });
+            // クリック後にフォーカスが残ると、ホバーを外してもラベルが出っぱなしになる
+            link.blur();
+        };
+
+        root.addEventListener("click", onClick);
+
+        cleanup = () => {
+            stopWatch();
+            root.removeEventListener("click", onClick);
+            cleanup = null;
+        };
+    }
+
+    document.addEventListener("astro:page-load", init);
+    document.addEventListener("astro:before-swap", () => cleanup?.());
+</script>
+
+<style>
+    /* 右端の位置は、ヘッダーのテーマダイアルの右端にそろえる */
+    .section-rail {
+        position: fixed;
+        top: 50%;
+        right: clamp(1rem, 3vw, 2.5rem);
+        z-index: 40;
+        display: flex;
+        flex-direction: column;
+        transform: translateY(-50%);
+        /* 灰色(控えめ)と現在地の色。ダークは白、ライトは墨色。どちらも背景に溶け込みすぎない濃さ */
+        --rail-idle: color-mix(in srgb, var(--text) 26%, transparent);
+        --rail-hover: color-mix(in srgb, var(--text) 55%, transparent);
+        --rail-active: var(--text);
+    }
+
+    /* 押しやすいように、線の周りを広めの当たり判定にしている */
+    .rail-item {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        padding: 5px 0;
+        color: var(--rail-idle);
+        text-decoration: none;
+        -webkit-tap-highlight-color: transparent;
+        outline: none;
+    }
+
+    .rail-line {
+        display: block;
+        width: 2px;
+        height: 26px;
+        border-radius: 2px;
+        background: currentColor;
+        /* 色は移り変わりが見えるようゆっくり、太さは素早く */
+        transition:
+            color 0.45s ease,
+            width 0.2s var(--ease-out);
+    }
+
+    .rail-item[aria-current="location"] {
+        color: var(--rail-active);
+    }
+
+    /* 項目名。線の左に、少し右(線側)から滑るように出る */
+    .rail-label {
+        position: absolute;
+        top: 50%;
+        right: 100%;
+        margin-right: 0.2rem;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.1em;
+        white-space: nowrap;
+        color: var(--text);
+        opacity: 0;
+        transform: translate(8px, -50%);
+        pointer-events: none;
+        transition:
+            opacity 0.25s ease,
+            transform 0.35s var(--ease-out);
+    }
+
+    @media (hover: hover) {
+        .rail-item:hover .rail-line {
+            width: 4px;
+        }
+        .rail-item:hover:not([aria-current="location"]) {
+            color: var(--rail-hover);
+        }
+        .rail-item:hover .rail-label {
+            opacity: 1;
+            transform: translate(0, -50%);
+        }
+    }
+
+    /* キーボードで辿ったときも同じ見え方にする */
+    .rail-item:focus-visible .rail-line {
+        width: 4px;
+    }
+    .rail-item:focus-visible .rail-label {
+        opacity: 1;
+        transform: translate(0, -50%);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .rail-line,
+        .rail-label {
+            transition: none;
+        }
+    }
+
+    /* 狭い画面ではホバーがなく、左右の余白も足りないので出さない(左の波形と同じ幅で切る) */
+    @media (max-width: 1239px) {
+        .section-rail {
+            display: none;
+        }
+    }
+</style>

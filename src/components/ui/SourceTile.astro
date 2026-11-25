@@ -1,0 +1,60 @@
+---
+// 画像のない記事のサムネイル。薄い格子の上に、掲載先のロゴを 1 つ置く。
+// このサイトの記事(local)はマスコットの線画。
+// トップと /blog の索引、記事ページの前後記事・おすすめ、アドベントカレンダーで共通。
+// 親の大きさいっぱいに広がるので、縦横比は使う側で決める。
+import Mascot from "../../assets/profile/toramutton-line.svg";
+import type { PostSource } from "../../utils/feeds";
+import BrandIcon from "../BrandIcon.astro";
+
+interface Props {
+    source: PostSource;
+}
+const { source } = Astro.props;
+---
+
+<span class="tile" aria-hidden="true">
+    {
+        source === "local" ? (
+            <span class="mark mascot">
+                <Mascot />
+            </span>
+        ) : (
+            <span class="mark">
+                <BrandIcon name={source} size={32} />
+            </span>
+        )
+    }
+</span>
+
+<style>
+    .tile {
+        display: grid;
+        place-items: center;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: var(--elevated);
+        background-image:
+            linear-gradient(var(--border) 1px, transparent 1px),
+            linear-gradient(90deg, var(--border) 1px, transparent 1px);
+        background-size: 24px 24px;
+        background-position: center;
+        color: var(--text-muted);
+    }
+
+    /* ロゴの大きさはタイルの幅に合わせる */
+    .mark {
+        display: grid;
+        width: clamp(1.25rem, 24%, 4rem);
+    }
+
+    .mascot {
+        width: clamp(1.75rem, 34%, 6rem);
+    }
+
+    .mark :global(svg) {
+        width: 100%;
+        height: auto;
+    }
+</style>

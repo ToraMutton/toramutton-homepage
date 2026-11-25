@@ -1,0 +1,144 @@
+---
+// 本文の下の「前の記事 / 次の記事」(日付順)。画像つき。
+import type { CollectionEntry } from "astro:content";
+import { ArrowLeft, ArrowRight } from "lucide-astro";
+import FormattedDate from "../FormattedDate.astro";
+import PostThumb from "./PostThumb.astro";
+
+interface Props {
+    older?: CollectionEntry<"blog">;
+    newer?: CollectionEntry<"blog">;
+}
+const { older, newer } = Astro.props;
+const items = [
+    { post: older, key: "prev", label: "前の記事" },
+    { post: newer, key: "next", label: "次の記事" },
+];
+---
+
+<nav class="pager" aria-label="前後の記事">
+    {
+        items.map(({ post, key, label }) =>
+            post ? (
+                <a href={`/blog/${post.id}/`} class={key}>
+                    <PostThumb image={post.data.heroImage} />
+                    <span class="text">
+                        <span class="label">
+                            {key === "prev" && <ArrowLeft size={14} aria-hidden="true" />}
+                            {label}
+                            {key === "next" && <ArrowRight size={14} aria-hidden="true" />}
+                        </span>
+                        <span class="title">{post.data.title}</span>
+                        <span class="date">
+                            <FormattedDate date={post.data.pubDate} />
+                        </span>
+                    </span>
+                </a>
+            ) : (
+                <span class="empty" />
+            ),
+        )
+    }
+</nav>
+
+<style>
+    .pager {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    /* サムネイルを外側に置く(前の記事は左、次の記事は右) */
+    a {
+        --thumb: clamp(5rem, 9vw, 8.5rem);
+        display: grid;
+        grid-template-columns: var(--thumb) minmax(0, 1fr);
+        align-items: center;
+        gap: 0.9rem;
+        padding: 0.8rem;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        background: var(--card);
+        color: var(--text);
+        text-decoration: none;
+        transition: border-color 0.2s ease;
+    }
+
+    .next {
+        grid-template-columns: minmax(0, 1fr) var(--thumb);
+        text-align: right;
+    }
+
+    .next > :global(.thumb) {
+        order: 1;
+    }
+
+    .text {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        min-width: 0;
+    }
+
+    .label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        color: var(--accent);
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+    }
+
+    .next .label {
+        justify-content: flex-end;
+    }
+
+    .title {
+        display: -webkit-box;
+        overflow: hidden;
+        font-size: 0.9rem;
+        font-weight: 700;
+        line-height: 1.55;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        transition: color 0.2s ease;
+    }
+
+    .date {
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+    }
+
+    @media (hover: hover) {
+        a:hover {
+            border-color: var(--accent);
+        }
+        a:hover .title {
+            color: var(--accent);
+        }
+    }
+
+    /* 1 列に積むときは、どちらも同じ向きにそろえる */
+    @media (max-width: 640px) {
+        .pager {
+            grid-template-columns: minmax(0, 1fr);
+        }
+        a,
+        .next {
+            --thumb: 6.5rem;
+            grid-template-columns: var(--thumb) minmax(0, 1fr);
+            text-align: left;
+        }
+        .next > :global(.thumb) {
+            order: 0;
+        }
+        .next .label {
+            justify-content: flex-start;
+        }
+        .empty {
+            display: none;
+        }
+    }
+</style>

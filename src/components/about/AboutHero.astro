@@ -1,0 +1,315 @@
+---
+// /about のファーストビュー(100svh)。トップのヒーロー(home/Hero.astro)と同じ作りで、
+// 右にローレンツアトラクタ、左上に大きな「About」、下に黒い三角形を置く。
+//
+// スクロールの仕組み(トップと同じ。計算は src/scripts/hero-scroll.ts)
+//   .hero-track は画面より少し縦長で、その中の .hero が sticky で画面に張り付く。
+//   張り付いている間のスクロール量を進捗 p(0〜1)にして、下の三角形 2 枚を広げる。
+//   p = 1 で画面全体が --bg-deep になり、同じ色の下のセクション(Bento Grid)へ継ぎ目なく続く。
+//
+// 三角形は、画面の左下の角・右下の角をそれぞれ直角の頂点にした直角三角形(左が大きく、右が小さい)。
+// どちらも自分の直角の角を中心に拡大する。
+//   形は --la / --ll / --ra / --rl(画面に対する割合)で決まり、
+//   覆い切るのに必要な倍率 --cover は、その割合から CSS が自分で計算する。
+//     第 v 行(下から高さ v)で左が覆う幅は  s·L − v·L/A、右は  s·L2 − v·L2/A2。
+//     いちばん高い行(v = H)でも合計が幅 W 以上になる最小の s が
+//       s = (1 + l/a + l2/a2) / (l + l2)       ( l = L/W, a = A/H … 画面に対する割合 )
+//     画面の縦横比によらず、割合だけで決まる。ここにほんの少し(4%)余裕を足している。
+//
+// 重なり順(手前ほど数字が大きい):
+//   30 … タイトル + ミニターミナル・HUD・スクロール誘導・SNS ドック(三角形と一緒には拡大しない)
+//   15 … 左右の三角形
+//   10 … 3D キャンバス(ローレンツアトラクタ。src/scripts/lorenz.ts を後から読み込む)
+import ScrollCue from "../ui/ScrollCue.astro";
+import SocialDock from "../ui/SocialDock.astro";
+import AboutTerminal from "./AboutTerminal.astro";
+---
+
+<div class="hero-track" data-about-track>
+    <section class="hero" id="top" aria-label="About" data-about-hero>
+        <div class="hero-canvas" data-lorenz-canvas aria-hidden="true"></div>
+
+        <div class="hero-tri hero-tri-l" aria-hidden="true"></div>
+        <div class="hero-tri hero-tri-r" aria-hidden="true"></div>
+
+        <!-- 左カラム: タイトルとミニターミナル。背後の 3D をドラッグできるよう、カラム自体はポインター操作を素通しする
+             (ターミナルだけが自分で受け取る)。スマホでは、すりガラスのターミナルがアトラクタの上に重なる -->
+        <div class="hero-left hero-fade">
+            <h1 class="hero-title">About</h1>
+            <AboutTerminal />
+        </div>
+
+        <!-- HUD: ローレンツ方程式と、いま光の粒がいる位置。装飾なので読み上げない・ポインターも素通し -->
+        <div class="hud hero-fade" aria-hidden="true">
+            <p class="hud-eq">
+                dx/dt = σ(y − x)<br />
+                dy/dt = x(ρ − z) − y<br />
+                dz/dt = xy − βz
+            </p>
+            <p class="hud-par">σ=10 ρ=28 β=8/3</p>
+            <p class="hud-live">
+                <span>x <b data-lz="x">--</b></span>
+                <span>y <b data-lz="y">--</b></span>
+                <span>z <b data-lz="z">--</b></span>
+            </p>
+        </div>
+
+        <ScrollCue href="#bento" label={false} center />
+        <SocialDock />
+    </section>
+</div>
+
+<script>
+    import type { LorenzHandle } from "../../scripts/lorenz";
+    import { bindHeroScroll } from "../../scripts/hero-scroll";
+
+    let handle: LorenzHandle | null = null;
+    let cleanupScroll: (() => void) | null = null;
+
+    // ---- 3D: three(数百KB)は初期表示に要らないので、ブラウザが暇になってから読み込む ----
+    function mountLorenz() {
+        const el = document.querySelector<HTMLElement>("[data-lorenz-canvas]");
+        if (!el || handle) return;
+
+        // HUD の数字(先頭の光の粒の位置)
+        const out = {
+            x: document.querySelector<HTMLElement>('[data-lz="x"]'),
+            y: document.querySelector<HTMLElement>('[data-lz="y"]'),
+            z: document.querySelector<HTMLElement>('[data-lz="z"]'),
+        };
+        const fmt = (v: number) => v.toFixed(1);
+
+        const start = () =>
+            import("../../scripts/lorenz").then((m) => {
+                // 読み込み中に別ページへ移動していたら何もしない
+                if (!document.contains(el) || handle) return;
+                handle = m.mountLorenz(el, {
+                    onSample: (x, y, z) => {
+                        if (out.x) out.x.textContent = fmt(x);
+                        if (out.y) out.y.textContent = fmt(y);
+                        if (out.z) out.z.textContent = fmt(z);
+                    },
+                });
+            });
+        if ("requestIdleCallback" in window) {
+            requestIdleCallback(start, { timeout: 1200 });
+        } else {
+            setTimeout(start, 150);
+        }
+    }
+
+    // ---- スクロールで三角形を広げる ----
+    function bindScroll() {
+        const track = document.querySelector<HTMLElement>("[data-about-track]");
+        const hero = document.querySelector<HTMLElement>("[data-about-hero]");
+        if (!track || !hero) return;
+        cleanupScroll = bindHeroScroll({
+            track,
+            hero,
+            // 覆い切ったらアトラクタは見えないので描画を止める
+            onProgress: (p) => handle?.setSuspended(p >= 0.999),
+        });
+    }
+
+    document.addEventListener("astro:page-load", () => {
+        mountLorenz();
+        bindScroll();
+    });
+    document.addEventListener("astro:before-swap", () => {
+        handle?.destroy();
+        handle = null;
+        cleanupScroll?.();
+        cleanupScroll = null;
+    });
+</script>
+
+<style>
+    /* 画面 1 枚ぶん + 三角形を広げるためのスクロール量 */
+    .hero-track {
+        position: relative;
+        height: 165lvh;
+    }
+
+    .hero {
+        /* 進捗(スクリプトが入れる) */
+        --p: 0;
+        --e: 0;
+        /* 三角形の形。画面に対する割合(0〜1)。
+           la / ra … 左端・右端での高さ   ll / rl … 底辺の長さ */
+        --la: 0.38;
+        --ll: 0.52;
+        --ra: 0.25;
+        --rl: 0.36;
+        /* 覆い切るのに必要な倍率(上のコメントの式)× 余裕 4% */
+        --cover: calc((1 + var(--ll) / var(--la) + var(--rl) / var(--ra)) / (var(--ll) + var(--rl)) * 1.04);
+        position: sticky;
+        top: 0;
+        /* lvh = アドレスバーが隠れた時の高さで固定。dvh だとスクロール中に伸び縮みしてカクつく。
+           下端の部品は --toolbar(バーのぶん)だけ持ち上げる(PC では 0) */
+        --toolbar: calc(100lvh - 100svh);
+        height: 100lvh;
+        min-height: 560px;
+        overflow: hidden;
+        background: var(--bg);
+    }
+
+    .hero-canvas {
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        opacity: 0;
+        transition: opacity 1.2s var(--ease-out);
+    }
+
+    /* lorenz.ts が最初のフレームを描いたら付ける(一度だけのフェードイン) */
+    .hero-canvas:global(.is-ready) {
+        opacity: 1;
+    }
+
+    /* スクロール連動で沈めるのは中の canvas の方。入れ物と同じ opacity に掛けると、
+       スクロールのたびにフェードインのトランジションがやり直しになってしまう */
+    .hero-canvas :global(canvas) {
+        display: block;
+        width: 100%;
+        height: 100%;
+        opacity: calc(1 - var(--e) * 0.5);
+    }
+
+    /* ---- 三角形 2 枚 ---- */
+    .hero-tri {
+        position: absolute;
+        inset: 0;
+        z-index: 15;
+        background: var(--bg-deep);
+        pointer-events: none;
+        will-change: transform;
+        transform: scale(calc(1 + var(--e) * (var(--cover) - 1)));
+    }
+
+    /* 左: 左下の角が直角。斜辺は、左端の (1 − la) の高さから、底辺の ll の位置まで */
+    .hero-tri-l {
+        clip-path: polygon(0 calc((1 - var(--la)) * 100%), 0 100%, calc(var(--ll) * 100%) 100%);
+        transform-origin: 0 100%;
+    }
+
+    /* 右: 右下の角が直角 */
+    .hero-tri-r {
+        clip-path: polygon(100% calc((1 - var(--ra)) * 100%), 100% 100%, calc((1 - var(--rl)) * 100%) 100%);
+        transform-origin: 100% 100%;
+    }
+
+    /* 三角形と一緒に拡大しないもの(文字やアイコン)は、広がるにつれて消える */
+    .hero-fade {
+        opacity: calc(1 - var(--p) * 2.5);
+    }
+
+    /* 見えなくなったものを押せないようにする */
+    .hero.is-covered .hero-fade {
+        visibility: hidden;
+    }
+
+    /* ---- 左カラム(タイトル + ターミナル) ---- */
+    .hero-left {
+        position: absolute;
+        top: calc(72px + clamp(1rem, 5vh, 3.5rem));
+        left: clamp(1.5rem, 6vw, 7rem);
+        z-index: 30;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: clamp(0.9rem, 2.5vh, 1.5rem);
+        pointer-events: none;
+    }
+
+    .hero-title {
+        margin: 0;
+        border: 0;
+        font-family: var(--font-mono);
+        font-size: clamp(2.75rem, 8vw, 7rem);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1;
+        color: var(--text);
+        user-select: none;
+    }
+
+    /* ---- HUD(右上。ヘッダーの下) ----
+       式は静かに、いま光の粒がいる位置だけが動く。数字の幅をそろえて、桁が変わっても揺れないようにする */
+    .hud {
+        position: absolute;
+        top: calc(72px + clamp(1.25rem, 3.5vh, 2.5rem));
+        right: clamp(1.5rem, 4vw, 3.5rem);
+        z-index: 30;
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        line-height: 1.7;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+        pointer-events: none;
+        user-select: none;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .hud p {
+        margin: 0;
+    }
+
+    .hud-par {
+        margin-top: 0.4rem;
+        color: var(--accent);
+    }
+
+    .hud-live {
+        display: flex;
+        gap: 0.9rem;
+        margin-top: 0.4rem;
+        opacity: 0.8;
+    }
+
+    .hud-live b {
+        display: inline-block;
+        min-width: 4.5ch;
+        font-weight: 400;
+        text-align: right;
+        color: var(--text);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .hero-canvas {
+            transition: none;
+        }
+    }
+
+    /* 狭いデスクトップ幅では、右の三角形を大きくして、SNS ドック(幅が固定)が斜辺にかからないようにする */
+    @media (max-width: 1180px) {
+        .hero {
+            --ra: 0.31;
+            --rl: 0.44;
+        }
+    }
+
+    /* ---- モバイル ---- */
+    @media (max-width: 768px) {
+        /* 覆い切った後の真っ黒な画面を短くする(Bento 側も重ねて始める) */
+        .hero-track {
+            height: 145lvh;
+        }
+
+        /* 縦長画面は底辺が短いので、三角形を少し高く・長くする */
+        .hero {
+            --la: 0.3;
+            --ll: 0.78;
+            --ra: 0.16;
+            --rl: 0.42;
+        }
+
+        .hud {
+            display: none;
+        }
+
+        /* タイトルとターミナルを、画面の左右の余白をそろえて広げる */
+        .hero-left {
+            right: 1.5rem;
+        }
+    }
+</style>

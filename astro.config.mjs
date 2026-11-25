@@ -14,11 +14,15 @@ import remarkLinkCard from 'remark-link-card';
 export default defineConfig({
 	site: 'https://toramutton.me',
 	output: 'server',
+	// /works ページはトップの Works セクションに統合した。古いリンクはそこへ飛ばす
+	redirects: {
+		'/works': '/#works',
+	},
 	adapter: vercel(),
-	// /retro 配下は通常ページと内容がかぶる遊びのページなので、sitemap には載せない
+	// /retro 配下は通常ページと内容がかぶる遊びのページ、/reconnect は 404 のミニゲームの共有用なので、sitemap には載せない
 	integrations: [
 		mdx(),
-		sitemap({ filter: (page) => !new URL(page).pathname.startsWith('/retro') }),
+		sitemap({ filter: (page) => !/^\/(retro|reconnect)/.test(new URL(page).pathname) }),
 	],
 	image: {
 		layout: 'constrained',

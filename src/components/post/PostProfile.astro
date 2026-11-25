@@ -1,0 +1,110 @@
+---
+// 記事の右上に置く簡易プロフィール(名前・所属・SNS だけ)。
+import { Image } from "astro:assets";
+import avatarImage from "../../assets/profile/toramutton.jpg";
+import BrandIcon from "../BrandIcon.astro";
+import { PROFILE } from "../../data/about";
+import { socials } from "../../data/home";
+---
+
+<div class="profile">
+    <a href="/about" class="who">
+        <Image src={avatarImage} alt="" class="avatar" width={56} height={56} layout="fixed" loading="eager" />
+        <span class="text">
+            <span class="name">{PROFILE.kana}</span>
+            <span class="univ">{PROFILE.univ}</span>
+        </span>
+    </a>
+    <ul class="sns">
+        {
+            socials.map((s) => (
+                <li>
+                    <a href={s.url} class={`sns-${s.icon}`} target="_blank" rel="noopener noreferrer" aria-label={s.name} title={s.name}>
+                        <BrandIcon name={s.icon} size={17} />
+                    </a>
+                </li>
+            ))
+        }
+    </ul>
+</div>
+
+<style>
+    .profile {
+        padding: 1.1rem 1.1rem 0.8rem;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        background: var(--card);
+    }
+
+    .who {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        color: var(--text);
+        text-decoration: none;
+    }
+
+    .who :global(.avatar) {
+        width: 56px;
+        height: 56px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .text {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .name {
+        font-size: 1.05rem;
+        font-weight: 700;
+    }
+
+    .univ {
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        line-height: 1.5;
+    }
+
+    .sns {
+        display: flex;
+        justify-content: space-between;
+        margin: 0.8rem 0 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    /* 普段はモノクロ。ホバーしたときだけブランドカラー(トップの SocialDock と同じ) */
+    .sns a {
+        --brand: var(--text);
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        color: var(--text-muted);
+        transition:
+            color 0.2s ease,
+            background-color 0.2s ease;
+    }
+
+    .sns .sns-zenn {
+        --brand: var(--brand-zenn);
+    }
+    .sns .sns-qiita {
+        --brand: var(--brand-qiita);
+    }
+    .sns .sns-note {
+        --brand: var(--brand-note);
+    }
+
+    .sns a:hover,
+    .sns a:focus-visible {
+        color: var(--brand);
+        background: var(--elevated);
+    }
+</style>

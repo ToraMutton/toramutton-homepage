@@ -1,0 +1,84 @@
+---
+// ヒーロー右下の SNS アイコンのドック(トップと /about で共通)。
+// 親の .hero が持つ --p(スクロール進捗)を継承して、三角形が広がるにつれて消える。
+// 覆い切って親に .is-covered が付いたら、押せないよう visibility: hidden にする。
+// 配置は「右下の三角形の中」。親(.hero)は position が決まっていること。
+import BrandIcon from "../BrandIcon.astro";
+import { socials } from "../../data/home";
+---
+
+<ul class="social-dock">
+    {
+        socials.map((s) => (
+            <li>
+                <a
+                    href={s.url}
+                    class={`social-link social-${s.icon}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.name}
+                >
+                    <BrandIcon name={s.icon} size={18} />
+                </a>
+            </li>
+        ))
+    }
+</ul>
+
+<style>
+    .social-dock {
+        position: absolute;
+        right: clamp(1rem, 3vw, 2.5rem);
+        bottom: calc(1.75rem + var(--toolbar, 0px));
+        z-index: 30;
+        display: flex;
+        gap: 0.5rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        opacity: calc(1 - var(--p, 0) * 2.5);
+    }
+
+    :global(.is-covered) .social-dock {
+        visibility: hidden;
+    }
+
+    /* 普段はモノクロ。ホバーしたときだけブランドカラーになる */
+    .social-link {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        color: var(--text-muted);
+        --brand: var(--text);
+        transition:
+            color 0.2s ease,
+            background-color 0.2s ease;
+    }
+
+    .social-zenn {
+        --brand: var(--brand-zenn);
+    }
+    .social-qiita {
+        --brand: var(--brand-qiita);
+    }
+    .social-note {
+        --brand: var(--brand-note);
+    }
+
+    .social-link:hover,
+    .social-link:focus-visible {
+        color: var(--brand);
+        background: var(--elevated);
+    }
+
+    /* モバイル: 中央に寄せて、スクロール誘導の上に置く */
+    @media (max-width: 768px) {
+        .social-dock {
+            right: 50%;
+            bottom: calc(6.5rem + var(--toolbar, 0px));
+            transform: translateX(50%);
+        }
+    }
+</style>

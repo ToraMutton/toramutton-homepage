@@ -1,0 +1,413 @@
+---
+// 「切れた回線」がそのまま遊べるミニゲームの画面(ルールは scripts/packet-run-model.ts)。
+// ヘッダーだけ残して戻り道にし、フッターは出さない 1 画面。
+// 2 つの URL が同じ画面を使う。
+//   404 ページ  … 存在しない URL を踏んだとき
+//   /reconnect … SNS で共有する用。404 ページは HTTP ステータスが 404 で、
+//                 共有カードが出ないことがあるので、正常に開ける URL を別に用意している
+import { Copy, Twitter } from "lucide-astro";
+import Layout from "../layouts/BaseLayout.astro";
+
+interface Props {
+    title: string;
+    description: string;
+    /** 検索結果に載せない */
+    noindex?: boolean;
+}
+const { title, description, noindex = false } = Astro.props;
+
+// 共有するのは踏んだ URL ではなく、いつもこの URL(打ち間違いの文字列などを外に出さない)
+const shareUrl = new URL("/reconnect", Astro.site ?? Astro.url).href;
+---
+
+<Layout {title} {description} width="bare" footer={false}>
+    {noindex && <meta slot="head" name="robots" content="noindex" />}
+    <div class="lost" data-run data-share-url={shareUrl}>
+        <div class="inner">
+            <p class="eyebrow" data-run-eyebrow>ページが見つかりません</p>
+            <h1 class="code" data-run-code>404</h1>
+            <p class="status">
+                <span data-run-status>no route to host</span>
+                <span class="best" data-run-best></span>
+            </p>
+
+            <div class="stage">
+                <canvas
+                    class="board"
+                    data-run-canvas
+                    role="img"
+                    aria-label="切れた回線の上を、丸いアイコンが跳んで進むミニゲーム"></canvas>
+                <p class="warn" data-run-warn aria-hidden="true"></p>
+            </div>
+
+            <p class="hint" data-run-hint>Space / タップで再接続</p>
+
+            {/* 失敗・クリアのあとに出る、結果の共有。文面は scripts/packet-run.ts が入れる */}
+            <div class="share" data-run-share>
+                <a data-run-tweet target="_blank" rel="noopener noreferrer">
+                    <Twitter size={14} aria-hidden="true" />
+                    <span>Twitterで共有</span>
+                </a>
+                <button type="button" data-run-copy>
+                    <Copy size={14} aria-hidden="true" />
+                    <span data-run-copy-label>結果をコピー</span>
+                </button>
+            </div>
+
+            {/* 一度クリアした人だけに出る、遊び方の切り替え。形は /blog の掲載先トグルと同じ */}
+            <div class="modes" role="group" aria-label="遊び方" data-run-modes>
+                <span class="modes-thumb" aria-hidden="true"></span>
+                <button type="button" data-mode="goal" aria-pressed="true">404 hops</button>
+                <button type="button" data-mode="endless" aria-pressed="false">Endless</button>
+            </div>
+
+            <nav class="ways" aria-label="ほかのページ">
+                <a href="/">Home</a>
+                <a href="/blog">Blog</a>
+                <a href="/about">About</a>
+            </nav>
+        </div>
+
+        <canvas class="noise" data-run-noise aria-hidden="true"></canvas>
+        <p class="sr-only" aria-live="polite" data-run-announce></p>
+    </div>
+</Layout>
+
+<script>
+    import { initPacketRun } from "../scripts/packet-run";
+    document.addEventListener("astro:page-load", initPacketRun);
+</script>
+
+<style>
+    .lost {
+        display: grid;
+        align-content: center;
+        min-height: 100dvh;
+        padding: calc(72px + 1.5rem) 0 2rem;
+        background: var(--bg-deep);
+        text-align: center;
+        /* 画面のどこを押してもジャンプできるので、連打や長押しで文字が選択されないようにする
+           (iOS の Safari は -webkit- 付きが要る) */
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* 走行中は指を長く置くので、スクロール扱いや長押しメニューに取られないようにする */
+    .lost[data-state="running"] {
+        touch-action: none;
+        -webkit-touch-callout: none;
+    }
+
+    /* 中の要素が個別に選択できる指定を持っていても上書きする。走行中はヘッダーの文字も選ばせない */
+    .lost :global(*),
+    :global(body:has(.lost[data-state="running"])) {
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+    }
+
+    .inner {
+        width: 100%;
+        max-width: var(--max-width);
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+
+    .eyebrow {
+        margin: 0 0 0.5rem;
+        color: var(--accent);
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.2em;
+    }
+
+    .code {
+        display: block;
+        margin: 0;
+        color: var(--text);
+        font-family: var(--font-mono);
+        font-size: clamp(4.5rem, 14vw, 8rem);
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: -0.03em;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* 失敗・接続の瞬間の色ずれ(scripts/packet-run.ts がクラスを付ける) */
+    .code.is-glitch {
+        animation: code-glitch 0.45s steps(1, end);
+    }
+
+    @keyframes code-glitch {
+        0% {
+            text-shadow: -6px 0 #ff5d73, 6px 0 #4fe3ff;
+            transform: translateX(-4px) skewX(-8deg);
+        }
+        25% {
+            text-shadow: 4px 0 #ff5d73, -4px 0 #4fe3ff;
+            transform: translateX(5px);
+            clip-path: inset(18% 0 34% 0);
+        }
+        50% {
+            text-shadow: -3px 0 #ff5d73, 3px 0 #4fe3ff;
+            transform: translateX(-2px) skewX(5deg);
+            clip-path: none;
+        }
+        75% {
+            text-shadow: 2px 0 #ff5d73, -2px 0 #4fe3ff;
+            transform: translateX(1px);
+        }
+        100% {
+            text-shadow: none;
+            transform: none;
+        }
+    }
+
+    .status {
+        display: flex;
+        justify-content: center;
+        gap: 1.25rem;
+        margin: 0.75rem 0 0;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .best:empty {
+        display: none;
+    }
+
+    .stage {
+        position: relative;
+        margin-top: 0.5rem;
+        cursor: pointer;
+    }
+
+    .board {
+        display: block;
+        width: 100%;
+        height: 250px;
+    }
+
+    /* 反転の予告。ゆっくり明滅する */
+    .warn {
+        position: absolute;
+        /* 上端なら、どの向きでも回線や自分に重ならない */
+        top: 0.25rem;
+        right: 0;
+        left: 0;
+        margin: 0;
+        color: var(--accent);
+        font-family: var(--font-mono);
+        font-size: 1rem;
+        letter-spacing: 0.15em;
+        pointer-events: none;
+        animation: warn-pulse 0.7s ease-in-out infinite alternate;
+    }
+
+    @keyframes warn-pulse {
+        from {
+            opacity: 0.35;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    .hint {
+        min-height: 1.5em;
+        margin: 0;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.1em;
+    }
+
+    /* 出ていないときも場所は空けておく。出すのは少し遅らせて、連打したタップが当たらないようにする */
+    .share {
+        display: flex;
+        justify-content: center;
+        gap: 0.75rem;
+        margin-top: 0.9rem;
+        visibility: hidden;
+        opacity: 0;
+    }
+
+    .lost:is([data-state="lost"], [data-state="done"]) .share {
+        visibility: visible;
+        opacity: 1;
+        transition:
+            opacity 0.4s ease 0.6s,
+            visibility 0s 0.6s;
+    }
+
+    .share a,
+    .share button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--text);
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        text-decoration: none;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+
+    .share a:focus-visible,
+    .share button:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    @media (hover: hover) {
+        .share a:hover,
+        .share button:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+    }
+
+    /* 選ばれた項目へ白(ライトでは黒)の台がすべって移る。台の位置と幅は JS が --x / --w に書く。
+       出ていないときも場所は空けておき、出し入れで画面が上下にずれないようにする */
+    .modes {
+        position: relative;
+        display: inline-flex;
+        margin-top: 1rem;
+        padding: 3px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--surface);
+        visibility: hidden;
+        opacity: 0;
+        transition:
+            opacity 0.4s ease,
+            visibility 0.4s;
+    }
+
+    /* 走っている間と、繋がる演出の間は隠す */
+    .lost:is([data-state="idle"], [data-state="lost"], [data-state="done"]) .modes.is-available {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .modes-thumb {
+        position: absolute;
+        top: 3px;
+        bottom: 3px;
+        left: 0;
+        width: var(--w, 0);
+        border-radius: 999px;
+        background: var(--text);
+        transform: translateX(var(--x, 0));
+        transition:
+            transform 0.5s cubic-bezier(0.34, 1.35, 0.5, 1),
+            width 0.5s cubic-bezier(0.34, 1.35, 0.5, 1);
+    }
+
+    .modes button {
+        position: relative;
+        z-index: 1;
+        padding: 0.4rem 1rem;
+        border: 0;
+        border-radius: 999px;
+        background: none;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        cursor: pointer;
+        transition: color 0.35s ease;
+    }
+
+    .modes button[aria-pressed="true"] {
+        color: var(--bg-deep);
+    }
+
+    .modes button:focus-visible {
+        outline: 1px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    @media (hover: hover) {
+        .modes button[aria-pressed="false"]:hover {
+            color: var(--text);
+        }
+    }
+
+    .ways {
+        display: flex;
+        justify-content: center;
+        gap: 2.5rem;
+        margin-top: 1.5rem;
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+    }
+
+    .ways a {
+        color: var(--text);
+        text-decoration: none;
+        padding: 0.5rem 0.25rem;
+        border-bottom: 1px solid var(--border);
+        transition:
+            color 0.25s ease,
+            border-color 0.25s ease;
+    }
+
+    @media (hover: hover) {
+        .ways a:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+    }
+
+    .noise {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        image-rendering: pixelated;
+        pointer-events: none;
+        z-index: 100;
+    }
+
+    .sr-only {
+        position: absolute;
+        overflow: hidden;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    @media (max-width: 720px) {
+        .board {
+            height: 230px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .modes,
+        .modes-thumb,
+        .modes button {
+            transition: none;
+        }
+
+        .code.is-glitch,
+        .warn {
+            animation: none;
+        }
+    }
+</style>

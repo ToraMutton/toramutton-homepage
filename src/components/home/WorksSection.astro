@@ -1,0 +1,546 @@
+---
+// 制作物のカルーセル。データは src/data/works.ts(並び順もそのまま)。
+// 奥のカードが重なる coverflow 風。ループする(最後の次は最初)ので、どの位置でも左右にカードが並ぶ。
+// 矢印・ドラッグ・スワイプ・キー・目盛りで動かせる。
+// 動き(位置の計算・入力処理)は src/scripts/coverflow.ts。ここは見た目と、カード状態の反映だけ。
+//
+// 構成: 見出し行(右に「View all」)→ 画面いっぱいのカード列(両端は溶かす)→ 操作列(＜ 03 / 12 ＞ と目盛り)
+import { Image } from "astro:assets";
+import { ChevronLeft, ChevronRight, ExternalLink, Github } from "lucide-astro";
+import { works } from "../../data/works";
+import HomeSection from "./HomeSection.astro";
+
+const statusLabel = { "in-progress": "制作中", planned: "構想中" } as const;
+const pad = (n: number) => String(n).padStart(2, "0");
+const total = works.length;
+---
+
+<HomeSection id="works" index="01" title="Works" caption="つくったもの" afterHero>
+    <div slot="wide" class="works-wide" data-works>
+        <div
+            class="stage"
+            data-works-stage
+            role="region"
+            aria-roledescription="carousel"
+            aria-label="制作物"
+            tabindex="0"
+        >
+            <ul class="cards">
+                {
+                    works.map((work, i) => (
+                        <li
+                            class="card"
+                            data-coverflow-card
+                            role="group"
+                            aria-roledescription="slide"
+                            aria-label={`${i + 1} / ${total}: ${work.name}`}
+                        >
+                            <article class="card-body">
+                                <div
+                                    class="card-media"
+                                    style={`--media-fit:${work.imageFit ?? "cover"};--media-pos:${work.imagePosition ?? "center"}`}
+                                >
+                                    {work.image ? (
+                                        <Image
+                                            src={work.image}
+                                            alt=""
+                                            width={Math.min(720, work.image.width)}
+                                            widths={[360, 540, 720]}
+                                            sizes="(max-width: 450px) 80vw, 360px"
+                                            draggable="false"
+                                        />
+                                    ) : (
+                                        <div class="media-placeholder" aria-hidden="true">
+                                            <work.icon size={44} strokeWidth={1.25} />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div class="card-info">
+                                    <p class="card-meta">
+                                        <span>{work.year}</span>
+                                        {work.status !== "completed" && (
+                                            <span class="badge">{statusLabel[work.status]}</span>
+                                        )}
+                                    </p>
+                                    <h3 class="card-name">{work.name}</h3>
+                                    <ul class="card-tags">
+                                        {work.tags.map((tag) => (
+                                            <li>{tag}</li>
+                                        ))}
+                                    </ul>
+                                    <p class="card-desc">{work.description}</p>
+                                    {(work.url || work.github) && (
+                                        <div class="card-links">
+                                            {work.url && (
+                                                <a href={work.url} target="_blank" rel="noopener noreferrer">
+                                                    <ExternalLink size={14} strokeWidth={1.75} />
+                                                    <span>Site</span>
+                                                </a>
+                                            )}
+                                            {work.github && (
+                                                <a href={work.github} target="_blank" rel="noopener noreferrer">
+                                                    <Github size={14} strokeWidth={1.75} />
+                                                    <span>GitHub</span>
+                                                </a>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </article>
+                        </li>
+                    ))
+                }
+            </ul>
+        </div>
+
+        <div class="controls">
+            <div class="controls-row">
+                <button type="button" class="step" data-works-prev aria-label="前の制作物">
+                    <ChevronLeft size={26} strokeWidth={1.25} />
+                </button>
+                <p class="counter" aria-live="polite" aria-atomic="true">
+                    <span class="counter-current" data-works-current>01</span>
+                    <span class="counter-total">/ {pad(total)}</span>
+                </p>
+                <button type="button" class="step" data-works-next aria-label="次の制作物">
+                    <ChevronRight size={26} strokeWidth={1.25} />
+                </button>
+            </div>
+            <div class="ticks">
+                {
+                    works.map((work, i) => (
+                        <button
+                            type="button"
+                            class="tick"
+                            data-works-tick={i}
+                            aria-label={`${i + 1} 番目: ${work.name}`}
+                        >
+                            <span />
+                        </button>
+                    ))
+                }
+            </div>
+        </div>
+    </div>
+</HomeSection>
+
+<script>
+    import type { CoverflowHandle } from "../../scripts/coverflow";
+
+    let handle: CoverflowHandle | null = null;
+
+    async function init() {
+        const root = document.querySelector<HTMLElement>("[data-works]");
+        const stage = root?.querySelector<HTMLElement>("[data-works-stage]");
+        if (!root || !stage || handle) return;
+
+        const cards = Array.from(stage.querySelectorAll<HTMLElement>("[data-coverflow-card]"));
+        const prev = root.querySelector<HTMLButtonElement>("[data-works-prev]")!;
+        const next = root.querySelector<HTMLButtonElement>("[data-works-next]")!;
+        const currentEl = root.querySelector<HTMLElement>("[data-works-current]")!;
+        const ticks = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-works-tick]"));
+
+        const { mountCoverflow } = await import("../../scripts/coverflow");
+        if (!document.contains(stage) || handle) return;
+
+        handle = mountCoverflow({
+            stage,
+            cards,
+            onChange: (index) => {
+                currentEl.textContent = String(index + 1).padStart(2, "0");
+                ticks.forEach((t, i) => {
+                    if (i === index) t.setAttribute("aria-current", "true");
+                    else t.removeAttribute("aria-current");
+                });
+                // 真ん中以外のカードは、スクリーンリーダーにも Tab にも見せない(クリックは「真ん中へ呼ぶ」に使う)
+                cards.forEach((card, i) => {
+                    const active = i === index;
+                    card.classList.toggle("is-active", active);
+                    card.toggleAttribute("aria-hidden", !active);
+                    card
+                        .querySelectorAll<HTMLElement>("a")
+                        .forEach((a) => (a.tabIndex = active ? 0 : -1));
+                });
+            },
+        });
+        root.classList.add("is-ready");
+
+        prev.addEventListener("click", () => handle?.prev());
+        next.addEventListener("click", () => handle?.next());
+        ticks.forEach((t, i) => t.addEventListener("click", () => handle?.go(i)));
+    }
+
+    document.addEventListener("astro:page-load", init);
+    document.addEventListener("astro:before-swap", () => {
+        handle?.destroy();
+        handle = null;
+    });
+</script>
+
+<style>
+    /* ---- カード列 ---- */
+    .works-wide {
+        --card-w: clamp(260px, 80vw, 360px);
+        --card-h: calc(var(--card-w) * 1.34);
+        margin-top: -1.25rem;
+    }
+
+    /* 左右の端は透明に溶かす(固定の波形・バーとぶつからないように)。
+       ぼかした影やカードの縮小で上下にはみ出す分の余白は padding で確保する */
+    .stage {
+        position: relative;
+        padding: 1.5rem 0;
+        cursor: grab;
+        touch-action: pan-y; /* 縦はページのスクロール、横はカルーセルが受ける */
+        user-select: none;
+        -webkit-user-select: none;
+        outline: none;
+        -webkit-mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent);
+        mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent);
+    }
+
+    .stage:global(.is-dragging) {
+        cursor: grabbing;
+    }
+
+    .stage:focus-visible {
+        outline: 1px solid var(--accent);
+        outline-offset: -1px;
+    }
+
+    .cards {
+        position: relative;
+        height: var(--card-h);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    /* 位置・拡大率・暗さは JS が毎フレーム書き込む。最初の 1 枚だけは JS が動く前から見せておく */
+    .card {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: var(--card-w);
+        height: var(--card-h);
+        margin-left: calc(var(--card-w) / -2);
+        opacity: 0;
+        will-change: transform, opacity;
+    }
+
+    .card:first-child {
+        opacity: 1;
+    }
+
+    .card-body {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: var(--surface);
+        transition:
+            box-shadow 0.3s ease,
+            border-color 0.3s ease;
+    }
+
+    /* 脇のカードを暗く見せるための覆い。透明にすると重なった奥が透けるので、不透明のまま背景色を被せる */
+    .card-body::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        background: var(--bg-deep);
+        opacity: var(--dim, 0);
+        pointer-events: none;
+    }
+
+    @media (hover: hover) {
+        .card:global(.is-active) .card-body:hover {
+            border-color: var(--accent);
+            box-shadow: var(--shadow-offset);
+        }
+    }
+
+    /* 真ん中以外では、カード内のリンクを押させない(クリックは「真ん中へ呼ぶ」になる) */
+    .card:not(:global(.is-active)) .card-links a {
+        pointer-events: none;
+    }
+
+    /* ---- 画像 ---- */
+    .card-media {
+        flex: none;
+        aspect-ratio: 16 / 10;
+        overflow: hidden;
+        background: var(--elevated);
+    }
+
+    .card-media :global(img) {
+        display: block;
+        width: 100%;
+        height: 100%;
+        /* --fit / --pos は Astro の Image が自分で書き込むので、衝突しない別名にしている */
+        object-fit: var(--media-fit);
+        object-position: var(--media-pos);
+        -webkit-user-drag: none;
+    }
+
+    /* 画像のない作品。数直線のような薄い格子の上に、アイコンを 1 つ */
+    .media-placeholder {
+        display: grid;
+        place-items: center;
+        width: 100%;
+        height: 100%;
+        color: var(--text-muted);
+        background-image:
+            linear-gradient(var(--border) 1px, transparent 1px),
+            linear-gradient(90deg, var(--border) 1px, transparent 1px);
+        background-size: 28px 28px;
+        background-position: center;
+    }
+
+    /* ---- 文字 ---- */
+    .card-info {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 0.55rem;
+        min-height: 0;
+        padding: 1rem 1.15rem 1.15rem;
+    }
+
+    .card-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.12em;
+        color: var(--text-muted);
+    }
+
+    .badge {
+        padding: 0.05rem 0.5rem;
+        border: 1px solid var(--accent);
+        border-radius: 999px;
+        font-family: var(--font-sans);
+        font-size: 0.68rem;
+        letter-spacing: 0.04em;
+        color: var(--accent);
+    }
+
+    .card-name {
+        display: -webkit-box;
+        margin: 0;
+        overflow: hidden;
+        font-size: 1.08rem;
+        font-weight: 700;
+        line-height: 1.35;
+        color: var(--text);
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .card-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        max-height: 1.45rem;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        list-style: none;
+    }
+
+    .card-tags li {
+        padding: 0.05rem 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        font-family: var(--font-mono);
+        font-size: 0.66rem;
+        color: var(--text-muted);
+    }
+
+    .card-desc {
+        display: -webkit-box;
+        margin: 0;
+        overflow: hidden;
+        font-size: 0.82rem;
+        line-height: 1.7;
+        color: var(--text-muted);
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+    }
+
+    .card-links {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: auto;
+    }
+
+    .card-links a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.3rem 0.8rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        color: var(--text);
+        text-decoration: none;
+        transition:
+            border-color 0.25s ease,
+            color 0.25s ease;
+    }
+
+    @media (hover: hover) {
+        .card-links a:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+    }
+
+    /* ---- 操作列 ---- */
+    .controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.9rem;
+        margin-top: 0.75rem;
+    }
+
+    .controls-row {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+    }
+
+    /* 「＜」「＞」。丸い枠なしで、線だけ */
+    .step {
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition:
+            color 0.25s ease,
+            transform 0.3s var(--ease-out);
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .step:focus-visible {
+        outline: 1px solid var(--accent);
+        outline-offset: -4px;
+    }
+
+    @media (hover: hover) {
+        .step:hover {
+            color: var(--text);
+        }
+        [data-works-prev]:hover {
+            transform: translateX(-3px);
+        }
+        [data-works-next]:hover {
+            transform: translateX(3px);
+        }
+    }
+
+    .counter {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        min-width: 7.5rem;
+        margin: 0;
+        justify-content: center;
+        font-family: var(--font-mono);
+    }
+
+    .counter-current {
+        font-size: 1.6rem;
+        font-weight: 500;
+        color: var(--text);
+    }
+
+    .counter-total {
+        font-size: 0.85rem;
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
+    }
+
+    /* 全体のどこにいるかの目盛り。右端のバーと同じ、細い線の語彙 */
+    .ticks {
+        display: flex;
+        align-items: center;
+    }
+
+    .tick {
+        display: grid;
+        place-items: center;
+        width: 18px;
+        height: 28px;
+        padding: 0;
+        border: 0;
+        background: none;
+        cursor: pointer;
+        color: color-mix(in srgb, var(--text) 26%, transparent);
+        transition: color 0.45s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .tick span {
+        display: block;
+        width: 2px;
+        height: 14px;
+        border-radius: 2px;
+        background: currentColor;
+        transition:
+            height 0.3s var(--ease-out),
+            width 0.2s var(--ease-out);
+    }
+
+    .tick[aria-current="true"] {
+        color: var(--text);
+    }
+
+    .tick[aria-current="true"] span {
+        height: 22px;
+    }
+
+    .tick:focus-visible {
+        outline: 1px solid var(--accent);
+        outline-offset: -2px;
+    }
+
+    @media (hover: hover) {
+        .tick:not([aria-current="true"]):hover {
+            color: color-mix(in srgb, var(--text) 55%, transparent);
+        }
+        .tick:hover span {
+            width: 4px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .step,
+        .tick,
+        .tick span {
+            transition: none;
+        }
+    }
+
+    /* 狭い画面: 目盛りは 12 本だと横幅が足りないので、細く詰める */
+    @media (max-width: 520px) {
+        .tick {
+            width: 14px;
+        }
+    }
+</style>

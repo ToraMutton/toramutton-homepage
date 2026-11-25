@@ -1,0 +1,202 @@
+---
+// 記事への操作ボタン。
+//   rail … 本文の左に縦に並ぶ丸ボタン(PC)
+//   row  … 本文の下に横に並ぶ(PC でも出る。端末の共有シートはこちらだけ)
+// いいねの処理は scripts/likes.ts、共有とコピーは layouts/BlogPost.astro のスクリプト。
+import { Check, Heart, Link2, Share2, Twitter } from "lucide-astro";
+
+interface Props {
+    variant: "rail" | "row";
+    /** Twitter の投稿画面の URL */
+    tweetUrl: string;
+    /** 記事の id。いいねの数を引くのに使う */
+    slug: string;
+}
+const { variant, tweetUrl, slug } = Astro.props;
+---
+
+<div class:list={["actions", variant]}>
+    {/* 数が取れるまでは見えない(場所だけ空けておく)。取れなければ消える */}
+    <button type="button" class="action like is-loading" data-like={slug} aria-pressed="false" title="いいね">
+        <span class="heart"><Heart size={18} strokeWidth={1.6} aria-hidden="true" /></span>
+        <span class="label">いいね</span>
+        <span class="count" data-like-count>0</span>
+    </button>
+    <a href={tweetUrl} target="_blank" rel="noopener noreferrer" class="action" title="Twitterで共有">
+        <Twitter size={18} strokeWidth={1.6} aria-hidden="true" />
+        <span class="label">Twitterで共有</span>
+    </a>
+    <button type="button" class="action" data-share-copy title="リンクをコピー">
+        <span class="icon-default"><Link2 size={18} strokeWidth={1.6} aria-hidden="true" /></span>
+        <span class="icon-done"><Check size={18} strokeWidth={1.6} aria-hidden="true" /></span>
+        <span class="label">リンクをコピー</span>
+    </button>
+    {
+        variant === "row" && (
+            <button type="button" class="action" data-share-native hidden title="共有">
+                <Share2 size={18} strokeWidth={1.6} aria-hidden="true" />
+                <span class="label">共有</span>
+            </button>
+        )
+    }
+</div>
+
+<script>
+    import { initLikes } from "../../scripts/likes";
+    document.addEventListener("astro:page-load", initLikes);
+</script>
+
+<style>
+    .actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .rail {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .row {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--card);
+        color: var(--text-muted);
+        font: inherit;
+        font-size: 0.8rem;
+        line-height: 1;
+        text-decoration: none;
+        cursor: pointer;
+        transition:
+            color 0.2s ease,
+            border-color 0.2s ease;
+    }
+
+    .action[hidden] {
+        display: none;
+    }
+
+    .rail .action {
+        width: 3rem;
+        height: 3rem;
+        padding: 0;
+    }
+
+    .row .action {
+        padding: 0.65rem 1.1rem;
+    }
+
+    /* ---- いいね ---- */
+    .like.is-loading {
+        visibility: hidden;
+    }
+
+    /* 縦並びでは、ハートの下に数を入れた縦長の丸にする */
+    .rail .action.like {
+        flex-direction: column;
+        gap: 0.35rem;
+        height: auto;
+        padding: 0.8rem 0 0.65rem;
+    }
+
+    .heart {
+        display: inline-flex;
+    }
+
+    .count {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .like[aria-pressed="true"] {
+        color: var(--accent);
+        border-color: var(--accent);
+    }
+
+    .like[aria-pressed="true"] .heart :global(svg) {
+        fill: currentColor;
+    }
+
+    .like.is-popping .heart {
+        animation: like-pop 0.4s var(--ease-out);
+    }
+
+    @keyframes like-pop {
+        40% {
+            transform: scale(1.45);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .like.is-popping .heart {
+            animation: none;
+        }
+    }
+
+    /* 縦の丸ボタンはアイコンだけ(名前は読み上げ用に残す) */
+    .rail .label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    .icon-default,
+    .icon-done {
+        display: inline-flex;
+    }
+
+    .icon-done,
+    .action.is-copied .icon-default {
+        display: none;
+    }
+
+    .action.is-copied .icon-done {
+        display: inline-flex;
+    }
+
+    .action.is-copied {
+        color: var(--accent);
+        border-color: var(--accent);
+    }
+
+    /* 狭い画面では 1 段に収まるように、いいね以外はアイコンだけにする(名前は読み上げ用に残す) */
+    @media (max-width: 480px) {
+        .row .action:not(.like) {
+            width: 2.75rem;
+            padding: 0.65rem 0;
+        }
+
+        .row .action:not(.like) .label {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip-path: inset(50%);
+            white-space: nowrap;
+        }
+    }
+
+    .action:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+    }
+
+    @media (hover: hover) {
+        .action:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+    }
+</style>

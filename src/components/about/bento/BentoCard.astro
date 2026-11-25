@@ -1,0 +1,68 @@
+---
+// Bento Grid の 1 枚のカード(角丸の面 + 小さな見出し)。中身はスロットに入れる。
+// 面の色はヒーローの背景と同じ --bg。セクションの地(--bg-deep)から、ほんの少し浮いて見える。
+//   aside スロット … 見出し行の右端(GitHub の総数など)
+//   class          … 親が付ける配置用のクラス
+interface Props {
+    /** 小さな見出し(英字) */
+    label: string;
+    class?: string;
+    /** 出現アニメーションを順に遅らせる番号(× 40ms) */
+    order?: number;
+}
+const { label, class: className, order = 0 } = Astro.props;
+---
+
+<section class:list={["card", className]} data-reveal style={`--i: ${order}`}>
+    <header class="card-head">
+        <h3 class="label">{label}</h3>
+        <div class="card-aside"><slot name="aside" /></div>
+    </header>
+    <slot />
+</section>
+
+<style>
+    .card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+        padding: 1.15rem 1.25rem 1.25rem;
+        background: var(--bg);
+        border: 1px solid color-mix(in srgb, var(--text) 7%, transparent);
+        border-radius: 20px;
+        overflow: hidden;
+        transition: border-color 0.3s ease;
+    }
+
+    @media (hover: hover) {
+        .card:hover {
+            border-color: color-mix(in srgb, var(--accent) 38%, transparent);
+        }
+    }
+
+    .card-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 0.9rem;
+    }
+
+    .label {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        font-weight: 500;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--accent);
+    }
+
+    .card-aside {
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        color: var(--text);
+    }
+</style>

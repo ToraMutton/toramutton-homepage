@@ -1,0 +1,288 @@
+---
+// ファイルツリー風の目次。上端の線とフッターの % で読み進みを示す。
+// 項目が多い記事では、h3 を「いま読んでいる h2 の中」だけ開く(内部スクロールを避けるため)。
+// ≥1024px は右の列、それより狭いとヘッダーのボタンで開くドロワー(.blog-toc を Header.astro が探す)。
+// 現在地の判定は layouts/BlogPost.astro のスクリプト。
+import type { MarkdownHeading } from "astro";
+import { ArrowUp } from "lucide-astro";
+
+interface Props {
+    /** h2 / h3 の見出し */
+    headings: MarkdownHeading[];
+}
+const { headings } = Astro.props;
+
+interface Group {
+    head?: MarkdownHeading;
+    children: MarkdownHeading[];
+}
+const groups: Group[] = [];
+for (const heading of headings) {
+    if (heading.depth === 2) groups.push({ head: heading, children: [] });
+    else if (groups.length === 0) groups.push({ children: [heading] });
+    else groups[groups.length - 1].children.push(heading);
+}
+// 全部開いても短い目次は、たたまない
+const collapsible = headings.length > 12;
+---
+
+<nav class:list={["blog-toc", { "is-collapsible": collapsible }]} aria-label="目次">
+    <div class="toc-card">
+        <div class="toc-progress" id="toc-progress"></div>
+        <p class="toc-title">目次</p>
+        <ul class="toc-list">
+            {
+                groups.map((group) => (
+                    <li class:list={["toc-group", { orphan: !group.head }]}>
+                        {group.head && (
+                            <a href={`#${group.head.slug}`} data-toc-slug={group.head.slug}>
+                                {group.head.text}
+                            </a>
+                        )}
+                        {group.children.length > 0 && (
+                            <div class="toc-sub">
+                                <ul>
+                                    {group.children.map((child) => (
+                                        <li class="toc-level-3">
+                                            <a href={`#${child.slug}`} data-toc-slug={child.slug}>
+                                                {child.text}
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </li>
+                ))
+            }
+        </ul>
+        <div class="toc-footer">
+            <span class="toc-percent"><span id="toc-percent">0</span>% read</span>
+            <a href="#" class="toc-top" id="toc-top"><ArrowUp size={12} aria-hidden="true" /> top</a>
+        </div>
+    </div>
+</nav>
+
+<style>
+    .toc-card {
+        position: relative;
+        overflow: hidden;
+        padding: 1.1rem 1rem 0.85rem;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        background: var(--card);
+    }
+
+    /* 読了プログレスバー */
+    .toc-progress {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 3px;
+        width: 0%;
+        background: var(--accent);
+        transition: width 0.15s ease-out;
+        z-index: 1;
+    }
+
+    .toc-title {
+        margin: 0 0 0.5rem;
+        padding-bottom: 0.45rem;
+        border-bottom: 1px solid var(--border);
+        color: var(--text-muted);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+    }
+
+    ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    li {
+        line-height: 1.35;
+    }
+
+    a {
+        display: block;
+        padding: 0.28rem 0.5rem;
+        border-left: 2px solid transparent;
+        color: var(--text);
+        font-size: 0.84rem;
+        text-decoration: none;
+        transition:
+            background-color 0.2s,
+            color 0.2s,
+            opacity 0.2s,
+            border-color 0.2s;
+    }
+
+    /* 通過済み */
+    a.is-passed {
+        color: var(--text-muted);
+        opacity: 0.7;
+    }
+
+    /* 現在地 */
+    a.active {
+        border-left-color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 10%, transparent);
+        color: var(--accent);
+        font-weight: 700;
+        opacity: 1;
+    }
+
+    @media (hover: hover) {
+        .toc-list a:hover {
+            background: color-mix(in srgb, var(--accent) 7%, transparent);
+            color: var(--accent);
+            opacity: 1;
+        }
+    }
+
+    /* h3 ツリーライン(├── / └──) */
+    .toc-level-3 {
+        position: relative;
+    }
+    .toc-level-3::before {
+        content: "";
+        position: absolute;
+        left: 0.55rem;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: var(--border);
+    }
+    /* グループ末尾だけ縦線を上半分に切る */
+    .toc-level-3:last-child::before {
+        bottom: 50%;
+    }
+    .toc-level-3 > a {
+        position: relative;
+        padding-left: 1.6rem;
+        border-left: none;
+        font-size: 0.78rem;
+    }
+    .toc-level-3 > a::before {
+        content: "";
+        position: absolute;
+        left: 0.55rem;
+        top: 50%;
+        width: 0.65rem;
+        height: 1px;
+        background: var(--border);
+        transition: background-color 0.2s;
+    }
+    .toc-level-3 > a.active::before,
+    .toc-level-3 > a.is-passed::before {
+        background: var(--accent);
+    }
+
+    /* ---- たたむ(PC の列のときだけ。ドロワーは全部開いたまま) ---- */
+    @media (min-width: 1024px) {
+        .is-collapsible .toc-group:not(.orphan) .toc-sub {
+            display: grid;
+            grid-template-rows: 0fr;
+            visibility: hidden;
+            transition:
+                grid-template-rows 0.3s var(--ease-out),
+                visibility 0s 0.3s;
+        }
+        .is-collapsible .toc-group:not(.orphan) .toc-sub > ul {
+            min-height: 0;
+            overflow: hidden;
+        }
+        .is-collapsible .toc-group.is-open .toc-sub {
+            grid-template-rows: 1fr;
+            visibility: visible;
+            transition: grid-template-rows 0.3s var(--ease-out);
+        }
+        /* よほど背の低い画面で、目次だけで画面からあふれる場合の逃げ道 */
+        .toc-list {
+            max-height: calc(100vh - 13rem);
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+    }
+
+    .toc-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-top: 0.6rem;
+        padding-top: 0.6rem;
+        border-top: 1px solid var(--border);
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        font-size: 0.74rem;
+    }
+    .toc-percent {
+        font-variant-numeric: tabular-nums;
+    }
+    .toc-top {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0;
+        border: 0;
+        color: var(--text-muted);
+        font-size: inherit;
+    }
+    @media (hover: hover) {
+        .toc-top:hover {
+            color: var(--accent);
+        }
+    }
+
+    /* ---- ≤1023px: 右から出るドロワー ---- */
+    @media (max-width: 1023px) {
+        .blog-toc {
+            position: fixed;
+            top: var(--header-height, 64px);
+            right: 0;
+            width: min(300px, 80vw);
+            height: calc(100dvh - var(--header-height, 64px));
+            overflow-y: auto;
+            z-index: 1000;
+            padding: 1.25rem 1rem;
+            border-left: 1px solid var(--border);
+            background: var(--surface);
+            opacity: 0;
+            transform: translateX(16px);
+            pointer-events: none;
+            visibility: hidden;
+            transition:
+                opacity 0.18s ease-out,
+                transform 0.22s var(--ease-out),
+                visibility 0s linear 0.22s;
+        }
+        .blog-toc.mobile-open {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+            visibility: visible;
+            transition:
+                opacity 0.18s ease-out,
+                transform 0.22s var(--ease-out),
+                visibility 0s linear 0s;
+        }
+        .toc-card {
+            padding: 0.75rem 0 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .blog-toc,
+        .blog-toc.mobile-open,
+        .toc-sub,
+        .toc-progress {
+            transition: none !important;
+        }
+    }
+</style>

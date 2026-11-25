@@ -1,0 +1,60 @@
+---
+// 見出し行の右端に置く「View all →」リンク(HomeSection の aside スロット用)。
+// label を変えれば「Advent 2026 →」のような別の行き先にも使える。accent で目立たせる。
+import { ArrowRight } from "lucide-astro";
+
+interface Props {
+    href: string;
+    /** 省略すると "View all" */
+    label?: string;
+    /** アクセント色で出す(特別な行き先用) */
+    accent?: boolean;
+}
+const { href, label = "View all", accent = false } = Astro.props;
+---
+
+<a class:list={["view-all", { accent }]} {href}>
+    <span>{label}</span>
+    <ArrowRight size={16} strokeWidth={1.5} />
+</a>
+
+<style>
+    .view-all {
+        display: inline-flex;
+        white-space: nowrap;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: color 0.25s ease;
+    }
+
+    .view-all :global(svg) {
+        transition: transform 0.35s var(--ease-out);
+    }
+
+    .view-all.accent {
+        color: var(--accent);
+    }
+
+    @media (hover: hover) {
+        .view-all:hover {
+            color: var(--accent);
+        }
+        .view-all.accent:hover {
+            color: var(--text);
+        }
+        .view-all:hover :global(svg) {
+            transform: translateX(4px);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .view-all :global(svg) {
+            transition: none;
+        }
+    }
+</style>

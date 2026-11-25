@@ -1,0 +1,151 @@
+---
+// トップページ左端に固定する「フーリエ級数」の波形レール。
+// ヘッダーのマスコットの真下から伸び、今いるセクションに合わせて波形が変わる。
+// 計算と描画は src/scripts/fourier.ts。
+//
+// 各セクションの見出しと重ならない幅(1240px 以上)でだけ表示する。
+---
+
+<div class="fourier-rail" aria-hidden="true" data-fourier>
+    <canvas class="fourier-canvas" data-fourier-canvas></canvas>
+    <p class="fourier-label" data-fourier-label>
+        <span>f(y) = Σ bₙ sin(ny)</span>
+        <span data-fourier-n>N = 1</span>
+        <span data-fourier-b>b₁ = 1</span>
+    </p>
+</div>
+
+<script>
+    import type { FourierHandle, Wave } from "../../scripts/fourier";
+
+    let handle: FourierHandle | null = null;
+    let stopWatch: (() => void) | null = null;
+    let stopCover: (() => void) | null = null;
+    let waveTimer = 0;
+
+    async function init() {
+        const root = document.querySelector<HTMLElement>("[data-fourier]");
+        const canvas = root?.querySelector<HTMLCanvasElement>("[data-fourier-canvas]");
+        if (!root || !canvas || handle) return;
+        // 非表示の幅では何もしない(描画のコストもかけない)
+        if (getComputedStyle(root).display === "none") return;
+
+        const label = root.querySelector<HTMLElement>("[data-fourier-label]")!;
+        const nEl = root.querySelector<HTMLElement>("[data-fourier-n]")!;
+        const bEl = root.querySelector<HTMLElement>("[data-fourier-b]")!;
+        let labelTimer = 0;
+        // ラベルは一度消してから書き換えて、ふわっと出し直す
+        const onLabel = (w: Wave) => {
+            clearTimeout(labelTimer);
+            label.classList.add("is-changing");
+            labelTimer = window.setTimeout(() => {
+                nEl.textContent = `N = ${w.N}`;
+                bEl.textContent = w.label;
+                label.classList.remove("is-changing");
+            }, 250);
+        };
+
+        // フッター(16 進数の帯)がラベルの下端まで上がってきたら、ラベルだけ消して被りを避ける。
+        // 低いウィンドウだと位置の調整だけでは避けきれないための保険
+        const footer = document.querySelector<HTMLElement>("[data-footer]");
+        let raf = 0;
+        const checkCovered = () => {
+            raf = 0;
+            if (!footer) return;
+            const covered = footer.getBoundingClientRect().top < label.getBoundingClientRect().bottom;
+            label.classList.toggle("is-covered", covered);
+        };
+        const requestCheck = () => {
+            if (!raf) raf = requestAnimationFrame(checkCovered);
+        };
+        window.addEventListener("scroll", requestCheck, { passive: true });
+        window.addEventListener("resize", requestCheck);
+        stopCover = () => {
+            cancelAnimationFrame(raf);
+            window.removeEventListener("scroll", requestCheck);
+            window.removeEventListener("resize", requestCheck);
+        };
+        checkCovered();
+
+        const { mountFourier } = await import("../../scripts/fourier");
+        if (!document.contains(canvas)) return;
+        handle = mountFourier(canvas, onLabel);
+
+        // 今いるセクション(右の現在位置バーと同じ判定)に合わせて波形を変える
+        const { watchCurrentSection } = await import("../../scripts/current-section");
+        if (!handle) return; // 読み込み中にページが切り替わっていた
+        // 速くスクロールして複数のセクションを通り過ぎるとき、波が通過のたびに変わると騒がしい。
+        // 現在地が 0.35 秒落ち着いてから切り替える(最後に止まったセクションの波だけを見せる)
+        stopWatch = watchCurrentSection((id) => {
+            clearTimeout(waveTimer);
+            waveTimer = window.setTimeout(() => handle?.setWave(id), 350);
+        });
+    }
+
+    document.addEventListener("astro:page-load", init);
+    document.addEventListener("astro:before-swap", () => {
+        handle?.destroy();
+        handle = null;
+        stopWatch?.();
+        stopWatch = null;
+        stopCover?.();
+        stopCover = null;
+        clearTimeout(waveTimer);
+    });
+</script>
+
+<style>
+    /* ヘッダーのロゴ(左端から clamp(1rem, 3vw, 2.5rem)、幅 40px)の真下に中心をそろえる */
+    .fourier-rail {
+        position: fixed;
+        top: 64px;
+        bottom: 150px;
+        left: clamp(1rem, 3vw, 2.5rem);
+        z-index: 40;
+        width: 40px;
+        pointer-events: none;
+    }
+
+    .fourier-canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        color: var(--text-muted);
+        /* 上下の端を溶かして、マスコットから生えて消えていくように見せる */
+        mask-image: linear-gradient(to bottom, transparent, black 8%, black 88%, transparent);
+    }
+
+    /* 波の右に縦書きで小さく添える式。気づいた人だけニヤッとする濃さ。
+       下端だとフッターの 16 進数の帯や下のコンテンツとぶつかるので、マスコット側(上)に寄せる。
+       180° 回しているので flex の始点(式の書き出し)は箱の下端。箱の高さを固定して、
+       式の長さが変わっても書き出しの位置が動かないようにしている */
+    .fourier-label {
+        position: absolute;
+        top: 8%;
+        left: 100%;
+        height: 20rem;
+        display: flex;
+        gap: 1.1em;
+        margin: 0 0 0 0.5rem;
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        letter-spacing: 0.08em;
+        white-space: nowrap;
+        color: var(--text-muted);
+        opacity: 0.7;
+        transition: opacity 0.25s ease;
+    }
+
+    .fourier-label.is-changing,
+    .fourier-label.is-covered {
+        opacity: 0;
+    }
+
+    @media (max-width: 1239px) {
+        .fourier-rail {
+            display: none;
+        }
+    }
+</style>

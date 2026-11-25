@@ -1,0 +1,93 @@
+---
+// トップの下層セクション(Works / Blog / About)の共通の枠。
+// 背景はヒーローの斜め三角形と同じ --bg-deep なので、ヒーローから境目なくつながる。
+// 左の波形(FourierRail)と右の縦バー(SectionRail)は、この id を目印に現在地を判定する
+// (src/scripts/current-section.ts)。id を変えるときは SECTION_IDS も直すこと。
+//
+// スロット:
+//   (default) … コンテンツ幅(--max-width)の中に入る本文
+//   aside     … 見出し行の右端(「View all」リンクなど)。見出しの下端にそろう
+//   wide      … コンテンツ幅の外。画面いっぱいに広げたいもの(カルーセルなど)用
+import SectionTitle from "../ui/SectionTitle.astro";
+
+interface Props {
+    /** アンカー(#works など)とインジケーターの両方で使う */
+    id: string;
+    index: string;
+    /** 大きく出す英字の見出し */
+    title: string;
+    /** 小さく添える日本語 */
+    caption: string;
+    /** ヒーローの直後のセクションなら true(下の .after-hero を参照) */
+    afterHero?: boolean;
+}
+
+const { id, index, title, caption, afterHero = false } = Astro.props;
+---
+
+<section class:list={["home-section", { "after-hero": afterHero }]} id={id} data-home-section>
+    <div class="inner">
+        <div class="head">
+            <SectionTitle {index} {title} {caption} />
+            <div class="aside"><slot name="aside" /></div>
+        </div>
+        <slot />
+    </div>
+    <slot name="wide" />
+</section>
+
+<style>
+    .home-section {
+        background: var(--bg-deep);
+        padding: clamp(5rem, 12vh, 9rem) 0;
+        /* wide スロットのはみ出しで横スクロールが出ないように(clip は hidden と違いスクロール領域を作らない) */
+        overflow-x: clip;
+    }
+
+    /* ヒーロー直後のセクション。
+       ヒーローは三角形が画面を覆い切る(スクロール量 約 40dvh、p ≈ 0.6)のに、
+       最後(65dvh)まで画面に貼り付いたままで、その間ずっと「同じ色だけの画面」が続いて見出しが遅れて見えた。
+       そこで覆い切るころから、セクションをヒーローの末尾に 22dvh 重ねて、早く持ち上げる。
+       重なる相手(ヒーロー)はその時点で全面が --bg-deep なので、継ぎ目は見えない。
+       (三角形の拡大の速さは変えていない。覆い切る位置を変えたら、ここの数値も見直すこと)
+       sticky のヒーローより手前に描くため position + z-index が要る */
+    .after-hero {
+        position: relative;
+        z-index: 1;
+        margin-top: -22lvh;
+        padding-top: clamp(3rem, 6vh, 5rem);
+    }
+
+    .inner {
+        max-width: var(--max-width);
+        margin: 0 auto;
+        padding: 0 1.5rem;
+    }
+
+    /* 見出しの右端に aside を置く。SectionTitle は下に 2.5rem の余白を持つので、aside も同じだけ上げて下端をそろえる */
+    .head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1.5rem;
+    }
+
+    .aside {
+        padding-bottom: 2.5rem;
+    }
+
+    /* スマホ幅では、見出しの右に並べると窮屈(リンクが折り返して見出しも潰れる)ので、見出しの下へ回す。
+       SectionTitle が下に持つ 2.5rem の余白のうち 1.5rem を食い込ませて、見出しに近づける */
+    @media (max-width: 520px) {
+        .head {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0;
+        }
+
+        .aside {
+            margin-top: -1.5rem;
+            padding-bottom: 2rem;
+        }
+    }
+</style>

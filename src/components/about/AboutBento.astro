@@ -1,0 +1,180 @@
+---
+// /about の Bento Grid(ヒーローの下)。角丸のカードを敷き詰める。ヒーローの三角形が覆い切った --bg-deep が、そのまま地になる。
+//
+// PC 幅(1200px 以上): 12 カラム × 4 行
+//          1–3          4–6      7–9      10–12
+//   行 1   環境(縦 2 行) Uptime   趣味     資格 +
+//   行 2   環境          CRT モニター(4–9)  タイムライン(縦 3 行ぶん)
+//   行 3   Countdown    GitHub(4–9)        (タイムライン)
+//   行 4   技術スタック(1–12。アイコン 16 個が横一列の帯)
+//   環境は文字を読みやすい大きさにするため、縦に長い(行 1〜2 をまるごと使う)。スクロールなしで収まる。
+//   行の高さは 17rem / 21rem / 14rem / 9rem。
+// 1200px 未満: 2 カラム(CRT・GitHub・技術スタック・資格は全幅)  /  720px 以下: 1 カラム縦積み
+//   どちらも、資格の入れ物は display: contents で外して、カードを並べ替えなしに順に敷く。
+//
+// 真ん中の CRT モニター(bento/BentoCrt.astro)は、カードの枠より上へ突き出す(canvas はカードの外に置いてある)。
+// 突き出した先の Uptime・趣味のカードをクリックできるよう、canvas 自体はポインターを素通しする。
+import BentoEnv from "./bento/BentoEnv.astro";
+import BentoCountdown from "./bento/BentoCountdown.astro";
+import BentoUptime from "./bento/BentoUptime.astro";
+import BentoHobby from "./bento/BentoHobby.astro";
+import BentoSkills from "./bento/BentoSkills.astro";
+import BentoGithub from "./bento/BentoGithub.astro";
+import BentoProfile from "./bento/BentoProfile.astro";
+import BentoCrt from "./bento/BentoCrt.astro";
+---
+
+<section class="bento" id="bento" aria-labelledby="bento-title">
+    <h2 id="bento-title" class="sr-only">プロフィールの詳細</h2>
+    <div class="inner">
+        <div class="grid">
+            <div class="cell c-env"><BentoEnv /></div>
+            <div class="cell c-count"><BentoCountdown /></div>
+            <div class="cell c-uptime"><BentoUptime /></div>
+            <div class="cell c-hobby"><BentoHobby /></div>
+            <div class="cell c-crt"><BentoCrt /></div>
+            <div class="cell c-github"><BentoGithub /></div>
+            <div class="cell c-skills"><BentoSkills /></div>
+            <div class="right"><BentoProfile /></div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .bento {
+        background: var(--bg-deep);
+        /* ヘッダー(固定 72px)の裏から始まるので、その分も含めて余白をとる */
+        padding: clamp(5rem, 11vh, 7.5rem) 0 clamp(4rem, 9vh, 7rem);
+    }
+
+    /* スマホは、ヒーローの末尾に重ねて始める(三角形が覆った後の真っ黒な画面を作らない) */
+    @media (max-width: 768px) {
+        .bento {
+            position: relative;
+            z-index: 1;
+            margin-top: -45lvh;
+            padding-top: 1.5rem;
+        }
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .inner {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+    }
+
+    .grid {
+        --gap: 14px;
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        grid-template-rows: 17rem 21rem 14rem 9rem;
+        gap: var(--gap);
+    }
+
+    /* カードを 1 枚ずつ入れる入れ物。カードは入れ物いっぱいに伸びる */
+    .cell,
+    .right {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+    }
+    .cell > :global(.card),
+    .right > :global(.card) {
+        flex: 1;
+    }
+
+    .c-env {
+        grid-column: 1 / 4;
+        grid-row: 1 / 3;
+    }
+    .c-count {
+        grid-column: 1 / 4;
+        grid-row: 3;
+    }
+
+    .c-uptime {
+        grid-column: 4 / 7;
+        grid-row: 1;
+    }
+    .c-hobby {
+        grid-column: 7 / 10;
+        grid-row: 1;
+    }
+    .c-crt {
+        grid-column: 4 / 10;
+        grid-row: 2;
+    }
+    .c-github {
+        grid-column: 4 / 10;
+        grid-row: 3;
+    }
+    .c-skills {
+        grid-column: 1 / 13;
+        grid-row: 4;
+    }
+    .right {
+        grid-column: 10 / 13;
+        grid-row: 1 / 4;
+    }
+
+    /* ---- 2 カラム(タブレット・小さめのノート PC) ---- */
+    @media (max-width: 1199px) {
+        .grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-rows: none;
+        }
+
+        /* 資格の入れ物は外して、中のカードを直接グリッドに並べる */
+        .right {
+            display: contents;
+        }
+
+        .cell {
+            grid-column: auto;
+            grid-row: auto;
+        }
+        .c-crt,
+        .c-skills,
+        .c-github {
+            grid-column: 1 / -1;
+        }
+        .right > :global(.card) {
+            grid-column: 1 / -1;
+        }
+
+        .c-uptime,
+        .c-hobby {
+            min-height: 14rem;
+        }
+        .c-crt {
+            min-height: 20rem;
+        }
+    }
+
+    /* ---- 1 カラム(スマホ) ---- */
+    @media (max-width: 720px) {
+        .grid {
+            grid-template-columns: minmax(0, 1fr);
+        }
+        .c-uptime,
+        .c-hobby {
+            grid-column: 1 / -1;
+        }
+        .c-crt {
+            min-height: 17rem;
+        }
+    }
+</style>

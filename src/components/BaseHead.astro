@@ -29,7 +29,7 @@ const {
   cardType = "summary",
 } = Astro.props;
 
-// SNS 用は JPEG、favicon は小さい PNG として、共通の元画像から生成する。
+// SNS 用の画像(四角)。タブのアイコンは丸く切り抜いた public/favicon.png を使う(npm run icon で作る)。
 const socialImage = await getImage({
   src: image,
   width: Math.min(cardType === "summary_large_image" ? 1200 : 600, image.width),
@@ -38,13 +38,6 @@ const socialImage = await getImage({
   layout: "none",
 });
 const socialImageURL = new URL(socialImage.src, Astro.site ?? Astro.url);
-const favicon = await getImage({
-  src: FallbackImage,
-  width: 64,
-  height: 64,
-  format: "png",
-  layout: "none",
-});
 ---
 
 <!-- 基本設定 -->
@@ -73,7 +66,7 @@ const favicon = await getImage({
 </script>
 
 <!-- アイコン / RSS / sitemap -->
-<link rel="icon" type="image/png" href={favicon.src} />
+<link rel="icon" type="image/png" href="/favicon.png" />
 <link rel="sitemap" href="/sitemap-index.xml" />
 <link
   rel="alternate"

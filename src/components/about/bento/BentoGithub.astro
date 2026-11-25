@@ -1,0 +1,116 @@
+---
+// GitHub カード。本家の GitHub と同じ、角丸の正方形のマスの草グラフ(色はアクセント 1 色の濃淡)。
+//   横スクロールはさせず、枠にきれいに収まるよう、直近 WEEKS 週だけを日曜始まりで切り出す。
+//   縦 7 マス(日〜土)× 横 WEEKS 列。マスは枠の幅に合わせて自動で大きさが決まる(正方形のまま)。
+//   スマホ(1 カラム)ではマスが小さくなりすぎるので、新しい WEEKS_SM 週だけを見せる(古い週は列ごと display: none)。
+//   右上の数字は、直近 1 年の contributions の総数(jogruber の API が返す total。トップと同じ数字)。
+import { getContributions } from "../../../utils/github";
+import { GITHUB_URL } from "../../../consts";
+import BentoCard from "./BentoCard.astro";
+
+// 横幅の広い PC(6 カラム)では WEEKS 週ぶん。スマホでは、古い側の (WEEKS − WEEKS_SM) 週を CSS で隠して WEEKS_SM 週にする
+const WEEKS = 26;
+const WEEKS_SM = 20;
+const contributions = await getContributions();
+const days = contributions.days;
+let recent = days;
+if (days.length > 0) {
+    const last = days[days.length - 1];
+    const lastWeekday = new Date(`${last.date}T00:00:00Z`).getUTCDay();
+    // 最終週の日曜日から (WEEKS - 1) 週さかのぼった日曜日が先頭
+    recent = days.slice(Math.max(0, days.length - (lastWeekday + 1) - (WEEKS - 1) * 7));
+}
+---
+
+<BentoCard label="GitHub" class="github" order={5}>
+    <a
+        slot="aside"
+        class="total"
+        href={GITHUB_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`GitHub: 直近1年で ${contributions.total} contributions`}
+    >
+        {contributions.total.toLocaleString("en-US")}
+    </a>
+
+    {
+        recent.length > 0 ? (
+            <div class="dots" aria-hidden="true" style={`--weeks: ${WEEKS}; --weeks-sm: ${WEEKS_SM}`}>
+                {recent.map((d) => (
+                    <span class={`dot lv-${d.level}`} title={`${d.date} · ${d.count} contributions`} />
+                ))}
+            </div>
+        ) : (
+            <p class="empty">草を取得できませんでした。</p>
+        )
+    }
+</BentoCard>
+
+<style>
+    .total {
+        color: var(--text);
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+    .total:hover,
+    .total:focus-visible {
+        color: var(--accent);
+    }
+
+    .dots {
+        display: grid;
+        --cols: var(--weeks);
+        grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+        /* 日付順に並べたいので、縦 7 マス × 横 weeks 列を「列方向に」埋める */
+        grid-template-rows: repeat(7, auto);
+        grid-auto-flow: column;
+        gap: 3px;
+        margin-block: auto;
+        width: 100%;
+    }
+
+    /* 本家の GitHub と同じ角丸の正方形(1 辺の 2 割ほどの丸み)。トップのヒーローの草は丸のまま */
+    .dot {
+        aspect-ratio: 1;
+        border-radius: 22%;
+        background: color-mix(in srgb, var(--text) 8%, transparent);
+    }
+
+    /* 色は増やさず、アクセント 1 色の濃さで段階を出す */
+    .lv-1 {
+        background: color-mix(in srgb, var(--accent) 30%, transparent);
+    }
+    .lv-2 {
+        background: color-mix(in srgb, var(--accent) 52%, transparent);
+    }
+    .lv-3 {
+        background: color-mix(in srgb, var(--accent) 76%, transparent);
+    }
+    .lv-4 {
+        background: var(--accent);
+    }
+
+    .empty {
+        margin: auto 0;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    /* 広い 1 枚になる幅(タブレット)では、ドットが大きくなりすぎないよう幅を抑える */
+    @media (max-width: 1199px) and (min-width: 721px) {
+        .dots {
+            max-width: 36rem;
+        }
+    }
+
+    /* スマホ: 古い (WEEKS − WEEKS_SM) 週ぶん(= 先頭から 7 マス × その週数)を隠す。列方向に並べているので、先頭の n 個がそのまま古い週 */
+    @media (max-width: 720px) {
+        .dots {
+            --cols: var(--weeks-sm);
+        }
+        .dot:nth-child(-n + 42) {
+            display: none;
+        }
+    }
+</style>

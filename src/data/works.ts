@@ -50,6 +50,11 @@ export interface Work {
   status: "completed" | "in-progress" | "planned";
   category: WorkCategory;
   image?: ImageMetadata;
+  /** トップのカルーセルでの画像の収め方。省略すると cover(枠いっぱいに切り抜く)。
+   *  極端な横長で切ると中身が欠けるものは "contain"(全体を収めて余白を出す) */
+  imageFit?: "cover" | "contain";
+  /** cover で切り抜くときの基準位置(CSS の object-position。例: "top")。省略は中央 */
+  imagePosition?: string;
 }
 
 export const works: Work[] = [
@@ -91,6 +96,7 @@ export const works: Work[] = [
     status: "completed",
     category: "desktop",
     image: caelestiaAiUsageImage,
+    imageFit: "contain",
   },
   {
     name: "はじめてのホームページ制作ガイド",
@@ -103,6 +109,7 @@ export const works: Work[] = [
     status: "completed",
     category: "web",
     image: guideBookImage,
+    imagePosition: "top",
   },
   {
     name: "ArToram",
@@ -155,6 +162,7 @@ export const works: Work[] = [
     status: "completed",
     category: "desktop",
     image: windotImage,
+    imageFit: "contain",
   },
   {
     name: "fxtwitter-bot",
@@ -168,6 +176,7 @@ export const works: Work[] = [
     status: "completed",
     category: "tools",
     image: fxtwitterImage,
+    imageFit: "contain",
   },
   {
     name: "Classroom-PDF-Saver",
@@ -190,16 +199,6 @@ export const works: Work[] = [
     year: "2026",
     github: "https://github.com/ToraMutton/local-ai-rocm",
     status: "in-progress",
-    category: "tools",
-  },
-  {
-    name: "ネタプログラミング言語",
-    description:
-      "Go言語による自作プログラミング言語の開発。字句解析・構文解析といった言語処理系の仕組みを学ぶための、実用性皆無なネタ言語。",
-    tags: ["Go", "Compiler", ".trmt"],
-    icon: Terminal,
-    year: "2027予定",
-    status: "planned",
     category: "tools",
   },
 ];

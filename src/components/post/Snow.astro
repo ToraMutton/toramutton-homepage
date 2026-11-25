@@ -1,0 +1,92 @@
+---
+// アドベントカレンダーの記事の背景に降る雪。CSS だけ(JS も canvas も使わない)。
+//
+// 軽さの工夫
+//   ・雪の模様は繰り返しの背景画像。動かすのは transform だけなので、描き直しが起きない
+//   ・模様 1 枚ぶん動いたら最初に戻る。ちょうど 1 枚ずれているので継ぎ目は見えない
+//   ・層は画面 1 枚ぶんの大きさで、記事エリアの中に張り付く(position: sticky)。
+//     長い記事でも大きな層を作らず、フッターにも被らない
+// 親は position: relative で、本文側の要素も position: relative にして雪より手前に置くこと。
+---
+
+<div class="snow" aria-hidden="true">
+    <div class="view">
+        <span class="layer far"></span>
+        <span class="layer near"></span>
+    </div>
+</div>
+
+<style>
+    .snow {
+        --flake: rgb(110 140 170 / 0.5);
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    :global(html.dark) .snow {
+        --flake: rgb(226 238 255 / 0.65);
+    }
+
+    .view {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .layer {
+        position: absolute;
+        /* 模様 1 枚ぶん、上と左にはみ出させておく */
+        top: calc(-1 * var(--tile));
+        left: calc(-1 * var(--tile));
+        width: calc(100% + var(--tile));
+        height: calc(100% + var(--tile));
+        background-size: var(--tile) var(--tile);
+        animation: snow-fall var(--time) linear infinite;
+        will-change: transform;
+    }
+
+    /* 奥: 小さい粒がゆっくり、まっすぐ */
+    .far {
+        --tile: 260px;
+        --time: 15s;
+        --drift: 0px;
+        opacity: 0.7;
+        background-image:
+            radial-gradient(circle at 12% 18%, var(--flake) 1.4px, transparent 2px),
+            radial-gradient(circle at 47% 7%, var(--flake) 1px, transparent 1.6px),
+            radial-gradient(circle at 78% 33%, var(--flake) 1.6px, transparent 2.2px),
+            radial-gradient(circle at 29% 56%, var(--flake) 1.1px, transparent 1.7px),
+            radial-gradient(circle at 63% 71%, var(--flake) 1.4px, transparent 2px),
+            radial-gradient(circle at 91% 88%, var(--flake) 1px, transparent 1.6px),
+            radial-gradient(circle at 8% 84%, var(--flake) 1.3px, transparent 1.9px);
+    }
+
+    /* 手前: 大きい粒が少し速く、斜めに流れる */
+    .near {
+        --tile: 410px;
+        --time: 13s;
+        --drift: var(--tile);
+        background-image:
+            radial-gradient(circle at 22% 12%, var(--flake) 2.6px, transparent 3.6px),
+            radial-gradient(circle at 71% 27%, var(--flake) 2px, transparent 3px),
+            radial-gradient(circle at 39% 49%, var(--flake) 3px, transparent 4.2px),
+            radial-gradient(circle at 88% 64%, var(--flake) 2.4px, transparent 3.4px),
+            radial-gradient(circle at 12% 77%, var(--flake) 2px, transparent 3px),
+            radial-gradient(circle at 55% 92%, var(--flake) 2.8px, transparent 3.8px);
+    }
+
+    @keyframes snow-fall {
+        to {
+            transform: translate(var(--drift), var(--tile));
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .layer {
+            animation: none;
+        }
+    }
+</style>

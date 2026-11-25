@@ -1,0 +1,34 @@
+---
+// 最新記事。ローカル記事と Zenn / Qiita / note の RSS を統合して出す
+// (取得は src/utils/all-posts.ts)。見た目・検索は src/components/blog/PostTimeline.astro で、
+// 後で作り直す /blog でも同じ部品を使う。
+//
+// アドベントカレンダーへの導線は、時系列を乱さないよう記事の列には混ぜず、
+// 見出し行の右端(View all の左)に「Advent 2026 →」として置く(開催の前後だけ。判定は src/utils/advent-link.ts)。
+import { adventHref, adventLabel, showAdventLink } from "../../utils/advent-link";
+import { getAllPosts } from "../../utils/all-posts";
+import PostTimeline from "../blog/PostTimeline.astro";
+import ViewAll from "../ui/ViewAll.astro";
+import HomeSection from "./HomeSection.astro";
+
+const LATEST = 5;
+const showAdvent = showAdventLink();
+
+const posts = await getAllPosts();
+---
+
+<HomeSection id="blog" index="02" title="Blog" caption="書いたもの">
+    <div slot="aside" class="aside-links">
+        {showAdvent && <ViewAll href={adventHref} label={adventLabel} accent />}
+        <ViewAll href="/blog" />
+    </div>
+    <PostTimeline {posts} limit={LATEST} moreHref="/blog" />
+</HomeSection>
+
+<style>
+    .aside-links {
+        display: flex;
+        align-items: center;
+        gap: 1.75rem;
+    }
+</style>

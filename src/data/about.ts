@@ -1,5 +1,59 @@
-// Aboutページ（src/pages/about.astro）に出す内容。
+// プロフィール系の内容。トップの About セクション(src/components/home/AboutSection.astro)と、
+// Aboutページ（src/pages/about.astro）の両方が読む。
 // 技術スタック・趣味・使っている機材・経歴を、ここだけ触れば増やせるようにしてある。
+
+// =====================================================
+// プロフィール(名前・所属など)
+// =====================================================
+export const PROFILE = {
+  handle: "toramutton",
+  kana: "トラマト",
+  kanji: "寅松",
+  /** 所属。トップの About とフッターで同じ表記を使う(入学年度 - プログラム) */
+  univ: "UEC25 - Computer Science Program",
+  club: "MMA",
+  mbti: "INTJ-A",
+  /** 誕生日 YYYY-MM-DD。年齢は utils/age.ts で、JST の今日から数える */
+  birthday: "2006-06-20",
+  /** 先輩からもらった大切な UUID。トップのヒーローと About で使う(クリックでコピー) */
+  uuid: "1b45a0db-7238-47e4-b95e-206522388c88",
+} as const;
+
+// =====================================================
+// スキル(厳選 16 個。熟練度は付けない)
+// =====================================================
+// アイコンは public/icons/skills/ の単色 SVG(Simple Icons / CC0。ROCm だけ public/icons/rocm.svg)。
+// 色は CSS の mask で塗るので、テーマの色にそのまま追従する。
+export interface FeaturedSkill {
+  name: string;
+  /** public からのパス */
+  icon: string;
+}
+
+const si = (file: string) => `/icons/skills/${file}.svg`;
+
+/** 並び順がそのまま画面の並び(8 × 2)。言語 → Web → 基盤 → ツール */
+export const FEATURED_SKILLS: FeaturedSkill[] = [
+  { name: "C", icon: si("c") },
+  { name: "Rust", icon: si("rust") },
+  { name: "Ruby", icon: si("ruby") },
+  { name: "JavaScript", icon: si("javascript") },
+  { name: "TypeScript", icon: si("typescript") },
+  { name: "HTML", icon: si("html5") },
+  { name: "CSS", icon: si("css3") },
+  { name: "React", icon: si("react") },
+  { name: "Astro", icon: si("astro") },
+  { name: "Qt", icon: si("qt") },
+  { name: "ROCm", icon: "/icons/rocm.svg" },
+  { name: "Zed", icon: si("zedindustries") },
+  { name: "Git", icon: si("git") },
+  { name: "GitHub", icon: si("github") },
+  { name: "LaTeX", icon: si("latex") },
+  { name: "Arch Linux", icon: si("archlinux") },
+];
+
+// ---- ここから下のスキル(34 個・熟練度つき)は、/about を作り直すまでの旧データ ----
+// 作り直したら、上の FEATURED_SKILLS に一本化して、この下のスキル関連(SKILL_* / *_SKILLS / devicon)を消す。
 
 /**
  * devicon のアイコンURLを組み立てる。
@@ -125,9 +179,9 @@ export const INTERESTS: Interest[] = [
   { section: "music", items: ["米津玄師", "Eve", "ヨルシカ"] },
   {
     section: "game",
-    items: ["Minecraft", "Splatoon", "Blue Archive", "Pokémon"],
+    items: ["Minecraft", "Splatoon", "Pokémon"],
   },
-  { section: "other", items: ["Twitter", "アニメ", "睡眠", "キヨ。"] },
+  { section: "other", items: ["Twitter", "キヨ。"] },
 ];
 
 // =====================================================
@@ -171,7 +225,7 @@ export const ENV_BLOCKS: EnvBlock[] = [
       { k: "cpu", v: "Core Ultra 7 258V" },
       { k: "gpu", v: "Intel Arc Graphics 140V" },
       { k: "memory", v: "32GB (MoP / LPDDR5x-8533)" },
-      { k: "os", v: "Windows 11 Home　& Arch Linux" },
+      { k: "os", v: "Windows 11 Home & Arch Linux" },
     ],
   },
   {
@@ -199,26 +253,51 @@ export const ENV_BLOCKS: EnvBlock[] = [
 ];
 
 // =====================================================
+// 資格
+// =====================================================
+// 増えたらここに 1 行足すだけでいい。取得した日の「合格」が、下の TIMELINE にも自動で入る。
+export interface Qualification {
+  id: string;
+  name: string;
+  /** 取得日 YYYY.MM.DD */
+  date: string;
+}
+
+export const QUALIFICATIONS: Qualification[] = [
+  { id: "fe", name: "基本情報技術者試験", date: "2026.03.10" },
+];
+
+// =====================================================
 // 経歴（git log 風 / 新しいものが上）
 // =====================================================
 export interface TimelineEntry {
   /** YYYY.MM.DD */
   date: string;
   desc: string;
+  /** 資格の取得を表す項目(QUALIFICATIONS の id) */
+  qualification?: string;
 }
 
-export const TIMELINE: TimelineEntry[] = [
+/** 資格以外の出来事。順不同でよい(下で日付順に並べる) */
+const EVENTS: TimelineEntry[] = [
   { date: "2026.09.25", desc: "コンピュータサイエンスプログラム 配属" },
-  { date: "2026.09.12", desc: "ノートPCにArch Linuxを導入(デュアルブート)" },
+  { date: "2026.09.12", desc: "ノートPCにArch Linuxを導入" },
   { date: "2026.08.14", desc: "デスクトップシェルをCaelestia Shellへ移行" },
   { date: "2026.05.30", desc: "ホームページをターミナル風デザインに大改造" },
   { date: "2026.04.24", desc: "UEC Career Boot Festa 2026 のNOCに参加" },
-  { date: "2026.03.10", desc: "基本情報技術者試験 合格" },
-  { date: "2026.02.15", desc: "自作PCにArch Linuxを導入(デュアルブート)" },
+  { date: "2026.02.15", desc: "自作PCにArch Linuxを導入" },
   { date: "2026.02.13", desc: "自作PCをビルド" },
-  { date: "2026.01.02", desc: "Astroでこのホームページを開設" },
+  { date: "2026.01.02", desc: "このホームページを開設" },
   { date: "2025.04.14", desc: "電気通信大学 MMA 入部" },
-  { date: "2025.04.04", desc: "電気通信大学 I類 入学" },
-  { date: "2022.04.07", desc: "都立三田高校 入学" },
+  { date: "2025.04.04", desc: "電気通信大学 入学" },
   { date: "2006.06.20", desc: "誕生" },
 ];
+
+export const TIMELINE: TimelineEntry[] = [
+  ...EVENTS,
+  ...QUALIFICATIONS.map((q) => ({
+    date: q.date,
+    desc: `${q.name} 合格`,
+    qualification: q.id,
+  })),
+].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));

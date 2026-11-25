@@ -1,5 +1,5 @@
 /* src/styles/global.css */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
 
 /* =========================================
    1. リセット & 基本設定
@@ -22,38 +22,37 @@ body {
 /* =========================================
    2. 変数定義
    ========================================= */
+/*
+ * 色は「役割の名前」で持つ(--bg, --accent など)。テーマは値だけを差し替える。
+ * ダークを基調にし、黒・白・灰 + 落ち着いたシアン1色相に絞る。
+ * 背景は青みを抜いたニュートラルグレー(旧テーマは GitHub 風の青みがかった黒だった)。
+ */
 :root {
-    /* --- ライトモード --- */
-    /* 背景 */
-    --background: #ffffff;
-    --surface: #f6f8fa;
-    --elevated: #eaeef2;
+    /* --- ライトモード(白寄りグレーに黒線) --- */
+    /* 背景: ヒーロー(--bg)と、斜め三角形から広がる下層(--bg-deep)。ライトでは下層の方が明るい */
+    --bg: #e1e2e5;
+    --bg-deep: #f6f6f7;
+    /* 2枚重ねの斜め三角形のうち、外側(大きい方)の色。--bg と --bg-deep の中間 */
+    --bg-mid: #ececee;
+    --surface: #ffffff;
+    --elevated: #eceef0;
+    --border: #cfd2d6;
 
-    /* テキスト */
-    --text-main: #1f2328;
-    --text-muted: #656d76;
+    /* テキストと線 */
+    --text: #1b1c1f;
+    --text-muted: #5f636a;
+    /* ワイヤーフレーム・波形・罫線などの「描く線」 */
+    --line: rgb(27 28 31 / 0.5);
 
-    /* 境界線 */
-    --border-color: #d0d7de;
+    /* アクセント: 1色相を2段階で使う。--accent は UI(リンク・アクティブ表示)、--accent-glow は光(粒子など) */
+    --accent: #3f7f8b;
+    --accent-glow: #4f97a5;
 
-    /* アクセント */
-    --accent-blue: #0e7490;
-    /* dim cyan : リンク・主要強調 */
-    --accent-rev: #22d3ee;
-    /* bright cyan : hover/active */
-    --accent-secondary: #2563eb;
-    /* sub-blue : 副アクセント */
-
-    /* コンポーネント用カラー */
-    --code-bg: #f6f8fa;
+    /* コンポーネント固有の色 */
     --code-text: #cf222e;
-    --spec-label: #0e7490;
     --text-yellow-custom: #9a6700;
-    --category-title: #0e7490;
-    --badge-bg: #eaeef2;
-    --badge-text: #656d76;
 
-    /* 外部サービスのブランドカラー(バッジ・フィルター・SNSアイコン共通) */
+    /* 外部サービスのブランドカラー(SNS アイコンはホバー時だけこの色にする) */
     --brand-zenn: #3ea8ff;
     --brand-note: #41c9b4;
     --brand-qiita: #55c500;
@@ -67,56 +66,54 @@ body {
     /* 出現・ホバーで共通して使うイージング */
     --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
     /* ぼかさないオフセット影(カードの hover 語彙) */
-    --shadow-offset: 5px 5px 0 var(--accent-blue);
+    --shadow-offset: 5px 5px 0 var(--accent);
 
-    /* --- 互換用（段階的に廃止予定） --- */
-    --glass-bg: #ffffff;
-    --glass-blur: none;
-
-    /* タイポグラフィ */
+    /* タイポグラフィ。IBM Plex Sans JP を主役にして、読み込めないときは従来の和文フォントに落ちる */
     --font-mono:
         'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
     --font-sans:
+        'IBM Plex Sans JP', 'Noto Sans JP',
         -apple-system, BlinkMacSystemFont,
         '游ゴシック', 'Yu Gothic', YuGothic,
-        'Noto Sans JP', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN',
+        'Hiragino Sans', 'Hiragino Kaku Gothic ProN',
         'Meiryo', sans-serif;
+
+    /*
+     * --- 旧名(既存ページ用の別名) ---
+     * 新デザインに作り替えたページから順に新しい名前へ移し、使われなくなったら消す。
+     * :root と html.dark は同じ <html> 要素なので、ここで var() を参照しておけば
+     * テーマ切り替え後の値が自動で入る。
+     */
+    --background: var(--bg);
+    --text-main: var(--text);
+    --border-color: var(--border);
+    --accent-blue: var(--accent);
+    --accent-secondary: var(--accent);
+    --code-bg: var(--surface);
+    --spec-label: var(--accent);
+    --category-title: var(--accent);
+    --badge-bg: var(--elevated);
+    --badge-text: var(--text-muted);
 }
 
-/* --- †ダークモード† --- */
+/* --- †ダークモード†(黒寄りグレーに白線) --- */
 html.dark {
-    /* 背景 */
-    --background: #0d1117;
-    --surface: #161b22;
-    --elevated: #21262d;
+    --bg: #17181b;
+    --bg-deep: #0c0d0f;
+    --bg-mid: #111214;
+    --surface: #1f2125;
+    --elevated: #2a2d32;
+    --border: #34373d;
 
-    /* テキスト */
-    --text-main: #e6edf3;
-    --text-muted: #7d8590;
+    --text: #e8eaed;
+    --text-muted: #8b9098;
+    --line: rgb(232 234 237 / 0.42);
 
-    /* 境界線 */
-    --border-color: #30363d;
+    --accent: #7ab9c6;
+    --accent-glow: #b4dde5;
 
-    /* アクセント */
-    --accent-blue: #22d3ee;
-    /* bright cyan : リンク・主要強調 */
-    --accent-rev: #0e7490;
-    /* dim cyan : 落ち着いた強調 */
-    --accent-secondary: #60a5fa;
-    /* sub-blue : 副アクセント */
-
-    /* コンポーネント用カラー */
-    --code-bg: #161b22;
     --code-text: #ff7b72;
-    --spec-label: var(--accent-blue);
     --text-yellow-custom: #d29922;
-    --category-title: var(--accent-blue);
-    --badge-bg: #21262d;
-    --badge-text: var(--text-muted);
-
-    /* --- 互換用（段階的に廃止予定） --- */
-    --glass-bg: #161b22;
-    --glass-blur: none;
 }
 
 /* =========================================
@@ -402,29 +399,18 @@ html:not(.dark) .mission-title {
 }
 
 /* =========================================
-   6. View Transition (テーマ切替アニメーション)
+   6. テーマ切り替えのフェード
    ========================================= */
-html.theme-transitioning::view-transition-old(root),
-html.theme-transitioning::view-transition-new(root) {
-    animation: none;
-    mix-blend-mode: normal;
-}
-
-html.theme-transitioning::view-transition-old(root) {
-    z-index: 1;
-}
-
-html.theme-transitioning::view-transition-new(root) {
-    z-index: 9999;
-    animation: circle-reveal 0.5s ease-in-out;
-}
-
-@keyframes circle-reveal {
-    from {
-        clip-path: circle(0% at var(--tx, 50%) var(--ty, 50%));
-    }
-
-    to {
-        clip-path: circle(150% at var(--tx, 50%) var(--ty, 50%));
-    }
+/* src/scripts/theme-switch.ts が切り替えの間だけ付ける。
+   すべての要素の色を同じ長さで混ぜる(各部品のトランジションより優先する)。
+   テーマダイアルは自前の動き(影・光線の transform)を持つので対象外にする。
+   ここで transition-property を上書きすると、その動きが消えてしまうため */
+html.theme-fading,
+html.theme-fading :not(.theme-dial, .theme-dial *),
+html.theme-fading :not(.theme-dial, .theme-dial *)::before,
+html.theme-fading :not(.theme-dial, .theme-dial *)::after {
+    transition-property: background-color, color, border-color, fill, stroke, outline-color, text-decoration-color !important;
+    transition-duration: 600ms !important;
+    transition-timing-function: ease !important;
+    transition-delay: 0s !important;
 }

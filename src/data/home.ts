@@ -28,6 +28,7 @@ import {
   TW_DAILY_URL,
   ZENN_URL,
 } from "../consts";
+import { PROFILE } from "./about";
 import type { WorkCategory } from "./works";
 import type { MissionInput } from "../utils/countdown";
 
@@ -68,7 +69,7 @@ export const heroSpecs: HeroSpec[] = [
   {
     key: "UUID",
     icon: Fingerprint,
-    value: "1b45a0db-7238-47e4-b95e-206522388c88",
+    value: PROFILE.uuid,
     copy: true,
   },
   // 今やっていること。気が向いたら書き換える
@@ -88,10 +89,14 @@ export interface Social {
 export const socials: Social[] = [
   { name: "GitHub", url: GITHUB_URL, icon: "github" },
   { name: "Zenn", url: ZENN_URL, icon: "zenn" },
-  { name: "note", url: NOTE_URL, icon: "note" },
   { name: "Qiita", url: QIITA_URL, icon: "qiita" },
+  { name: "note", url: NOTE_URL, icon: "note" },
   { name: "Twitter", url: TW_DAILY_URL, icon: "twitter" },
 ];
+
+// ---- Links の紹介文 ----
+// トップの Others と /links ページで共通に使う
+export const LINKS_SUMMARY = "相互リンクしているサイト一覧";
 
 // ---- PALETTE セクション ----
 // サイトの CSS 変数名。ライト/ダークで自動的に切り替わる
@@ -149,62 +154,6 @@ export const workCategories: WorkCategoryCard[] = [
     icon: Wrench,
     cover: "fxtwitter-bot",
   },
-];
-
-// =====================================================
-// ヒーロー左側のミニターミナル
-// 表示のたびに、この中からランダムで3行が選ばれる
-// =====================================================
-export interface TerminalCommand {
-  cmd: string;
-  out: string;
-  /** 指定すると、出力がこのURLへのリンクになる（イースターエッグ用） */
-  href?: string;
-}
-
-export const terminalCommands: TerminalCommand[] = [
-  { cmd: "whoami", out: "toramutton" },
-  { cmd: "status", out: "studying" },
-  { cmd: "mood", out: "creating something" },
-  { cmd: "cat major", out: "CS @ UEC" },
-  { cmd: "cat os", out: "Arch Linux / Windows 11" },
-  { cmd: "echo $SHELL", out: "/bin/bash" },
-  { cmd: "cat hobby", out: "Twitter / Anime / Music" },
-  { cmd: "git status", out: "on branch: main" },
-  { cmd: "pwd", out: "/home/toramutton" },
-  { cmd: "echo $LANG", out: "ja_JP.UTF-8" },
-  { cmd: "cat skills", out: "Rust / TypeScript / C" },
-  { cmd: "cat editor", out: "Zed" },
-  { cmd: "echo $WM", out: "Hyprland / GlazeWM" },
-  { cmd: "cat focus", out: "web / compilers / LLM" },
-  { cmd: "fortune", out: "多分動くと思うからリリースしようぜ" },
-  { cmd: "cat music", out: "米津玄師 / Eve / ヨルシカ" },
-  { cmd: "ping life", out: "64 bytes: icmp_seq=1 ttl=64" },
-  { cmd: "cat dream", out: "living happy!" },
-  { cmd: "cat gpa", out: "it's fine" },
-  { cmd: "cat sleep", out: "insufficient" },
-  { cmd: "git log --oneline", out: "abc1234 fix: everything" },
-  { cmd: "cat arch", out: "I use Arch btw" },
-  { cmd: "cat bugs", out: "feature" },
-  // イースターエッグ。出力をクリックすると古き良きホームページへ飛べる
-  { cmd: "cd /retro", out: "→ 古き良きホームページへ", href: "/retro/" },
-  { cmd: "sudo make me a sandwich", out: "Okay." },
-  {
-    cmd: "rm -rf laziness",
-    out: "Permission denied: It's part of your identity",
-  },
-  { cmd: "cat motivation", out: "depends on the day" },
-  { cmd: "uptime", out: "2 years at UEC" },
-  { cmd: "ls projects", out: "too many" },
-  { cmd: "man life", out: "No manual entry for life" },
-  { cmd: "cat girlfriend", out: "404 Not Found" },
-  { cmd: "cat regrets", out: "3DS" },
-  { cmd: "git diff lunch", out: "no changes. still udon." },
-  { cmd: "locate meme", out: "found before you finished asking" },
-  { cmd: "which interest", out: "ask me again next month" },
-  { cmd: "gcc exam.c", out: "Please use a pencil." },
-  { cmd: "sudo reboot", out: "please come back" },
-  { cmd: "cat day.conf", out: "hours = 27 # powered by Gemini" },
 ];
 
 // =====================================================

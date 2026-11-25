@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <!--
+        マスコット(src/assets/profile/toramutton.jpg, 400x400)の線画。
+        目・ハイライト・口・ほっぺの位置と大きさは、写真から色で切り出して測った値をそのまま使っている。
+        色は currentColor で親の CSS color を受け取る。
+
+        目は「黒い目に白い光」という元写真の関係を保つため、テーマで描き方を変える。
+          - ダーク(既定): 目は輪郭線だけ(中は背景の暗色)、ハイライトを線の色で塗る
+          - ライト(html に .dark が無いとき): 目を塗りつぶし、ハイライトを穴として抜く
+        <img> で読み込んだ場合は外側の html が見えないので、常にダーク版になる。
+    -->
+    <style>
+        .tm-eyes-solid { display: none; }
+        html:not(.dark) .tm-eyes-solid { display: inline; }
+        html:not(.dark) .tm-eyes-line { display: none; }
+    </style>
+    <defs>
+        <clipPath id="tm-frame"><circle cx="200" cy="200" r="195" /></clipPath>
+        <!-- ルートの stroke がここにも継承されるとハイライトの縁が半端に残るので、マスク内は線なし -->
+        <mask id="tm-eye-hl" stroke="none">
+            <rect width="400" height="400" fill="#fff" />
+            <ellipse rx="12.8" ry="25" fill="#000" transform="translate(56.6 152.9) rotate(6)" />
+            <ellipse rx="12.5" ry="20.6" fill="#000" transform="translate(345.9 190.3) rotate(17.7)" />
+        </mask>
+    </defs>
+
+    <g clip-path="url(#tm-frame)">
+        <!-- 目: ダーク用(輪郭線 + 塗りのハイライト) -->
+        <g class="tm-eyes-line">
+            <g stroke-width="7">
+                <ellipse rx="32.7" ry="51.7" transform="translate(45.7 168.6) rotate(11.3)" />
+                <ellipse rx="38.4" ry="51.8" transform="translate(352.5 208.6) rotate(2.3)" />
+            </g>
+            <g fill="currentColor" stroke="none">
+                <ellipse rx="12.8" ry="25" transform="translate(56.6 152.9) rotate(6)" />
+                <ellipse rx="12.5" ry="20.6" transform="translate(345.9 190.3) rotate(17.7)" />
+            </g>
+        </g>
+
+        <!-- 目: ライト用(塗り + ハイライトを穴で抜く) -->
+        <g class="tm-eyes-solid" fill="currentColor" stroke="none" mask="url(#tm-eye-hl)">
+            <ellipse rx="32.7" ry="51.7" transform="translate(45.7 168.6) rotate(11.3)" />
+            <ellipse rx="38.4" ry="51.8" transform="translate(352.5 208.6) rotate(2.3)" />
+        </g>
+
+        <!-- 口(写真の黒い線の中心線をなぞったもの) -->
+        <path d="M94 245.5 C110 261 132 271 152 270 C168 269 181 262 190 263.5 C200 268 222 281 245 282 C259 282 268 277 276 273.5" />
+
+        <!-- ほっぺ(写真では枠の外にはみ出しているので、枠で切り取る) -->
+        <ellipse cx="-4" cy="248" rx="30" ry="42" stroke-width="6" opacity="0.55" />
+        <ellipse cx="396" cy="298" rx="38" ry="46" stroke-width="6" opacity="0.55" />
+    </g>
+
+    <circle cx="200" cy="200" r="195" stroke-width="7" />
+</svg>

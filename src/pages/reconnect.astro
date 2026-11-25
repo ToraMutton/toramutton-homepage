@@ -1,0 +1,13 @@
+---
+// 404 のミニゲームを SNS で共有するための URL。画面は 404 と同じ(components/LostPage.astro)。
+export const prerender = true;
+
+import LostPage from "../components/LostPage.astro";
+import { SITE_TITLE } from "../consts";
+---
+
+<LostPage
+    title={`404 ミニゲーム | ${SITE_TITLE}`}
+    description="切れた回線を跳んでつなぐミニゲーム。404 hops で 200 OK。"
+    noindex
+/>

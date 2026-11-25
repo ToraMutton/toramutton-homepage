@@ -1,0 +1,124 @@
+---
+// ヒーローのスクロール誘導(縦に3つ並んだシェブロン + 縦書きの SCROLL)。トップと /about で共通。
+// 親の .hero が持つ --p(スクロール進捗)を継承して、三角形が広がるにつれて消える。
+// 覆い切って親に .is-covered が付いたら、押せないよう visibility: hidden にする。
+interface Props {
+    /** 行き先(次のセクションのアンカー) */
+    href?: string;
+    /** 縦書きの「SCROLL」を出すか。情報を減らしたいページでは false */
+    label?: boolean;
+    /** 下部の中央に置く(既定は左下) */
+    center?: boolean;
+}
+const { href = "#works", label = true, center = false } = Astro.props;
+---
+
+<a class:list={["scroll-cue", { center }]} {href} aria-label="下のセクションへ">
+    {
+        label && (
+            <span class="scroll-label" aria-hidden="true">
+                SCROLL
+            </span>
+        )
+    }
+    <span class="chevrons" aria-hidden="true">
+        <span class="chevron"></span>
+        <span class="chevron"></span>
+        <span class="chevron"></span>
+    </span>
+</a>
+
+<style>
+    .scroll-cue {
+        position: absolute;
+        left: clamp(1rem, 3vw, 2.5rem);
+        bottom: calc(1.75rem + var(--toolbar, 0px));
+        z-index: 30;
+        display: grid;
+        justify-items: center;
+        gap: 0.9rem;
+        padding: 0.5rem;
+        color: var(--text);
+        text-decoration: none;
+        opacity: calc(1 - var(--p, 0) * 2.5);
+        transition: color 0.2s ease;
+    }
+
+    .scroll-cue.center {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    :global(.is-covered) .scroll-cue {
+        visibility: hidden;
+    }
+
+    .scroll-cue:hover,
+    .scroll-cue:focus-visible {
+        color: var(--accent);
+    }
+
+    .scroll-label {
+        writing-mode: vertical-rl;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.35em;
+        color: var(--text-muted);
+    }
+
+    .chevrons {
+        display: grid;
+    }
+
+    .chevron {
+        display: block;
+        width: 20px;
+        height: 20px;
+        margin-top: -6px;
+        border-right: 2.5px solid currentColor;
+        border-bottom: 2.5px solid currentColor;
+        transform: rotate(45deg);
+        animation: chevron-flow 1.6s ease-in-out infinite;
+    }
+
+    /* 上から順に少しずつ遅らせて、光が下へ流れ落ちるように見せる */
+    .chevron:nth-child(2) {
+        animation-delay: 0.18s;
+    }
+    .chevron:nth-child(3) {
+        animation-delay: 0.36s;
+    }
+
+    @keyframes chevron-flow {
+        0%,
+        100% {
+            opacity: 0.2;
+            translate: 0 0;
+        }
+        45% {
+            opacity: 1;
+            translate: 0 5px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .chevron {
+            animation: none;
+            opacity: 0.8;
+        }
+    }
+
+    /* モバイル: 下部の中央、SCROLL の文字は省く */
+    @media (max-width: 768px) {
+        .scroll-cue,
+        .scroll-cue.center {
+            left: 50%;
+            bottom: calc(0.75rem + var(--toolbar, 0px));
+            transform: translateX(-50%);
+        }
+
+        .scroll-label {
+            display: none;
+        }
+    }
+</style>

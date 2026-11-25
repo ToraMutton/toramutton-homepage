@@ -1,0 +1,71 @@
+---
+// アドベントカレンダーの記事のタイトル上に置くプレゼントのアイコン。押すとカレンダーへ。
+// 他と同じ線のアイコン(lucide)。動きは付けず、ホバーで色が変わるだけ。
+import { Gift } from "lucide-astro";
+import { adventHref, adventLabel } from "../../utils/advent-link";
+
+interface Props {
+    /** "Day 5" / "Prologue" など */
+    label: string;
+}
+const { label } = Astro.props;
+---
+
+<a class="advent-badge" href={adventHref} aria-label={`${adventLabel} ${label} — カレンダーを見る`}>
+    <Gift size={32} strokeWidth={1.5} aria-hidden="true" />
+    <span class="text">
+        <span class="name">{adventLabel}</span>
+        <span class="day">{label}</span>
+    </span>
+</a>
+
+<style>
+    .advent-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        margin-bottom: 0.9rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        line-height: 1.35;
+        transition: color 0.2s ease;
+    }
+
+    .advent-badge :global(svg) {
+        flex-shrink: 0;
+    }
+
+    .text {
+        display: flex;
+        flex-direction: column;
+        font-family: var(--font-mono);
+    }
+
+    .name {
+        font-size: 0.7rem;
+        letter-spacing: 0.12em;
+    }
+
+    .day {
+        font-size: 0.95rem;
+        font-weight: 700;
+    }
+
+    .advent-badge:focus-visible {
+        color: var(--accent);
+        outline: 2px solid var(--accent);
+        outline-offset: 4px;
+    }
+
+    @media (hover: hover) {
+        .advent-badge:hover {
+            color: var(--accent);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .advent-badge {
+            transition: none;
+        }
+    }
+</style>

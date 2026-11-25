@@ -1,0 +1,183 @@
+---
+// そのほかのページへの導線(Links / Advent 2026 / Retro)。
+//
+// 引き算のデザイン。装飾は面の色(Hero の背景と同じ --bg)と、面の間の細いスリットだけ。
+//   ・PC / タブレット: 縦のスリットで区切った 3 カラム。傾けない・グラデーションも付けない
+//   ・スマホ(≤ 720px): 縦に積み、About と同じ「斜めの重なり」にする。
+//       面の背景だけを ::before で skewY に傾け(文字は傾けない)、行ごとに向きを交互に逆転させる。
+//       向きが逆の面どうしは、境目が片側で重なり、反対側でくさび形に開く。
+//       後ろの面ほど DOM で後に描かれるので、下の面ほど手前に乗り上げて見える。
+//       画面の端から端まで広げるため、HomeSection の左右の余白ぶん(1.5rem)を負のマージンで打ち消している
+// 項目を増やすときは、傾きの向きが交互になるよう .b1 / .b2 / .b3 の --skew-y を見直すこと。
+import { ArrowRight, CalendarDays, Gamepad2, Link as LinkIcon } from "lucide-astro";
+import HomeSection from "./HomeSection.astro";
+import { LINKS_SUMMARY } from "../../data/home";
+
+const items = [
+    { href: "/links", name: "Links", desc: LINKS_SUMMARY, icon: LinkIcon },
+    { href: "/advent2026", name: "Advent 2026", desc: "トラマト一人アドベントカレンダー 2026", icon: CalendarDays },
+    // retro は通常ページと見た目が全く違うので、ClientRouter を使わず普通に読み込む
+    { href: "/retro/", name: "Retro", desc: "軽量版お遊びページ", icon: Gamepad2, reload: true },
+];
+---
+
+<HomeSection id="others" index="04" title="Others" caption="そのほか">
+    <ul class="others">
+        {
+            items.map((item, i) => (
+                <li class={`b${i + 1}`}>
+                    <a href={item.href} data-astro-reload={item.reload ? true : undefined}>
+                        <span class="top">
+                            <span class="icon" aria-hidden="true">
+                                <item.icon size={20} strokeWidth={1.5} />
+                            </span>
+                            <ArrowRight class="arrow" size={18} strokeWidth={1.5} aria-hidden="true" />
+                        </span>
+                        <span class="text">
+                            <span class="name">{item.name}</span>
+                            <span class="desc">{item.desc}</span>
+                        </span>
+                    </a>
+                </li>
+            ))
+        }
+    </ul>
+</HomeSection>
+
+<style>
+    .others {
+        /* --gap: 面と面のすき間(スリット)  --tilt: スマホでの面の傾き(About と同じ角度) */
+        --gap: 6px;
+        --tilt: 3.5deg;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--gap);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .others a {
+        position: relative;
+        isolation: isolate;
+        display: flex;
+        flex-direction: column;
+        /* 説明文の行数が違っても、名前の位置が横並びでそろうよう上から詰める */
+        gap: 2.5rem;
+        height: 100%;
+        min-height: 13rem;
+        padding: 1.75rem 2rem 2rem;
+        color: var(--text);
+        text-decoration: none;
+    }
+
+    /* 面の背景。スマホでは、これだけを傾ける(文字は傾けない) */
+    .others a::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background: var(--bg);
+        transform: skewY(var(--skew-y, 0deg));
+        transition: background-color 0.3s ease;
+    }
+
+    .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .icon {
+        display: grid;
+        place-items: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border: 1px solid var(--border);
+        border-radius: 50%;
+        color: var(--accent);
+        transition: border-color 0.3s ease;
+    }
+
+    .top :global(.arrow) {
+        color: var(--text-muted);
+        transition:
+            transform 0.35s var(--ease-out),
+            color 0.25s ease;
+    }
+
+    .text {
+        display: grid;
+        gap: 0.5rem;
+    }
+
+    .name {
+        font-family: var(--font-mono);
+        font-size: 1.3rem;
+        font-weight: 700;
+        transition: color 0.25s ease;
+    }
+
+    .desc {
+        font-size: 0.9rem;
+        line-height: 1.7;
+        color: var(--text-muted);
+    }
+
+    .others a:focus-visible .name {
+        color: var(--accent);
+        text-decoration: underline;
+    }
+
+    @media (hover: hover) {
+        .others a:hover::before {
+            background: color-mix(in srgb, var(--bg) 93%, var(--text));
+        }
+        .others a:hover .name {
+            color: var(--accent);
+        }
+        .others a:hover .icon {
+            border-color: var(--accent);
+        }
+        .others a:hover .top :global(.arrow) {
+            color: var(--accent);
+            transform: translateX(4px);
+        }
+    }
+
+    /* ======== スマホ: 縦に積み、About と同じ斜めの重なりに ======== */
+    @media (max-width: 720px) {
+        .others {
+            --gap: 14px;
+            grid-template-columns: 1fr;
+            /* HomeSection の左右の余白(1.5rem)を打ち消して、面を画面の端から端まで広げる */
+            margin-inline: -1.5rem;
+        }
+
+        /* 向きを交互に逆転。後ろの面ほど手前(DOM の後ろほど後から描かれる) */
+        .b1 {
+            --skew-y: var(--tilt);
+        }
+        .b2 {
+            --skew-y: calc(-1 * var(--tilt));
+        }
+        .b3 {
+            --skew-y: var(--tilt);
+        }
+
+        .others a {
+            min-height: 0;
+            gap: 1.25rem;
+            padding: 3rem 1.5rem;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .others a::before,
+        .icon,
+        .name,
+        .top :global(.arrow) {
+            transition: none;
+        }
+    }
+</style>
