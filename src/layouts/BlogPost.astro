@@ -111,7 +111,7 @@ const heroWidths = [
         <div class="post-grid">
             <div class="post-rail">
                 <div class="rail-sticky">
-                    <PostActions variant="rail" {tweetUrl} />
+                    <PostActions variant="rail" {tweetUrl} slug={id} />
                 </div>
             </div>
 
@@ -165,7 +165,7 @@ const heroWidths = [
                     </div>
                 </article>
 
-                <PostActions variant="row" {tweetUrl} />
+                <PostActions variant="row" {tweetUrl} slug={id} />
                 <PostPager older={olderPost} newer={newerPost} />
                 <p class="post-back">
                     <ViewAll href="/blog" label="All posts" />
