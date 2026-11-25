@@ -1,6 +1,7 @@
 ---
-// アドベントカレンダーの記事のタイトル上に置くクリスマスツリー。押すとカレンダーへ。
-// 動き: ツリーがゆっくり揺れ、飾りが順番に瞬く(ホバーすると大きく揺れる)。
+// アドベントカレンダーの記事のタイトル上に置くプレゼントのアイコン。押すとカレンダーへ。
+// 他と同じ線のアイコン(lucide)。動きは付けず、ホバーで色が変わるだけ。
+import { Gift } from "lucide-astro";
 import { adventHref, adventLabel } from "../../utils/advent-link";
 
 interface Props {
@@ -11,21 +12,7 @@ const { label } = Astro.props;
 ---
 
 <a class="advent-badge" href={adventHref} aria-label={`${adventLabel} ${label} — カレンダーを見る`}>
-    <svg class="tree" viewBox="0 0 48 56" width="40" height="47" aria-hidden="true">
-        <g class="body">
-            <rect x="20.5" y="45" width="7" height="8" rx="1.5" fill="#9a6b4a" />
-            <path class="leaf" d="M24 24 41 46H7Z" />
-            <path class="leaf" d="M24 15 37.5 35h-27Z" />
-            <path class="leaf" d="M24 7 33.5 24h-19Z" />
-            <circle class="light" cx="20" cy="21" r="2.1" fill="#ff7a85" style="--d:0s" />
-            <circle class="light" cx="28" cy="30" r="2.1" fill="#ffd66b" style="--d:0.5s" />
-            <circle class="light" cx="18" cy="33" r="2.1" fill="#8fdcef" style="--d:1s" />
-            <circle class="light" cx="31" cy="42" r="2.1" fill="#ff7a85" style="--d:1.5s" />
-            <circle class="light" cx="16" cy="43" r="2.1" fill="#ffd66b" style="--d:0.8s" />
-            <circle class="light" cx="23.5" cy="40" r="1.8" fill="#8fdcef" style="--d:0.3s" />
-            <path class="star" d="m24 1 2 4.2 4.6.6-3.4 3.2.9 4.6L24 11.4l-4.1 2.2.9-4.6-3.4-3.2 4.6-.6Z" fill="#ffd66b" />
-        </g>
-    </svg>
+    <Gift size={32} strokeWidth={1.5} aria-hidden="true" />
     <span class="text">
         <span class="name">{adventLabel}</span>
         <span class="day">{label}</span>
@@ -38,35 +25,14 @@ const { label } = Astro.props;
         align-items: center;
         gap: 0.65rem;
         margin-bottom: 0.9rem;
-        color: var(--text);
+        color: var(--text-muted);
         text-decoration: none;
         line-height: 1.35;
+        transition: color 0.2s ease;
     }
 
-    .tree {
-        overflow: visible;
+    .advent-badge :global(svg) {
         flex-shrink: 0;
-    }
-
-    .leaf {
-        fill: #4fa57e;
-        stroke: #4fa57e;
-        stroke-width: 3;
-        stroke-linejoin: round;
-    }
-
-    .body {
-        transform-origin: 24px 53px;
-        animation: tree-sway 3.2s ease-in-out infinite;
-    }
-
-    .light {
-        animation: twinkle 2s ease-in-out var(--d) infinite;
-    }
-
-    .star {
-        transform-origin: 24px 7.5px;
-        animation: star-pulse 2.4s ease-in-out infinite;
     }
 
     .text {
@@ -76,7 +42,6 @@ const { label } = Astro.props;
     }
 
     .name {
-        color: var(--text-muted);
         font-size: 0.7rem;
         letter-spacing: 0.12em;
     }
@@ -84,65 +49,23 @@ const { label } = Astro.props;
     .day {
         font-size: 0.95rem;
         font-weight: 700;
-        transition: color 0.2s ease;
     }
 
     .advent-badge:focus-visible {
+        color: var(--accent);
         outline: 2px solid var(--accent);
         outline-offset: 4px;
     }
 
     @media (hover: hover) {
-        .advent-badge:hover .day {
+        .advent-badge:hover {
             color: var(--accent);
-        }
-        .advent-badge:hover .body {
-            animation: tree-wiggle 0.6s ease-in-out infinite;
-        }
-    }
-
-    @keyframes tree-sway {
-        0%,
-        100% {
-            transform: rotate(-3deg);
-        }
-        50% {
-            transform: rotate(3deg);
-        }
-    }
-
-    @keyframes tree-wiggle {
-        0%,
-        100% {
-            transform: rotate(-7deg) scale(1.06);
-        }
-        50% {
-            transform: rotate(7deg) scale(1.06);
-        }
-    }
-
-    @keyframes twinkle {
-        0%,
-        100% {
-            opacity: 1;
-        }
-        50% {
-            opacity: 0.25;
-        }
-    }
-
-    @keyframes star-pulse {
-        50% {
-            transform: scale(1.18) rotate(12deg);
         }
     }
 
     @media (prefers-reduced-motion: reduce) {
-        .body,
-        .light,
-        .star,
-        .advent-badge:hover .body {
-            animation: none;
+        .advent-badge {
+            transition: none;
         }
     }
 </style>
