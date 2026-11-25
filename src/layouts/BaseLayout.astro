@@ -25,9 +25,11 @@ interface Props {
      *   bare    … 画面いっぱい・余白なし（トップページ。ヒーローを固定ヘッダーの裏まで敷く）
      */
     width?: "default" | "narrow" | "full" | "bare";
+    /** false にするとフッターを出さない(404 のような 1 画面のページ用) */
+    footer?: boolean;
 }
 
-const { title, description, image, cardType, width = "default" } = Astro.props;
+const { title, description, image, cardType, width = "default", footer = true } = Astro.props;
 ---
 
 <html lang="ja">
@@ -40,7 +42,7 @@ const { title, description, image, cardType, width = "default" } = Astro.props;
         <main class={width}>
             <slot />
         </main>
-        <Footer />
+        {footer && <Footer />}
         {/* ページ固有のスクリプトをここに置くためのスロット */}
         <slot name="body-end" />
     </body>
