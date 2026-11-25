@@ -7,11 +7,10 @@ import type { MarkdownHeading } from "astro";
 import { ArrowUp } from "lucide-astro";
 
 interface Props {
-    id: string;
     /** h2 / h3 の見出し */
     headings: MarkdownHeading[];
 }
-const { id, headings } = Astro.props;
+const { headings } = Astro.props;
 
 interface Group {
     head?: MarkdownHeading;
@@ -30,9 +29,7 @@ const collapsible = headings.length > 12;
 <nav class:list={["blog-toc", { "is-collapsible": collapsible }]} aria-label="目次">
     <div class="toc-card">
         <div class="toc-progress" id="toc-progress"></div>
-        <p class="toc-title">
-            <span class="prompt">$</span> grep '^#' {id}.md
-        </p>
+        <p class="toc-title">目次</p>
         <ul class="toc-list">
             {
                 groups.map((group) => (
@@ -89,20 +86,13 @@ const collapsible = headings.length > 12;
     }
 
     .toc-title {
-        margin: 0 0 0.6rem;
-        padding-bottom: 0.5rem;
-        overflow: hidden;
+        margin: 0 0 0.5rem;
+        padding-bottom: 0.45rem;
         border-bottom: 1px solid var(--border);
         color: var(--text-muted);
-        font-family: var(--font-mono);
         font-size: 0.72rem;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .prompt {
-        color: var(--accent);
         font-weight: 700;
+        letter-spacing: 0.1em;
     }
 
     ul {

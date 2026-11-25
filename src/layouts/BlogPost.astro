@@ -11,11 +11,14 @@ import type { MarkdownHeading } from "astro";
 import Layout from "./BaseLayout.astro";
 import FormattedDate from "../components/FormattedDate.astro";
 import ViewAll from "../components/ui/ViewAll.astro";
+import AdventBadge from "../components/post/AdventBadge.astro";
 import PostActions from "../components/post/PostActions.astro";
 import PostPager from "../components/post/PostPager.astro";
 import PostProfile from "../components/post/PostProfile.astro";
 import PostRecommend from "../components/post/PostRecommend.astro";
 import PostToc from "../components/post/PostToc.astro";
+import Snow from "../components/post/Snow.astro";
+import { adventLabelOf } from "../utils/advent-post";
 import { getVisiblePosts } from "../utils/post";
 
 type Props = CollectionEntry<"blog">["data"] & {
@@ -37,6 +40,9 @@ const {
     tags = [],
     headings = [],
 } = Astro.props;
+
+// アドベントカレンダーの記事には、ツリーと雪を添える
+const advent = adventLabelOf(id);
 
 const shareText = `${title} | トラマト`;
 const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(Astro.url.href)}`;
@@ -101,6 +107,7 @@ const heroWidths = [
 
 <Layout title={title} description={description} image={heroImage} {cardType} width="bare">
     <div class="post-page">
+        {advent && <Snow />}
         <div class="post-grid">
             <div class="post-rail">
                 <div class="rail-sticky">
@@ -128,6 +135,7 @@ const heroWidths = [
                     }
                     <div class="prose">
                         <header class="post-header">
+                            {advent && <AdventBadge label={advent} />}
                             <h1>{title}</h1>
                             <p class="post-meta">
                                 <FormattedDate date={pubDate} />
@@ -169,7 +177,7 @@ const heroWidths = [
                     <PostProfile />
                 </div>
                 <div class="side-sticky">
-                    {tocHeadings.length > 0 && <PostToc {id} headings={tocHeadings} />}
+                    {tocHeadings.length > 0 && <PostToc headings={tocHeadings} />}
                     <PostRecommend posts={recommended} />
                 </div>
             </aside>
@@ -183,6 +191,7 @@ const heroWidths = [
         .post-page {
             /* カードの面。ライトは白、ダークは背景より一段明るい灰 */
             --card: var(--surface);
+            position: relative;
             min-height: 100dvh;
             padding: calc(72px + 1.5rem) 1rem 4rem;
             background: var(--bg-deep);
@@ -192,6 +201,8 @@ const heroWidths = [
         }
 
         .post-grid {
+            /* 雪より手前に描く。z-index は付けない(付けると、中の目次ドロワーが背景幕の下に潜る) */
+            position: relative;
             display: grid;
             grid-template-columns: minmax(0, 1fr);
             gap: 2rem;

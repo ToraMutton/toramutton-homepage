@@ -4,6 +4,7 @@
 //   公開前   … 日付の数字を薄く出すだけ(引き算。鍵マークなどは付けない)
 // 「今日」の印はブラウザ側のスクリプトが data-today を付ける(advent2026.astro)。
 import { Image } from "astro:assets";
+import SourceTile from "../ui/SourceTile.astro";
 import type { ResolvedAdventDay } from "../../utils/advent";
 import type { AdventSource } from "../../data/advent2026";
 
@@ -43,7 +44,7 @@ const Tag = url ? "a" : "div";
                         ) : typeof image === "string" && image ? (
                             <img src={image} alt="" width="320" height="200" loading="lazy" decoding="async" />
                         ) : (
-                            <span class="no-image">{dd}</span>
+                            <SourceTile source={source === "blog" || !source ? "local" : source} />
                         )}
                     </span>
                     <span class="title">{title}</span>
@@ -122,15 +123,6 @@ const Tag = url ? "a" : "div";
         border-radius: 0;
         object-fit: cover;
         transition: transform 0.6s var(--ease-out);
-    }
-
-    .no-image {
-        display: grid;
-        place-items: center;
-        height: 100%;
-        color: var(--text-muted);
-        font-family: var(--font-mono);
-        font-size: 1.1rem;
     }
 
     .title {
