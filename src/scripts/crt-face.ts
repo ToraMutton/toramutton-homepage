@@ -112,7 +112,7 @@ const EYE_SQUEEZE_L = mirror(EYE_SQUEEZE_R); // "<"
 const EYE_DEAD = ["XX...XX", ".XX.XX.", "..XXX..", "...X...", "..XXX..", ".XX.XX.", "XX...XX"];
 const EYE_SLEEP = ["X.....X", "XX...XX", ".XXXXX."]; // "˘"
 
-const MOUTH_IDLE = ["X..X..X", "X..X..X", ".XX.XX."]; // "ω"
+const MOUTH_IDLE = ["X....X....X", "X....X....X", ".X..X.X..X.", "..XX...XX.."]; // "ω"(11 × 4)
 const MOUTH_HOVER = ["XXXXXXXXX", ".XXXXXXX.", "..XXXXX..", "...XXX..."];
 const MOUTH_CLICK = ["XXXXXXXXXXX", "XXXXXXXXXXX", ".XXXXXXXXX.", "..XXXXXXX..", "...XXXXX..."];
 const MOUTH_DEAD = ["XXXXXXXXXXX", ".........XX", ".........XX"];
@@ -190,7 +190,7 @@ export function drawFace(ctx: CanvasRenderingContext2D, s: FaceState) {
           ctx.fillStyle = "#fff";
         }
       }
-      art(ctx, MOUTH_IDLE, mx - 3 + Math.round(lx / 2), MOUTH_Y);
+      art(ctx, MOUTH_IDLE, mx - 5 + Math.round(lx / 2), MOUTH_Y - 1);
       break;
     }
     case "hover": {

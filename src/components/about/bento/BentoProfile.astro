@@ -4,7 +4,7 @@
 // PC 幅(12 カラムのとき)は、カードの高さをグリッドに合わせ、タイムラインだけをカード内でスクロールさせる。
 //   細いスクロールバー + 上下の端のフェード(まだ続きがある側だけ薄くする)で、続きがあることを示す。
 //   ・フェードの長さは CSS 変数 --fade-top / --fade-bottom。@property で登録して、出入りをなめらかに補間している
-//   ・どちら側に続きがあるかは、スクロールのたびに <script> が .can-up / .can-down を付け外しして伝える
+//   ・どちら側に続きがあるかは、スクロールのたびに、下のスクリプトが .can-up / .can-down を付け外しして伝える
 // 中身は src/data/about.ts の QUALIFICATIONS / TIMELINE(資格を足すと経歴にも自動で入る)。
 import { Award } from "lucide-astro";
 import { QUALIFICATIONS, TIMELINE } from "../../../data/about";

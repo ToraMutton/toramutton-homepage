@@ -1,5 +1,6 @@
 ---
-// 技術スタックカード。トップの About セクションと同じ、厳選 16 個の単色アイコン(8 × 2)。
+// 技術スタックカード。トップの About セクションと同じ、厳選 16 個の単色アイコン。
+// PC 幅では全幅の帯になるので 16 × 1(横一列)、タブレットは 8 × 2、スマホは 4 × 4。
 // アイコンは SVG を mask にして currentColor で塗るので、テーマの色にそのまま追従する(中身は about.ts の FEATURED_SKILLS)。
 import { FEATURED_SKILLS } from "../../../data/about";
 import BentoCard from "./BentoCard.astro";
@@ -21,7 +22,7 @@ import BentoCard from "./BentoCard.astro";
 <style>
     .list {
         display: grid;
-        grid-template-columns: repeat(8, minmax(0, 1fr));
+        grid-template-columns: repeat(16, minmax(0, 1fr));
         align-content: center;
         flex: 1;
         gap: 1.1rem 0.25rem;
@@ -40,8 +41,8 @@ import BentoCard from "./BentoCard.astro";
     }
 
     .ico {
-        width: 1.7rem;
-        height: 1.7rem;
+        width: 1.9rem;
+        height: 1.9rem;
         background: currentColor;
         -webkit-mask: var(--icon) center / contain no-repeat;
         mask: var(--icon) center / contain no-repeat;
@@ -51,7 +52,7 @@ import BentoCard from "./BentoCard.astro";
     .name {
         max-width: 100%;
         font-family: var(--font-mono);
-        font-size: 0.54rem;
+        font-size: 0.6rem;
         letter-spacing: 0;
         text-align: center;
         overflow-wrap: anywhere;
@@ -63,6 +64,13 @@ import BentoCard from "./BentoCard.astro";
         }
         .skill:hover .ico {
             transform: translateY(-3px);
+        }
+    }
+
+    /* 全幅の帯でなくなる幅(タブレット)では 8 × 2 */
+    @media (max-width: 1199px) {
+        .list {
+            grid-template-columns: repeat(8, minmax(0, 1fr));
         }
     }
 

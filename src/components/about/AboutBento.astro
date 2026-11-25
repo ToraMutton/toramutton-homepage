@@ -1,15 +1,16 @@
 ---
 // /about の Bento Grid(ヒーローの下)。角丸のカードを敷き詰める。ヒーローの三角形が覆い切った --bg-deep が、そのまま地になる。
 //
-// PC 幅(1200px 以上): 12 カラム × 3 行
+// PC 幅(1200px 以上): 12 カラム × 4 行
 //          1–3          4–6      7–9      10–12
-//   行 1   環境(上 64%)  Uptime   趣味     資格 +
-//   行 2   Countdown     CRT モニター(4–9)  タイムライン(縦 3 行ぶん。内側でスクロール)
-//   行 3   技術スタック(1–5)      GitHub(6–9)
-//   左(環境 + Countdown。行 1〜2 ぶん)と右(資格 + タイムライン)は、列全体を 1 つの入れ物にして中でカードを積む。
-//   行の高さは 17rem / 21rem / 15rem。
-// 1200px 未満: 2 カラム(CRT・技術スタック・GitHub・資格は全幅)  /  720px 以下: 1 カラム縦積み
-//   どちらも、左右の入れ物は display: contents で外して、カードを並べ替えなしに順に敷く。
+//   行 1   環境(縦 2 行) Uptime   趣味     資格 +
+//   行 2   環境          CRT モニター(4–9)  タイムライン(縦 3 行ぶん)
+//   行 3   Countdown    GitHub(4–9)        (タイムライン)
+//   行 4   技術スタック(1–12。アイコン 16 個が横一列の帯)
+//   環境は文字を読みやすい大きさにするため、縦に長い(行 1〜2 をまるごと使う)。スクロールなしで収まる。
+//   行の高さは 17rem / 21rem / 14rem / 9rem。
+// 1200px 未満: 2 カラム(CRT・GitHub・技術スタック・資格は全幅)  /  720px 以下: 1 カラム縦積み
+//   どちらも、資格の入れ物は display: contents で外して、カードを並べ替えなしに順に敷く。
 //
 // 真ん中の CRT モニター(bento/BentoCrt.astro)は、カードの枠より上へ突き出す(canvas はカードの外に置いてある)。
 // 突き出した先の Uptime・趣味のカードをクリックできるよう、canvas 自体はポインターを素通しする。
@@ -27,15 +28,13 @@ import BentoCrt from "./bento/BentoCrt.astro";
     <h2 id="bento-title" class="sr-only">プロフィールの詳細</h2>
     <div class="inner">
         <div class="grid">
-            <div class="left">
-                <BentoEnv />
-                <BentoCountdown />
-            </div>
+            <div class="cell c-env"><BentoEnv /></div>
+            <div class="cell c-count"><BentoCountdown /></div>
             <div class="cell c-uptime"><BentoUptime /></div>
             <div class="cell c-hobby"><BentoHobby /></div>
             <div class="cell c-crt"><BentoCrt /></div>
-            <div class="cell c-skills"><BentoSkills /></div>
             <div class="cell c-github"><BentoGithub /></div>
+            <div class="cell c-skills"><BentoSkills /></div>
             <div class="right"><BentoProfile /></div>
         </div>
     </div>
@@ -70,13 +69,12 @@ import BentoCrt from "./bento/BentoCrt.astro";
         --gap: 14px;
         display: grid;
         grid-template-columns: repeat(12, minmax(0, 1fr));
-        grid-template-rows: 17rem 21rem 15rem;
+        grid-template-rows: 17rem 21rem 14rem 9rem;
         gap: var(--gap);
     }
 
     /* カードを 1 枚ずつ入れる入れ物。カードは入れ物いっぱいに伸びる */
     .cell,
-    .left,
     .right {
         display: flex;
         flex-direction: column;
@@ -88,17 +86,13 @@ import BentoCrt from "./bento/BentoCrt.astro";
         flex: 1;
     }
 
-    .left {
+    .c-env {
         grid-column: 1 / 4;
         grid-row: 1 / 3;
-        gap: var(--gap);
     }
-    /* 環境が上の 64%、Countdown が下の 36%(環境は開いたピルにスペックを詰めるので、縦を多めに取る) */
-    .left > :global(.env) {
-        flex: 64 1 0;
-    }
-    .left > :global(.countdown) {
-        flex: 36 1 0;
+    .c-count {
+        grid-column: 1 / 4;
+        grid-row: 3;
     }
 
     .c-uptime {
@@ -113,13 +107,13 @@ import BentoCrt from "./bento/BentoCrt.astro";
         grid-column: 4 / 10;
         grid-row: 2;
     }
-    .c-skills {
-        grid-column: 1 / 6;
+    .c-github {
+        grid-column: 4 / 10;
         grid-row: 3;
     }
-    .c-github {
-        grid-column: 6 / 10;
-        grid-row: 3;
+    .c-skills {
+        grid-column: 1 / 13;
+        grid-row: 4;
     }
     .right {
         grid-column: 10 / 13;
@@ -133,19 +127,12 @@ import BentoCrt from "./bento/BentoCrt.astro";
             grid-template-rows: none;
         }
 
-        /* 左右の入れ物は外して、中のカードを直接グリッドに並べる */
-        .left,
+        /* 資格の入れ物は外して、中のカードを直接グリッドに並べる */
         .right {
             display: contents;
         }
-        .left > :global(.env),
-        .left > :global(.countdown) {
-            flex: none;
-        }
 
-        .cell,
-        .c-uptime,
-        .c-hobby {
+        .cell {
             grid-column: auto;
             grid-row: auto;
         }
@@ -153,7 +140,6 @@ import BentoCrt from "./bento/BentoCrt.astro";
         .c-skills,
         .c-github {
             grid-column: 1 / -1;
-            grid-row: auto;
         }
         .right > :global(.card) {
             grid-column: 1 / -1;
