@@ -58,14 +58,14 @@ const fanItems = nav.map((item) => ({ ...item, active: item.href === current }))
         </div>
 
         <div class="controls-group">
+            <ThemeDial />
+
             <button id="toc-toggle" class="toc-toggle ctrl-btn" aria-label="目次を開く">
                 <div class="icon-container-toc">
-                    <span class="icon-toc-open"><BookOpenText size={22} /></span>
-                    <span class="icon-toc-close"><X size={22} /></span>
+                    <span class="icon-toc-open"><BookOpenText size={20} /></span>
+                    <span class="icon-toc-close"><X size={20} /></span>
                 </div>
             </button>
-
-            <ThemeDial />
 
             <!-- 扇は真下〜左下に開く(左へ振りすぎると、隣のテーマダイアルに重なる) -->
             <FabFan
@@ -318,14 +318,21 @@ const fanItems = nav.map((item) => ({ ...item, active: item.href === current }))
         background: color-mix(in srgb, var(--accent) 18%, transparent);
     }
 
-    /* === TOC トグル === */
+    /* === TOC トグル(扇メニューの丸ボタンと同じ見た目) === */
     .toc-toggle {
         display: none;
+        width: 44px;
+        height: 44px;
+        flex: none;
+        border: 1px solid var(--border);
+        border-radius: 50%;
+        background: color-mix(in srgb, var(--surface) 88%, transparent);
+        color: var(--text);
     }
     .icon-container-toc {
         position: relative;
-        width: 22px;
-        height: 22px;
+        width: 20px;
+        height: 20px;
     }
     .icon-toc-open,
     .icon-toc-close {
@@ -351,8 +358,8 @@ const fanItems = nav.map((item) => ({ ...item, active: item.href === current }))
         transform: rotate(0deg) scale(1);
     }
     .toc-toggle.active {
+        border-color: var(--accent);
         color: var(--accent);
-        background: color-mix(in srgb, var(--accent) 12%, transparent);
     }
     /* 記事ページの目次は 1024px 以上で常時表示。それ未満はこのボタンでドロワー */
     @media (max-width: 1023px) {

@@ -384,6 +384,31 @@ const rows = [
         }
     }
 
+    /* 縦が短いスマホは、下の SNS アイコンに被らないようアスキーアートを縮める(さらに短ければ出さない) */
+    @media (max-width: 768px) {
+        .aa {
+            font-size: calc(min(var(--aa-w), 100dvh - 41rem) / 38.4);
+        }
+    }
+    @media (max-width: 768px) and (max-height: 750px) {
+        .aa {
+            display: none;
+        }
+    }
+
+    /* 指の端末ではコマンド入力をやめる(キーボードが出入りして画面がずれるため)。
+       内部スクロールもなくして、スワイプはページのスクロールに使う */
+    @media (hover: none) and (pointer: coarse) {
+        .term-form {
+            display: none;
+        }
+        .term-body {
+            max-height: none;
+            overflow: visible;
+            cursor: auto;
+        }
+    }
+
     /* 狭いデスクトップ幅では、項目名の列を詰めて値の幅を稼ぐ */
     @media (max-width: 1180px) and (min-width: 769px) {
         .info-row {

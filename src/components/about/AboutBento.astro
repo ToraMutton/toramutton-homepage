@@ -47,6 +47,16 @@ import BentoCrt from "./bento/BentoCrt.astro";
         padding: clamp(5rem, 11vh, 7.5rem) 0 clamp(4rem, 9vh, 7rem);
     }
 
+    /* スマホは、ヒーローの末尾に重ねて始める(三角形が覆った後の真っ黒な画面を作らない) */
+    @media (max-width: 768px) {
+        .bento {
+            position: relative;
+            z-index: 1;
+            margin-top: -45dvh;
+            padding-top: 1.5rem;
+        }
+    }
+
     .sr-only {
         position: absolute;
         width: 1px;

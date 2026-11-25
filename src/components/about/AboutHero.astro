@@ -287,6 +287,11 @@ import AboutTerminal from "./AboutTerminal.astro";
 
     /* ---- モバイル ---- */
     @media (max-width: 768px) {
+        /* 覆い切った後の真っ黒な画面を短くする(Bento 側も重ねて始める) */
+        .hero-track {
+            height: 145dvh;
+        }
+
         /* 縦長画面は底辺が短いので、三角形を少し高く・長くする */
         .hero {
             --la: 0.3;

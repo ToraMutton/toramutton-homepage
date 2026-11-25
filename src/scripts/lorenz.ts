@@ -305,6 +305,8 @@ export function mountLorenz(container: HTMLElement, options: LorenzOptions = {})
   el.style.touchAction = "pan-y";
 
   function onDown(e: PointerEvent) {
+    // 指では回さない(縦スクロールと被るため)。自動回転はそのまま、マウスやペンは回せる
+    if (e.pointerType === "touch") return;
     dragging = true;
     lastX = e.clientX;
     lastY = e.clientY;

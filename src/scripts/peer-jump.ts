@@ -120,6 +120,14 @@ export function initPeerJump(): void {
       }
     }
 
+    // タッチ端末は、演出のあとに新しいタブを開くとブロックされやすい。同じタブで移動する(「戻る」で帰れる)
+    if (window.matchMedia("(pointer: coarse)").matches) {
+      status.textContent = `connected → ${name}`;
+      finish();
+      window.location.href = anchor.href;
+      return;
+    }
+
     // 3. 開く。"noopener" を引数に渡すと成功しても null が返り、ブロックされたか判定できないので、
     //    空のタブを開いて opener を切ってから移動する
     const opened = window.open("", "_blank");

@@ -43,6 +43,8 @@ const BEST_KEYS: Record<Mode, string> = { goal: "packet-run-best", endless: "pac
 const GLITCH_RED = "#ff5d73";
 const GLITCH_CYAN = "#4fe3ff";
 const JUMP_KEYS = ["Space", "ArrowUp", "KeyW"];
+/** 指の端末では、開始と再挑戦は盤面を押したときだけ(トグルやボタンの近くに触れて始まらないように) */
+const TAP = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches ? "盤面をタップ" : "タップ";
 /** 失敗・クリアの直後は入力を受けない(連打で結果が一瞬で流れないように) */
 const LOCK_MS = { lost: 600, done: 900 };
 
@@ -253,7 +255,7 @@ export function initPacketRun(): void {
     setText(eyebrow, "ページが見つかりません");
     setText(status, "no route to host");
     setText(warn, "");
-    setText(hint, mode === "goal" ? "Space / タップで再接続" : "Space / タップで開始 · 長く押すほど高く跳ぶ");
+    setText(hint, mode === "goal" ? `Space / ${TAP}で再接続` : `Space / ${TAP}で開始 · 長く押すほど高く跳ぶ`);
   };
 
   /** 画面全体のノイズと、見出しの色ずれ。点滅が負担になる人向けの設定では出さない */
@@ -299,7 +301,7 @@ export function initPacketRun(): void {
     setText(eyebrow, "接続が切れました");
     setText(status, `connection lost · ${progress(hops)}`);
     setText(warn, "");
-    setText(hint, "Space / タップでもう一度");
+    setText(hint, `Space / ${TAP}でもう一度`);
     setText(announce, `接続が切れました。${hops} hops`);
     setShare(
       mode === "goal"
@@ -317,7 +319,7 @@ export function initPacketRun(): void {
     setText(code, "200");
     setText(eyebrow, "つながりました");
     setText(status, `200 OK · ${GOAL_HOPS} hops`);
-    setText(hint, "Space / タップでもう一度");
+    setText(hint, `Space / ${TAP}でもう一度`);
     setText(announce, "つながりました。200 OK");
     setShare(`404ページのミニゲームをクリアした！\n${GOAL_HOPS} hops → 200 OK`);
   };
@@ -401,6 +403,9 @@ export function initPacketRun(): void {
     "pointerdown",
     (e) => {
       if (e.button !== 0 || isControl(e.target)) return;
+      // 走行中は画面のどこでもジャンプ。それ以外のとき、指では盤面だけが反応する
+      const onStage = e.target instanceof Element && e.target.closest(".stage") !== null;
+      if (e.pointerType !== "mouse" && state !== "running" && !onStage) return;
       e.preventDefault();
       action();
     },
@@ -419,7 +424,7 @@ export function initPacketRun(): void {
     () => {
       if (!document.hidden || state !== "running") return;
       enter("paused");
-      setText(hint, "一時停止中 — Space / タップで再開");
+      setText(hint, `一時停止中 — Space / ${TAP}で再開`);
     },
     { signal },
   );
