@@ -417,6 +417,18 @@ export function initPacketRun(): void {
   };
   window.addEventListener("keyup", (e) => JUMP_KEYS.includes(e.code) && letGo(), { signal });
   for (const type of ["pointerup", "pointercancel", "blur"]) window.addEventListener(type, letGo, { signal });
+  // 長押しで文字が選択される(青い範囲指定が出る)のを防ぐ。CSS だけでは効かないブラウザがあるので、
+  // 盤面(走行中はどこでも)を押した指は、ブラウザの長押し操作そのものを止める。ジャンプは pointer イベントで受けるので影響しない
+  root.addEventListener(
+    "touchstart",
+    (e) => {
+      if (isControl(e.target)) return;
+      const onStage = e.target instanceof Element && e.target.closest(".stage") !== null;
+      if (state === "running" || onStage) e.preventDefault();
+    },
+    { passive: false, signal },
+  );
+  document.addEventListener("selectstart", (e) => e.preventDefault(), { signal });
   // 指の長押しでメニューが出ないように
   root.addEventListener("contextmenu", (e) => state === "running" && e.preventDefault(), { signal });
   document.addEventListener(

@@ -86,8 +86,11 @@ const shareUrl = new URL("/reconnect", Astro.site ?? Astro.url).href;
         padding: calc(72px + 1.5rem) 0 2rem;
         background: var(--bg-deep);
         text-align: center;
-        /* 画面のどこを押してもジャンプできるので、連打で文字が選択されないようにする */
+        /* 画面のどこを押してもジャンプできるので、連打や長押しで文字が選択されないようにする
+           (iOS の Safari は -webkit- 付きが要る) */
+        -webkit-user-select: none;
         user-select: none;
+        -webkit-touch-callout: none;
         touch-action: manipulation;
         -webkit-tap-highlight-color: transparent;
     }
@@ -95,6 +98,14 @@ const shareUrl = new URL("/reconnect", Astro.site ?? Astro.url).href;
     /* 走行中は指を長く置くので、スクロール扱いや長押しメニューに取られないようにする */
     .lost[data-state="running"] {
         touch-action: none;
+        -webkit-touch-callout: none;
+    }
+
+    /* 中の要素が個別に選択できる指定を持っていても上書きする。走行中はヘッダーの文字も選ばせない */
+    .lost :global(*),
+    :global(body:has(.lost[data-state="running"])) {
+        -webkit-user-select: none;
+        user-select: none;
         -webkit-touch-callout: none;
     }
 
