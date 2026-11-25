@@ -1,0 +1,333 @@
+---
+// /links の末尾。このサイトにリンクを張ってくれる人向けに、必要なものをまとめて置く。
+//   ・名前 / サイト名 / URL / アイコン URL … 行のどこを押してもコピー
+//   ・アイコン … public/icon.png(npm run icon で作る丸アイコン)。保存ボタン付き
+//   ・JSON まとめコピー … src/data/links.json の 1 件ぶんと同じ形
+// アイコン URL は相手に直接参照されるので、/icon.png は移動・改名しないこと。
+import { Check, Copy, Download } from "lucide-astro";
+import SectionTitle from "../ui/SectionTitle.astro";
+import { PROFILE } from "../../data/about";
+import { SITE_TITLE } from "../../consts";
+
+// 本番の URL(astro.config.mjs の site)。末尾のスラッシュなし
+const site = (Astro.site ?? Astro.url).origin;
+const iconUrl = `${site}/icon.png`;
+
+const fields = [
+    { label: "Name", value: PROFILE.kana },
+    { label: "Site", value: SITE_TITLE },
+    { label: "URL", value: site },
+    { label: "Icon", value: iconUrl },
+];
+// インデントを 2 にしておくと、スマホ幅でも 1 項目が 1 行に収まる
+const json = JSON.stringify({ name: PROFILE.kana, url: site, icon: iconUrl }, null, 2);
+---
+
+<section class="connect" data-connect>
+    <SectionTitle title="Connect" caption="相互リンクする方へ" />
+
+    <div class="body">
+        <ul class="fields">
+            {
+                fields.map((field) => (
+                    <li>
+                        <button type="button" class="field" data-copy={field.value}>
+                            <span class="label">{field.label}</span>
+                            <span class="value">{field.value}</span>
+                            <span class="state" aria-hidden="true">
+                                <span class="state-text" />
+                                <span class="i-copy"><Copy size={16} strokeWidth={1.5} /></span>
+                                <span class="i-done"><Check size={16} strokeWidth={1.5} /></span>
+                            </span>
+                        </button>
+                    </li>
+                ))
+            }
+        </ul>
+
+        <div class="avatar">
+            <img src="/icon.png" alt="トラマトのアイコン" width="160" height="160" loading="lazy" decoding="async" />
+            <a class="save" href="/icon.png" download="toramutton.png">
+                <Download size={16} strokeWidth={1.5} aria-hidden="true" />
+                <span>アイコンを保存</span>
+            </a>
+            <p class="note">画像 URL の直接参照も OK です</p>
+        </div>
+
+        <button type="button" class="json" data-copy={json}>
+            <span class="json-head">
+                <span class="label">JSON まとめてコピー</span>
+                <span class="state" aria-hidden="true">
+                    <span class="state-text"></span>
+                    <span class="i-copy"><Copy size={16} strokeWidth={1.5} /></span>
+                    <span class="i-done"><Check size={16} strokeWidth={1.5} /></span>
+                </span>
+            </span>
+            <span class="json-body">{json}</span>
+        </button>
+    </div>
+
+    <p class="sr-only" aria-live="polite" data-copy-announce></p>
+</section>
+
+<script>
+    function initConnect() {
+        const root = document.querySelector<HTMLElement>("[data-connect]");
+        const announce = root?.querySelector<HTMLElement>("[data-copy-announce]");
+        if (!root || !announce) return;
+
+        for (const button of root.querySelectorAll<HTMLButtonElement>("[data-copy]")) {
+            const text = button.querySelector<HTMLElement>(".state-text");
+            let timer = 0;
+
+            const show = (state: "copied" | "failed") => {
+                const message = state === "copied" ? "Copied" : "コピーできません";
+                button.dataset.state = state;
+                if (text) text.textContent = message;
+                announce.textContent = message;
+                window.clearTimeout(timer);
+                timer = window.setTimeout(() => {
+                    delete button.dataset.state;
+                    if (text) text.textContent = "";
+                    announce.textContent = "";
+                }, 1400);
+            };
+
+            button.addEventListener("click", async () => {
+                try {
+                    await navigator.clipboard.writeText(button.dataset.copy ?? "");
+                    show("copied");
+                } catch {
+                    show("failed");
+                }
+            });
+        }
+    }
+    document.addEventListener("astro:page-load", initConnect);
+</script>
+
+<style>
+    .sr-only {
+        position: absolute;
+        overflow: hidden;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    .connect {
+        margin-top: clamp(5rem, 12vh, 8rem);
+    }
+
+    .body {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 14rem;
+        grid-template-areas:
+            "fields avatar"
+            "json avatar";
+        column-gap: 3.5rem;
+        row-gap: 1.5rem;
+        align-items: start;
+    }
+
+    .fields {
+        grid-area: fields;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    button {
+        border: 0;
+        background: transparent;
+        color: var(--text);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    button:focus-visible,
+    .save:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    /* 索引と同じく、細い線で区切るだけ */
+    .field {
+        display: grid;
+        grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 1rem;
+        width: 100%;
+        min-height: 3.75rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--border);
+        transition: border-color 0.25s ease;
+    }
+
+    .label {
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.12em;
+    }
+
+    .value {
+        font-size: 1rem;
+        overflow-wrap: anywhere;
+    }
+
+    .state {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        transition: color 0.25s ease;
+    }
+
+    .i-copy,
+    .i-done {
+        display: flex;
+    }
+
+    .i-done,
+    button[data-state="copied"] .i-copy {
+        display: none;
+    }
+
+    button[data-state="copied"] .i-done {
+        display: flex;
+    }
+
+    button[data-state] .state {
+        color: var(--accent);
+    }
+
+    .json {
+        grid-area: json;
+        display: block;
+        width: 100%;
+        padding: 1.1rem 1.25rem;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        background: var(--bg);
+        transition: border-color 0.25s ease;
+    }
+
+    .json-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .json-body {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 0.82rem;
+        line-height: 1.8;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+
+    .avatar {
+        grid-area: avatar;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.25rem;
+        padding-top: 0.5rem;
+    }
+
+    /* 画像そのものが丸く切り抜いてある(外側は透明) */
+    .avatar img {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+    }
+
+    .save {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.55rem 1.1rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        color: var(--text);
+        font-size: 0.8rem;
+        text-decoration: none;
+        white-space: nowrap;
+        transition:
+            border-color 0.25s ease,
+            color 0.25s ease;
+    }
+
+    .note {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 0.72rem;
+        text-align: center;
+    }
+
+    @media (hover: hover) {
+        .field:hover {
+            border-color: var(--accent);
+        }
+
+        .field:hover .state,
+        .json:hover .state {
+            color: var(--accent);
+        }
+
+        .json:hover,
+        .save:hover {
+            border-color: var(--accent);
+        }
+
+        .save:hover {
+            color: var(--accent);
+        }
+    }
+
+    @media (max-width: 720px) {
+        .body {
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-areas:
+                "avatar"
+                "fields"
+                "json";
+        }
+
+        .field {
+            grid-template-columns: 3.25rem minmax(0, 1fr) auto;
+            gap: 0.75rem;
+        }
+
+        .value {
+            font-size: 0.9rem;
+        }
+
+        .json {
+            padding: 1rem 0.9rem;
+        }
+
+        .json-body {
+            font-size: 0.74rem;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .field,
+        .state,
+        .json,
+        .save {
+            transition: none;
+        }
+    }
+</style>

@@ -1,0 +1,70 @@
+---
+// 見出しの右に置く小さな進捗リング。1 セグメント = 1 日(25 分割)。
+// 公開済みの日だけアクセント色。complete(全日程が終わった)ではすき間が閉じて、1 本の円になる。
+interface Props {
+    /** 各日が公開済みか(12/1 から順に) */
+    open: boolean[];
+    complete: boolean;
+}
+const { open, complete } = Astro.props;
+
+const R = 42;
+const step = 360 / open.length;
+const point = (deg: number) => {
+    const rad = ((deg - 90) * Math.PI) / 180;
+    return `${(50 + R * Math.cos(rad)).toFixed(2)} ${(50 + R * Math.sin(rad)).toFixed(2)}`;
+};
+// すき間は両端 2.2° ずつ
+const segments = open.map((isOpen, i) => ({
+    isOpen,
+    d: `M ${point(i * step + 2.2)} A ${R} ${R} 0 0 1 ${point((i + 1) * step - 2.2)}`,
+}));
+const count = open.filter(Boolean).length;
+---
+
+<div class:list={["ring", { complete }]} role="img" aria-label={`${open.length} 日中 ${count} 日公開`}>
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+        {segments.map((s, i) => <path d={s.d} class:list={{ open: s.isOpen }} style={`--i:${i}`} />)}
+        <circle class="whole" cx="50" cy="50" r={R} />
+    </svg>
+</div>
+
+<style>
+    .ring {
+        width: 3.25rem;
+        height: 3.25rem;
+        flex-shrink: 0;
+    }
+
+    svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+    }
+
+    path,
+    .whole {
+        fill: none;
+        stroke-width: 5;
+        stroke-linecap: round;
+    }
+
+    path {
+        stroke: var(--border);
+    }
+
+    path.open {
+        stroke: var(--accent);
+    }
+
+    /* 全部そろったら、すき間を埋める円を重ねる */
+    .whole {
+        stroke: var(--accent);
+        opacity: 0;
+    }
+
+    .complete .whole {
+        opacity: 1;
+    }
+</style>

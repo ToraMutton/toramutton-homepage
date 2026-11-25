@@ -1,447 +1,240 @@
 ---
+// アドベントカレンダー 2026。
+// 公開の判定(日付・リンク解決)は utils/advent.ts、記事の割り当ては data/advent2026.ts。
+// 見た目は /links と同じ「見出し + 細い線と文字」。右上に小さな 25 分割の進捗リング。
+//   開催中 … 今日のマス(ブラウザ側で JST から判定)の線を、小さな光が走る
+//   12/26 以降 … 「完成した記録」。今日の印は出さず、リングのすき間が閉じて 1 本の円になる
 export const prerender = true;
+import { ArrowUpRight } from "lucide-astro";
 import Layout from "../layouts/BaseLayout.astro";
-import PageHeader from "../components/PageHeader.astro";
-import SectionHeading from "../components/SectionHeading.astro";
-import AdventDayCard from "../components/AdventDayCard.astro";
+import SectionTitle from "../components/ui/SectionTitle.astro";
+import AdventExtra from "../components/advent/AdventExtra.astro";
+import AdventDay from "../components/advent/AdventDay.astro";
+import AdventRing from "../components/advent/AdventRing.astro";
 import { SITE_TITLE } from "../consts";
 import { getVisiblePosts } from "../utils/post";
 import { resolveAdventCalendar } from "../utils/advent";
-import { advent2026 as adventCalendar } from "../data/advent2026";
-import { ArrowUpRight, CalendarDays, Lock, BookOpen } from "lucide-astro";
+import { advent2026 as calendar } from "../data/advent2026";
 
-const {
-    prologue,
-    epilogue,
-    days: resolvedDays,
-    openCount,
-} = await resolveAdventCalendar(adventCalendar, await getVisiblePosts(), {
+const { prologue, epilogue, days, openCount } = await resolveAdventCalendar(calendar, await getVisiblePosts(), {
     fetchOgp: true,
 });
-const year = adventCalendar.year;
-const weekdayLabels = ["日", "月", "火", "水", "木", "金", "土"];
+const { year } = calendar;
+
+// 毎朝の再ビルドで焼き直されるので、ビルド時点の日付で「終わったか」を決める
+const complete = new Date() >= new Date(`${year}-12-26T00:00:00+09:00`);
+
+const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const firstDow = new Date(Date.UTC(year, 11, 1)).getUTCDay();
 const columnOf = (day: number) => ((firstDow + day - 1) % 7) + 1;
 
-// トップページの円形メーターと同じく、1セグメント = 1日。
-const ringStep = 360 / resolvedDays.length;
-const polar = (deg: number) => {
-    const rad = ((deg - 90) * Math.PI) / 180;
-    return [50 + 40 * Math.cos(rad), 50 + 40 * Math.sin(rad)];
-};
-const ringSegments = resolvedDays.map((entry, index) => {
-    const [x0, y0] = polar(index * ringStep + 2);
-    const [x1, y1] = polar((index + 1) * ringStep - 2);
-    return {
-        ...entry,
-        path: `M ${x0.toFixed(2)} ${y0.toFixed(2)} A 40 40 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`,
-    };
-});
+const pro = { label: "Prologue", entry: prologue, pending: "はじまりの記事" };
+const epi = { label: "Epilogue", entry: epilogue, pending: "12.26 公開" };
 ---
 
 <Layout
     title={`${SITE_TITLE} | Advent ${year}`}
     description={`トラマトの一人アドベントカレンダー${year}。12月1日から25日までの記事をここに。`}
-    width="narrow"
+    width="bare"
 >
-    <section class="advent-page">
-        <PageHeader
-            command={`./advent${year}`}
-            title={`Advent ${year}`}
-            description="トラマトによるはじめての一人アドベントカレンダー。12月1日から25日まで、頑張って毎日1記事更新します。"
-        >
-            <p class="advent-meta" slot="meta">
-                <span
-                    ><CalendarDays size={14} aria-hidden="true" />
-                    {year}.12.01 — 12.25</span
-                >
-                <span
-                    ><BookOpen size={14} aria-hidden="true" />
-                    {openCount} / {resolvedDays.length} 記事公開</span
-                >
-            </p>
-            <div
-                class="progress-ring"
-                slot="aside"
-                role="img"
-                aria-label={`${resolvedDays.length}記事中${openCount}記事公開済み`}
-            >
-                <svg viewBox="0 0 100 100" aria-hidden="true">
-                    {
-                        ringSegments.map((entry, index) => (
-                            <path
-                                d={entry.path}
-                                class:list={[
-                                    "ring-segment",
-                                    { "is-open": Boolean(entry.url) },
-                                ]}
-                                style={`--i:${index}`}
-                            />
-                        ))
-                    }
-                </svg>
-                <div class="progress-center" aria-hidden="true">
-                    <span class="progress-count"
-                        >{String(openCount).padStart(2, "0")}</span
-                    >
-                    <span class="progress-total">/ {resolvedDays.length}</span>
+    <div class="advent-page" data-advent data-year={year} data-complete={complete ? "" : undefined}>
+        <div class="inner">
+            <div class="head">
+                <SectionTitle as="h1" title={`Advent ${year}`} caption="トラマト一人アドベントカレンダー" />
+                <div class="aside">
+                    <AdventRing open={days.map((d) => Boolean(d.url))} {complete} />
+                    <div class="aside-text">
+                        <span class="count">
+                            <b>{String(openCount).padStart(2, "0")}</b> / {days.length}
+                            {complete && <span class="done">complete</span>}
+                        </span>
+                        {
+                            calendar.adventarUrl && (
+                                <a class="adventar" href={calendar.adventarUrl} target="_blank" rel="noopener noreferrer">
+                                    Adventar
+                                    <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden="true" />
+                                </a>
+                            )
+                        }
+                    </div>
                 </div>
             </div>
-        </PageHeader>
 
-        <section id="calendar" class="calendar-section">
-            <SectionHeading id="calendar-heading">
-                <CalendarDays size={20} class="heading-icon" />
-                December {year}
-                <span class="calendar-legend" slot="aside">
-                    <span
-                        ><BookOpen
-                            size={12}
-                            class="legend-open"
-                            aria-hidden="true"
-                        />公開済み</span
-                    >
-                    <span><Lock size={12} aria-hidden="true" />公開待ち</span>
-                </span>
-            </SectionHeading>
+            <AdventExtra {...pro} />
 
-            <div class="extra-entry" data-reveal>
-                <AdventDayCard
-                    {...prologue}
-                    sublabel="PROLOGUE"
-                    label="Begin"
-                    special
-                />
+            <div class="calendar">
+                <div class="weekdays" aria-hidden="true">
+                    {weekdays.map((w, i) => <span class:list={{ weekend: i === 0 || i === 6 }}>{w}</span>)}
+                </div>
+                <ol class="days">
+                    {days.map((entry) => <AdventDay {entry} {year} column={columnOf(entry.day)} />)}
+                </ol>
             </div>
-            <div class="calendar-grid">
-                {
-                    weekdayLabels.map((label, index) => (
-                        <span
-                            class:list={[
-                                "weekday-cell",
-                                { weekend: index === 0 || index === 6 },
-                            ]}
-                            aria-hidden="true"
-                        >
-                            {label}
-                        </span>
-                    ))
-                }
-                {
-                    resolvedDays.map((entry) => (
-                        <div
-                            class="calendar-cell"
-                            id={`day-${entry.day}`}
-                            style={`--column:${columnOf(entry.day)}; --i:${columnOf(entry.day) - 1}`}
-                            data-reveal
-                        >
-                            <AdventDayCard
-                                {...entry}
-                                sublabel="DEC"
-                                label={entry.day}
-                            />
-                        </div>
-                    ))
-                }
-            </div>
-            <div class="extra-entry" data-reveal>
-                <AdventDayCard
-                    {...epilogue}
-                    sublabel="EPILOGUE"
-                    label="Finish"
-                    special
-                />
-            </div>
-        </section>
 
-        <section aria-labelledby="adventar-heading">
-            <SectionHeading id="adventar-heading">
-                <ArrowUpRight size={20} class="heading-icon" />
-                Adventar
-            </SectionHeading>
-            <div class="adventar-panel ui-card" data-reveal>
-                <p class="adventar-copy">
-                    {
-                        adventCalendar.adventarUrl
-                            ? "Adventarにも同じカレンダーを置いています。"
-                            : "Adventarにも同じカレンダーを置く予定です。公開までお待ちください。"
-                    }
-                </p>
-                {
-                    adventCalendar.adventarUrl ? (
-                        <a
-                            class="adventar-link"
-                            href={adventCalendar.adventarUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            Adventarで見る
-                            <ArrowUpRight size={15} aria-hidden="true" />
-                            <span class="sr-only">（新しいタブで開く）</span>
-                        </a>
-                    ) : (
-                        <span class="adventar-pending">カレンダー準備中</span>
-                    )
-                }
-            </div>
-        </section>
-    </section>
+            <AdventExtra {...epi} />
+        </div>
+    </div>
 </Layout>
 
+<script>
+    // 今日のマスに印を付ける。静的ページなので、ビルドの日ではなく見ている瞬間の JST で判定する。
+    // 終わった後(data-complete)は「完成した記録」なので何もしない。
+    // 確認用: dev サーバーだけ、?today=5 で「今日」を指定できる(本番ビルドでは無効)
+    function markToday() {
+        const root = document.querySelector<HTMLElement>("[data-advent]");
+        if (!root) return;
+        const preview = import.meta.env.DEV && new URLSearchParams(location.search).get("today");
+        if (preview) {
+            root.querySelector(`[data-day="${Number(preview)}"]`)?.setAttribute("data-today", "");
+            return;
+        }
+        if (root.hasAttribute("data-complete")) return;
+        const jst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+        if (jst.getUTCFullYear() !== Number(root.dataset.year) || jst.getUTCMonth() !== 11) return;
+        root.querySelector(`[data-day="${jst.getUTCDate()}"]`)?.setAttribute("data-today", "");
+    }
+    document.addEventListener("astro:page-load", markToday);
+</script>
+
 <style>
-    /* =========================================
-       1. ヘッダ部(進捗リング・メタ情報)
-       ========================================= */
-    .advent-meta {
+    /* 背景と余白は /links・/blog とそろえる */
+    .advent-page {
+        min-height: 100dvh;
+        background: var(--bg-deep);
+        padding: calc(72px + clamp(2.5rem, 6vh, 4.5rem)) 0 clamp(4rem, 10vh, 7rem);
+    }
+
+    .inner {
+        max-width: var(--max-width);
+        margin: 0 auto;
+        padding: 0 1.5rem;
+    }
+
+    /* ---- 見出し行(/links と同じ組み方) ---- */
+    .head {
         display: flex;
-        flex-wrap: wrap;
-        gap: 0.4rem 1.25rem;
-        margin: 0.75rem 0 0;
-        color: var(--text-muted);
-        font-family: var(--font-mono);
-        font-size: 0.78rem;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1.5rem;
     }
 
-    .advent-meta > span {
-        display: inline-flex;
+    .aside {
+        display: flex;
         align-items: center;
-        gap: 0.4rem;
+        gap: 1rem;
+        padding-bottom: 2.5rem;
     }
 
-    .progress-ring {
-        position: relative;
-        flex-shrink: 0;
-        width: 120px;
-        aspect-ratio: 1;
-    }
-
-    .progress-ring svg {
-        display: block;
-        width: 100%;
-        height: 100%;
-        fill: none;
-    }
-
-    .ring-segment {
-        stroke: var(--border-color);
-        stroke-width: 9;
-        transform-origin: 50px 50px;
-    }
-
-    .ring-segment.is-open {
-        stroke: var(--accent-blue);
-    }
-
-    .progress-center {
-        position: absolute;
-        inset: 0;
+    .aside-text {
         display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: center;
+        gap: 0.3rem;
         font-family: var(--font-mono);
-        line-height: 1;
+        font-size: 0.8rem;
+        letter-spacing: 0.08em;
     }
 
-    .progress-count {
-        font-size: 1.6rem;
-        font-weight: 700;
-        letter-spacing: -0.04em;
-        font-variant-numeric: tabular-nums;
-    }
-
-    .progress-total {
-        margin-top: 0.3rem;
-        font-size: 0.7rem;
+    .count {
         color: var(--text-muted);
-    }
-
-    /* ヘッダーが出現したあと、リングの日付セグメントを順に描く */
-    @media (prefers-reduced-motion: no-preference) {
-        :global([data-reveal].is-visible) .ring-segment {
-            animation: segment-enter 0.5s var(--ease-out) backwards;
-            animation-delay: calc(0.15s + var(--i) * 25ms);
-        }
-
-        @keyframes segment-enter {
-            from {
-                opacity: 0;
-                transform: scale(0.88) rotate(-6deg);
-            }
-
-            to {
-                opacity: 1;
-                transform: none;
-            }
-        }
-    }
-
-    /* =========================================
-       2. カレンダー
-       ========================================= */
-    .calendar-section {
-        scroll-margin-top: 90px;
-    }
-
-    .heading-icon {
-        color: var(--accent-blue);
-    }
-
-    .calendar-legend,
-    .calendar-legend > span {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-    }
-
-    .calendar-legend {
-        gap: 1rem;
-        flex-shrink: 0;
-        color: var(--text-muted);
-        font-family: var(--font-mono);
-        font-size: 0.72rem;
-    }
-
-    .calendar-legend :global(.legend-open) {
-        color: var(--accent-blue);
-    }
-
-    .extra-entry {
-        margin: 1rem 0;
-    }
-
-    .calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(7, minmax(0, 1fr));
-        gap: 0.6rem;
-        margin: 1rem 0;
-    }
-
-    .weekday-cell {
-        text-align: center;
-        padding: 0.4rem 0;
-        color: var(--text-muted);
-        font-family: var(--font-mono);
-        font-size: 0.72rem;
-    }
-
-    .weekday-cell.weekend {
-        color: var(--accent-blue);
-    }
-
-    .calendar-cell {
-        min-width: 0;
-        grid-column: var(--column);
-        scroll-margin-top: 100px;
-    }
-
-    .calendar-cell:target {
-        outline: 2px solid var(--accent-blue);
-        outline-offset: 3px;
-        border-radius: var(--radius);
-    }
-
-    /* =========================================
-       3. Adventar
-       ========================================= */
-    .adventar-panel {
-        display: flex;
-        align-items: center;
-        gap: 1.2rem;
-        padding: 1.25rem 1.5rem;
-    }
-
-    .adventar-copy {
-        flex: 1;
-        min-width: 0;
-        margin: 0;
-        color: var(--text-muted);
-        font-size: 0.85rem;
-    }
-
-    .adventar-link,
-    .adventar-pending {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        flex-shrink: 0;
-        padding: 0.45rem 0.9rem;
-        border: 1px solid var(--border-color);
-        border-radius: 0;
-        font-family: var(--font-mono);
-        font-size: 0.82rem;
-        text-decoration: none;
         white-space: nowrap;
     }
 
-    .adventar-link {
-        color: var(--text-muted);
-        transition:
-            color 0.18s ease,
-            border-color 0.18s ease;
+    .count b {
+        color: var(--text);
+        font-weight: 700;
     }
 
-    .adventar-pending {
+    .done {
+        margin-left: 0.5rem;
+        color: var(--accent);
+    }
+
+    .adventar {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
         color: var(--text-muted);
-        border-style: dashed;
+        text-decoration: none;
+        transition: color 0.25s ease;
     }
 
     @media (hover: hover) {
-        .adventar-link:hover {
-            color: var(--accent-blue);
-            border-color: var(--accent-blue);
+        .adventar:hover {
+            color: var(--accent);
         }
     }
 
-    .adventar-link:focus-visible {
-        outline: 2px solid var(--accent-blue);
-        outline-offset: 3px;
+    /* ---- 暦 ---- */
+    .calendar {
+        margin: 3rem 0;
     }
 
-    .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
+    .weekdays,
+    .days {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        column-gap: 1.25rem;
+    }
+
+    .weekdays {
+        margin-bottom: 0.9rem;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+    }
+
+    .weekdays .weekend {
+        color: var(--accent);
+    }
+
+    .days {
+        row-gap: 2.25rem;
+        margin: 0;
         padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip-path: inset(50%);
-        white-space: nowrap;
+        list-style: none;
     }
 
-    /* =========================================
-       4. モバイル
-       ========================================= */
+    @media (max-width: 900px) {
+        .weekdays,
+        .days {
+            column-gap: 0.75rem;
+        }
+        .days {
+            row-gap: 1.5rem;
+        }
+    }
+
     @media (max-width: 720px) {
-        .calendar-grid {
-            grid-template-columns: minmax(0, 1fr);
+        .head {
+            flex-direction: column;
+            align-items: flex-start;
             gap: 0;
         }
-
-        .calendar-cell {
-            grid-column: auto;
-            --i: 0 !important;
-        }
-
-        .weekday-cell {
-            display: none;
-        }
-
-        .adventar-panel {
-            flex-wrap: wrap;
-            padding: 1rem 1.2rem;
-        }
-
-        .adventar-link,
-        .adventar-pending {
-            justify-content: center;
-            width: 100%;
+        .aside {
+            margin-top: -1rem;
+            padding-bottom: 2rem;
         }
     }
 
+    /* スマホは暦をやめて 1 列(曜日の行は要らない) */
     @media (max-width: 640px) {
-        .progress-ring {
-            width: 100px;
+        .calendar {
+            margin: 1.5rem 0;
+        }
+        .weekdays {
+            display: none;
+        }
+        .days {
+            grid-template-columns: minmax(0, 1fr);
+            row-gap: 0;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .adventar {
+            transition: none;
         }
     }
 </style>

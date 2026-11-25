@@ -1,0 +1,111 @@
+---
+// 前後の番外編(Prologue / Epilogue)の 1 行。細い線で挟んだだけの行。
+import { ArrowRight } from "lucide-astro";
+import type { ResolvedAdventEntry } from "../../utils/advent";
+
+interface Props {
+    label: string;
+    entry: ResolvedAdventEntry;
+    /** 未公開のときに薄く出す文言 */
+    pending: string;
+}
+const { label, entry, pending } = Astro.props;
+---
+
+{
+    entry.url ? (
+        <a class="extra" href={entry.url}>
+            <span class="extra-label">{label}</span>
+            <span class="extra-title">{entry.title}</span>
+            <ArrowRight class="extra-go" size={18} strokeWidth={1.5} aria-hidden="true" />
+        </a>
+    ) : (
+        <div class="extra pending">
+            <span class="extra-label">{label}</span>
+            <span class="extra-title">{pending}</span>
+        </div>
+    )
+}
+
+<style>
+    .extra {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        min-height: 3.75rem;
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        color: var(--text);
+        text-decoration: none;
+        transition: border-color 0.25s ease;
+    }
+
+    .extra-label {
+        width: 6rem;
+        flex-shrink: 0;
+        color: var(--accent);
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+    }
+
+    .extra-title {
+        flex: 1;
+        min-width: 0;
+        font-size: 1rem;
+        transition: color 0.25s ease;
+    }
+
+    .extra.pending .extra-label,
+    .extra.pending .extra-title {
+        color: var(--text-muted);
+        opacity: 0.5;
+    }
+
+    .extra :global(.extra-go) {
+        flex-shrink: 0;
+        color: var(--text-muted);
+        transition:
+            color 0.25s ease,
+            transform 0.35s var(--ease-out);
+    }
+
+    .extra:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    @media (hover: hover) {
+        a.extra:hover {
+            border-color: var(--accent);
+        }
+        a.extra:hover .extra-title,
+        a.extra:hover :global(.extra-go) {
+            color: var(--accent);
+        }
+        a.extra:hover :global(.extra-go) {
+            transform: translateX(4px);
+        }
+    }
+
+    @media (max-width: 720px) {
+        .extra {
+            gap: 1rem;
+        }
+        .extra-label {
+            width: 4.75rem;
+        }
+        .extra-title {
+            font-size: 0.9rem;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .extra,
+        .extra-title,
+        .extra :global(.extra-go) {
+            transition: none;
+        }
+    }
+</style>

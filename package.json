@@ -9,6 +9,7 @@
     "preview": "astro preview",
     "astro": "astro",
     "favicons": "node scripts/fetch-favicons.mjs",
+    "icon": "node scripts/site-icon.mjs",
     "ascii": "node scripts/ascii-avatar.mjs"
   },
   "dependencies": {

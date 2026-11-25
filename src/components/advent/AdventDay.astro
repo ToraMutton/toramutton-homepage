@@ -1,0 +1,298 @@
+---
+// カレンダーの 1 マス。
+//   公開済み … 日付 + サムネイル + タイトル + 掲載先
+//   公開前   … 日付の数字を薄く出すだけ(引き算。鍵マークなどは付けない)
+// 「今日」の印はブラウザ側のスクリプトが data-today を付ける(advent2026.astro)。
+import { Image } from "astro:assets";
+import type { ResolvedAdventDay } from "../../utils/advent";
+import type { AdventSource } from "../../data/advent2026";
+
+interface Props {
+    entry: ResolvedAdventDay;
+    year: number;
+    /** 7 列の暦で何列目か(1 = 日曜) */
+    column: number;
+}
+const { entry, year, column } = Astro.props;
+const { day, url, title, image, source } = entry;
+
+const dd = String(day).padStart(2, "0");
+const external = Boolean(url) && source !== "blog";
+const sourceLabels: Record<AdventSource, string> = { blog: "Blog", zenn: "Zenn", note: "note", qiita: "Qiita" };
+const Tag = url ? "a" : "div";
+---
+
+<li class:list={["day", { open: url }]} id={`day-${day}`} style={`--column:${column}`} data-day={day}>
+    <Tag
+        class="inner"
+        href={url}
+        target={external ? "_blank" : undefined}
+        rel={external ? "noopener noreferrer" : undefined}
+        aria-label={url ? `12月${day}日: ${title ?? "記事"}${external ? "(新しいタブで開く)" : ""}` : undefined}
+    >
+        <span class="head">
+            <time class="num" datetime={`${year}-12-${dd}`}>{dd}</time>
+            <span class="today-label" aria-hidden="true">today</span>
+        </span>
+        {
+            url && (
+                <>
+                    <span class="thumb" aria-hidden="true">
+                        {typeof image === "object" && image ? (
+                            <Image src={image} alt="" width={320} height={200} loading="lazy" />
+                        ) : typeof image === "string" && image ? (
+                            <img src={image} alt="" width="320" height="200" loading="lazy" decoding="async" />
+                        ) : (
+                            <span class="no-image">{dd}</span>
+                        )}
+                    </span>
+                    <span class="title">{title}</span>
+                    {source && <span class="source">{sourceLabels[source]}</span>}
+                </>
+            )
+        }
+        <span class="comet" aria-hidden="true"></span>
+    </Tag>
+</li>
+
+<style>
+    .day {
+        grid-column-start: var(--column);
+        min-width: 0;
+    }
+
+    .inner {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        height: 100%;
+        padding-top: 0.6rem;
+        /* 上の細い線が、そのマスの日付の区切り */
+        border-top: 1px solid var(--border);
+        color: var(--text);
+        text-decoration: none;
+        transition: border-color 0.25s ease;
+    }
+
+    .head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    .num {
+        font-family: var(--font-mono);
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        transition: color 0.25s ease;
+    }
+
+    /* 公開前は数字を薄くするだけ */
+    .day:not(.open) .num {
+        color: var(--text-muted);
+        opacity: 0.35;
+    }
+
+    .today-label {
+        display: none;
+        color: var(--accent);
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        letter-spacing: 0.15em;
+    }
+
+    .thumb {
+        display: block;
+        aspect-ratio: 16 / 10;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--bg);
+        transition: border-color 0.25s ease;
+    }
+
+    .thumb :global(img) {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        object-fit: cover;
+        transition: transform 0.6s var(--ease-out);
+    }
+
+    .no-image {
+        display: grid;
+        place-items: center;
+        height: 100%;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        font-size: 1.1rem;
+    }
+
+    .title {
+        display: -webkit-box;
+        overflow: hidden;
+        font-size: 0.8rem;
+        line-height: 1.55;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        transition: color 0.25s ease;
+    }
+
+    .source {
+        margin-top: auto;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        letter-spacing: 0.1em;
+    }
+
+    .inner:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 4px;
+    }
+
+    @media (hover: hover) {
+        a.inner:hover {
+            border-color: var(--accent);
+        }
+        a.inner:hover .num,
+        a.inner:hover .title {
+            color: var(--accent);
+        }
+        a.inner:hover .thumb {
+            border-color: var(--accent);
+        }
+        a.inner:hover .thumb :global(img) {
+            transform: scale(1.04);
+        }
+    }
+
+    /* ---- 今日のマス ----
+       上の線がアクセント色になり、その線の上を小さな光(彗星)が繰り返し走る */
+    .day[data-today] .inner {
+        border-color: var(--accent);
+    }
+
+    .day[data-today] .num {
+        color: var(--accent);
+        opacity: 1;
+    }
+
+    .day[data-today] .today-label {
+        display: inline;
+    }
+
+    .comet {
+        position: absolute;
+        top: -3px;
+        left: 0;
+        display: none;
+        width: 28px;
+        height: 5px;
+        border-radius: 999px;
+        background: linear-gradient(to right, transparent, var(--accent-glow));
+        filter: drop-shadow(0 0 4px var(--accent-glow));
+        pointer-events: none;
+    }
+
+    .day[data-today] .comet {
+        display: block;
+        animation: advent-comet 3.2s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+    }
+
+    @keyframes advent-comet {
+        0% {
+            left: -28px;
+            opacity: 0;
+        }
+        15% {
+            opacity: 1;
+        }
+        70% {
+            left: 100%;
+            opacity: 0;
+        }
+        100% {
+            left: 100%;
+            opacity: 0;
+        }
+    }
+
+    /* ---- タブレット: サムネイルだけ残してタイトルは隠す(読み上げは aria-label) ---- */
+    @media (max-width: 900px) {
+        .title,
+        .source {
+            display: none;
+        }
+        .num {
+            font-size: 1.2rem;
+        }
+    }
+
+    /* ---- スマホ: 暦をやめて 1 列の行にする ---- */
+    @media (max-width: 640px) {
+        .day {
+            grid-column-start: auto;
+        }
+
+        .inner {
+            display: grid;
+            grid-template-columns: 2.75rem 5.5rem minmax(0, 1fr);
+            grid-template-areas: "head thumb title" "head thumb source";
+            align-items: center;
+            column-gap: 0.9rem;
+            row-gap: 0.15rem;
+            min-height: 3.25rem;
+            padding: 0.6rem 0;
+        }
+
+        .day:not(.open) .inner {
+            grid-template-areas: "head . .";
+        }
+
+        .head {
+            grid-area: head;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.2rem;
+        }
+
+        .thumb {
+            grid-area: thumb;
+            border-radius: 6px;
+        }
+
+        .title {
+            grid-area: title;
+            display: -webkit-box;
+            align-self: end;
+            font-size: 0.85rem;
+            -webkit-line-clamp: 2;
+        }
+
+        .source {
+            grid-area: source;
+            display: block;
+            align-self: start;
+            margin-top: 0;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .day[data-today] .comet {
+            display: none;
+        }
+        .inner,
+        .num,
+        .title,
+        .thumb,
+        .thumb :global(img) {
+            transition: none;
+        }
+    }
+</style>
