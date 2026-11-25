@@ -1,40 +1,25 @@
 ---
 // ローカル記事のレイアウト。
-//   左  … プロフィール(小) + SNS + この記事のメタ情報 + 関連記事   (≥1280px)
-//   中  … 本文。幅 720px、$ 行 + mono タイトル + リード文、末尾に前後記事
-//   右  … 目次(h2 / h3)。読み進みに応じて通過済み / 現在地を色分け     (≥1024px)
+//   ≥1024px … [操作ボタン] [本文(最大 960px)] [プロフィール + 目次 + おすすめ]
+//   それ未満 … 本文 1 列。目次はヘッダーのボタンから開くドロワー、おすすめは本文の後
+// 部品は components/post/。本文の中身の装飾はこのファイルの <style>。
 import { Image } from "astro:assets";
-import avatarImage from "../assets/profile/toramutton.jpg";
 import { ARTICLE_IMAGE_WIDTHS, ARTICLE_IMAGE_SIZES } from "../utils/rehype-responsive-images.mjs";
 import type { CollectionEntry } from "astro:content";
 import type { MarkdownHeading } from "astro";
-import {
-    Twitter,
-    Github,
-    MessageCircle,
-    Share2,
-    Link2,
-    Check,
-    ArrowLeft,
-    ArrowRight,
-    ArrowUp,
-} from "lucide-astro";
 
 import Layout from "./BaseLayout.astro";
 import FormattedDate from "../components/FormattedDate.astro";
+import ViewAll from "../components/ui/ViewAll.astro";
+import PostActions from "../components/post/PostActions.astro";
+import PostPager from "../components/post/PostPager.astro";
+import PostProfile from "../components/post/PostProfile.astro";
+import PostRecommend from "../components/post/PostRecommend.astro";
+import PostToc from "../components/post/PostToc.astro";
 import { getVisiblePosts } from "../utils/post";
 
-import {
-    TW_DAILY_URL,
-    TW_TECH_URL,
-    GITHUB_URL,
-    NOTE_URL,
-    ZENN_URL,
-    QIITA_URL,
-} from "../consts";
-
 type Props = CollectionEntry<"blog">["data"] & {
-    /** 記事の id(フォルダ名)。前後記事・関連記事の判定に使う */
+    /** 記事の id(フォルダ名)。前後記事・おすすめの判定に使う */
     id: string;
     /** Markdown 本文。文字数と読了目安の算出に使う */
     body?: string;
@@ -53,11 +38,8 @@ const {
     headings = [],
 } = Astro.props;
 
-const shareUrl = Astro.url.href;
-// ページ先頭の `$ cat ./blog/<slug>.md` 行に出すパス
-const postPath = Astro.url.pathname.replace(/\/$/, "").replace(/^\//, "");
 const shareText = `${title} | トラマト`;
-const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(Astro.url.href)}`;
 
 // --- 文字数と読了目安 ---
 // Markdown の記法・コード・画像・import 行を落として本文の文字だけ数える
@@ -77,7 +59,7 @@ const readMinutes = Math.max(1, Math.round(charCount / 500));
 // --- 目次は h2 / h3 まで(h4 は本文内の小見出しに留める) ---
 const tocHeadings = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
 
-// --- 前後の記事と関連記事 ---
+// --- 前後の記事とおすすめ ---
 const allPosts = (await getVisiblePosts()).sort(
     (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
@@ -88,19 +70,18 @@ const olderPost =
         ? allPosts[currentIndex + 1]
         : undefined;
 
-// 同じタグが多い順、同点なら新しい順。無ければ最新記事で埋める
-const relatedPosts = allPosts
-    .filter((post) => post.id !== id)
+// 前後の記事は本文の下に出るので、おすすめはそれ以外から 3 本。
+// 同じタグを持つ記事を優先し、残りはランダム(ビルドのたび = 毎朝入れ替わる)
+const shown = new Set([id, newerPost?.id, olderPost?.id]);
+const recommended = allPosts
+    .filter((post) => !shown.has(post.id))
     .map((post) => ({
         post,
-        score: post.data.tags.filter((tag) => tags.includes(tag)).length,
+        score: post.data.tags.filter((tag) => tags.includes(tag)).length + Math.random() * 0.9,
     }))
-    .sort(
-        (a, b) =>
-            b.score - a.score ||
-            b.post.data.pubDate.valueOf() - a.post.data.pubDate.valueOf(),
-    )
-    .slice(0, 3);
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map(({ post }) => post);
 
 // --- Xカードの出し分け ---
 // summary_large_image は X 側で 2:1 に中央クロップされる。
@@ -116,530 +97,242 @@ const heroWidths = [
     Math.min(1440, heroMaxWidth),
 ];
 
-const snsLinks = [
-    { href: TW_DAILY_URL, brand: "twitter", label: "Twitter (Daily)" },
-    { href: TW_TECH_URL, brand: "tech", label: "Twitter (Tech)" },
-    { href: GITHUB_URL, brand: "github", label: "GitHub" },
-    { href: NOTE_URL, brand: "note", label: "note" },
-    { href: ZENN_URL, brand: "zenn", label: "Zenn" },
-    { href: QIITA_URL, brand: "qiita", label: "Qiita" },
-] as const;
 ---
 
-<Layout
-    title={title}
-    description={description}
-    image={heroImage}
-    {cardType}
-    width="full"
->
-    <div class="blog-container">
-        {/* ===== 左サイドバー ===== */}
-        <aside class="blog-sidebar-left">
-            <div class="sidebar-card ui-card">
-                <div class="sidebar-profile">
-                    <Image
-                        src={avatarImage}
-                        alt="トラマト"
-                        class="sidebar-avatar"
-                        width={48}
-                        height={48}
-                        layout="fixed"
-                        loading="eager"
-                    />
-                    <div class="sidebar-profile-text">
-                        <p class="sidebar-name">トラマト</p>
-                        <p class="sidebar-bio">電通大 I 類 / 勉強中</p>
-                    </div>
-                </div>
-
-                <nav class="sidebar-sns" aria-label="SNS">
-                    {
-                        snsLinks.map((sns) => (
-                            <a
-                                href={sns.href}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="sidebar-sns-link"
-                                data-brand={sns.brand}
-                                aria-label={sns.label}
-                                title={sns.label}
-                            >
-                                {sns.brand === "twitter" && (
-                                    <MessageCircle size={15} />
-                                )}
-                                {sns.brand === "tech" && <Twitter size={15} />}
-                                {sns.brand === "github" && <Github size={15} />}
-                                {sns.brand === "note" && (
-                                    <svg
-                                        role="img"
-                                        viewBox="0 0 24 24"
-                                        width="13"
-                                        height="13"
-                                        fill="currentColor"
-                                    >
-                                        <path d="M0 .279c4.623 0 10.953-.235 15.498-.117 6.099.156 8.39 2.813 8.468 9.374.077 3.71 0 14.335 0 14.335h-6.598c0-9.296.04-10.83 0-13.759-.078-2.578-.814-3.807-2.795-4.041-2.097-.235-7.975-.04-7.975-.04v17.84H0Z" />
-                                    </svg>
-                                )}
-                                {sns.brand === "zenn" && (
-                                    <svg
-                                        role="img"
-                                        viewBox="0 0 24 24"
-                                        width="15"
-                                        height="15"
-                                        fill="currentColor"
-                                    >
-                                        <path d="M.264 23.771h4.984c.264 0 .498-.147.645-.352L19.614.874c.176-.293-.029-.645-.381-.645h-4.72c-.235 0-.44.117-.557.323L.03 23.361c-.088.176.029.41.234.41zM17.445 23.419l6.479-10.408c.205-.323-.029-.733-.41-.733h-4.691c-.176 0-.352.088-.44.235l-6.655 10.643c-.176.264.029.616.352.616h4.779c.234-.001.468-.118.586-.353z" />
-                                    </svg>
-                                )}
-                                {sns.brand === "qiita" && (
-                                    <svg
-                                        role="img"
-                                        viewBox="0 0 24 24"
-                                        width="15"
-                                        height="15"
-                                        fill="currentColor"
-                                    >
-                                        <path d="M12 0C5.3726 0 0 5.3726 0 12s5.3726 12 12 12c3.3984 0 6.4665-1.413 8.6498-3.6832-.383-.0574-.7746-.2062-1.1466-.4542-.7145-.4763-1.3486-.9263-1.6817-1.674-1.2945 1.3807-3.0532 1.835-5.1822 2.0503-4.311.4359-8.0456-1.4893-8.4979-6.2996-.1922-2.045.2628-3.989 1.1804-5.582l-.5342-2.1009c-.0862-.3652.2498-.7126.6057-.6262l1.8456.448c1.0974-.9012 2.4249-1.49 3.8892-1.638 1.2526-.1267 2.467.0834 3.571.5624l1.7348-1.0494c.3265-.1974.7399.0257.7711.4164l.1 2.4747v.0002c1.334 1.4084 2.2424 3.3319 2.4478 5.516.116 1.2339-.012 2.1776-.339 3.078-.1531.4215-.1992.7778.0776 1.1305.2674.3408.6915 1.0026 1.1644.8917.7107-.1666 1.4718-.1223 1.9422.1715C23.4925 15.9525 24 14.0358 24 12c0-6.6274-5.3726-12-12-12Zm-.0727 5.727a5.2731 5.2731 0 0 0-.6146.0273c-2.2084.2233-3.9572 1.8135-4.4937 3.8484l-1.3176-.1996-.014.2589 1.2972.1407c-.0352.1497-.0643.2384-.086.3923l-1.1319.0902.0103.2025 1.1032-.088c-.0194.1713-.031.2814-.0332.4565l-1.0078.412.0495.2499.9598-.4492c.002.1339.008.2053.0207.3407.2667 2.8371 2.6364 3.3981 5.4677 3.1118 2.8312-.2863 5.0517-1.3114 4.785-4.1486-.013-.1361-.0324-.2068-.0553-.3392l1.0397.2257.0242-.229-1.0906-.207c-.0342-.1687-.0765-.271-.1264-.4327l1.1208-.1374-.0158-.2019-1.1499.1409a5.1093 5.1093 0 0 0-.1665-.4259l1.2665-.4042-.0397-.2536-1.3471.4667c-.819-1.7168-2.5002-2.8224-4.4546-2.8482Z" />
-                                    </svg>
-                                )}
-                            </a>
-                        ))
-                    }
-                </nav>
-
-                <div class="sidebar-divider"></div>
-
-                <p class="sidebar-section-title">// meta</p>
-                <dl class="meta-list">
-                    <dt>date</dt>
-                    <dd><FormattedDate date={pubDate} /></dd>
-                    <dt>tags</dt>
-                    <dd>
-                        {
-                            tags.length > 0 ? (
-                                <span class="meta-tags">
-                                    {tags.map((tag) => (
-                                        <span class="post-tag">{tag}</span>
-                                    ))}
-                                </span>
-                            ) : (
-                                "-"
-                            )
-                        }
-                    </dd>
-                    <dt>length</dt>
-                    <dd>{charCount.toLocaleString("ja-JP")} 字</dd>
-                    <dt>read</dt>
-                    <dd>約 {readMinutes} 分</dd>
-                </dl>
-
-                {
-                    relatedPosts.length > 0 && (
-                        <>
-                            <div class="sidebar-divider" />
-                            <p class="sidebar-section-title">// related</p>
-                            <ul class="related-list">
-                                {relatedPosts.map(({ post }) => (
-                                    <li>
-                                        <a
-                                            href={`/blog/${post.id}/`}
-                                            class="related-link"
-                                        >
-                                            <span class="related-title">
-                                                {post.data.title}
-                                            </span>
-                                            <span class="related-date">
-                                                <FormattedDate
-                                                    date={post.data.pubDate}
-                                                />
-                                            </span>
-                                        </a>
-                                    </li>
-                                ))}
-                            </ul>
-                        </>
-                    )
-                }
-
-                <div class="sidebar-divider"></div>
-
-                <div class="share-row" data-share-row>
-                    <a
-                        href={twitterShareUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="share-btn"
-                        title="Twitterでシェア"
-                    >
-                        <Twitter size={14} />
-                        <span class="share-label">Twitter</span>
-                    </a>
-                    <button
-                        type="button"
-                        class="share-btn"
-                        data-share-copy
-                        title="リンクをコピー"
-                        aria-label="リンクをコピー"
-                    >
-                        <span class="share-icon share-icon-default"><Link2 size={14} /></span>
-                        <span class="share-icon share-icon-done"><Check size={14} /></span>
-                        <span class="share-label">リンクをコピー</span>
-                    </button>
-                    <button
-                        type="button"
-                        class="share-btn"
-                        data-share-native
-                        hidden
-                        title="共有"
-                        aria-label="共有"
-                    >
-                        <Share2 size={14} />
-                        <span class="share-label">共有</span>
-                    </button>
+<Layout title={title} description={description} image={heroImage} {cardType} width="bare">
+    <div class="post-page">
+        <div class="post-grid">
+            <div class="post-rail">
+                <div class="rail-sticky">
+                    <PostActions variant="rail" {tweetUrl} />
                 </div>
             </div>
-        </aside>
 
-        {/* ===== 本文 ===== */}
-        <article>
-            {
-                heroImage && (
-                    <div class="hero-image">
-                        <Image
-                            width={heroWidth}
-                            height={heroWidth / 2}
-                            widths={heroWidths}
-                            sizes={ARTICLE_IMAGE_SIZES}
-                            fit="cover"
-                            priority
-                            src={heroImage}
-                            alt={title}
-                        />
-                    </div>
-                )
-            }
-            <div class="prose">
-                <header class="post-header">
-                    <p class="post-command">
-                        <span class="prompt">$</span>
-                        cat ./{postPath}.md
-                    </p>
-                    <h1>{title}</h1>
-                    {description && <p class="post-lead">{description}</p>}
-                    <p class="post-meta">
-                        <FormattedDate date={pubDate} />
-                        {
-                            updatedDate && (
-                                <span class="last-updated-on">
-                                    (updated{" "}
-                                    <FormattedDate date={updatedDate} />)
-                                </span>
-                            )
-                        }
-                        <span class="post-meta-read"
-                            >{charCount.toLocaleString("ja-JP")} 字 · 約 {
-                                readMinutes
-                            } 分</span
-                        >
-                    </p>
-                </header>
-
-                <slot />
-
-                <footer class="post-footer">
+            <div class="post-main">
+                <article data-post-article>
                     {
-                        tags.length > 0 && (
-                            <p class="footer-tags">
-                                <span class="footer-label">tags:</span>
-                                {tags.map((tag) => (
-                                    <span class="post-tag">{tag}</span>
-                                ))}
-                            </p>
+                        heroImage && (
+                            <div class="hero-image">
+                                <Image
+                                    width={heroWidth}
+                                    height={heroWidth / 2}
+                                    widths={heroWidths}
+                                    sizes={ARTICLE_IMAGE_SIZES}
+                                    fit="cover"
+                                    priority
+                                    src={heroImage}
+                                    alt={title}
+                                />
+                            </div>
                         )
                     }
+                    <div class="prose">
+                        <header class="post-header">
+                            <h1>{title}</h1>
+                            <p class="post-meta">
+                                <FormattedDate date={pubDate} />
+                                {
+                                    updatedDate && (
+                                        <span class="last-updated-on">
+                                            (updated <FormattedDate date={updatedDate} />)
+                                        </span>
+                                    )
+                                }
+                                <span>{charCount.toLocaleString("ja-JP")} 字</span>
+                                <span>約 {readMinutes} 分</span>
+                            </p>
+                            {
+                                tags.length > 0 && (
+                                    <ul class="post-tags" aria-label="タグ">
+                                        {tags.map((tag) => (
+                                            <li>{tag}</li>
+                                        ))}
+                                    </ul>
+                                )
+                            }
+                            {description && <p class="post-lead">{description}</p>}
+                        </header>
 
-                    <div class="share-row" data-share-row>
-                        <a
-                            href={twitterShareUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="share-btn"
-                            title="Twitterでシェア"
-                        >
-                            <Twitter size={14} />
-                            <span class="share-label">Twitter</span>
-                        </a>
-                        <button
-                            type="button"
-                            class="share-btn"
-                            data-share-copy
-                            title="リンクをコピー"
-                            aria-label="リンクをコピー"
-                        >
-                            <span class="share-icon share-icon-default"><Link2 size={14} /></span>
-                            <span class="share-icon share-icon-done"><Check size={14} /></span>
-                            <span class="share-label">リンクをコピー</span>
-                        </button>
-                        <button
-                            type="button"
-                            class="share-btn"
-                            data-share-native
-                            hidden
-                            title="共有"
-                            aria-label="共有"
-                        >
-                            <Share2 size={14} />
-                            <span class="share-label">共有</span>
-                        </button>
+                        <slot />
                     </div>
+                </article>
 
-                    <nav class="post-nav" aria-label="前後の記事">
-                        {
-                            olderPost ? (
-                                <a
-                                    href={`/blog/${olderPost.id}/`}
-                                    class="post-nav-link ui-card ui-card-link prev"
-                                >
-                                    <span class="post-nav-label">
-                                        <ArrowLeft size={13} /> 前の記事
-                                    </span>
-                                    <span class="post-nav-title">
-                                        {olderPost.data.title}
-                                    </span>
-                                </a>
-                            ) : (
-                                <span class="post-nav-empty" />
-                            )
-                        }
-                        {
-                            newerPost ? (
-                                <a
-                                    href={`/blog/${newerPost.id}/`}
-                                    class="post-nav-link ui-card ui-card-link next"
-                                >
-                                    <span class="post-nav-label">
-                                        次の記事 <ArrowRight size={13} />
-                                    </span>
-                                    <span class="post-nav-title">
-                                        {newerPost.data.title}
-                                    </span>
-                                </a>
-                            ) : (
-                                <span class="post-nav-empty" />
-                            )
-                        }
-                    </nav>
-
-                    <a href="/blog/" class="back-link">
-                        <span class="prompt">$</span> cd ../blog
-                        <span class="back-comment"># 記事一覧へ戻る</span>
-                    </a>
-                </footer>
+                <PostActions variant="row" {tweetUrl} />
+                <PostPager older={olderPost} newer={newerPost} />
+                <p class="post-back">
+                    <ViewAll href="/blog" label="All posts" />
+                </p>
             </div>
-        </article>
 
-        {/* ===== 右: 目次 ===== */}
-        {
-            tocHeadings.length > 0 && (
-                <aside class="blog-toc">
-                    <div class="toc-card">
-                        <div class="toc-progress" id="toc-progress" />
-                        <p class="toc-title">
-                            <span class="prompt">$</span> grep '^#' {id}.md
-                        </p>
-                        <ul>
-                            {tocHeadings.map((heading) => (
-                                <li class={`toc-level-${heading.depth}`}>
-                                    <a
-                                        href={`#${heading.slug}`}
-                                        data-toc-slug={heading.slug}
-                                    >
-                                        {heading.text}
-                                    </a>
-                                </li>
-                            ))}
-                        </ul>
-                        <div class="toc-footer">
-                            <span class="toc-percent">
-                                <span id="toc-percent">0</span>% read
-                            </span>
-                            <a href="#" class="toc-top" id="toc-top">
-                                <ArrowUp size={12} /> top
-                            </a>
-                        </div>
-                    </div>
-                </aside>
-            )
-        }
+            <aside class="post-side">
+                <div class="side-profile">
+                    <PostProfile />
+                </div>
+                <div class="side-sticky">
+                    {tocHeadings.length > 0 && <PostToc {id} headings={tocHeadings} />}
+                    <PostRecommend posts={recommended} />
+                </div>
+            </aside>
+        </div>
     </div>
 
     <style>
-        .prompt {
-            color: var(--accent-blue);
-            font-weight: 700;
-        }
-
         /* ======================================================
            1. レイアウト
-              〜1023px  … 本文のみ(目次はヘッダーのボタンからドロワー)
-              1024px〜  … 本文 + 目次
-              1280px〜  … 左サイドバー + 本文 + 目次
            ====================================================== */
-        .blog-container {
+        .post-page {
+            /* カードの面。ライトは白、ダークは背景より一段明るい灰 */
+            --card: var(--surface);
+            min-height: 100dvh;
+            padding: calc(72px + 1.5rem) 1rem 4rem;
+            background: var(--bg-deep);
+        }
+        :global(html.dark) .post-page {
+            --card: var(--bg);
+        }
+
+        .post-grid {
             display: grid;
             grid-template-columns: minmax(0, 1fr);
             gap: 2rem;
-            width: 100%;
-            max-width: 720px;
+            max-width: 760px;
             margin: 0 auto;
-            padding: 0;
-            align-items: flex-start;
+        }
+
+        .post-main {
+            display: flex;
+            flex-direction: column;
+            gap: 1.75rem;
+            min-width: 0;
         }
 
         article {
-            width: 100%;
             min-width: 0;
+            overflow: clip;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: var(--card);
+        }
+
+        .post-back {
+            display: flex;
+            justify-content: center;
             margin: 0;
         }
 
-        .blog-sidebar-left,
-        .blog-toc {
+        .post-rail,
+        .side-profile {
             display: none;
         }
 
+        /* 狭い画面では箱をなくして、中の目次(ドロワー)とおすすめをそのまま並べる */
+        .post-side,
+        .side-sticky {
+            display: contents;
+        }
+
         @media (min-width: 1024px) {
-            .blog-container {
-                max-width: 1000px;
-                grid-template-columns: minmax(0, 720px) 220px;
+            .post-grid {
+                grid-template-columns: 3rem minmax(0, 960px) 17rem;
                 justify-content: center;
-                padding: 0 1.5rem;
+                column-gap: 1.25rem;
+                max-width: none;
             }
-            article {
-                background: var(--surface);
-                border: 1px solid var(--border-color);
-                border-radius: var(--radius);
-                padding: 1.5rem 1.5rem 1rem;
-            }
-            .blog-toc {
+            .post-rail,
+            .side-profile {
                 display: block;
+            }
+            .rail-sticky {
                 position: sticky;
-                top: 6rem;
-                max-height: calc(100vh - 8rem);
-                overflow-y: auto;
-                margin: 0;
+                top: 7rem;
+            }
+            .post-side {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .side-sticky {
+                position: sticky;
+                top: 5.5rem;
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
             }
         }
 
         @media (min-width: 1280px) {
-            .blog-container {
-                max-width: 1280px;
-                grid-template-columns: 240px minmax(0, 720px) 220px;
-                padding: 0 2rem;
-            }
-            .blog-sidebar-left {
-                display: block;
-                position: sticky;
-                top: 6rem;
-                max-height: calc(100vh - 8rem);
-                overflow-y: auto;
-                margin: 0;
+            .post-grid {
+                grid-template-columns: 3.5rem minmax(0, 960px) 19rem;
+                column-gap: 1.75rem;
             }
         }
 
-        /* === ヒーロー画像 === */
-        .hero-image {
-            width: 100%;
-            margin: 0;
-            padding: 0;
-        }
-        /* 縦長の画像でも本文を押し下げないよう、横長(2:1)に切り抜く */
+        /* ヒーロー画像。縦長の画像でも本文を押し下げないよう、横長(2:1)に切り抜く */
         .hero-image img {
             display: block;
             width: 100%;
             height: auto;
             aspect-ratio: 2 / 1;
-            border-radius: var(--radius);
+            border-radius: 0;
             object-fit: cover;
-        }
-        @media (min-width: 1024px) {
-            .hero-image {
-                width: calc(100% + 3rem);
-                margin: -1.5rem -1.5rem 2rem;
-            }
-            .hero-image img {
-                border-bottom-left-radius: 0;
-                border-bottom-right-radius: 0;
-            }
         }
 
         /* ======================================================
-           2. 記事ヘッダー(他ページの PageHeader と同じ形)
+           2. 記事ヘッダー
            ====================================================== */
         .prose {
             width: 100%;
-            padding: 1rem 0;
-            color: var(--text-main);
-            line-height: 1.9;
+            padding: 2.25rem clamp(1.1rem, 5vw, 3.5rem) 3rem;
+            color: var(--text);
+            font-size: 1.0625rem;
+            line-height: 1.95;
         }
 
         .post-header {
             margin: 0 0 2.5rem;
             padding: 0 0 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-        .post-command {
-            margin: 0 0 0.6rem;
-            color: var(--text-muted);
-            font-family: var(--font-mono);
-            font-size: 0.82rem;
-            overflow-wrap: anywhere;
+            border-bottom: 1px solid var(--border);
         }
         .post-header h1 {
             display: block;
-            margin: 0 0 0.6rem;
-            color: var(--text-main);
-            font-family: var(--font-mono), var(--font-sans);
-            font-size: 2rem;
-            line-height: 1.3;
-            letter-spacing: -0.02em;
-            overflow-wrap: anywhere;
-        }
-        .post-lead {
             margin: 0 0 0.9rem;
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            line-height: 1.7;
+            color: var(--text);
+            font-size: clamp(1.6rem, 3.4vw, 2.3rem);
+            line-height: 1.4;
+            overflow-wrap: anywhere;
         }
         .post-meta {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 0.4rem 0.8rem;
+            gap: 0.3rem 1.1rem;
             margin: 0;
             color: var(--text-muted);
             font-family: var(--font-mono);
             font-size: 0.8rem;
         }
-        .last-updated-on {
-            opacity: 0.8;
+        .post-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin: 0.9rem 0 0;
+            padding: 0;
+            list-style: none;
         }
-        .post-meta-read::before {
-            content: "·";
-            margin-right: 0.8rem;
-        }
-
-        .post-tag {
-            display: inline-block;
-            padding: 0.1em 0.4em;
-            border: 1px solid var(--border-color);
-            border-radius: 0;
-            background: var(--background);
+        .post-tags li {
+            padding: 0.2rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            color: var(--text-muted);
             font-family: var(--font-mono);
-            font-size: 0.7rem;
-            font-weight: 500;
+            font-size: 0.74rem;
             line-height: 1.5;
-            white-space: nowrap;
+        }
+        .post-lead {
+            margin: 1.1rem 0 0;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.8;
         }
 
         /* ======================================================
@@ -656,7 +349,7 @@ const snsLinks = [
             font-size: 1.6rem;
             margin: 3.5rem 0 1.5rem;
             padding-bottom: 0.5rem;
-            color: var(--text-main);
+            color: var(--text);
         }
         .prose :global(h2)::after {
             content: "";
@@ -665,7 +358,7 @@ const snsLinks = [
             bottom: 0;
             height: 1px;
             width: 0%;
-            background-color: var(--accent-blue);
+            background-color: var(--accent);
             transition: width 0.8s ease-out;
         }
         .prose :global(h2.visible)::after {
@@ -683,8 +376,8 @@ const snsLinks = [
             font-size: 1.25rem;
             margin: 2.5rem 0 1rem;
             padding: 0.15rem 0 0.15rem 0.75rem;
-            border-left: 3px solid var(--accent-blue);
-            color: var(--text-main);
+            border-left: 3px solid var(--accent);
+            color: var(--text);
         }
 
         /* h4 … mono の小見出し */
@@ -695,19 +388,19 @@ const snsLinks = [
             font-family: var(--font-mono), var(--font-sans);
             font-size: 1rem;
             margin: 2rem 0 0.8rem;
-            color: var(--text-main);
+            color: var(--text);
         }
         .prose :global(h4)::before {
             content: "▸";
-            color: var(--accent-blue);
+            color: var(--accent);
         }
 
         /* 引用 */
         .prose :global(blockquote) {
             margin: 2rem 0;
             padding: 1.2rem 1.5rem;
-            background: var(--background);
-            border-left: 3px solid var(--accent-blue);
+            background: var(--bg-deep);
+            border-left: 3px solid var(--accent);
             border-radius: 0;
             color: var(--text-muted);
         }
@@ -718,8 +411,8 @@ const snsLinks = [
         /* コードブロック */
         .prose :global(pre) {
             padding: 1.5rem;
-            border-radius: var(--radius);
-            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            border: 1px solid var(--border);
             margin: 2rem 0;
             font-family: var(--font-mono);
             font-size: 0.9rem;
@@ -728,7 +421,7 @@ const snsLinks = [
 
         /* 画像は影ではなく 1px の枠で区切る */
         .prose :global(.prose-content img) {
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border);
         }
 
         /* Markdown の画像直下の _注記_ を ImageCaption と同じ見た目にする */
@@ -753,7 +446,7 @@ const snsLinks = [
         }
         .prose :global(th),
         .prose :global(td) {
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border);
             padding: 0.6rem 0.8rem;
             text-align: left;
             vertical-align: top;
@@ -768,7 +461,7 @@ const snsLinks = [
             white-space: nowrap;
         }
         .prose :global(tr:nth-child(even) td) {
-            background: color-mix(in srgb, var(--text-main) 3%, transparent);
+            background: color-mix(in srgb, var(--text) 3%, transparent);
         }
         @media (max-width: 720px) {
             .prose :global(table) {
@@ -776,20 +469,20 @@ const snsLinks = [
                 overflow-x: auto;
                 /* スクロールバーはコードブロック(global.css)と同じ形。色はテーマに追従 */
                 scrollbar-width: thin;
-                scrollbar-color: var(--border-color) transparent;
+                scrollbar-color: var(--border) transparent;
             }
             .prose :global(table:hover) {
-                scrollbar-color: var(--accent-blue) transparent;
+                scrollbar-color: var(--accent) transparent;
             }
             .prose :global(table)::-webkit-scrollbar {
                 height: 6px;
             }
             .prose :global(table)::-webkit-scrollbar-thumb {
-                background: var(--border-color);
-                border-radius: var(--radius);
+                background: var(--border);
+                border-radius: 10px;
             }
             .prose :global(table:hover)::-webkit-scrollbar-thumb {
-                background: var(--accent-blue);
+                background: var(--accent);
             }
         }
 
@@ -803,8 +496,8 @@ const snsLinks = [
             height: auto;
             aspect-ratio: 16 / 9;
             min-height: 200px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            border-radius: 10px;
             background: #000;
         }
         .prose :global(.youtube-embed-link) {
@@ -821,10 +514,10 @@ const snsLinks = [
             align-items: stretch;
             margin: 1.5rem 0;
             overflow: hidden;
-            background: var(--background);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            color: var(--text-main);
+            background: var(--bg-deep);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
             text-decoration: none;
             transition:
                 border-color 0.18s ease,
@@ -893,11 +586,11 @@ const snsLinks = [
         }
         @media (hover: hover) {
             .prose :global(.rlc-container:hover) {
-                border-color: var(--accent-blue);
+                border-color: var(--accent);
                 box-shadow: var(--shadow-offset);
             }
             .prose :global(.rlc-container:hover .rlc-title) {
-                color: var(--accent-blue);
+                color: var(--accent);
             }
         }
         @media (max-width: 640px) {
@@ -906,544 +599,9 @@ const snsLinks = [
             }
         }
 
-        /* ======================================================
-           4. 記事末尾
-           ====================================================== */
-        .post-footer {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            margin-top: 3.5rem;
-            padding-top: 2rem;
-            border-top: 1px solid var(--border-color);
-        }
-        .footer-tags {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 0.4rem;
-            margin: 0;
-        }
-        .footer-label {
-            color: var(--text-muted);
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-            margin-right: 0.2rem;
-        }
-
-        /* シェア: Twitter / リンクをコピー / 端末の共有シート(対応時のみ) */
-        .share-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.4rem;
-        }
-        .share-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.45rem;
-            padding: 0.5rem 0.9rem;
-            border: 1px solid var(--border-color);
-            border-radius: 0;
-            background: transparent;
-            color: var(--text-muted);
-            font-family: var(--font-mono);
-            font-size: 0.8rem;
-            line-height: 1;
-            text-decoration: none;
-            cursor: pointer;
-            transition:
-                color 0.18s ease,
-                border-color 0.18s ease;
-        }
-        .share-btn[hidden] {
-            display: none;
-        }
-        .share-icon {
-            display: inline-flex;
-        }
-        .share-icon-done,
-        .share-btn.is-copied .share-icon-default {
-            display: none;
-        }
-        .share-btn.is-copied .share-icon-done {
-            display: inline-flex;
-        }
-        .share-btn.is-copied {
-            color: var(--accent-blue);
-            border-color: var(--accent-blue);
-        }
-        @media (hover: hover) {
-            .share-btn:hover {
-                color: var(--accent-blue);
-                border-color: var(--accent-blue);
-            }
-        }
-        .share-btn:focus-visible {
-            outline: 2px solid var(--accent-blue);
-            outline-offset: 2px;
-        }
-
-        .post-nav {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 1rem;
-        }
-        .post-nav-link {
-            display: flex;
-            flex-direction: column;
-            gap: 0.4rem;
-            padding: 0.9rem 1rem;
-            color: var(--text-main);
-            text-decoration: none;
-            background: var(--background);
-        }
-        .post-nav-link.next {
-            text-align: right;
-            align-items: flex-end;
-        }
-        .post-nav-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            color: var(--text-muted);
-            font-family: var(--font-mono);
-            font-size: 0.72rem;
-        }
-        .post-nav-title {
-            font-size: 0.88rem;
-            font-weight: 700;
-            line-height: 1.5;
-            transition: color 0.18s ease;
-        }
-        @media (hover: hover) {
-            .post-nav-link:hover .post-nav-title {
-                color: var(--accent-blue);
-            }
-        }
-        @media (max-width: 640px) {
-            .post-nav {
-                grid-template-columns: 1fr;
-            }
-            .post-nav-link.next {
-                text-align: left;
-                align-items: flex-start;
-            }
-            .post-nav-empty {
-                display: none;
-            }
-        }
-
-        .back-link {
-            display: inline-flex;
-            flex-wrap: wrap;
-            align-items: baseline;
-            gap: 0.5rem;
-            align-self: flex-start;
-            color: var(--text-main);
-            font-family: var(--font-mono);
-            font-size: 0.9rem;
-            text-decoration: none;
-            transition: color 0.18s ease;
-        }
-        .back-comment {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-        }
-        @media (hover: hover) {
-            .back-link:hover {
-                color: var(--accent-blue);
-            }
-        }
-
-        /* ======================================================
-           5. 左サイドバー
-           ====================================================== */
-        .sidebar-card {
-            display: flex;
-            flex-direction: column;
-            gap: 0.9rem;
-            padding: 1.2rem 1.1rem;
-        }
-
-        .sidebar-profile {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        .sidebar-avatar {
-            width: 48px;
-            height: 48px;
-            flex-shrink: 0;
-            border-radius: 50%; /* トップのターミナル内アイコンと同じ丸抜き */
-            object-fit: cover;
-            border: 1px solid var(--border-color);
-        }
-        .sidebar-profile-text {
-            min-width: 0;
-        }
-        .sidebar-name {
-            margin: 0;
-            font-size: 0.95rem;
-            font-weight: 800;
-            color: var(--text-main);
-        }
-        .sidebar-bio {
-            margin: 0.1rem 0 0;
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            font-family: var(--font-mono);
-        }
-
-        .sidebar-sns {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.25rem;
-        }
-        .sidebar-sns-link {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius);
-            color: var(--text-muted);
-            transition:
-                background 0.2s,
-                color 0.2s,
-                border-color 0.2s;
-        }
-        /* ブランドカラー ホバー */
-        @media (hover: hover) {
-            .sidebar-sns-link:hover {
-                color: #fff;
-                border-color: transparent;
-            }
-            .sidebar-sns-link[data-brand="twitter"]:hover {
-                background: #1da1f2;
-            }
-            .sidebar-sns-link[data-brand="tech"]:hover {
-                background: #f59518;
-            }
-            .sidebar-sns-link[data-brand="github"]:hover {
-                background: #333;
-            }
-            :global(html.dark) .sidebar-sns-link[data-brand="github"]:hover {
-                background: #f0f0f0;
-                color: #333;
-            }
-            .sidebar-sns-link[data-brand="note"]:hover {
-                background: var(--brand-note);
-            }
-            .sidebar-sns-link[data-brand="zenn"]:hover {
-                background: var(--brand-zenn);
-            }
-            .sidebar-sns-link[data-brand="qiita"]:hover {
-                background: var(--brand-qiita);
-            }
-        }
-
-        .sidebar-divider {
-            width: 100%;
-            height: 1px;
-            background: var(--border-color);
-        }
-
-        .sidebar-section-title {
-            margin: 0;
-            font-family: var(--font-mono);
-            font-size: 0.72rem;
-            font-weight: 700;
-            color: var(--text-muted);
-        }
-
-        /* meta: key / value */
-        .meta-list {
-            display: grid;
-            grid-template-columns: auto 1fr;
-            gap: 0.45rem 0.8rem;
-            align-items: baseline;
-            margin: 0;
-            font-family: var(--font-mono);
-            font-size: 0.78rem;
-        }
-        .meta-list dt {
-            color: var(--accent-blue);
-            font-size: 0.68rem;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-        }
-        .meta-list dd {
-            margin: 0;
-            min-width: 0;
-            color: var(--text-main);
-        }
-        .meta-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.25rem;
-        }
-
-        /* related */
-        .related-list {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 0.2rem;
-        }
-        .related-link {
-            display: block;
-            padding: 0.4rem 0.5rem 0.4rem 0.9rem;
-            border-left: 2px solid var(--border-color);
-            color: var(--text-main);
-            text-decoration: none;
-            transition:
-                border-color 0.18s ease,
-                background 0.18s ease;
-        }
-        .related-title {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            font-size: 0.8rem;
-            font-weight: 600;
-            line-height: 1.5;
-            transition: color 0.18s ease;
-        }
-        .related-date {
-            display: block;
-            margin-top: 0.15rem;
-            color: var(--text-muted);
-            font-family: var(--font-mono);
-            font-size: 0.68rem;
-        }
-        @media (hover: hover) {
-            .related-link:hover {
-                border-left-color: var(--accent-blue);
-                background: color-mix(in srgb, var(--accent-blue) 6%, transparent);
-            }
-            .related-link:hover .related-title {
-                color: var(--accent-blue);
-            }
-        }
-
-        /* サイドバーは幅が無いのでアイコンだけ並べる */
-        .sidebar-card .share-btn {
-            flex: 1;
-            padding: 0.5rem 0;
-        }
-        .sidebar-card .share-label {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            overflow: hidden;
-            clip-path: inset(50%);
-            white-space: nowrap;
-        }
-
-        /* ======================================================
-           6. 右: 目次(ファイルツリー風)
-              通過した項目は薄く、現在地はアクセント、未読は通常
-           ====================================================== */
-        .toc-card {
-            position: relative;
-            padding-top: 0.5rem; /* progress バー分の余白 */
-        }
-
-        /* 読了プログレスバー */
-        .toc-progress {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 2px;
-            width: 0%;
-            background: var(--accent-blue);
-            transition: width 0.15s ease-out;
-            z-index: 1;
-        }
-
-        .toc-title {
-            margin: 0 0 0.8rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid var(--border-color);
-            color: var(--text-muted);
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .toc-card ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .toc-card li {
-            margin-bottom: 0.15rem;
-            line-height: 1.3;
-        }
-        .toc-card a {
-            display: block;
-            padding: 0.3rem 0.5rem;
-            border-left: 2px solid transparent;
-            border-radius: 0;
-            color: var(--text-main);
-            font-size: 0.82rem;
-            text-decoration: none;
-            transition:
-                background 0.2s,
-                color 0.2s,
-                opacity 0.2s,
-                border-color 0.2s;
-        }
-        @media (hover: hover) {
-            .toc-card a:hover {
-                color: var(--accent-blue);
-                background: color-mix(in srgb, var(--accent-blue) 6%, transparent);
-                opacity: 1;
-            }
-        }
-        /* 通過済み */
-        .toc-card a.is-passed {
-            color: var(--text-muted);
-            opacity: 0.6;
-        }
-        /* 現在地 */
-        .toc-card a.active {
-            color: var(--accent-blue);
-            font-weight: 700;
-            border-left-color: var(--accent-blue);
-            background: color-mix(in srgb, var(--accent-blue) 8%, transparent);
-            opacity: 1;
-        }
-
-        /* === h3 ツリーライン(├── / └──) === */
-        .toc-level-3 {
-            position: relative;
-        }
-        .toc-level-3::before {
-            content: "";
-            position: absolute;
-            left: 0.55rem;
-            top: 0;
-            bottom: 0;
-            width: 1px;
-            background: var(--border-color);
-        }
-        /* グループ末尾だけ縦線を上半分に切る */
-        .toc-level-3:last-child::before,
-        .toc-level-3:has(+ .toc-level-2)::before {
-            bottom: 50%;
-        }
-        .toc-level-3 > a {
-            position: relative;
-            padding-left: 1.6rem;
-            border-left: none;
-            font-size: 0.78rem;
-        }
-        .toc-level-3 > a::before {
-            content: "";
-            position: absolute;
-            left: 0.55rem;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 0.65rem;
-            height: 1px;
-            background: var(--border-color);
-            transition: background 0.2s;
-        }
-        .toc-level-3 > a.active::before,
-        .toc-level-3 > a.is-passed::before {
-            background: var(--accent-blue);
-        }
-        .toc-level-3 > a.is-passed::before {
-            opacity: 0.5;
-        }
-
-        .toc-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.5rem;
-            margin-top: 0.8rem;
-            padding-top: 0.6rem;
-            border-top: 1px solid var(--border-color);
-            color: var(--text-muted);
-            font-family: var(--font-mono);
-            font-size: 0.72rem;
-        }
-        .toc-percent {
-            font-variant-numeric: tabular-nums;
-        }
-        .toc-top {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-            color: var(--text-muted);
-            text-decoration: none;
-            transition: color 0.18s ease;
-        }
-        @media (hover: hover) {
-            .toc-top:hover {
-                color: var(--accent-blue);
-            }
-        }
-
-        /* --- TOC: サイドドロワー(≤1023px / 右側) --- */
-        @media (max-width: 1023px) {
-            .blog-toc {
-                display: block;
-                position: fixed;
-                top: var(--header-height, 64px);
-                right: 0;
-                width: min(300px, 80vw);
-                height: calc(100dvh - var(--header-height, 64px));
-                overflow-y: auto;
-                z-index: 1000;
-
-                background: var(--surface);
-                border-left: 1px solid var(--border-color);
-                padding: 1.5rem 1.25rem;
-
-                opacity: 0;
-                transform: translateX(16px);
-                pointer-events: none;
-                visibility: hidden;
-
-                transition:
-                    opacity 0.18s ease-out,
-                    transform 0.22s var(--ease-out),
-                    visibility 0s linear 0.22s;
-            }
-            .blog-toc.mobile-open {
-                opacity: 1;
-                transform: translateX(0);
-                pointer-events: auto;
-                visibility: visible;
-                transition:
-                    opacity 0.18s ease-out,
-                    transform 0.22s var(--ease-out),
-                    visibility 0s linear 0s;
-            }
-            @media (prefers-reduced-motion: reduce) {
-                .blog-toc,
-                .blog-toc.mobile-open {
-                    transition: none;
-                }
-            }
-        }
-
         @media (max-width: 720px) {
-            .prose {
-                padding: 1rem;
-            }
-            .post-header h1 {
-                font-size: 1.6rem;
+            .post-page {
+                padding-inline: 0.5rem;
             }
         }
     </style>
@@ -1452,9 +610,7 @@ const snsLinks = [
         <script>
             // ClientRouter での遷移でも動くよう、astro:page-load ごとに初期化する
             function initBlogPost() {
-                const article = document.querySelector<HTMLElement>(
-                    ".blog-container article",
-                );
+                const article = document.querySelector<HTMLElement>("[data-post-article]");
                 if (!article || article.dataset.initialized) return;
                 article.dataset.initialized = "true";
 
@@ -1568,6 +724,36 @@ const snsLinks = [
                     closeDrawer();
                 });
 
+                // === おすすめ: 目次と一緒に画面に入る本数だけ見せる ===
+                // 目次はたためるので「一番大きい章を開いたとき」の高さで見積もり、読み進めても本数が変わらないようにする
+                const recommend = document.querySelector<HTMLElement>("[data-recommend]");
+                const fitRecommend = () => {
+                    if (!recommend) return;
+                    const items = Array.from(recommend.querySelectorAll<HTMLElement>("[data-recommend-item]"));
+                    recommend.hidden = false;
+                    items.forEach((item) => (item.hidden = false));
+                    if (window.innerWidth < 1024) return;
+                    let tocHeight = 0;
+                    if (toc) {
+                        tocHeight = toc.offsetHeight + 16;
+                        if (toc.classList.contains("is-collapsible")) {
+                            const subs = Array.from(toc.querySelectorAll<HTMLElement>(".toc-group:not(.orphan) .toc-sub"));
+                            const open = subs.reduce((sum, sub) => sum + sub.offsetHeight, 0);
+                            const tallest = Math.max(0, ...subs.map((sub) => sub.firstElementChild?.scrollHeight ?? 0));
+                            tocHeight += tallest - open;
+                        }
+                    }
+                    // 5.5rem(張り付く位置)と下の余白を引いた残り
+                    const room = window.innerHeight - 88 - 16 - tocHeight;
+                    for (let i = items.length - 1; i >= 0 && recommend.offsetHeight > room; i--) {
+                        items[i].hidden = true;
+                    }
+                    recommend.hidden = items.every((item) => item.hidden);
+                };
+                fitRecommend();
+                document.fonts?.ready.then(fitRecommend);
+                window.addEventListener("resize", fitRecommend, { passive: true });
+
                 // 読み進みの判定は「見出しが画面上端から 120px を越えたか」。
                 // 越えた最後の見出しが現在地、それより前は通過済み。
                 let ticking = false;
@@ -1585,6 +771,11 @@ const snsLinks = [
                         link.classList.toggle("is-passed", i < activeIndex);
                         link.classList.toggle("active", i === activeIndex);
                     });
+                    // いま読んでいる章だけを開く
+                    const current = tocLinks[activeIndex]?.closest(".toc-group");
+                    toc?.querySelectorAll(".toc-group").forEach((group) =>
+                        group.classList.toggle("is-open", group === current),
+                    );
 
                     // 読了 %(記事の下端が画面下に来たら 100%)
                     const rect = article.getBoundingClientRect();
@@ -1611,6 +802,7 @@ const snsLinks = [
                     () => {
                         window.removeEventListener("scroll", onScroll);
                         window.removeEventListener("resize", onScroll);
+                        window.removeEventListener("resize", fitRecommend);
                         h2Observer.disconnect();
                     },
                     { once: true },

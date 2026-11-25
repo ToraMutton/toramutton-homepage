@@ -1,0 +1,125 @@
+---
+// 記事への操作ボタン。
+//   rail … 本文の左に縦に並ぶ丸ボタン(PC)
+//   row  … 本文の下に横に並ぶ(PC でも出る。端末の共有シートはこちらだけ)
+// クリックの処理は layouts/BlogPost.astro のスクリプト。
+import { Check, Link2, Share2, Twitter } from "lucide-astro";
+
+interface Props {
+    variant: "rail" | "row";
+    /** Twitter の投稿画面の URL */
+    tweetUrl: string;
+}
+const { variant, tweetUrl } = Astro.props;
+---
+
+<div class:list={["actions", variant]}>
+    <a href={tweetUrl} target="_blank" rel="noopener noreferrer" class="action" title="Twitterで共有">
+        <Twitter size={18} strokeWidth={1.6} aria-hidden="true" />
+        <span class="label">Twitterで共有</span>
+    </a>
+    <button type="button" class="action" data-share-copy title="リンクをコピー">
+        <span class="icon-default"><Link2 size={18} strokeWidth={1.6} aria-hidden="true" /></span>
+        <span class="icon-done"><Check size={18} strokeWidth={1.6} aria-hidden="true" /></span>
+        <span class="label">リンクをコピー</span>
+    </button>
+    {
+        variant === "row" && (
+            <button type="button" class="action" data-share-native hidden title="共有">
+                <Share2 size={18} strokeWidth={1.6} aria-hidden="true" />
+                <span class="label">共有</span>
+            </button>
+        )
+    }
+</div>
+
+<style>
+    .actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .rail {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .row {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--card);
+        color: var(--text-muted);
+        font: inherit;
+        font-size: 0.8rem;
+        line-height: 1;
+        text-decoration: none;
+        cursor: pointer;
+        transition:
+            color 0.2s ease,
+            border-color 0.2s ease;
+    }
+
+    .action[hidden] {
+        display: none;
+    }
+
+    .rail .action {
+        width: 3rem;
+        height: 3rem;
+        padding: 0;
+    }
+
+    .row .action {
+        padding: 0.65rem 1.1rem;
+    }
+
+    /* 縦の丸ボタンはアイコンだけ(名前は読み上げ用に残す) */
+    .rail .label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    .icon-default,
+    .icon-done {
+        display: inline-flex;
+    }
+
+    .icon-done,
+    .action.is-copied .icon-default {
+        display: none;
+    }
+
+    .action.is-copied .icon-done {
+        display: inline-flex;
+    }
+
+    .action.is-copied {
+        color: var(--accent);
+        border-color: var(--accent);
+    }
+
+    .action:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+    }
+
+    @media (hover: hover) {
+        .action:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+    }
+</style>

@@ -1,0 +1,50 @@
+---
+// 記事のサムネイル(16:10)。画像のない記事は、マスコットの線画を代わりに置く。
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+import Mascot from "../../assets/profile/toramutton-line.svg";
+
+interface Props {
+    image?: ImageMetadata;
+}
+const { image } = Astro.props;
+---
+
+<span class="thumb" aria-hidden="true">
+    {
+        image ? (
+            <Image src={image} alt="" width={320} height={200} fit="cover" loading="lazy" />
+        ) : (
+            <Mascot class="placeholder" />
+        )
+    }
+</span>
+
+<style>
+    .thumb {
+        display: grid;
+        place-items: center;
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-deep);
+        color: var(--text-muted);
+    }
+
+    .thumb :global(img) {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        object-fit: cover;
+    }
+
+    .thumb :global(.placeholder) {
+        width: 40%;
+        height: auto;
+        max-height: 70%;
+        opacity: 0.6;
+    }
+</style>
