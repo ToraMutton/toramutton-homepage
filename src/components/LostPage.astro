@@ -38,6 +38,12 @@ const shareUrl = new URL("/reconnect", Astro.site ?? Astro.url).href;
                     role="img"
                     aria-label="切れた回線の上を、丸いアイコンが跳んで進むミニゲーム"></canvas>
                 <p class="warn" data-run-warn aria-hidden="true"></p>
+                {/* エンドレスが解放されたときの知らせ。出すタイミングは scripts/packet-run.ts */}
+                <div class="unlock">
+                    <p class="unlock-label">ENDLESS UNLOCKED</p>
+                    <p class="unlock-text">Endless モードが解放されました</p>
+                    <button type="button" data-run-try>Endless に挑戦</button>
+                </div>
             </div>
 
             <p class="hint" data-run-hint>Space / タップで再接続</p>
@@ -54,11 +60,22 @@ const shareUrl = new URL("/reconnect", Astro.site ?? Astro.url).href;
                 </button>
             </div>
 
-            {/* 一度クリアした人だけに出る、遊び方の切り替え。形は /blog の掲載先トグルと同じ */}
+            {/* 一度クリアした人だけに出る、遊び方の選択。NEW はエンドレスを一度遊ぶまで */}
             <div class="modes" role="group" aria-label="遊び方" data-run-modes>
-                <span class="modes-thumb" aria-hidden="true"></span>
-                <button type="button" data-mode="goal" aria-pressed="true">404 hops</button>
-                <button type="button" data-mode="endless" aria-pressed="false">Endless</button>
+                <button type="button" data-mode="goal" aria-pressed="true">
+                    <span class="mode-name">404 hops</span>
+                    <span class="mode-meta">
+                        <span>ゴールあり</span>
+                        <span data-record="goal"></span>
+                    </span>
+                </button>
+                <button type="button" data-mode="endless" aria-pressed="false">
+                    <span class="mode-name">Endless<span class="mode-new">NEW</span></span>
+                    <span class="mode-meta">
+                        <span>ゴールなし</span>
+                        <span data-record="endless"></span>
+                    </span>
+                </button>
             </div>
 
             <nav class="ways" aria-label="ほかのページ">
@@ -182,6 +199,11 @@ const shareUrl = new URL("/reconnect", Astro.site ?? Astro.url).href;
         display: none;
     }
 
+    /* 選択カードに記録が出ている間は、同じ記録を上の行には出さない */
+    .lost.is-unlocked:is([data-state="idle"], [data-state="lost"], [data-state="done"]) .best {
+        display: none;
+    }
+
     .stage {
         position: relative;
         margin-top: 0.5rem;
@@ -217,6 +239,66 @@ const shareUrl = new URL("/reconnect", Astro.site ?? Astro.url).href;
         to {
             opacity: 1;
         }
+    }
+
+    /* 解放の知らせは盤面の上側の空きに重ねる(下に足すと画面全体がずれる) */
+    .unlock {
+        position: absolute;
+        top: 0;
+        right: 0;
+        left: 0;
+        display: grid;
+        justify-items: center;
+        gap: 0.3rem;
+        visibility: hidden;
+        opacity: 0;
+        transform: translateY(6px);
+        pointer-events: none;
+    }
+
+    .lost[data-unlock="shown"] .unlock {
+        visibility: visible;
+        opacity: 1;
+        transform: none;
+        transition:
+            opacity 0.4s ease,
+            transform 0.5s var(--ease-out);
+    }
+
+    .unlock p {
+        margin: 0;
+    }
+
+    .unlock-label {
+        color: var(--accent);
+        font-family: var(--font-mono);
+        font-size: 1.1rem;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+    }
+
+    .unlock-text {
+        color: var(--text);
+        font-size: 0.82rem;
+    }
+
+    .unlock button {
+        margin-top: 0.35rem;
+        padding: 0.5rem 1.4rem;
+        border: 0;
+        border-radius: 999px;
+        background: var(--accent);
+        color: var(--bg-deep);
+        font-family: var(--font-sans);
+        font-size: 0.8rem;
+        font-weight: 700;
+        cursor: pointer;
+        pointer-events: auto;
+    }
+
+    .unlock button:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
     }
 
     .hint {
@@ -277,16 +359,14 @@ const shareUrl = new URL("/reconnect", Astro.site ?? Astro.url).href;
         }
     }
 
-    /* 選ばれた項目へ白(ライトでは黒)の台がすべって移る。台の位置と幅は JS が --x / --w に書く。
+    /* 遊び方の選択カード。左の丸で、いま選んでいる方が分かるようにする。
        出ていないときも場所は空けておき、出し入れで画面が上下にずれないようにする */
     .modes {
-        position: relative;
-        display: inline-flex;
-        margin-top: 1rem;
-        padding: 3px;
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        background: var(--surface);
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+        width: min(100%, 27rem);
+        margin: 1rem auto 0;
         visibility: hidden;
         opacity: 0;
         transition:
@@ -300,47 +380,93 @@ const shareUrl = new URL("/reconnect", Astro.site ?? Astro.url).href;
         opacity: 1;
     }
 
-    .modes-thumb {
-        position: absolute;
-        top: 3px;
-        bottom: 3px;
-        left: 0;
-        width: var(--w, 0);
-        border-radius: 999px;
-        background: var(--text);
-        transform: translateX(var(--x, 0));
-        transition:
-            transform 0.5s cubic-bezier(0.34, 1.35, 0.5, 1),
-            width 0.5s cubic-bezier(0.34, 1.35, 0.5, 1);
+    /* 解放の演出中も隠しておき、知らせと一緒に出す(上の指定より後に書くこと) */
+    .lost[data-unlock="playing"] .modes.is-available {
+        visibility: hidden;
+        opacity: 0;
     }
 
     .modes button {
-        position: relative;
-        z-index: 1;
-        padding: 0.4rem 1rem;
-        border: 0;
-        border-radius: 999px;
-        background: none;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        /* 片方だけ 2 行になっても、名前の高さが揃うように上から詰める */
+        align-content: start;
+        align-items: center;
+        gap: 0.2rem 0.6rem;
+        padding: 0.7rem 0.8rem;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--bg-deep);
         color: var(--text-muted);
         font-family: var(--font-mono);
-        font-size: 0.72rem;
-        letter-spacing: 0.08em;
+        text-align: left;
         cursor: pointer;
-        transition: color 0.35s ease;
+        transition:
+            border-color 0.3s ease,
+            background-color 0.3s ease;
+    }
+
+    .modes button::before {
+        content: "";
+        grid-row: 1 / span 2;
+        width: 12px;
+        height: 12px;
+        border: 1px solid var(--text-muted);
+        border-radius: 50%;
     }
 
     .modes button[aria-pressed="true"] {
-        color: var(--bg-deep);
+        border-color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 12%, var(--bg-deep));
+    }
+
+    .modes button[aria-pressed="true"]::before {
+        border-color: var(--accent);
+        background: var(--accent);
+        box-shadow: inset 0 0 0 3px var(--bg-deep);
     }
 
     .modes button:focus-visible {
-        outline: 1px solid var(--accent);
+        outline: 2px solid var(--accent);
         outline-offset: 2px;
+    }
+
+    .mode-name {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text);
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+    }
+
+    /* 幅が足りない端末では、記録が次の行に折り返す */
+    .mode-meta {
+        display: flex;
+        flex-wrap: wrap;
+        column-gap: 0.7rem;
+        font-size: 0.66rem;
+        white-space: nowrap;
+    }
+
+    .mode-new {
+        display: none;
+        padding: 0 0.4rem;
+        border-radius: 999px;
+        background: var(--accent);
+        color: var(--bg-deep);
+        font-size: 0.58rem;
+        letter-spacing: 0.08em;
+    }
+
+    .modes.is-new .mode-new {
+        display: inline-block;
     }
 
     @media (hover: hover) {
         .modes button[aria-pressed="false"]:hover {
-            color: var(--text);
+            border-color: var(--text-muted);
         }
     }
 
@@ -396,12 +522,26 @@ const shareUrl = new URL("/reconnect", Astro.site ?? Astro.url).href;
         .board {
             height: 230px;
         }
+
+        /* 盤面が低いので、知らせを詰めて相手の名前との間を空ける */
+        .unlock {
+            gap: 0.15rem;
+        }
+
+        .unlock-label {
+            font-size: 0.95rem;
+        }
+
+        .unlock button {
+            margin-top: 0.2rem;
+            padding: 0.4rem 1.2rem;
+        }
     }
 
     @media (prefers-reduced-motion: reduce) {
         .modes,
-        .modes-thumb,
-        .modes button {
+        .modes button,
+        .lost[data-unlock="shown"] .unlock {
             transition: none;
         }
 

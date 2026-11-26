@@ -5,10 +5,12 @@
 // ノイズの見た目は /about の CRT モニター(crt.ts)のグリッチに合わせている: 横帯のずれ・色ずれ・ざらつき。
 // ただし普段は障害物と切れ目の周りだけ。画面全体が崩れるのは、失敗した瞬間と繋がった瞬間だけ。
 //
-// 一度クリアしたブラウザでは、エンドレスを選べるようになる(404.astro のトグル)。
+// 一度クリアしたブラウザでは、エンドレスを選べるようになる(LostPage.astro の選択カード)。
+// 解放されたことに気づけるように、エンドレスを一度も遊んでいない間は、クリアするたびに解放の演出を出す
+// (ゴールの先へ回線が伸びる)。演出ができる前にクリアしていた人には、次に開いたとき 1 回だけ出す。
 //
 // 確認用(dev サーバーだけで有効): ?from=265 で途中の hops から開始、?auto で自動操縦、
-// ?mode=endless でクリアせずにエンドレスを試す。
+// ?mode=endless でクリアせずにエンドレスを試す。?from=396&auto なら解放の演出まですぐ見られる。
 
 import {
   advance,
@@ -54,6 +56,15 @@ const ROLL_END = 1.5; // 相手まで転がる
 const SHAKE_PASS = 0.3; // ハンドシェイク 1 回ぶん
 const CONNECT_END = ROLL_END + SHAKE_PASS * 3;
 const SHAKE_LABELS = ["SYN →", "← SYN-ACK", "ACK →"];
+
+/** 解放の演出の区切り(秒): クリアの余韻 → 景色が左へ寄る → ゴールの先へ回線が伸びる */
+const UNLOCK_WAIT = 0.9;
+const UNLOCK_PAN = 0.8;
+const UNLOCK_EXTEND = 0.9;
+const UNLOCK_EXTEND_AT = UNLOCK_WAIT + UNLOCK_PAN * 0.6; // 寄りきる少し前から伸び始める
+const UNLOCK_END = UNLOCK_EXTEND_AT + UNLOCK_EXTEND;
+/** 解放の知らせを一度でも見たか。開いただけで出す演出を 1 回きりにするため */
+const UNLOCK_SEEN_KEY = "packet-run-unlock-seen";
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 const ease = (v: number) => v * v * (3 - 2 * v);
@@ -103,6 +114,21 @@ const saveBest = (mode: Mode, hops: number) => {
   }
 };
 
+const wasUnlockSeen = () => {
+  try {
+    return localStorage.getItem(UNLOCK_SEEN_KEY) === "1";
+  } catch {
+    return true;
+  }
+};
+const markUnlockSeen = () => {
+  try {
+    localStorage.setItem(UNLOCK_SEEN_KEY, "1");
+  } catch {
+    /* 保存できない環境では記録しないだけ */
+  }
+};
+
 export function initPacketRun(): void {
   const root = document.querySelector<HTMLElement>("[data-run]");
   if (!root) return;
@@ -118,6 +144,11 @@ export function initPacketRun(): void {
   const announce = $("announce");
   const modes = $("modes");
   const modeButtons = Array.from(modes.querySelectorAll<HTMLButtonElement>("[data-mode]"));
+  const records: Record<Mode, HTMLElement> = {
+    goal: modes.querySelector<HTMLElement>("[data-record='goal']")!,
+    endless: modes.querySelector<HTMLElement>("[data-record='endless']")!,
+  };
+  const tryButton = $<HTMLButtonElement>("try");
   const tweet = $<HTMLAnchorElement>("tweet");
   const copy = $<HTMLButtonElement>("copy");
   const copyLabel = $("copy-label");
@@ -200,6 +231,8 @@ export function initPacketRun(): void {
   let since = performance.now(); // 今の状態に入った時刻
   let burstUntil = 0;
   let connectT = 0;
+  /** 解放の演出の経過秒。出していないときは null */
+  let unlockT: number | null = null;
   const best: Record<Mode, number> = { goal: loadBest("goal"), endless: loadBest("endless") };
   /** エンドレスを選べるか(一度クリアしたら true) */
   let unlocked = preview || best.goal >= GOAL_HOPS;
@@ -223,16 +256,17 @@ export function initPacketRun(): void {
     setText(bestEl, mode === "goal" && value >= GOAL_HOPS ? "cleared ✓" : value > 0 ? `best ${value}` : "");
   };
 
-  /** トグルの表示を今の状態に合わせる。白い台は、選ばれたボタンの位置と幅へ移す */
+  /** 解放されたのに、まだエンドレスを一度も遊んでいない */
+  const isNew = () => unlocked && best.endless === 0;
+
+  /** 選択カードの表示を今の状態に合わせる */
   const showModes = () => {
     modes.classList.toggle("is-available", unlocked);
-    for (const button of modeButtons) {
-      const active = button.dataset.mode === mode;
-      button.setAttribute("aria-pressed", String(active));
-      if (!active) continue;
-      modes.style.setProperty("--x", `${button.offsetLeft}px`);
-      modes.style.setProperty("--w", `${button.offsetWidth}px`);
-    }
+    modes.classList.toggle("is-new", isNew());
+    root.classList.toggle("is-unlocked", unlocked);
+    setText(records.goal, best.goal >= GOAL_HOPS ? "cleared ✓" : "未クリア");
+    setText(records.endless, best.endless > 0 ? `best ${best.endless}` : "未プレイ");
+    for (const button of modeButtons) button.setAttribute("aria-pressed", String(button.dataset.mode === mode));
   };
 
   const enter = (next: State) => {
@@ -246,10 +280,36 @@ export function initPacketRun(): void {
     best[mode] = hops;
     saveBest(mode, hops);
     showBest();
+    showModes();
+  };
+
+  // ---- エンドレス解放の演出 ----
+  const clearUnlock = () => {
+    unlockT = null;
+    delete root.dataset.unlock;
+  };
+
+  /** 線が伸びきったら、知らせと選択カードを出す */
+  const revealUnlock = () => {
+    root.dataset.unlock = "shown";
+    since = performance.now(); // 出た直後の連打で流れないように、ここから入力のロックを数え直す
+    if (!practice) markUnlockSeen();
+    setText(hint, `Space / ${TAP}で${state === "done" ? "もう一度" : "再接続"}`);
+    setText(announce, "Endless モードが解放されました");
+  };
+
+  const startUnlock = () => {
+    unlockT = 0;
+    root.dataset.unlock = "playing";
+    setText(hint, "");
+    if (!reduced) return;
+    unlockT = UNLOCK_END;
+    revealUnlock();
   };
 
   /** 待機画面に戻す */
   const reset = () => {
+    clearUnlock();
     enter("idle");
     setText(code, "404");
     setText(eyebrow, "ページが見つかりません");
@@ -278,6 +338,7 @@ export function initPacketRun(): void {
     }
     runner = createRunner(from, mode === "endless"); // 押す長さで高さが変わるのはエンドレスだけ
     connectT = 0;
+    clearUnlock();
     enter("running");
     setText(code, "404");
     setText(eyebrow, "再接続を試みています");
@@ -321,7 +382,9 @@ export function initPacketRun(): void {
     setText(status, `200 OK · ${GOAL_HOPS} hops`);
     setText(hint, `Space / ${TAP}でもう一度`);
     setText(announce, "つながりました。200 OK");
-    setShare(`404ページのミニゲームをクリアした！\n${GOAL_HOPS} hops → 200 OK`);
+    const unlockLine = isNew() ? "\nEndlessモードが解放された" : "";
+    setShare(`404ページのミニゲームをクリアした！\n${GOAL_HOPS} hops → 200 OK${unlockLine}`);
+    if (isNew()) startUnlock();
   };
 
   const connect = () => {
@@ -335,8 +398,11 @@ export function initPacketRun(): void {
   };
 
   const action = () => {
+    if (root.dataset.unlock === "playing") return; // 解放の演出は飛ばせない(連打で見逃さないように)
     const waited = performance.now() - since;
-    if (state === "idle") start();
+    if (state === "idle") {
+      if (unlockT === null || waited > LOCK_MS.done) start();
+    }
     else if (state === "running") press(runner);
     else if (state === "paused") {
       enter("running");
@@ -362,27 +428,29 @@ export function initPacketRun(): void {
   );
 
   // ---- 遊び方の切り替え ----
-  for (const button of modeButtons) {
+  const selectMode = (next: Mode) => {
+    if (state === "running" || state === "paused" || state === "connecting" || next === mode) return;
+    mode = next;
+    reset();
+    showBest();
+    showModes();
+  };
+  // 解放の知らせの「Endless に挑戦」は、待機画面に移るだけ(長押しの説明を読んでから始められるように)
+  const choices: [HTMLButtonElement, Mode][] = [
+    ...modeButtons.map((b): [HTMLButtonElement, Mode] => [b, b.dataset.mode as Mode]),
+    [tryButton, "endless"],
+  ];
+  for (const [button, next] of choices) {
     button.addEventListener(
       "click",
       (e) => {
-        if (state === "running" || state === "paused" || state === "connecting") return;
-        const next = button.dataset.mode as Mode;
-        if (next !== mode) {
-          mode = next;
-          reset();
-          showBest();
-          showModes();
-        }
+        selectMode(next);
         // マウスやタップで選んだあと、次の Space がボタンではなくゲームに届くようにする
         if (e.detail > 0) button.blur();
       },
       { signal },
     );
   }
-  // フォントの読み込みや画面幅の変化でボタンの幅が変わったら、台も合わせ直す
-  const modesWatch = new ResizeObserver(showModes);
-  modesWatch.observe(modes);
 
   // ---- 入力 ----
   // リンクやボタン(ヘッダーのテーマ切り替えなど)の操作は横取りしない
@@ -532,7 +600,7 @@ export function initPacketRun(): void {
     ctx.clearRect(0, 0, W, H);
     ctx.save();
 
-    if (state === "idle") {
+    if (state === "idle" && unlockT === null) {
       // 切れた回線。切れ目の周りだけがざらつく
       const a = mix(L.px, L.dest, 0.46);
       const b = mix(L.px, L.dest, 0.58);
@@ -549,30 +617,60 @@ export function initPacketRun(): void {
       return;
     }
 
-    if (state === "connecting" || state === "done") {
-      const c = state === "done" ? CONNECT_END : connectT;
+    // 待機画面でも、解放の演出を出すときは「繋がったあと」の景色を使う
+    if (state === "connecting" || state === "done" || unlockT !== null) {
+      const connected = state !== "connecting";
+      const c = connected ? CONNECT_END : connectT;
       const linked = clamp01(c / LINK_END);
       const rolled = ease(clamp01((c - LINK_END) / (ROLL_END - LINK_END)));
-      segment(L.px, L.dest - 6, L.ground, color.line);
-      segment(L.px, mix(L.px, L.dest - 6, ease(linked)), L.ground, color.accent);
-      if (linked < 1) staticBlock(mix(L.px, L.dest, linked), L.ground - 9, (L.dest - L.px) * (1 - linked), 18, tick, 0.12);
-      node(L.dest, L.ground, color.accent, state === "done");
-      label(L.dest, L.ground - L.size - 22);
-      const stop = L.dest - L.size / 2 - 10;
-      const x = mix(L.px, stop, rolled);
+      // 解放の演出では、景色ごと左へ寄せてゴールの先に場所を空ける
+      const u = unlockT ?? 0;
+      const shift = (L.dest - mix(L.px, L.dest, 0.4)) * ease(clamp01((u - UNLOCK_WAIT) / UNLOCK_PAN));
+      const x0 = L.px - shift;
+      const x1 = L.dest - shift;
+      segment(x0, x1 - 6, L.ground, color.line);
+      segment(x0, mix(x0, x1 - 6, ease(linked)), L.ground, color.accent);
+      if (linked < 1) staticBlock(mix(x0, x1, linked), L.ground - 9, (x1 - x0) * (1 - linked), 18, tick, 0.12);
+
+      const grown = ease(clamp01((u - UNLOCK_EXTEND_AT) / UNLOCK_EXTEND));
+      if (grown > 0) {
+        const begin = x1 + 6;
+        const head = mix(begin, W + 12, grown);
+        segment(begin, head, L.ground, color.accent);
+        // 走行中と同じ 1 hop の目盛り。ここから先も走れる回線だと分かるように
+        ctx.fillStyle = color.line;
+        for (let x = begin + L.speed / HOPS_PER_UNIT; x < head; x += L.speed / HOPS_PER_UNIT) {
+          ctx.fillRect(x, L.ground + 6, 1, 4);
+        }
+        // 線がノードを抜ける瞬間だけ、少しざらつく
+        if (grown < 0.35 && !reduced) staticBlock(x1 - 9, L.ground - 9, 18, 18, tick, 0.4);
+        if (grown < 1) glowDot(head, L.ground);
+        else if (!reduced) glowDot(mix(begin, W, (now % 2400) / 2400), L.ground);
+        ctx.globalAlpha = grown;
+        ctx.font = "24px 'JetBrains Mono', monospace";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "alphabetic";
+        ctx.fillStyle = color.accent;
+        ctx.fillText("∞", W - 4, L.ground - 14);
+        ctx.globalAlpha = 1;
+      }
+
+      node(x1, L.ground, color.accent, connected);
+      label(x1, L.ground - L.size - 22);
+      const stop = x1 - L.size / 2 - 10;
+      const x = mix(x0, stop, rolled);
       // 回転数を整数に丸めて、着いたときに顔がまっすぐ前を向くようにする
-      const turns = Math.max(1, Math.round((stop - L.px) / (Math.PI * L.size)));
+      const turns = Math.max(1, Math.round((stop - x0) / (Math.PI * L.size)));
       drawIcon(x, L.ground - L.size / 2, L.size, rolled * turns * Math.PI * 2);
       if (c >= ROLL_END) {
         // ハンドシェイク: 出発点と相手の間を 行く → 返る → 行く
-        const done = state === "done";
         const pass = Math.min(2, Math.floor((c - ROLL_END) / SHAKE_PASS));
         const k = ease(clamp01((c - ROLL_END - pass * SHAKE_PASS) / SHAKE_PASS));
-        if (!done) glowDot(pass === 1 ? mix(stop - 24, L.px, k) : mix(L.px, stop - 24, k), L.ground);
-        else if (!reduced) {
-          // 繋がったあとは、ゆっくり往復し続ける
+        if (!connected) glowDot(pass === 1 ? mix(stop - 24, x0, k) : mix(x0, stop - 24, k), L.ground);
+        else if (!reduced && unlockT === null) {
+          // 繋がったあとは、ゆっくり往復し続ける(解放の演出中は、光は伸びる線の側に出す)
           const w = (now % 2800) / 1400;
-          glowDot(mix(L.px, stop - 24, ease(w < 1 ? w : 2 - w)), L.ground);
+          glowDot(mix(x0, stop - 24, ease(w < 1 ? w : 2 - w)), L.ground);
         }
       }
       ctx.restore();
@@ -717,6 +815,11 @@ export function initPacketRun(): void {
       setText(status, connectT < ROLL_END ? "connecting…" : (SHAKE_LABELS[pass] ?? "ACK →"));
       if (connectT >= CONNECT_END) finish();
     }
+    // 経過はフレームごとに足す(裏のタブに回った間は進まず、戻ってから続きが見られる)
+    if (unlockT !== null && root.dataset.unlock === "playing") {
+      unlockT += dt;
+      if (unlockT >= UNLOCK_END) revealUnlock();
+    }
 
     draw(now);
     drawBurst(now);
@@ -726,6 +829,8 @@ export function initPacketRun(): void {
   showBest();
   showModes();
   reset();
+  // 演出ができる前にクリアしていた人にも、一度だけ知らせる
+  if (isNew() && !preview && !wasUnlockSeen()) startUnlock();
   raf = requestAnimationFrame(frame);
 
   document.addEventListener(
@@ -735,7 +840,6 @@ export function initPacketRun(): void {
       abort.abort();
       themeWatch.disconnect();
       resizeWatch.disconnect();
-      modesWatch.disconnect();
     },
     { once: true },
   );
