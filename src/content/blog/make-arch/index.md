@@ -6,7 +6,7 @@ heroImage: "./images/hero.png"
 tags:
     - advent2026
     - Linux
-draft: true
+draft: false
 ---
 
 > この記事は[トラマト一人アドベントカレンダー](https://toramutton.me/advent2026/)の6日目の記事です。

@@ -6,7 +6,7 @@ heroImage: "./images/hero.png"
 tags:
     - advent2026
     - Ruby
-draft: true
+draft: false
 ---
 
 > この記事は[トラマト一人アドベントカレンダー](https://toramutton.me/advent2026/)の5日目の記事です。

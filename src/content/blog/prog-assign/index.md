@@ -6,7 +6,7 @@ heroImage: "./images/hero.jpg"
 tags:
     - advent2026
     - 大学
-draft: true
+draft: false
 ---
 
 > この記事は[トラマト一人アドベントカレンダー](https://toramutton.me/advent2026/)の20日目の記事です。

@@ -6,7 +6,7 @@ heroImage: "./images/hero.jpg"
 tags:
     - advent2026
     - 振り返り
-draft: true
+draft: false
 ---
 
 > この記事は[トラマト一人アドベントカレンダー](https://toramutton.me/advent2026/)の16日目の記事です。

@@ -6,7 +6,7 @@ heroImage: ./images/fastfetch.png
 tags:
     - advent2026
     - Linux
-draft: true
+draft: false
 ---
 
 > この記事は[トラマト一人アドベントカレンダー](https://toramutton.me/advent2026/)の1日目の記事です。

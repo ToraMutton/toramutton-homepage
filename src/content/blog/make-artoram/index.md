@@ -6,7 +6,7 @@ heroImage: "./images/hero.jpg"
 tags:
     - advent2026
     - React
-draft: true
+draft: false
 ---
 
 > この記事は[トラマト一人アドベントカレンダー](https://toramutton.me/advent2026/)の3日目の記事です。

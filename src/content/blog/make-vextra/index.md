@@ -7,7 +7,7 @@ tags:
     - advent2026
     - Three.js
     - React
-draft: true
+draft: false
 ---
 
 > この記事は[トラマト一人アドベントカレンダー](https://toramutton.me/advent2026/)の7日目の記事です。

@@ -5,7 +5,7 @@ description: "狂気"
 heroImage: ./images/hero.jpg
 tags:
     - advent2026
-draft: true
+draft: false
 ---
 
 ## はじめに
