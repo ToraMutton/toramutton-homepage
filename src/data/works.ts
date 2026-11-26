@@ -1,8 +1,8 @@
-// Worksページ（src/pages/works.astro）に並べる作品。
+// 作品のデータ。トップの Works(src/components/home/WorksSection.astro)と /retro/works が並べる。
 //
 // 作品を足すときは、下の works 配列に1つオブジェクトを足すだけでいい。
-// status によって「完成」「制作中」「構想中」のどのセクションに出るかが決まる。
-// category は、トップページの分野カードのどれに並ぶかを決める（completed だけが出る）。
+// status は「完成(completed)」か「制作中(in-progress)」。トップのカードには制作中だけバッジが付く。
+// category は以前の分野カード用の区分で、いまは画面には出ない。
 //
 // スクリーンショットを付けるなら src/assets/works/ に画像を置き、
 // このファイルの先頭で import してから image に渡す（Astro が自動で圧縮してくれる）。
@@ -47,7 +47,7 @@ export interface Work {
   tags: string[];
   icon: typeof Code2;
   year: string;
-  status: "completed" | "in-progress" | "planned";
+  status: "completed" | "in-progress";
   category: WorkCategory;
   image?: ImageMetadata;
   /** トップのカルーセルでの画像の収め方。省略すると cover(枠いっぱいに切り抜く)。

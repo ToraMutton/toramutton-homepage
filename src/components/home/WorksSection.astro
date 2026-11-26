@@ -10,7 +10,6 @@ import { ChevronLeft, ChevronRight, ExternalLink, Github } from "lucide-astro";
 import { works } from "../../data/works";
 import HomeSection from "./HomeSection.astro";
 
-const statusLabel = { "in-progress": "制作中", planned: "構想中" } as const;
 const pad = (n: number) => String(n).padStart(2, "0");
 const total = works.length;
 ---
@@ -59,9 +58,7 @@ const total = works.length;
                                 <div class="card-info">
                                     <p class="card-meta">
                                         <span>{work.year}</span>
-                                        {work.status !== "completed" && (
-                                            <span class="badge">{statusLabel[work.status]}</span>
-                                        )}
+                                        {work.status === "in-progress" && <span class="badge">制作中</span>}
                                     </p>
                                     <h3 class="card-name">{work.name}</h3>
                                     <ul class="card-tags">
