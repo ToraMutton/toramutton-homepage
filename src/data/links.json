@@ -123,5 +123,10 @@
         "name": "みりん星",
         "url": "https://mirin-homepage.vercel.app/",
         "icon": "/favicons/mrin.webp"
+    },
+    {
+        "name": "まろん。",
+        "url": "https://montblank.fun/",
+        "icon": null
     }
 ]
