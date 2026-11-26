@@ -1,4 +1,4 @@
-// Countdown カード / Advent カードの日付計算。
+// Countdown カードの日付計算。
 // ビルド時(index.astro の frontmatter)とブラウザ側(<script>)の両方から使う。
 //
 // 日付はすべて「JST のカレンダー上の日付」で数える。
@@ -45,32 +45,4 @@ export function resolveMissionDate(m: MissionInput, today: string): string {
   const year = Number(today.slice(0, 4));
   const thisYear = `${year}-${m.date}`;
   return daysBetween(today, thisYear) >= 0 ? thisYear : `${year + 1}-${m.date}`;
-}
-
-// =====================================================
-// Advent カード
-// 開催前 → 開催中 → 終了 の3フェーズで表示を切り替える
-// =====================================================
-
-export interface AdventStatus {
-  phase: "before" | "during" | "after";
-  title: string;
-  num: string;
-  unit: string;
-}
-
-export function adventStatus(
-  year: number,
-  totalDays: number,
-  today: string,
-): AdventStatus {
-  const start = `${year}-12-01`;
-  const elapsed = daysBetween(start, today); // 12/1 で 0
-  if (elapsed < 0) {
-    return { phase: "before", title: "開催まで", num: String(-elapsed), unit: "days" };
-  }
-  if (elapsed < totalDays) {
-    return { phase: "during", title: "開催中", num: String(elapsed + 1), unit: `/ ${totalDays}` };
-  }
-  return { phase: "after", title: "開催終了", num: "Fin.", unit: "thanks!" };
 }

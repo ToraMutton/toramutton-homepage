@@ -34,7 +34,7 @@ import {
   Terminal,
 } from "lucide-astro";
 
-/** 分野。トップページの分野カード（src/data/home.ts の workCategories）に振り分けられる */
+/** 作品の分野。以前の分野カード用の区分で、いまは画面には出ない */
 export type WorkCategory = "web" | "desktop" | "art" | "tools";
 
 export interface Work {

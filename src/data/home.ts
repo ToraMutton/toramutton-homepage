@@ -8,18 +8,12 @@ import {
   Cake,
   Clock,
   Fingerprint,
-  Globe,
   GraduationCap,
   Layers,
   Milestone,
-  Monitor,
-  Music,
   Rocket,
-  Shapes,
   ShieldCheck,
-  ThermometerSun,
   User,
-  Wrench,
 } from "lucide-astro";
 import {
   GITHUB_URL,
@@ -29,19 +23,14 @@ import {
   ZENN_URL,
 } from "../consts";
 import { PROFILE } from "./about";
-import type { WorkCategory } from "./works";
 import type { MissionInput } from "../utils/countdown";
 
 /** lucide-astro のアイコン。どれも同じ形なので Cake を代表にして型を借りている */
 type Icon = typeof Cake;
 
 // =====================================================
-// ヒーロー(fastfetch 風)の右側に出る情報
-// 左の ASCII アートは scripts/ascii-avatar.mjs が生成する
+// プロフィールの項目(旧ヒーローの名残。いまは /retro のトップだけが読む)
 // =====================================================
-
-/** 1 行目の user@host */
-export const heroUser = { user: "toramutton", host: "toramutton.me" };
 
 // ---- USER セクション ----
 export type HeroSpec =
@@ -97,64 +86,6 @@ export const socials: Social[] = [
 // ---- Links の紹介文 ----
 // トップの Others と /links ページで共通に使う
 export const LINKS_SUMMARY = "相互リンクしているサイト一覧";
-
-// ---- PALETTE セクション ----
-// サイトの CSS 変数名。ライト/ダークで自動的に切り替わる
-export const heroPalette: string[] = [
-  "--accent-blue",
-  "--accent-secondary",
-  "--brand-zenn",
-  "--brand-note",
-  "--brand-qiita",
-  "--text-main",
-  "--text-muted",
-  "--border-color",
-];
-
-// =====================================================
-// 分野カード（ヒーロー直下の「つくっているもの」）
-// 各カードには、works.ts でその category を持つ completed の作品が全部並ぶ。
-// 並び順はこの配列の順。作品側は works.ts の並び順
-// =====================================================
-export interface WorkCategoryCard {
-  key: WorkCategory;
-  title: string;
-  desc: string;
-  icon: Icon;
-  /** 上に大きく出す作品の name。省略すると画像付きの先頭の作品 */
-  cover?: string;
-}
-
-export const workCategories: WorkCategoryCard[] = [
-  {
-    key: "web",
-    title: "Web Apps",
-    desc: "ブラウザで動くものたち",
-    icon: Globe,
-    cover: "Vextra",
-  },
-  {
-    key: "desktop",
-    title: "Desktop Ricing",
-    desc: "Linux と Windows の見た目と操作を、自分好みに組み上げてます",
-    icon: Monitor,
-    cover: "Arch Linux Dotfiles",
-  },
-  {
-    key: "art",
-    title: "Generative Art",
-    desc: "数式とコードで絵を描いてます。",
-    icon: Shapes,
-    cover: "ArToram",
-  },
-  {
-    key: "tools",
-    title: "Tools & Bots",
-    desc: "日常のちょっとした面倒を解決する道具たち。",
-    icon: Wrench,
-    cover: "fxtwitter-bot",
-  },
-];
 
 // =====================================================
 // Countdown カード

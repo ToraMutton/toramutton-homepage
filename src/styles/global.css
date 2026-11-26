@@ -162,8 +162,7 @@ h1 {
     display: inline-block;
 }
 
-/* セクション見出し(h2)の見た目は components/SectionHeading.astro に集約。
-   記事本文(BlogPost)だけは「青い線が伸びる」下線を使う */
+/* 記事本文(BlogPost)だけは「青い線が伸びる」下線を使う */
 h2 {
     margin-top: 4rem;
     margin-bottom: 1.5rem;
