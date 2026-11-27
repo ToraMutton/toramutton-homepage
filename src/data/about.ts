@@ -149,7 +149,7 @@ export interface Qualification {
 }
 
 export const QUALIFICATIONS: Qualification[] = [
-  { id: "fe", name: "基本情報技術者試験", date: "2026.03.10" },
+  { id: "fe", name: "基本情報技術者試験", date: "2026.04.21" },
 ];
 
 // =====================================================
