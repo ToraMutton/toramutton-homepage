@@ -50,7 +50,6 @@ body {
 
     /* コンポーネント固有の色 */
     --code-text: #cf222e;
-    --text-yellow-custom: #9a6700;
 
     /* 外部サービスのブランドカラー(SNS アイコンはホバー時だけこの色にする) */
     --brand-zenn: #3ea8ff;
@@ -77,23 +76,6 @@ body {
         '游ゴシック', 'Yu Gothic', YuGothic,
         'Hiragino Sans', 'Hiragino Kaku Gothic ProN',
         'Meiryo', sans-serif;
-
-    /*
-     * --- 旧名(既存ページ用の別名) ---
-     * 新デザインに作り替えたページから順に新しい名前へ移し、使われなくなったら消す。
-     * :root と html.dark は同じ <html> 要素なので、ここで var() を参照しておけば
-     * テーマ切り替え後の値が自動で入る。
-     */
-    --background: var(--bg);
-    --text-main: var(--text);
-    --border-color: var(--border);
-    --accent-blue: var(--accent);
-    --accent-secondary: var(--accent);
-    --code-bg: var(--surface);
-    --spec-label: var(--accent);
-    --category-title: var(--accent);
-    --badge-bg: var(--elevated);
-    --badge-text: var(--text-muted);
 }
 
 /* --- †ダークモード†(黒寄りグレーに白線) --- */
@@ -113,15 +95,14 @@ html.dark {
     --accent-glow: #b4dde5;
 
     --code-text: #ff7b72;
-    --text-yellow-custom: #d29922;
 }
 
 /* =========================================
    3. 全体レイアウト & タイポグラフィ
    ========================================= */
 html {
-    background-color: var(--background);
-    color: var(--text-main);
+    background-color: var(--bg);
+    color: var(--text);
     font-family: var(--font-sans);
     line-height: 1.6;
     transition: background-color 0.3s ease, color 0.3s ease;
@@ -148,7 +129,7 @@ h2,
 h3,
 h4,
 h5 {
-    color: var(--text-main);
+    color: var(--text);
     line-height: 1.3;
     margin-top: 2.5rem;
     margin-bottom: 1rem;
@@ -158,7 +139,7 @@ h5 {
 
 h1 {
     font-size: 2.5rem;
-    color: var(--accent-blue);
+    color: var(--accent);
     display: inline-block;
 }
 
@@ -176,25 +157,25 @@ h4 {
 
 p {
     margin-bottom: 1.5rem;
-    color: var(--text-main);
+    color: var(--text);
 }
 
 strong,
 b {
-    color: var(--text-main);
+    color: var(--text);
     font-weight: 700;
 }
 
 /* リンク */
 a {
-    color: var(--accent-blue);
+    color: var(--accent);
     text-decoration: underline;
     text-underline-offset: 4px;
     transition: color 0.2s ease;
 }
 
 a:hover {
-    color: var(--accent-secondary);
+    color: var(--accent);
 }
 
 /* 画像。影はサイト方針(ぼかさない)に合わせて付けない */
@@ -209,9 +190,9 @@ img {
    ========================================= */
 code {
     font-family: var(--font-mono);
-    background-color: var(--code-bg);
+    background-color: var(--surface);
     color: var(--code-text);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border);
     padding: 0.2em 0.4em;
     border-radius: 4px;
     font-size: 0.9em;
@@ -262,7 +243,7 @@ pre:hover::-webkit-scrollbar-thumb {
 }
 
 blockquote {
-    border-left: 4px solid var(--accent-blue);
+    border-left: 4px solid var(--accent);
     background: rgba(14, 165, 233, 0.1);
     margin: 1.5rem 0;
     padding: 1rem 1.5rem;
@@ -272,7 +253,7 @@ blockquote {
 
 hr {
     border: none;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--border);
     margin: 3rem 0;
 }
 
@@ -287,76 +268,7 @@ hr {
 }
 
 /* =========================================
-   5. ユーティリティクラス
-   ========================================= */
-
-.spec-label {
-    color: var(--spec-label);
-    font-weight: 800;
-}
-
-.text-yellow,
-.text-yellow-small {
-    color: var(--text-yellow-custom);
-    font-weight: 700;
-}
-
-.category-title {
-    color: var(--category-title);
-}
-
-.mission-title {
-    font-weight: 700;
-}
-
-html:not(.dark) .mission-title {
-    color: #1e293b;
-}
-
-.coming-soon-badge {
-    background: var(--badge-bg);
-    color: var(--badge-text);
-    border: 1px solid var(--border-color);
-}
-
-/* =========================================
-   5.1 カード共通 (薄い背景 + 1px 枠 + 4px 角丸)
-   .ui-card       … 静止したカード
-   .ui-card-hover … クリックはできないが hover で枠がシアンになるカード
-   .ui-card-link  … クリックできるカード。hover で枠がシアン + オフセット影
-   ========================================= */
-.ui-card {
-    background: var(--surface);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-}
-
-.ui-card-hover,
-.ui-card-link {
-    transition:
-        border-color 0.18s ease,
-        box-shadow 0.35s var(--ease-out);
-}
-
-@media (hover: hover) {
-    .ui-card-hover:hover,
-    .ui-card-link:hover {
-        border-color: var(--accent-blue);
-    }
-
-    .ui-card-link:hover {
-        box-shadow: var(--shadow-offset);
-    }
-}
-
-.ui-card-link:focus-visible {
-    outline: 2px solid var(--accent-blue);
-    outline-offset: 3px;
-    border-color: var(--accent-blue);
-}
-
-/* =========================================
-   5.2 出現アニメーション (全ページ共通)
+   5. 出現アニメーション (全ページ共通)
    [data-reveal] を付けた要素は画面に入ったとき一度だけ下からフェードイン。
    style="--i: n" で n × 40ms ずつ遅らせられる。
    .is-visible は layouts/BaseLayout.astro のスクリプトが付ける。
@@ -390,10 +302,6 @@ html:not(.dark) .mission-title {
 
     [data-reveal].is-visible {
         animation: none;
-    }
-
-    .ui-card-link {
-        transition: none;
     }
 }
 
