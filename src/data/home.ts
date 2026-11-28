@@ -4,16 +4,10 @@
 // アイコンは https://lucide.dev で名前を探して、下の import に足してから使う。
 
 import {
-  Activity,
   Cake,
-  Clock,
-  Fingerprint,
-  GraduationCap,
-  Layers,
   Milestone,
   Rocket,
   ShieldCheck,
-  User,
 } from "lucide-astro";
 import {
   GITHUB_URL,
@@ -22,49 +16,10 @@ import {
   TW_DAILY_URL,
   ZENN_URL,
 } from "../consts";
-import { PROFILE } from "./about";
 import type { MissionInput } from "../utils/countdown";
 
 /** lucide-astro のアイコン。どれも同じ形なので Cake を代表にして型を借りている */
 type Icon = typeof Cake;
-
-// =====================================================
-// プロフィールの項目(旧ヒーローの名残。いまは /retro のトップだけが読む)
-// =====================================================
-
-// ---- USER セクション ----
-export type HeroSpec =
-  | {
-      key: string;
-      icon: Icon;
-      kind?: "text";
-      value: string;
-      /** true にするとアクセント色の点が脈打つ */
-      live?: boolean;
-      /** true にすると値クリックで全文をクリップボードにコピーする */
-      copy?: boolean;
-    }
-  | {
-      key: string;
-      icon: Icon;
-      /** JST の現在時刻を秒ごとに更新する */
-      kind: "clock";
-    };
-
-export const heroSpecs: HeroSpec[] = [
-  { key: "Name", icon: User, value: "トラマト / 寅松 / toramutton" },
-  { key: "Univ", icon: GraduationCap, value: "UEC25 / I類 / CS Program" },
-  { key: "Stack", icon: Layers, value: "Rust / TS / C" },
-  {
-    key: "UUID",
-    icon: Fingerprint,
-    value: PROFILE.uuid,
-    copy: true,
-  },
-  // 今やっていること。気が向いたら書き換える
-  { key: "Now", icon: Activity, value: "Rust勉強中", live: true },
-  { key: "Time", icon: Clock, kind: "clock" },
-];
 
 // ---- SOCIAL セクション ----
 // アイコンは components/BrandIcon.astro で名前から引く。

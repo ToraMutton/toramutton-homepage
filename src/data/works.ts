@@ -1,4 +1,4 @@
-// 作品のデータ。トップの Works(src/components/home/WorksSection.astro)と /retro/works が並べる。
+// 作品のデータ。トップの Works(src/components/home/WorksSection.astro)と /retro が並べる。
 //
 // 作品を足すときは、下の works 配列に1つオブジェクトを足すだけでいい。
 // status は「完成(completed)」か「制作中(in-progress)」。トップのカードには制作中だけバッジが付く。

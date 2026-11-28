@@ -1,48 +1,177 @@
 ---
+// /retro: HTML と CSS を始めたての人が作ったような、情報だけの軽い 1 ページ。
+// BaseLayout や共通の CSS は使わない。出力は素の HTML だけで、JS も CSS ファイルも出ない。
+//
+// 載せるのは、通常のページにもある情報だけ。通常ページと内容がかぶるので noindex
+// (sitemap からも除外済み)。
+//
+// コメントや余分な空白はビルド後に src/integrations/retro-weight.mjs が削るので、
+// ここは読みやすく書いていい。重さの表示もそこで書き込まれる。
 export const prerender = true;
-import RetroLayout from "../../layouts/RetroLayout.astro";
-import { SITE_TITLE } from "../../consts";
-import { heroSpecs, socials } from "../../data/home";
 
-// 元ネタのトップに倣って、情報は最小限。罫線の表は使わず、文字をそのまま置く。
-// 表示する項目は home.ts の heroSpecs から選ぶ（キー → 日本語の見出し）
-const LABELS: Record<string, string | null> = {
-  Name: null,
-  Univ: "所属",
-  Stack: "使う言語",
-  Now: "最近",
+import { SITE_TITLE } from "../../consts";
+import { INTERESTS, PROFILE } from "../../data/about";
+import { socials } from "../../data/home";
+import { works } from "../../data/works";
+import { getVisiblePosts } from "../../utils/post";
+import { getExternalPosts } from "../../utils/feeds";
+
+const SOURCE_LABEL = { note: "note", zenn: "Zenn", qiita: "Qiita" } as const;
+const INTEREST_LABEL: Record<string, string> = {
+  music: "音楽",
+  game: "ゲーム",
+  other: "その他",
 };
-const lines = heroSpecs.flatMap((s) =>
-  s.kind !== "clock" && s.key in LABELS
-    ? [{ label: LABELS[s.key], value: s.value }]
-    : [],
-);
+
+// このサイトと note / Zenn / Qiita の記事を、新しい順に 1 つの更新履歴にする
+const history = [
+  ...(await getVisiblePosts()).map((post) => ({
+    title: post.data.title,
+    url: `/blog/${post.id}/`,
+    date: post.data.pubDate,
+    source: "このサイト",
+  })),
+  ...(await getExternalPosts()).map((p) => ({
+    title: p.title,
+    url: p.url,
+    date: p.date,
+    source: SOURCE_LABEL[p.source],
+  })),
+].sort((a, b) => b.date.valueOf() - a.date.valueOf());
+
+const fmt = new Intl.DateTimeFormat("ja-JP", {
+  timeZone: "Asia/Tokyo",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+const birthday = fmt.format(new Date(`${PROFILE.birthday}T00:00:00+09:00`));
 ---
 
-<RetroLayout title={SITE_TITLE} current="top">
-  <h1 align="center">{SITE_TITLE}</h1>
-  <p align="center">
-    <img src="/retro/me.jpg" width="96" height="96" alt="トラマトのアイコン" />
-  </p>
-  <p align="center">
-    {
-      lines.map((l) => (
-        <>
-          {l.label && `${l.label}: `}
-          {l.value}
-          <br />
-        </>
-      ))
-    }
-  </p>
-  <p align="center">
-    {
-      socials.map((s, i) => (
-        <>
-          {i > 0 && " | "}
-          <a href={s.url}>{s.name}</a>
-        </>
-      ))
-    }
-  </p>
-</RetroLayout>
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <!-- ダークモードでも常にライト表示。`only` を付けると、ブラウザ側の強制ダーク化（反転）も拒否できる -->
+    <meta name="color-scheme" content="only light" />
+    <title>{SITE_TITLE}</title>
+    <!-- favicon のリクエスト自体を発生させない -->
+    <link rel="icon" href="data:," />
+    <style is:inline>
+      /* 背景・文字・リンク色は全部明示する(ダークモードで反転しないように) */
+      :root {
+        color-scheme: only light;
+      }
+      body {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 8px 16px;
+        background: #ffffee;
+        color: #000;
+      }
+      a:link {
+        color: #0000ee;
+      }
+      a:visited {
+        color: #551a8b;
+      }
+      h1,
+      .center {
+        text-align: center;
+      }
+      h1 {
+        font-size: 1.5em;
+      }
+      img {
+        border-radius: 50%;
+      }
+      table {
+        width: 100%;
+        background: #fff;
+      }
+      .date {
+        white-space: nowrap;
+      }
+      .new {
+        color: #e00000;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ようこそ！{SITE_TITLE}へ</h1>
+    <hr />
+    <p class="center">
+      <img src="/retro/me.jpg" width="120" height="120" alt="トラマトのアイコン" />
+    </p>
+
+    <h2>■ 自己紹介</h2>
+    <ul>
+      <li>名前: {PROFILE.kanji}（{PROFILE.kana}） / {PROFILE.handle}</li>
+      <li>大学: 電気通信大学</li>
+      <li>所属: {PROFILE.univ}</li>
+      <li>生年月日: {birthday}</li>
+      <li>MBTI: {PROFILE.mbti}</li>
+    </ul>
+
+    <h2>■ 好きなもの</h2>
+    <ul>
+      {
+        INTERESTS.map((i) => (
+          <li>
+            {INTEREST_LABEL[i.section] ?? i.section}: {i.items.join(" / ")}
+          </li>
+        ))
+      }
+    </ul>
+
+    <h2>■ 更新履歴</h2>
+    <table border="1" cellpadding="4">
+      <tr>
+        <th>日付</th>
+        <th>記事</th>
+      </tr>
+      {
+        history.map((p, i) => (
+          <tr>
+            <td class="date">{fmt.format(p.date)}</td>
+            <td>
+              <a href={p.url}>{p.title}</a>（{p.source}）
+              {i === 0 && <b class="new">New!</b>}
+            </td>
+          </tr>
+        ))
+      }
+    </table>
+
+    <h2>■ 作ったもの</h2>
+    <ul>
+      {
+        works.map((w) => (
+          <li>
+            <a href={w.url || w.github}>{w.name}</a>
+            {w.status === "in-progress" && "（制作中）"}
+          </li>
+        ))
+      }
+    </ul>
+
+    <h2>■ リンク</h2>
+    <ul>
+      {
+        socials.map((s) => (
+          <li>
+            <a href={s.url}>{s.name}</a>
+          </li>
+        ))
+      }
+      <li><a href="/">最新版のホームページ</a></li>
+    </ul>
+
+    <hr />
+    <p class="center"><small>&copy; ToraMutton</small></p>
+    <!-- 次の行は、ビルド後に重さの表示へ置き換わる -->
+    <p class="center"><small><!--retro-weight--></small></p>
+  </body>
+</html>

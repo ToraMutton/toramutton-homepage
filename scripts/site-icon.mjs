@@ -3,19 +3,19 @@
  *
  *   npm run icon
  *
- * src/assets/profile/toramutton.jpg を円形に切り抜いて、2つ書き出す。
+ * src/assets/profile/toramutton.png を円形に切り抜いて、2つ書き出す。
  *
  *   public/icon.png    … /links の Connect で配るアイコン。
  *                        相手のサイトが直接参照するので、この名前と場所は変えない
  *   public/favicon.png … ブラウザのタブに出るアイコン
  *
- * 元の写真を差し替えたときだけ実行して、public/ の2枚をコミットする。
+ * 元の絵を差し替えたときだけ実行して、public/ の2枚をコミットする。
  */
 import path from "node:path";
 import sharp from "sharp";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
-const SOURCE = path.join(ROOT, "src/assets/profile/toramutton.jpg");
+const SOURCE = path.join(ROOT, "src/assets/profile/toramutton.png");
 const OUTPUTS = [
   { file: "public/icon.png", size: 400 },
   { file: "public/favicon.png", size: 64 },
