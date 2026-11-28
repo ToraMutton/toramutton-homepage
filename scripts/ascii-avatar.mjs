@@ -2,10 +2,12 @@
 //   npm run ascii
 // で src/data/asciiAvatar.ts を書き出す。画像を差し替えたら実行し直す。
 //
-// 縮小前に毛並みの陰影を除き、目・口・頬の暗い部分を残す。
+// 全身だと目や口がつぶれるので、顔の寄り(face-crop.mjs)を使う。
+// 縮小前にクレヨンのざらつきを除き、輪郭・目・口の線(暗い部分)だけを残す。
 // 縮小後の濃淡は、各文字の領域を暗い部分がどれだけ占めるかを表す。
 import sharp from "sharp";
 import { writeFile } from "node:fs/promises";
+import { FACE_CROP } from "./face-crop.mjs";
 
 const SRC = "src/assets/profile/toramutton.png";
 const OUT = "src/data/asciiAvatar.ts";
@@ -22,8 +24,9 @@ const INK_THRESHOLD = 110;
 // 細い口の線も、小さな表示で読める濃さにする。
 const INK_GAMMA = 0.7;
 
-// 先に縮小すると口と黄色い生地が混ざるため、原寸で二値化を完了させる。
+// 先に縮小すると細い線が地の色と混ざるため、原寸で二値化を完了させる。
 const mask = await sharp(SRC)
+  .extract(FACE_CROP)
   .median(5)
   .grayscale()
   .threshold(INK_THRESHOLD)

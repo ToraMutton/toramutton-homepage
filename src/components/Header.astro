@@ -218,17 +218,20 @@ const fanItems = nav.map((item) => ({ ...item, active: item.href === current }))
     .logo {
         display: block;
         color: var(--text);
-        border-radius: 50%;
+        border-radius: 12px;
         transition:
             color 0.25s ease,
             transform 0.35s var(--ease-out);
         z-index: 1001;
     }
 
+    /* 横長の絵。場所取りは 40px のままにして左右に 7px ずつはみ出させ、
+       中心をずらさない(真下の FourierRail が 40px 幅を前提に位置を決めている) */
     .logo-mark {
         display: block;
-        width: 40px;
+        width: 54px;
         height: 40px;
+        margin: 0 -7px;
     }
 
     @media (hover: hover) {

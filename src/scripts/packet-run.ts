@@ -158,7 +158,8 @@ export function initPacketRun(): void {
   if (!ctx || !noiseCtx) return;
 
   const icon = new Image();
-  icon.src = "/icon.png";
+  // 自機は顔の寄り(タブのアイコンと同じ画像)。全身の icon.png だと小さくてつぶれる
+  icon.src = "/favicon.png";
 
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const params = import.meta.env.DEV ? new URLSearchParams(location.search) : null;
