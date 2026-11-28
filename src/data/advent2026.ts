@@ -207,7 +207,7 @@ export const advent2026: AdventCalendar = {
     },
     {
       day: 21,
-      memo: "基本情報技術者試験に合格するまで",
+      memo: "共テ「情報Ⅰ」レベルから応用情報技術者試験を受けるまで",
       link: { type: "blog", slug: "fe-ap" },
     },
     {

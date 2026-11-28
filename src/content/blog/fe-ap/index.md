@@ -1,5 +1,5 @@
 ---
-title: "基本情報技術者試験に合格するまで"
+title: "共テ「情報Ⅰ」レベルから応用情報技術者試験を受けるまで"
 pubDate: "2026-12-21"
 description: "TODO"
 # heroImage: "./images/hero.jpg"
